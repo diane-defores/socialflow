@@ -18,13 +18,13 @@
             :class="{ 'p-button-text-primary': comment.liked }"
             text 
             size="small"
-            @click="$emit('like')"
+            @click="handleLike"
           />
           <Button 
             label="Répondre" 
             text 
             size="small"
-            @click="$emit('reply')"
+            @click="handleReply"
           />
           <span class="comment-time">{{ formatDate(comment.timestamp) }}</span>
         </div>
@@ -105,7 +105,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   'like': []
-  'reply': [replyToId?: string]
+  'reply': []
   'menu': [event: MouseEvent]
   'like-reply': [replyId: string]
   'menu-reply': [replyId: string, event: MouseEvent]
@@ -127,6 +127,14 @@ const likeLabel = computed(() => {
 const formatDate = (timestamp: string) => {
   // Ici vous pouvez utiliser une librairie comme date-fns
   return new Date(timestamp).toLocaleDateString()
+}
+
+const handleLike = () => {
+  emit('like')
+}
+
+const handleReply = () => {
+  emit('reply')
 }
 </script>
 

@@ -1,27 +1,6 @@
 <template>
   <div class="facebook-view">
     <div class="facebook-content">
-      <!-- Sidebar gauche -->
-      <div class="left-sidebar">
-        <div class="profile-section">
-          <SocialAvatar 
-            :user="store.currentUser"
-            size="xlarge"
-          />
-          <h3>{{ store.currentUser.name }}</h3>
-          <p>{{ store.currentUser.friends }} amis</p>
-        </div>
-
-        <div class="menu-section">
-          <Button icon="pi pi-home" label="Fil d'actualité" text class="w-full justify-start" />
-          <Button icon="pi pi-user" label="Profil" text class="w-full justify-start" />
-          <Button icon="pi pi-users" label="Amis" text class="w-full justify-start" />
-          <Button icon="pi pi-bell" :badge="store.currentUser.notifications.toString()" label="Notifications" text class="w-full justify-start" />
-          <Button icon="pi pi-bookmark" label="Enregistrements" text class="w-full justify-start" />
-          <Button icon="pi pi-calendar" label="Événements" text class="w-full justify-start" />
-        </div>
-      </div>
-
       <!-- Feed principal -->
       <div class="main-feed">
         <!-- Stories -->
@@ -63,18 +42,20 @@
             :key="post.id"
             :post="post"
             network="facebook"
-            :show-comments="true"
+            :show-comments="post.showComments"
             @primary-action="store.addReaction(post.id, 'like')"
             @comment="store.addComment(post.id, '')"
             @share="store.sharePost(post.id)"
+            @toggle-comments="togglePostComments(post.id)"
           >
-            <template #comments>
+            <template #comments v-if="post.showComments">
               <div v-if="post.comments?.length" class="comments-container">
                 <SocialComment
                   v-for="comment in post.comments"
                   :key="comment.id"
                   :comment="comment"
-                  @like="store.addReaction(post.id, 'like')"
+                  @like="handleCommentLike(post.id, comment.id)"
+                  @reply="handleCommentReply(post.id, comment.id)"
                 />
               </div>
               <div class="comment-composer">
@@ -120,10 +101,7 @@ import { ref } from 'vue'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import ScrollPanel from 'primevue/scrollpanel'
-import SocialAvatar from '@/components/feed/SocialAvatar.vue'
-import SocialPost from '@/components/feed/SocialPost.vue'
-import SocialComment from '@/components/feed/SocialComment.vue'
-import CreatePost from '@/components/feed/CreatePost.vue'
+import { SocialAvatar, SocialPost, SocialComment, CreatePost } from '@/components/feed'
 import { useFacebookMockStore } from '@/stores/mockData/facebookMock'
 
 const store = useFacebookMockStore()
@@ -135,51 +113,41 @@ const handleCommentSubmit = (postId: string) => {
     newComments.value[postId] = ''
   }
 }
+
+const handleCommentLike = (postId: string, commentId: string) => {
+  store.likeComment(postId, commentId)
+}
+
+const handleCommentReply = (postId: string, commentId: string) => {
+  // Logique pour répondre à un commentaire
+  console.log(`Répondre au commentaire ${commentId} du post ${postId}`)
+}
+
+const togglePostComments = (postId: string) => {
+  const post = store.posts.find(p => p.id === postId)
+  if (post) {
+    // Vous pouvez ajouter une propriété personnalisée pour suivre l'état des commentaires
+    post.showComments = !post.showComments
+  }
+}
 </script>
 
 <style scoped>
 .facebook-view {
   height: 100%;
   background: var(--surface-ground);
+  padding-top: 4rem;
 }
 
 .facebook-content {
   display: grid;
-  grid-template-columns: 300px 1fr 300px;
+  grid-template-columns: 1fr 300px;
   gap: 1rem;
-  max-width: 1600px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 1rem;
-  height: 100%;
-}
-
-.left-sidebar, .right-sidebar {
-  background: var(--surface-card);
-  border-radius: 8px;
-  padding: 1rem;
-  height: fit-content;
-}
-
-.profile-section {
-  text-align: center;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--surface-border);
-  margin-bottom: 1rem;
-}
-
-.profile-section h3 {
-  margin: 0.5rem 0 0.25rem;
-}
-
-.profile-section p {
-  color: var(--text-color-secondary);
-  margin: 0;
-}
-
-.menu-section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  height: calc(100% - 4rem);
+  overflow-y: auto;
 }
 
 .main-feed {
@@ -247,6 +215,13 @@ const handleCommentSubmit = (postId: string) => {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.right-sidebar {
+  background: var(--surface-card);
+  border-radius: 8px;
+  padding: 1rem;
+  height: fit-content;
 }
 
 .online-friends {

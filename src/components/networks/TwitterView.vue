@@ -1,7 +1,14 @@
 <template>
   <div class="twitter-view">
     <template v-if="isConnected">
-      <h2>Twitter Feed</h2>
+      <div class="header">
+        <SocialNetworkLogo 
+          network="twitter"
+          size="small"
+          class="mr-2"
+        />
+        <h2>Twitter Feed</h2>
+      </div>
       <div class="twitter-content">
         <div class="profile-sidebar">
           <h3>Mon Profil</h3>
@@ -35,7 +42,7 @@
           <div class="compose-tweet">
             <Avatar :image="profileInfo.avatar" size="normal" shape="circle" />
             <div class="compose-input">
-              <InputTextarea 
+              <Textarea 
                 v-model="newTweet" 
                 placeholder="Quoi de neuf ?" 
                 :autoResize="true"
@@ -85,6 +92,11 @@
     </template>
     <template v-else>
       <div class="connect-prompt">
+        <SocialNetworkLogo 
+          network="twitter"
+          size="large"
+          class="mb-3"
+        />
         <h3>Connectez-vous à Twitter</h3>
         <p>Pour voir votre feed Twitter et interagir avec vos abonnés, vous devez d'abord vous connecter.</p>
         <Button 
@@ -101,9 +113,10 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useSocialNetworksStore } from '@/stores/socialNetworks'
-import { Button } from 'primevue/button'
-import { Textarea } from 'primevue/textarea'
-import { Avatar } from 'primevue/avatar'
+import Button from 'primevue/button'
+import Textarea from 'primevue/textarea'
+import Avatar from 'primevue/avatar'
+import { SocialNetworkLogo } from '@/components/common'
 
 const store = useSocialNetworksStore()
 const isConnected = computed(() => store.isConnected('twitter'))
@@ -355,5 +368,15 @@ const connectTwitter = () => {
 :deep(.p-inputtextarea:focus) {
   box-shadow: none;
   border: none;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.header h2 {
+  margin: 0;
 }
 </style> 

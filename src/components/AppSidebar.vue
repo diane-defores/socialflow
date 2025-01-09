@@ -1,48 +1,51 @@
 <template>
-  <Splitter 
-    ref="splitterRef" 
-    :class="{ 'sidebar-hidden': !modelValue }"
-    @resizeend="handleResizeEnd"
-    @resize="handleResize"
-  >
-    <SplitterPanel 
-      :size="panelSize" 
-      :minSize="5" 
-      class="sidebar"
-      :class="{ 'icons-only': iconsOnly }"
+  <template v-if="modelValue">
+    <Splitter 
+      ref="splitterRef" 
+      @resizeend="handleResizeEnd"
+      @resize="handleResize"
     >
-      <div class="sidebar-content" :class="{ 'content-centered': iconsOnly }">
-        <div class="flex align-items-center mb-3" :class="{ 'justify-content-center': iconsOnly, 'justify-content-between': !iconsOnly }">
-          <h2 class="sidebar-title" v-show="!iconsOnly">Social Networks</h2>
-          <Button 
-            icon="pi pi-arrows-h" 
-            text 
-            @click="toggleIconsOnly"
-            v-tooltip.right="'Toggle compact mode'"
-          />
-        </div>
-        <div class="menu-items">
-          <div v-for="item in menuItems" :key="item.id" class="menu-item">
+      <SplitterPanel 
+        :size="panelSize" 
+        :minSize="5" 
+        class="sidebar"
+        :class="{ 'icons-only': iconsOnly }"
+      >
+        <div class="sidebar-content" :class="{ 'content-centered': iconsOnly }">
+          <div class="flex align-items-center mb-3" :class="{ 'justify-content-center': iconsOnly, 'justify-content-between': !iconsOnly }">
             <Button 
-              :icon="item.icon" 
-              :label="iconsOnly ? undefined : item.label"
-              :tooltip="iconsOnly ? item.label : undefined"
-              :tooltipOptions="{ position: 'right' }"
-              text
-              :class="[
-                'w-full',
-                iconsOnly ? 'justify-content-center' : 'justify-content-start'
-              ]"
-              @click="navigateToNetwork(item)"
+              icon="pi pi-arrows-h" 
+              text 
+              @click="toggleIconsOnly"
+              v-tooltip.right="'Toggle compact mode'"
             />
           </div>
+          <div class="menu-items">
+            <div v-for="item in menuItems" :key="item.id" class="menu-item">
+              <Button 
+                :icon="item.icon" 
+                :label="iconsOnly ? undefined : item.label"
+                :tooltip="iconsOnly ? item.label : undefined"
+                :tooltipOptions="{ position: 'right' }"
+                text
+                :class="[
+                  'w-full',
+                  iconsOnly ? 'justify-content-center' : 'justify-content-start'
+                ]"
+                @click="navigateToNetwork(item)"
+              />
+            </div>
+          </div>
         </div>
-      </div>
-    </SplitterPanel>
-    <SplitterPanel :size="100 - panelSize">
-      <slot></slot>
-    </SplitterPanel>
-  </Splitter>
+      </SplitterPanel>
+      <SplitterPanel :size="100 - panelSize">
+        <slot></slot>
+      </SplitterPanel>
+    </Splitter>
+  </template>
+  <template v-else>
+    <slot></slot>
+  </template>
 </template>
 
 <script setup lang="ts">
@@ -119,7 +122,7 @@ const navigateToNetwork = (network: MenuItem): void => {
 }
 
 .sidebar-hidden {
-  transform: translateX(-100%);
+  display: none;
 }
 
 .sidebar-content {

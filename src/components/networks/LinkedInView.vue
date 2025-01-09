@@ -1,7 +1,14 @@
 <template>
   <div class="linkedin-view">
     <template v-if="isConnected">
-      <h2>LinkedIn Feed</h2>
+      <div class="header">
+        <SocialNetworkLogo 
+          network="linkedin"
+          size="small"
+          class="mr-2"
+        />
+        <h2>LinkedIn Feed</h2>
+      </div>
       <div class="linkedin-content">
         <div class="profile-sidebar">
           <div class="profile-card">
@@ -98,6 +105,11 @@
     </template>
     <template v-else>
       <div class="connect-prompt">
+        <SocialNetworkLogo 
+          network="linkedin"
+          size="large"
+          class="mb-3"
+        />
         <h3>Connectez-vous à LinkedIn</h3>
         <p>Pour voir votre feed professionnel et interagir avec votre réseau, vous devez d'abord vous connecter.</p>
         <Button 
@@ -129,7 +141,7 @@
           </div>
         </div>
         
-        <InputTextarea
+        <Textarea
           v-model="newPost"
           placeholder="De quoi souhaitez-vous parler ?"
           :autoResize="true"
@@ -159,11 +171,11 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useSocialNetworksStore } from '@/stores/socialNetworks'
-import { Button } from 'primevue/button'
-import { InputTextarea } from 'primevue/inputtextarea'
-import { Avatar } from 'primevue/avatar'
-import { Dialog } from 'primevue/dialog'
-import { Textarea } from "primevue/textarea"
+import Button from 'primevue/button'
+import Textarea from 'primevue/textarea'
+import Avatar from 'primevue/avatar'
+import Dialog from 'primevue/dialog'
+import { SocialNetworkLogo } from '@/components/common'
 
 const store = useSocialNetworksStore()
 const isConnected = computed(() => store.isConnected('linkedin'))
@@ -458,5 +470,15 @@ const connectLinkedIn = () => {
 
 :deep(.p-dialog-content) {
   padding: 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.header h2 {
+  margin: 0;
 }
 </style> 

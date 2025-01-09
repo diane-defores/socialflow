@@ -1,0 +1,44 @@
+:root {
+  --primary-color: #4318FF;
+  --secondary-color: #868CFF;
+  --background-color: #ffffff;
+  --surface-color: #f8f9fa;
+  --text-color: #1B2559;
+  --border-color: #e9ecef;
+}
+
+:root.dark {
+  --background-color: #1a1a1a;
+  --surface-color: #2d2d2d;
+  --text-color: #ffffff;
+  --border-color: #404040;
+}
+
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+.p-component {
+  color: var(--text-color);
+}
+
+/* Dark mode overrides for PrimeVue components */
+:root.dark {
+  --surface-0: var(--surface-color);
+  --surface-50: var(--surface-color);
+  --surface-100: var(--surface-color);
+  --surface-200: var(--surface-color);
+  --surface-300: var(--surface-color);
+  --surface-400: var(--surface-color);
+  --surface-500: var(--surface-color);
+  --surface-600: var(--surface-color);
+  --surface-700: var(--surface-color);
+  --surface-800: var(--surface-color);
+  --surface-900: var(--surface-color);
+  
+  --text-color: #ffffff;
+  --text-color-secondary: #f8f9fa;
+}
+
+/* ... existing styles ... */ 

@@ -52,6 +52,12 @@ const networks = [
 ]
 
 const login = async (networkId: string) => {
+  if (networkId === 'facebook') {
+    // Utiliser la méthode spécifique à Facebook
+    await store.connectFacebook()
+    return
+  }
+
   const authWindow = window.open(
     `/api/auth/${networkId}`,
     'Auth',

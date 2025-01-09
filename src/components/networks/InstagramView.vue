@@ -1,6 +1,13 @@
 <template>
   <div class="instagram-view">
-    <h2>Instagram Feed</h2>
+    <div class="header">
+      <SocialNetworkLogo 
+        network="instagram"
+        size="small"
+        class="mr-2"
+      />
+      <h2>Instagram Feed</h2>
+    </div>
     <div class="instagram-grid">
       <!-- Grille de photos Instagram -->
       <div v-for="i in 9" :key="i" class="instagram-item">
@@ -12,7 +19,22 @@
   </div>
 </template>
 
+<script setup lang="ts">
+import { SocialNetworkLogo } from '@/components/common'
+</script>
+
 <style scoped>
+.header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 0 1rem;
+}
+
+.header h2 {
+  margin: 0;
+}
+
 .instagram-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

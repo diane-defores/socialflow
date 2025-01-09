@@ -1,6 +1,13 @@
 <template>
   <div class="discord-view">
-    <h2>Discord Channels</h2>
+    <div class="header">
+      <SocialNetworkLogo 
+        network="discord"
+        size="small"
+        class="mr-2"
+      />
+      <h2>Discord Channels</h2>
+    </div>
     <div class="discord-content">
       <div class="servers-list">
         <div v-for="i in 5" :key="i" class="server-item">
@@ -24,8 +31,10 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
+import Avatar from 'primevue/avatar'
+import { SocialNetworkLogo } from '@/components/common'
 
 const channels = ref([
   { id: 1, name: 'general', icon: 'pi pi-hashtag', members: '245' },
@@ -37,6 +46,17 @@ const channels = ref([
 </script>
 
 <style scoped>
+.header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 0 1rem;
+}
+
+.header h2 {
+  margin: 0;
+}
+
 .discord-content {
   display: flex;
   gap: 1rem;

@@ -65,7 +65,13 @@
         <span>{{ totalReactions }}</span>
       </div>
       <div class="interaction-stats">
-        <span v-if="post.stats.comments">{{ post.stats.comments }} commentaires</span>
+        <span 
+          v-if="post.stats.comments" 
+          class="comments-count"
+          @click="toggleComments"
+        >
+          {{ post.stats.comments }} commentaires
+        </span>
         <span v-if="post.stats.shares">{{ post.stats.shares }} partages</span>
       </div>
     </div>
@@ -155,6 +161,9 @@ const emit = defineEmits<{
   'share': []
   'menu-click': [event: MouseEvent]
   'image-click': [{ image: string, index: number }]
+  'comment-like': [commentId: string]
+  'comment-reply': [commentId: string]
+  'toggle-comments': []
 }>()
 
 const networkClass = computed(() => `network-${props.network}`)
@@ -211,6 +220,11 @@ const formatText = (text: string) => {
 
   // Convertit les retours à la ligne en <br>
   return text.replace(/\n/g, '<br>')
+}
+
+// Méthode pour basculer l'affichage des commentaires
+const toggleComments = () => {
+  emit('toggle-comments')
 }
 </script>
 
@@ -384,5 +398,15 @@ const formatText = (text: string) => {
 
 .network-instagram {
   /* Styles spécifiques à Instagram */
+}
+
+.interaction-stats .comments-count {
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.interaction-stats .comments-count:hover {
+  color: var(--primary-color);
+  text-decoration: underline;
 }
 </style> 

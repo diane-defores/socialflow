@@ -1,18 +1,17 @@
 <template>
-  <div class="surface-card h-full flex align-items-center">
-    <div class="flex flex-wrap gap-3 align-items-center justify-content-center w-full px-2">
+  <div class="filters-wrapper">
+    <div class="filters-group">
       <!-- Date Range Picker -->
       <Calendar 
         v-model="filters.dateRange" 
         selectionMode="range" 
         :showIcon="true"
         placeholder="Filtrer par date"
-        class="min-w-max"
         :disabled="!currentNetwork"
       />
 
       <!-- Quick Date Filters -->
-      <div class="flex gap-2 flex-wrap">
+      <div class="quick-filters">
         <Button 
           v-for="filter in quickDateFilters" 
           :key="filter.value"
@@ -31,7 +30,6 @@
         :options="filterOptions"
         optionLabel="label"
         placeholder="Filtres"
-        class="min-w-min"
         :maxSelectedLabels="3"
         :disabled="!currentNetwork"
       />
@@ -42,7 +40,6 @@
         :options="sortOptions"
         optionLabel="label"
         placeholder="Trier par"
-        class="min-w-min"
         :disabled="!currentNetwork"
       />
 
@@ -131,54 +128,63 @@ watch(filters, (newFilters) => {
 </script>
 
 <style scoped>
-.filters-container {
-  background: var(--surface-card);
-  border-bottom: 1px solid var(--surface-border);
-  padding: 1rem;
-  margin-bottom: 1rem;
-}
-
-.filters-content {
+.filters-wrapper {
   display: flex;
-  gap: 1rem;
   align-items: center;
-  flex-wrap: wrap;
+  width: 100%;
 }
 
-.date-picker {
-  min-width: 200px;
+.filters-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
 }
 
 .quick-filters {
   display: flex;
   gap: 0.5rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-.toggle-filters {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+.quick-filters::-webkit-scrollbar {
+  display: none;
 }
 
-.filter-item {
-  display: flex;
-  align-items: center;
+:deep(.p-calendar),
+:deep(.p-multiselect),
+:deep(.p-dropdown) {
+  min-width: unset;
+  flex-shrink: 1;
 }
 
-.sort-dropdown {
-  min-width: 150px;
-  margin-left: auto;
+:deep(.p-calendar) {
+  width: 200px;
 }
 
-@media (max-width: 768px) {
-  .filters-content {
+:deep(.p-multiselect) {
+  width: 150px;
+}
+
+:deep(.p-dropdown) {
+  width: 120px;
+}
+
+@media (max-width: 1200px) {
+  .filters-wrapper {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .sort-dropdown {
-    margin-left: 0;
+  .search-container {
+    min-width: unset;
+  }
+
+  .filters-group {
+    flex-wrap: wrap;
   }
 }
 </style> 

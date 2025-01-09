@@ -4,6 +4,7 @@ import PrimeVue from 'primevue/config'
 import { router } from './router'
 import { createPinia } from 'pinia'
 import Ripple from 'primevue/ripple'
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 
 // Styles PrimeVue
 import 'primevue/resources/themes/lara-light-blue/theme.css' // thème
@@ -25,9 +26,12 @@ import Splitter from 'primevue/splitter'
 import SplitterPanel from 'primevue/splitterpanel'
 import Tooltip from 'primevue/tooltip'
 import MultiSelect from 'primevue/multiselect'
+import Textarea from 'primevue/textarea'
 
 const app = createApp(App)
 const pinia = createPinia()
+
+pinia.use(piniaPluginPersistedstate)
 
 app.use(PrimeVue, {
     ripple: true
@@ -47,6 +51,7 @@ app.component('ToggleButton', ToggleButton)
 app.component('Dropdown', Dropdown)
 app.component('InputText', InputText)
 app.component('Password', Password)
+app.component('Textarea', Textarea)
 app.component('Splitter', Splitter)
 app.component('SplitterPanel', SplitterPanel)
 app.directive('tooltip', Tooltip)

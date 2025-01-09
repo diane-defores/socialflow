@@ -1,7 +1,14 @@
 <template>
   <div class="reddit-view">
     <template v-if="isConnected">
-      <h2>Reddit Feed</h2>
+      <div class="header">
+        <SocialNetworkLogo 
+          network="reddit"
+          size="small"
+          class="mr-2"
+        />
+        <h2>Reddit Feed</h2>
+      </div>
       <div class="reddit-content">
         <div class="subreddits-sidebar">
           <h3>Mes Subreddits</h3>
@@ -39,6 +46,11 @@
     </template>
     <template v-else>
       <div class="connect-prompt">
+        <SocialNetworkLogo 
+          network="reddit"
+          size="large"
+          class="mb-3"
+        />
         <h3>Connectez-vous à Reddit</h3>
         <p>Pour voir votre feed Reddit, vous devez d'abord vous connecter à votre compte.</p>
         <Button 
@@ -55,6 +67,9 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useSocialNetworksStore } from '@/stores/socialNetworks'
+import Button from 'primevue/button'
+import Avatar from 'primevue/avatar'
+import { SocialNetworkLogo } from '@/components/common'
 
 const store = useSocialNetworksStore()
 const isConnected = computed(() => store.isConnected('reddit'))
@@ -196,5 +211,15 @@ const connectReddit = () => {
 
 :deep(.p-button-reddit:hover) {
   background: #ff5722;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.header h2 {
+  margin: 0;
 }
 </style> 

@@ -39,6 +39,7 @@ export interface FacebookPost {
   location?: string;
   tagged_users?: string[];
   comments?: FacebookComment[];
+  showComments?: boolean;
 }
 
 export interface FacebookComment {
@@ -329,6 +330,29 @@ export const useFacebookMockStore = defineStore('facebookMock', {
       if (story) {
         story.viewed = true
       }
+    },
+
+    likeComment(postId: string, commentId: string) {
+      const post = this.posts.find(p => p.id === postId)
+      if (!post || !post.comments) return
+
+      const comment = this.findCommentById(post.comments, commentId)
+      if (comment) {
+        comment.likes++
+      }
+    },
+
+    // Méthode utilitaire pour trouver un commentaire récursivement
+    findCommentById(comments: FacebookComment[], commentId: string): FacebookComment | undefined {
+      for (const comment of comments) {
+        if (comment.id === commentId) return comment
+        
+        if (comment.replies) {
+          const nestedComment = this.findCommentById(comment.replies, commentId)
+          if (nestedComment) return nestedComment
+        }
+      }
+      return undefined
     }
   }
 }) 

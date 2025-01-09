@@ -1,12 +1,13 @@
 <template>
   <div class="social-avatar" :class="sizeClass">
     <Avatar 
-      :image="user.avatar" 
+      :image="avatarUrl" 
       :size="size"
       :shape="shape"
       :pt="{
         root: { style: borderStyle }
       }"
+      @error="handleAvatarError"
     />
     <Badge v-if="showBadge" 
       :value="badgeContent" 
@@ -22,13 +23,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import Avatar from 'primevue/avatar'
 import Badge from 'primevue/badge'
 
 interface Props {
   user: {
-    avatar: string
+    username?: string
+    network?: string
+    avatar?: string
     status?: 'online' | 'offline' | 'idle' | 'busy'
   }
   size?: 'normal' | 'large' | 'xlarge'
@@ -55,6 +58,21 @@ const sizeClass = computed(() => `size-${props.size}`)
 const borderStyle = computed(() => ({
   border: props.borderWidth ? `${props.borderWidth} solid ${props.borderColor || 'var(--surface-border)'}` : 'none'
 }))
+
+const avatarUrl = computed(() => {
+  if (props.user.avatar) return props.user.avatar
+  
+  if (props.user.username && props.user.network) {
+    return `https://unavatar.io/${props.user.network}/${props.user.username}`
+  }
+  
+  return `https://unavatar.io/fallback/${props.user.username || 'default'}`
+})
+
+const handleAvatarError = () => {
+  const username = props.user.username || 'default'
+  avatarUrl.value = `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`
+}
 </script>
 
 <style scoped>

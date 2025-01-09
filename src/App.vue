@@ -1,77 +1,56 @@
 <template>
-  <div class="layout-wrapper">
+  <div class="app-container">
     <AppHeader 
-      @toggle-sidebar="toggleSidebar" 
-      @filter-change="handleFilterChange"
-      :currentNetwork="currentNetwork"
+      v-model:sidebar-visible="sidebarVisible"
+      v-model:right-sidebar-visible="rightSidebarVisible"
     />
     
-    <div class="content-layout">
-      <AppSidebar 
-        v-model="sidebarVisible"
-        @network-selected="selectNetwork"
-      />
-      
-      <main class="main-content">
-        <div class="content-wrapper">
-          <router-view :network="currentNetwork" />
-        </div>
-      </main>
-    </div>
+    <AppSidebar v-model="sidebarVisible">
+      <AppRightSidebar v-model="rightSidebarVisible">
+        <router-view></router-view>
+      </AppRightSidebar>
+    </AppSidebar>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import AppHeader from './components/AppHeader.vue'
-import AppSidebar from './components/AppSidebar.vue'
-import type { MenuItem } from '@/types'
+import { ref, onMounted } from 'vue'
+import { useThemeStore } from '@/stores/theme'
+import AppHeader from '@/components/AppHeader.vue'
+import AppSidebar from '@/components/AppSidebar.vue'
+import AppRightSidebar from '@/components/AppRightSidebar.vue'
 
-const sidebarVisible = ref<boolean>(true)
-const currentNetwork = ref<MenuItem | null>(null)
+const sidebarVisible = ref(true)
+const rightSidebarVisible = ref(true)
 
-const toggleSidebar = () => {
-  sidebarVisible.value = !sidebarVisible.value
-}
+const themeStore = useThemeStore()
 
-const selectNetwork = (network: MenuItem) => {
-  currentNetwork.value = network
-}
-
-const handleFilterChange = (filters: any) => {
-  console.log('Filtres mis à jour:', filters)
-}
+onMounted(() => {
+  themeStore.initTheme()
+})
 </script>
 
-<style scoped>
-.layout-wrapper {
-  display: flex;
-  flex-direction: column;
+<style>
+.app-container {
   height: 100vh;
   overflow: hidden;
 }
 
-.content-layout {
-  display: flex;
-  height: calc(100vh - 4rem);
-  margin-top: 4rem;
+:root {
+  --primary-color: #2196F3;
+  --text-color: #495057;
+  --text-color-secondary: #6c757d;
+  --surface-ground: #f8f9fa;
+  --surface-card: #ffffff;
+  --surface-border: #dee2e6;
+  --surface-hover: #e9ecef;
+  --card-shadow: 0 2px 1px -1px rgba(0,0,0,.2), 0 1px 1px 0 rgba(0,0,0,.14), 0 1px 3px 0 rgba(0,0,0,.12);
 }
 
-.main-content {
-  flex: 1;
-  padding: 2rem;
-  overflow-y: auto;
-}
-
-.content-wrapper {
-  max-width: 1200px;
-  margin: 0 auto;
-  height: 100%;
-}
-
-@media (max-width: 768px) {
-  .main-content {
-    margin-left: 0;
-  }
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  color: var(--text-color);
+  background: var(--surface-ground);
 }
 </style> 
