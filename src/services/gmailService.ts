@@ -1,0 +1,171 @@
+const GMAIL_API_BASE = 'https://gmail.googleapis.com/gmail/v1/users/me'
+
+export interface GmailConfig {
+  clientId: string
+  apiKey: string
+  scope: string
+}
+
+export class GmailService {
+  private accessToken: string | null = null
+  private config: GmailConfig
+
+  constructor(config: GmailConfig) {
+    this.config = config
+  }
+
+  async init() {
+    // Charger la bibliothèque Google
+    await this.loadGoogleAPI()
+    await this.initializeGoogleAuth()
+  }
+
+  private async loadGoogleAPI(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = 'https://apis.google.com/js/api.js'
+      script.onload = () => {
+        gapi.load('client:auth2', () => {
+          resolve()
+        })
+      }
+      script.onerror = reject
+      document.body.appendChild(script)
+    })
+  }
+
+  private async initializeGoogleAuth(): Promise<void> {
+    await gapi.client.init({
+      apiKey: this.config.apiKey,
+      clientId: this.config.clientId,
+      scope: this.config.scope,
+      discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest']
+    })
+  }
+
+  async authenticate(): Promise<void> {
+    try {
+      const googleAuth = gapi.auth2.getAuthInstance()
+      const user = await googleAuth.signIn()
+      this.accessToken = user.getAuthResponse().access_token
+    } catch (error) {
+      console.error('Erreur d\'authentification Gmail:', error)
+      throw error
+    }
+  }
+
+  async getEmails(maxResults: number = 20): Promise<any[]> {
+    if (!this.accessToken) {
+      throw new Error('Non authentifié')
+    }
+
+    try {
+      // Récupérer la liste des messages
+      const response = await gapi.client.gmail.users.messages.list({
+        userId: 'me',
+        maxResults: maxResults,
+        labelIds: ['INBOX']
+      })
+
+      // Récupérer les détails de chaque message
+      const messages = await Promise.all(
+        response.result.messages.map(async (message: any) => {
+          const details = await gapi.client.gmail.users.messages.get({
+            userId: 'me',
+            id: message.id,
+            format: 'full'
+          })
+          return this.parseMessage(details.result)
+        })
+      )
+
+      return messages
+    } catch (error) {
+      console.error('Erreur lors de la récupération des emails:', error)
+      throw error
+    }
+  }
+
+  private parseMessage(message: any) {
+    const headers = message.payload.headers
+    const subject = headers.find((h: any) => h.name === 'Subject')?.value
+    const from = headers.find((h: any) => h.name === 'From')?.value
+    const date = headers.find((h: any) => h.name === 'Date')?.value
+
+    // Extraire le nom et l'email de l'expéditeur
+    const fromMatch = from?.match(/(?:"?([^"]*)"?\s)?(?:<?(.+@[^>]+)>?)/)
+    const [, senderName = '', senderEmail = ''] = fromMatch || []
+
+    // Extraire le contenu du message
+    let body = ''
+    if (message.payload.parts) {
+      const textPart = message.payload.parts.find((part: any) => part.mimeType === 'text/plain')
+      if (textPart?.body?.data) {
+        body = atob(textPart.body.data.replace(/-/g, '+').replace(/_/g, '/'))
+      }
+    } else if (message.payload.body?.data) {
+      body = atob(message.payload.body.data.replace(/-/g, '+').replace(/_/g, '/'))
+    }
+
+    return {
+      id: message.id,
+      threadId: message.threadId,
+      subject: subject || '(pas de sujet)',
+      preview: body.substring(0, 100),
+      body: body,
+      date: new Date(date),
+      sender: {
+        id: senderEmail,
+        name: senderName || senderEmail,
+        email: senderEmail,
+        avatar: `https://www.gravatar.com/avatar/${this.md5(senderEmail)}?d=mp`
+      },
+      isRead: !message.labelIds.includes('UNREAD'),
+      labels: message.labelIds || []
+    }
+  }
+
+  private md5(str: string): string {
+    // Une implémentation simple de MD5 pour les avatars Gravatar
+    // Dans un environnement de production, utilisez une bibliothèque dédiée
+    return str.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0)
+      return a & a
+    }, 0).toString(16)
+  }
+
+  async markAsRead(messageId: string): Promise<void> {
+    if (!this.accessToken) {
+      throw new Error('Non authentifié')
+    }
+
+    try {
+      await gapi.client.gmail.users.messages.modify({
+        userId: 'me',
+        id: messageId,
+        resource: {
+          removeLabelIds: ['UNREAD']
+        }
+      })
+    } catch (error) {
+      console.error('Erreur lors du marquage comme lu:', error)
+      throw error
+    }
+  }
+
+  async getLabels(): Promise<any[]> {
+    if (!this.accessToken) {
+      throw new Error('Non authentifié')
+    }
+
+    try {
+      const response = await gapi.client.gmail.users.labels.list({
+        userId: 'me'
+      })
+      return response.result.labels
+    } catch (error) {
+      console.error('Erreur lors de la récupération des labels:', error)
+      throw error
+    }
+  }
+} 

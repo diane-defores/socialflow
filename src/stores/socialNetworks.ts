@@ -1,4 +1,8 @@
 import { defineStore } from 'pinia'
+import { computed } from 'vue'
+import { GmailService } from '@/services/gmailService'
+import { gmailConfig } from '@/config/gmail'
+import type { Email } from '@/types'
 
 interface NetworkConnection {
   networkId: string
@@ -9,16 +13,26 @@ interface NetworkConnection {
 
 export const useSocialNetworksStore = defineStore('socialNetworks', {
   state: () => ({
-    connections: {} as Record<string, NetworkConnection>
+    connections: {} as Record<string, NetworkConnection>,
+    gmail: {
+      service: new GmailService(gmailConfig),
+      emails: [] as Email[],
+      initialized: false,
+      connected: false
+    }
   }),
   
   getters: {
     isConnected: (state) => (networkId: string) => {
+      if (networkId === 'gmail') {
+        return state.gmail.connected
+      }
       return state.connections[networkId]?.connected || false
     },
     getNetworkInfo: (state) => (networkId: string) => {
       return state.connections[networkId]
-    }
+    },
+    unreadEmailCount: (state) => computed(() => state.gmail.emails.filter(email => !email.isRead).length)
   },
 
   actions: {
@@ -136,6 +150,55 @@ export const useSocialNetworksStore = defineStore('socialNetworks', {
       } catch (error) {
         console.error('Erreur lors de la récupération du flux Facebook:', error)
         return []
+      }
+    },
+
+    async initializeGmail() {
+      if (this.gmail.initialized) return
+
+      try {
+        await this.gmail.service.init()
+        this.gmail.initialized = true
+      } catch (error) {
+        console.error('Erreur lors de l\'initialisation de Gmail:', error)
+        throw error
+      }
+    },
+
+    async connectGmail() {
+      try {
+        await this.initializeGmail()
+        await this.gmail.service.authenticate()
+        this.gmail.connected = true
+        await this.fetchGmailData()
+      } catch (error) {
+        console.error('Erreur lors de la connexion à Gmail:', error)
+        throw error
+      }
+    },
+
+    async fetchGmailData() {
+      try {
+        if (!this.gmail.connected) {
+          await this.connectGmail()
+        }
+        this.gmail.emails = await this.gmail.service.getEmails()
+      } catch (error) {
+        console.error('Erreur lors de la récupération des emails:', error)
+        throw error
+      }
+    },
+
+    async markEmailAsRead(messageId: string) {
+      try {
+        await this.gmail.service.markAsRead(messageId)
+        const email = this.gmail.emails.find(e => e.id === messageId)
+        if (email) {
+          email.isRead = true
+        }
+      } catch (error) {
+        console.error('Erreur lors du marquage comme lu:', error)
+        throw error
       }
     }
   }

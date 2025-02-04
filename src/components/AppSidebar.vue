@@ -20,20 +20,74 @@
               v-tooltip.right="'Toggle compact mode'"
             />
           </div>
-          <div class="menu-items">
-            <div v-for="item in menuItems" :key="item.id" class="menu-item">
-              <Button 
-                :icon="item.icon" 
-                :label="iconsOnly ? undefined : item.label"
-                :tooltip="iconsOnly ? item.label : undefined"
-                :tooltipOptions="{ position: 'right' }"
-                text
-                :class="[
-                  'w-full',
-                  iconsOnly ? 'justify-content-center' : 'justify-content-start'
-                ]"
-                @click="navigateToNetwork(item)"
-              />
+
+          <!-- Réseaux sociaux -->
+          <div class="menu-section">
+            <div class="section-header" v-if="!iconsOnly">
+              <h3>Réseaux sociaux</h3>
+            </div>
+            <div class="menu-items">
+              <div v-for="item in menuItems" :key="item.id" class="menu-item">
+                <Button 
+                  :icon="item.icon" 
+                  :label="iconsOnly ? undefined : item.label"
+                  :tooltip="iconsOnly ? item.label : undefined"
+                  :tooltipOptions="{ position: 'right' }"
+                  text
+                  :class="[
+                    'w-full',
+                    iconsOnly ? 'justify-content-center' : 'justify-content-start'
+                  ]"
+                  @click="navigateToNetwork(item)"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Kanban Columns -->
+          <div class="kanban-section" v-if="!iconsOnly">
+            <div class="kanban-columns">
+              <div 
+                v-for="column in kanbanStore.columns" 
+                :key="column.id"
+                class="kanban-column"
+                @dragover.prevent
+                @drop="handleDrop($event, column.id)"
+              >
+                <div class="column-header">
+                  <span class="column-title">{{ column.title }}</span>
+                  <span class="column-count">{{ getColumnItems(column.id).length }}</span>
+                </div>
+                <div class="column-content">
+                  <TransitionGroup name="list" tag="div">
+                    <div
+                      v-for="item in getColumnItems(column.id)"
+                      :key="item.id"
+                      class="kanban-item"
+                      :class="[
+                        `type-${item.type}`,
+                        { 'is-dragging': isDragging(item) }
+                      ]"
+                      draggable="true"
+                      @dragstart="handleDragStart($event, item)"
+                      @dragend="handleDragEnd"
+                    >
+                      <div class="item-header">
+                        <i :class="getItemIcon(item.type)"></i>
+                        <span class="item-title">{{ item.title }}</span>
+                        <Button
+                          icon="pi pi-times"
+                          text
+                          rounded
+                          size="small"
+                          severity="danger"
+                          @click="deleteKanbanItem(item.id)"
+                        />
+                      </div>
+                    </div>
+                  </TransitionGroup>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -49,12 +103,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useKanbanStore } from '@/stores/kanban'
 import type { MenuItem } from '@/types'
+import type { KanbanItem, KanbanColumnId } from '@/services/kanbanService'
+import Button from 'primevue/button'
 
 const router = useRouter()
+const kanbanStore = useKanbanStore()
 const splitterRef = ref()
+
 const props = defineProps<{
   modelValue: boolean
 }>()
@@ -70,6 +129,56 @@ const COMPACT_THRESHOLD = 10
 const panelSize = computed(() => {
   return iconsOnly.value ? 5 : 20
 })
+
+const totalKanbanItems = computed(() => {
+  return kanbanStore.columns.reduce((total, column) => total + column.items.length, 0)
+})
+
+const getColumnItems = (columnId: KanbanColumnId) => {
+  return kanbanStore.getColumnItems(columnId)
+}
+
+const isDragging = (item: KanbanItem) => {
+  return kanbanStore.draggedItem?.id === item.id
+}
+
+const getItemIcon = (type: string) => {
+  switch (type) {
+    case 'email':
+      return 'pi pi-envelope'
+    case 'task':
+      return 'pi pi-check-square'
+    case 'note':
+      return 'pi pi-file'
+    default:
+      return 'pi pi-file'
+  }
+}
+
+const handleDragStart = (event: DragEvent, item: KanbanItem) => {
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', item.id)
+  }
+  kanbanStore.startDragging(item)
+}
+
+const handleDragEnd = () => {
+  kanbanStore.endDragging()
+}
+
+const handleDrop = (event: DragEvent, columnId: KanbanColumnId) => {
+  const itemId = event.dataTransfer?.getData('text/plain')
+  if (itemId) {
+    kanbanStore.moveItem(itemId, columnId)
+  }
+}
+
+const deleteKanbanItem = (itemId: string) => {
+  if (confirm('Voulez-vous vraiment supprimer cet élément ?')) {
+    kanbanStore.deleteItem(itemId)
+  }
+}
 
 const toggleIconsOnly = () => {
   iconsOnly.value = !iconsOnly.value
@@ -94,13 +203,19 @@ const menuItems = ref<MenuItem[]>([
   { id: 5, label: 'TikTok', icon: 'pi pi-video', route: '/tiktok' },
   { id: 6, label: 'Threads', icon: 'pi pi-at', route: '/threads' },
   { id: 7, label: 'Discord', icon: 'pi pi-discord', route: '/discord' },
-  { id: 8, label: 'Reddit', icon: 'pi pi-reddit', route: '/reddit' }
+  { id: 8, label: 'Reddit', icon: 'pi pi-reddit', route: '/reddit' },
+  { id: 9, label: 'Gmail', icon: 'pi pi-envelope', route: '/gmail' },
+  { id: 10, label: 'Kanban', icon: 'pi pi-th-large', route: '/kanban' }
 ])
 
 const navigateToNetwork = (network: MenuItem): void => {
   router.push(network.route)
   emit('network-selected', network)
 }
+
+onMounted(() => {
+  kanbanStore.initialize()
+})
 </script>
 
 <style scoped>
@@ -121,12 +236,9 @@ const navigateToNetwork = (network: MenuItem): void => {
   min-width: 15rem;
 }
 
-.sidebar-hidden {
-  display: none;
-}
-
 .sidebar-content {
   height: 100%;
+  overflow-y: auto;
 }
 
 .content-centered {
@@ -141,11 +253,6 @@ const navigateToNetwork = (network: MenuItem): void => {
 
 .flex.align-items-center.mb-3 {
   padding: 1rem;
-}
-
-.sidebar-title {
-  color: var(--primary-color);
-  font-size: 1.5rem;
 }
 
 .menu-items {
@@ -169,6 +276,122 @@ const navigateToNetwork = (network: MenuItem): void => {
 
 .menu-item :deep(.p-button:hover) {
   background-color: var(--surface-hover);
+}
+
+.menu-section {
+  margin-bottom: 1rem;
+}
+
+.section-header {
+  padding: 0.5rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.section-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-color-secondary);
+}
+
+.kanban-columns {
+  padding: 0.5rem;
+}
+
+.kanban-column {
+  margin-bottom: 1rem;
+  background: var(--surface-ground);
+  border-radius: 6px;
+}
+
+.column-header {
+  padding: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.column-title {
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.column-count {
+  background: var(--surface-hover);
+  color: var(--text-color);
+  padding: 0.1rem 0.4rem;
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.column-content {
+  padding: 0.5rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.kanban-item {
+  background: var(--surface-card);
+  border-radius: 4px;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  cursor: move;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.kanban-item:hover {
+  transform: translateX(2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.kanban-item.is-dragging {
+  opacity: 0.5;
+}
+
+.item-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.item-title {
+  flex: 1;
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.type-email {
+  border-left: 3px solid var(--blue-500);
+}
+
+.type-task {
+  border-left: 3px solid var(--green-500);
+}
+
+.type-note {
+  border-left: 3px solid var(--yellow-500);
+}
+
+/* Animations */
+.list-move,
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.3s ease;
+}
+
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+.list-leave-active {
+  position: absolute;
 }
 
 @media (max-width: 768px) {

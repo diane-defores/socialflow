@@ -8,6 +8,7 @@ import TikTokView from '../components/networks/TikTokView.vue'
 import ThreadsView from '../components/networks/ThreadsView.vue'
 import DiscordView from '../components/networks/DiscordView.vue'
 import RedditView from '../components/networks/RedditView.vue'
+import GmailView from '../components/networks/GmailView.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -96,6 +97,16 @@ const routes: RouteRecordRaw[] = [
     meta: {
       requiresAuth: true,
       networkId: 'reddit',
+      roles: ['user', 'admin']
+    }
+  },
+  {
+    path: '/gmail',
+    name: 'Gmail',
+    component: GmailView,
+    meta: {
+      requiresAuth: true,
+      networkId: 'gmail',
       roles: ['user', 'admin']
     }
   }

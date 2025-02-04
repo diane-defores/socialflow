@@ -24,4 +24,20 @@ export interface ProfileMenuItem {
   icon: string
   separator?: boolean
   command?: () => void
+}
+
+export interface Email {
+  id: string
+  subject: string
+  preview: string
+  body: string
+  date: Date
+  sender: {
+    id: string
+    name: string
+    avatar: string
+    email: string
+  }
+  isRead: boolean
+  labels: string[]
 } 
