@@ -1,60 +1,107 @@
 <template>
-  <NetworkLogo 
-    :domain="getDomain(network)"
-    :size="size"
-    :class="[`network-logo-${network}`, className]"
-  />
+  <div 
+    class="social-network-logo"
+    :class="[size, network]"
+  >
+    <i :class="getIconClass"></i>
+  </div>
 </template>
 
 <script setup lang="ts">
-import NetworkLogo from './NetworkLogo.vue'
+import { computed } from 'vue'
 
-interface Props {
-  network: 'facebook' | 'twitter' | 'linkedin' | 'reddit' | 'instagram' | 'discord'
+const props = defineProps<{
+  network: 'twitter' | 'facebook' | 'instagram' | 'linkedin' | 'tiktok' | 'threads' | 'discord' | 'reddit' | 'gmail'
   size?: 'small' | 'medium' | 'large'
-  className?: string
-}
+}>()
 
-const props = withDefaults(defineProps<Props>(), {
-  size: 'medium',
-  className: ''
-})
-
-const getDomain = (network: string): string => {
-  const domains = {
-    facebook: 'facebook.com',
-    twitter: 'twitter.com',
-    linkedin: 'linkedin.com',
-    reddit: 'reddit.com',
-    instagram: 'instagram.com',
-    discord: 'discord.com'
+const getIconClass = computed(() => {
+  switch (props.network) {
+    case 'twitter':
+      return 'pi pi-twitter'
+    case 'facebook':
+      return 'pi pi-facebook'
+    case 'instagram':
+      return 'pi pi-instagram'
+    case 'linkedin':
+      return 'pi pi-linkedin'
+    case 'tiktok':
+      return 'pi pi-video'
+    case 'threads':
+      return 'pi pi-at'
+    case 'discord':
+      return 'pi pi-discord'
+    case 'reddit':
+      return 'pi pi-reddit'
+    case 'gmail':
+      return 'pi pi-envelope'
+    default:
+      return 'pi pi-question'
   }
-  return domains[network as keyof typeof domains]
-}
+})
 </script>
 
 <style scoped>
-.network-logo-facebook {
-  --logo-color: #1877F2;
+.social-network-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--surface-ground);
 }
 
-.network-logo-twitter {
-  --logo-color: #1DA1F2;
+.social-network-logo.small {
+  width: 2rem;
+  height: 2rem;
+  font-size: 1rem;
 }
 
-.network-logo-linkedin {
-  --logo-color: #0A66C2;
+.social-network-logo.medium {
+  width: 3rem;
+  height: 3rem;
+  font-size: 1.5rem;
 }
 
-.network-logo-reddit {
-  --logo-color: #FF4500;
+.social-network-logo.large {
+  width: 4rem;
+  height: 4rem;
+  font-size: 2rem;
 }
 
-.network-logo-instagram {
-  --logo-color: #E4405F;
+/* Couleurs spécifiques pour chaque réseau */
+.twitter {
+  color: #1DA1F2;
 }
 
-.network-logo-discord {
-  --logo-color: #5865F2;
+.facebook {
+  color: #1877F2;
+}
+
+.instagram {
+  color: #E4405F;
+}
+
+.linkedin {
+  color: #0A66C2;
+}
+
+.tiktok {
+  color: #000000;
+}
+
+.threads {
+  color: #000000;
+}
+
+.discord {
+  color: #5865F2;
+}
+
+.reddit {
+  color: #FF4500;
+}
+
+.gmail {
+  color: #EA4335;
 }
 </style> 

@@ -1,121 +1,101 @@
 import { defineStore } from 'pinia'
 
 interface User {
-  id: string;
-  email: string;
-  role: string;
-  permissions: string[];
-  name: string;
+  id: string
+  username: string
+  email: string
+  avatar?: string
 }
 
 interface AuthState {
-  isAuthenticated: boolean;
-  user: User | null;
-  token: string | null;
+  user: User | null
+  isAuthenticated: boolean
+  token: string | null
 }
 
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState => ({
-    isAuthenticated: false,
     user: null,
+    isAuthenticated: false,
     token: null
   }),
 
   getters: {
-    // Vérifie si l'utilisateur a un rôle spécifique
-    hasRole: (state) => (role: string) => {
-      return state.user?.role === role
-    },
-
-    // Vérifie si l'utilisateur a une permission spécifique
-    hasPermission: (state) => (permission: string) => {
-      return state.user?.permissions.includes(permission) || false
-    },
-
-    // Vérifie si l'utilisateur a accès à un réseau social
-    hasNetworkAccess: (state) => (networkId: string) => {
-      return state.user?.permissions.includes(`network:${networkId}`) || false
-    }
+    currentUser: (state) => state.user,
+    isLoggedIn: (state) => state.isAuthenticated
   },
 
   actions: {
-    // Connexion utilisateur
     async login(email: string, password: string) {
       try {
-        const response = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ email, password })
-        })
-
-        if (!response.ok) {
-          throw new Error('Échec de la connexion')
+        // Ici, nous devrions faire un appel API pour authentifier l'utilisateur
+        // Pour l'instant, on simule une connexion réussie
+        this.user = {
+          id: '1',
+          username: 'utilisateur_test',
+          email: email,
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`
         }
+        this.isAuthenticated = true
+        this.token = 'fake-jwt-token'
 
-        const data = await response.json()
-        this.setAuthState(data.user, data.token)
+        // Sauvegarder l'état dans le stockage local
+        this.saveToLocalStorage()
+
         return true
       } catch (error) {
-        console.error('Erreur de connexion:', error)
-        return false
+        console.error('Erreur lors de la connexion:', error)
+        throw error
       }
     },
 
-    // Déconnexion utilisateur
-    async logout() {
+    async register(username: string, email: string, password: string) {
       try {
-        await fetch('/api/auth/logout', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${this.token}`
-          }
-        })
+        // Ici, nous devrions faire un appel API pour créer un nouvel utilisateur
+        // Pour l'instant, on simule une inscription réussie
+        this.user = {
+          id: '1',
+          username,
+          email,
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`
+        }
+        this.isAuthenticated = true
+        this.token = 'fake-jwt-token'
+
+        // Sauvegarder l'état dans le stockage local
+        this.saveToLocalStorage()
+
+        return true
       } catch (error) {
-        console.error('Erreur lors de la déconnexion:', error)
-      } finally {
-        this.clearAuthState()
+        console.error('Erreur lors de l\'inscription:', error)
+        throw error
       }
     },
 
-    // Met à jour l'état d'authentification
-    setAuthState(user: User, token: string) {
-      this.isAuthenticated = true
-      this.user = user
-      this.token = token
-      localStorage.setItem('token', token)
-    },
-
-    // Efface l'état d'authentification
-    clearAuthState() {
-      this.isAuthenticated = false
+    logout() {
       this.user = null
+      this.isAuthenticated = false
       this.token = null
-      localStorage.removeItem('token')
+      localStorage.removeItem('auth-state')
     },
 
-    // Vérifie et restaure la session si un token existe
-    async checkAuth() {
-      const token = localStorage.getItem('token')
-      if (!token) return false
-
-      try {
-        const response = await fetch('/api/auth/me', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
-
-        if (!response.ok) throw new Error('Token invalide')
-
-        const data = await response.json()
-        this.setAuthState(data.user, token)
-        return true
-      } catch (error) {
-        this.clearAuthState()
-        return false
+    initialize() {
+      // Charger l'état depuis le stockage local
+      const savedState = localStorage.getItem('auth-state')
+      if (savedState) {
+        const { user, isAuthenticated, token } = JSON.parse(savedState)
+        this.user = user
+        this.isAuthenticated = isAuthenticated
+        this.token = token
       }
+    },
+
+    saveToLocalStorage() {
+      localStorage.setItem('auth-state', JSON.stringify({
+        user: this.user,
+        isAuthenticated: this.isAuthenticated,
+        token: this.token
+      }))
     }
   }
 }) 

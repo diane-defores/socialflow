@@ -2,25 +2,28 @@ import { defineStore } from 'pinia'
 
 export const useThemeStore = defineStore('theme', {
   state: () => ({
-    isDarkMode: localStorage.getItem('theme') === 'dark'
+    isDarkMode: false
   }),
   
   actions: {
     toggleTheme() {
       this.isDarkMode = !this.isDarkMode
-      localStorage.setItem('theme', this.isDarkMode ? 'dark' : 'light')
       this.applyTheme()
     },
 
     applyTheme() {
-      if (this.isDarkMode) {
-        document.documentElement.classList.add('dark')
-      } else {
-        document.documentElement.classList.remove('dark')
-      }
+      document.documentElement.classList.toggle('dark', this.isDarkMode)
     },
 
     initTheme() {
+      // Check if user has a saved preference
+      const savedTheme = localStorage.getItem('theme')
+      if (savedTheme) {
+        this.isDarkMode = savedTheme === 'dark'
+      } else {
+        // Check system preference
+        this.isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches
+      }
       this.applyTheme()
     }
   }

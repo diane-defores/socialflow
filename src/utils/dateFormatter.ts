@@ -1,42 +1,50 @@
 /**
- * Formate une date en français
- * @param date - La date à formater
+ * Formate une date en une chaîne lisible en français
+ * @param date La date à formater (string, number ou Date)
  * @returns La date formatée en français
  */
-export function formatDate(date: Date): string {
+export function formatDate(date: string | number | Date): string {
+  const dateObj = new Date(date)
   const now = new Date()
-  const diff = now.getTime() - date.getTime()
+  const diff = now.getTime() - dateObj.getTime()
   const seconds = Math.floor(diff / 1000)
   const minutes = Math.floor(seconds / 60)
   const hours = Math.floor(minutes / 60)
   const days = Math.floor(hours / 24)
 
-  // Si moins d'une minute
-  if (seconds < 60) {
-    return 'À l\'instant'
+  // Si c'est aujourd'hui
+  if (days === 0) {
+    if (hours === 0) {
+      if (minutes === 0) {
+        return 'À l\'instant'
+      }
+      return `Il y a ${minutes} minute${minutes > 1 ? 's' : ''}`
+    }
+    return `Il y a ${hours} heure${hours > 1 ? 's' : ''}`
   }
 
-  // Si moins d'une heure
-  if (minutes < 60) {
-    return `Il y a ${minutes} min${minutes > 1 ? 's' : ''}`
+  // Si c'est hier
+  if (days === 1) {
+    return 'Hier'
   }
 
-  // Si moins d'un jour
-  if (hours < 24) {
-    return `Il y a ${hours} h${hours > 1 ? 's' : ''}`
-  }
-
-  // Si moins d'une semaine
+  // Si c'est cette semaine
   if (days < 7) {
     return `Il y a ${days} jour${days > 1 ? 's' : ''}`
   }
 
-  // Format complet pour les dates plus anciennes
-  return new Intl.DateTimeFormat('fr-FR', {
-    year: 'numeric',
-    month: 'long',
+  // Si c'est cette année
+  if (dateObj.getFullYear() === now.getFullYear()) {
+    return dateObj.toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'long'
+    })
+  }
+
+  // Sinon, afficher la date complète
+  return dateObj.toLocaleDateString('fr-FR', {
     day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  }).format(date)
-} 
+    month: 'long',
+    year: 'numeric'
+  })
+}
