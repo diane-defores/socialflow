@@ -1,8 +1,10 @@
 {
   "dependencies": {
+    "@clerk/vue": "^1.17.17",
     "@primevue/themes": "^4.2.5",
     "@tauri-apps/api": "^2.10.1",
     "@vueuse/core": "^10.11.1",
+    "convex": "^1.32.0",
     "marked": "^15.0.6",
     "notivue": "^2.4.5",
     "pinia": "^2.3.1",
@@ -10,6 +12,7 @@
     "primeflex": "^3.3.1",
     "primeicons": "^7.0.0",
     "primevue": "^3.53.1",
+    "svix": "^1.86.0",
     "vue": "^3.5.13",
     "vue-i18n": "^11.1.0",
     "vue-router": "^4.5.0",

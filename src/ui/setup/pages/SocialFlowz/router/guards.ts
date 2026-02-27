@@ -1,46 +1,34 @@
-import { useAuthStore } from '@/stores/auth'
-import type { NavigationGuard } from 'vue-router'
+import type { NavigationGuard } from "vue-router";
+import { useAuth } from "@clerk/vue";
 
-interface User {
-  role: string;
-  permissions: string[];
-}
-
-interface AuthState {
-  isAuthenticated: boolean;
-  user: User | null;
-}
-
-// Pour le développement, on crée un utilisateur fictif
-const devUser = {
-  id: 'dev-user',
-  email: 'dev@example.com',
-  role: 'admin',
-  permissions: ['network:facebook', 'network:twitter', 'network:linkedin', 'network:reddit'],
-  name: 'Dev User'
-}
-
-export const authGuard: NavigationGuard = (to, from, next) => {
-  const authStore = useAuthStore()
-  
-  // En développement, on simule un utilisateur connecté
-  if (!authStore.isAuthenticated) {
-    authStore.setAuthState(devUser, 'dev-token')
-  }
-
-  if (to.path === '/login') {
-    if (authStore.isAuthenticated) {
-      next('/facebook')
-    } else {
-      next()
+export const authGuard: NavigationGuard = async (to, _from, next) => {
+  // Public routes — always allow
+  if (to.path === "/login" || to.path === "/sign-up") {
+    const { isSignedIn } = useAuth();
+    // If already signed in, skip the login page
+    if (isSignedIn.value) {
+      return next("/twitter");
     }
-    return
+    return next();
   }
 
-  next()
-}
+  if (to.meta.requiresAuth) {
+    const { isLoaded, isSignedIn } = useAuth();
 
-export const networkAccessGuard: NavigationGuard = (to, from, next) => {
-  // En développement, on autorise tous les accès
-  next()
-} 
+    // Wait for Clerk to initialise (SSR or cold start)
+    if (!isLoaded.value) {
+      // Clerk not ready yet — allow through; the component will handle it
+      return next();
+    }
+
+    if (!isSignedIn.value) {
+      return next("/login");
+    }
+  }
+
+  next();
+};
+
+export const networkAccessGuard: NavigationGuard = (_to, _from, next) => {
+  next();
+};

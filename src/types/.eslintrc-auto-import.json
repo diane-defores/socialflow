@@ -376,6 +376,9 @@
     "WEBVIEW_URLS": true,
     "useWebviewStore": true,
     "Account": true,
-    "useAccountsStore": true
+    "useAccountsStore": true,
+    "useConvexMutation": true,
+    "useConvexQuery": true,
+    "useUser": true
   }
 }

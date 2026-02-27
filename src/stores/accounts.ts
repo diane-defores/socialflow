@@ -1,4 +1,7 @@
 import { defineStore } from 'pinia'
+import { getConvexClient } from '@/lib/convex'
+import { api } from '../../convex/_generated/api'
+import { useAuth } from '@clerk/vue'
 
 export interface Account {
   id: string        // crypto.randomUUID()
@@ -38,6 +41,8 @@ export const useAccountsStore = defineStore('accounts', {
       }
       this.accounts.push(account)
       this.activeAccountId[networkId] = account.id
+      this.syncAccountToCloud(account)
+      this.syncActiveToCloud(networkId, account.id)
       return account
     },
 
@@ -50,18 +55,24 @@ export const useAccountsStore = defineStore('accounts', {
       if (this.activeAccountId[networkId] === accountId) {
         const next = this.accounts.find((a) => a.networkId === networkId)
         this.activeAccountId[networkId] = next?.id ?? ''
+        if (next) this.syncActiveToCloud(networkId, next.id)
       }
+      this.removeAccountFromCloud(accountId)
     },
 
     /** Switch the active account for a network. */
     setActive(networkId: string, accountId: string) {
       this.activeAccountId[networkId] = accountId
+      this.syncActiveToCloud(networkId, accountId)
     },
 
     /** Rename an account label. */
     rename(accountId: string, label: string) {
       const account = this.accounts.find((a) => a.id === accountId)
-      if (account) account.label = label
+      if (account) {
+        account.label = label
+        this.syncAccountToCloud(account)
+      }
     },
 
     /**
@@ -78,6 +89,95 @@ export const useAccountsStore = defineStore('accounts', {
         return existing
       }
       return this.add(networkId, 'Account 1')
+    },
+
+    /** Sync a single account upsert to Convex (fire-and-forget). */
+    async syncAccountToCloud(account: Account) {
+      try {
+        const { getToken } = useAuth()
+        const client = getConvexClient()
+        const token = await getToken({ template: 'convex' })
+        if (!token) return
+        client.setAuth(token)
+        await client.mutation(api.socialAccounts.upsert, {
+          accountId: account.id,
+          networkId: account.networkId,
+          label: account.label,
+          addedAt: account.addedAt,
+        })
+      } catch {
+        // Offline or not auth'd — local state is the source of truth
+      }
+    },
+
+    /** Sync active account pointer to Convex. */
+    async syncActiveToCloud(networkId: string, accountId: string) {
+      try {
+        const { getToken } = useAuth()
+        const client = getConvexClient()
+        const token = await getToken({ template: 'convex' })
+        if (!token) return
+        client.setAuth(token)
+        await client.mutation(api.socialAccounts.setActive, { networkId, accountId })
+      } catch {
+        // Offline — ignore
+      }
+    },
+
+    /** Remove an account from Convex. */
+    async removeAccountFromCloud(accountId: string) {
+      try {
+        const { getToken } = useAuth()
+        const client = getConvexClient()
+        const token = await getToken({ template: 'convex' })
+        if (!token) return
+        client.setAuth(token)
+        await client.mutation(api.socialAccounts.remove, { accountId })
+      } catch {
+        // Offline — ignore
+      }
+    },
+
+    /**
+     * Load accounts + active pointers from Convex and merge into local state.
+     * Called once on sign-in. Cloud wins for accounts that exist in cloud;
+     * local-only accounts (created while offline) are kept.
+     */
+    async loadFromCloud() {
+      try {
+        const { getToken } = useAuth()
+        const client = getConvexClient()
+        const token = await getToken({ template: 'convex' })
+        if (!token) return
+        client.setAuth(token)
+
+        const [cloudAccounts, cloudActive] = await Promise.all([
+          client.query(api.socialAccounts.list, {}),
+          client.query(api.socialAccounts.listActive, {}),
+        ])
+
+        // Merge cloud accounts into local state
+        for (const ca of cloudAccounts) {
+          const existing = this.accounts.find((a) => a.id === ca.accountId)
+          if (existing) {
+            existing.label = ca.label
+          } else {
+            this.accounts.push({
+              id: ca.accountId,
+              networkId: ca.networkId,
+              label: ca.label,
+              addedAt: ca.addedAt,
+            })
+          }
+        }
+
+        // Apply active account pointers from cloud
+        for (const ca of cloudActive) {
+          this.activeAccountId[ca.networkId] = ca.accountId
+        }
+      } catch {
+        // Offline — stay with local state
+      }
     },
   },
 

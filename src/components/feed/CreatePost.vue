@@ -56,8 +56,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useAuthStore } from '@/stores/auth'
+import { ref, computed } from 'vue'
+import { useUser } from '@clerk/vue'
 import Button from 'primevue/button'
 import Textarea from 'primevue/textarea'
 import FileUpload from 'primevue/fileupload'
@@ -71,11 +71,11 @@ const emit = defineEmits<{
   (e: 'create', data: { content: string, image?: string }): void
 }>()
 
-const authStore = useAuthStore()
-const currentUser = computed(() => authStore.currentUser || {
-  username: 'Utilisateur',
-  avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'
-})
+const { user } = useUser()
+const currentUser = computed(() => ({
+  username: user.value?.username ?? user.value?.firstName ?? 'User',
+  avatar: user.value?.imageUrl ?? 'https://api.dicebear.com/7.x/avataaars/svg?seed=default',
+}))
 
 const content = ref('')
 const selectedImage = ref<string | null>(null)

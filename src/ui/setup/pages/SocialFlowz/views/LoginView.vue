@@ -1,57 +1,62 @@
 <template>
-  <div class="flex align-items-center justify-content-center min-h-screen">
-    <div class="surface-card p-4 shadow-2 border-round w-full max-w-30rem">
-      <h1 class="text-center mb-4">Connexion</h1>
-      <div class="flex flex-column gap-3">
-        <span class="p-float-label">
-          <InputText id="username" v-model="username" class="w-full" />
-          <label for="username">Nom d'utilisateur</label>
-        </span>
-        
-        <span class="p-float-label">
-          <Password id="password" v-model="password" :feedback="false" class="w-full" />
-          <label for="password">Mot de passe</label>
-        </span>
-
-        <Button label="Se connecter" @click="login" class="w-full" />
+  <div class="login-screen">
+    <div class="login-card">
+      <div class="login-header">
+        <h1>SocialFlowz</h1>
+        <p>Your social media command center</p>
       </div>
+
+      <SignIn
+        :appearance="{
+          elements: {
+            rootBox: 'clerk-root',
+            card: 'clerk-card',
+          },
+        }"
+        after-sign-in-url="/twitter"
+        sign-up-url="/sign-up"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-import Password from 'primevue/password'
-import InputText from 'primevue/inputtext'
-
-const router = useRouter()
-const authStore = useAuthStore()
-const username = ref('')
-const password = ref('')
-
-const login = () => {
-  authStore.login(username.value, password.value)
-  router.push('/twitter')
-}
+import { SignIn } from "@clerk/vue";
 </script>
 
 <style scoped>
-.login-view {
+.login-screen {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  padding: 1rem;
+  background: var(--surface-ground);
 }
 
-.login-form {
+.login-card {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2rem;
+  max-width: 480px;
   width: 100%;
-  max-width: 300px;
 }
-</style> 
+
+.login-header {
+  text-align: center;
+}
+
+.login-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem;
+  color: var(--text-color);
+}
+
+.login-header p {
+  margin: 0;
+  color: var(--text-color-secondary);
+  font-size: 0.95rem;
+}
+</style>

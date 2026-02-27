@@ -17,10 +17,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useThemeStore } from '@/stores/theme'
 import { useWebviewStore } from '@/stores/webviewState'
 import { useAccountsStore } from '@/stores/accounts'
+import { useAuth } from '@clerk/vue'
 import AppHeader from '@/components/AppHeader.vue'
 import AppSidebar from '@/components/AppSidebar.vue'
 import AppRightSidebar from '@/components/AppRightSidebar.vue'
@@ -32,11 +33,24 @@ const rightSidebarVisible = ref(true)
 const themeStore = useThemeStore()
 const webviewStore = useWebviewStore()
 const accountsStore = useAccountsStore()
+const { isSignedIn } = useAuth()
 
 let unlistenTray: (() => void) | undefined
 
+// Load cloud data whenever the user signs in
+watch(isSignedIn, async (signedIn) => {
+  if (signedIn) {
+    await accountsStore.loadFromCloud()
+  }
+})
+
 onMounted(async () => {
   themeStore.initTheme()
+
+  // Sync cloud data if already signed in on startup
+  if (isSignedIn.value) {
+    accountsStore.loadFromCloud()
+  }
 
   // Listen for tray menu "open network" events (only in Tauri)
   if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {

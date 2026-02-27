@@ -58,10 +58,47 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [x] Fixed identifier — changed from `com.socialflowz.app` to `com.socialflowz.desktop` (avoids macOS bundle conflict)
 - [x] GitHub Actions CI — `.github/workflows/build.yml` — builds AppImage + deb on ubuntu-22.04 on push to `v*` tags
 - [x] `cargo check` passes cleanly on all phases
-- [ ] **To produce binaries**: push a `v0.1.0` tag → GitHub Actions builds AppImage + deb (local build blocked by Flox webkitgtk GLIBC 2.42 vs system GLIBC 2.39 mismatch)
+- [ ] **To produce binaries**: push a `v0.1.0` tag → GitHub Actions builds AppImage + deb
 - [ ] Auto-updater (`@tauri-apps/plugin-updater`) — future
-- [ ] macOS `.dmg` + code signing — future (add macos-latest runner to CI)
-- [ ] Windows `.exe` / `.msi` — future (add windows-latest runner to CI)
+- [ ] macOS `.dmg` + code signing — future
+- [ ] Windows `.exe` / `.msi` — future
+
+## Phase 6 — Clerk Auth + Convex Persistence ✅ (2026-02-27)
+
+- [x] `pnpm add convex @clerk/vue svix`
+- [x] `convex/schema.ts` — `users`, `socialAccounts`, `activeAccounts`, `settings`, `subscriptions` tables
+- [x] `convex/auth.config.ts` — Clerk JWT issuer domain
+- [x] `convex/http.ts` — `POST /clerk-webhook` with svix signature verification
+- [x] `convex/users.ts` — `upsertFromClerk` (internal), `deleteFromClerk` (internal), `getMe` (query)
+- [x] `convex/socialAccounts.ts` — `list`, `upsert`, `remove`, `setActive`, `listActive`
+- [x] `convex/settings.ts` — `get`, `upsert`
+- [x] `convex/_generated/` — stubs (`api`, `server`, `dataModel`) for TS; replaced by `npx convex dev`
+- [x] `src/lib/convex.ts` — `ConvexHttpClient` singleton (`VITE_CONVEX_URL`)
+- [x] `src/composables/useConvex.ts` — `useConvexQuery` / `useConvexMutation` (Clerk JWT → Convex)
+- [x] `src/composables/useAuth.ts` — thin re-export of `useAuth`, `useUser` from `@clerk/vue`
+- [x] `main.ts` — `clerkPlugin` with `VITE_CLERK_PUBLISHABLE_KEY`
+- [x] `views/LoginView.vue` — replaced username/password mock form with Clerk `<SignIn />`
+- [x] `router/guards.ts` — replaced hardcoded dev bypass with real `useAuth()` from Clerk
+- [x] `stores/accounts.ts` — offline-first: `loadFromCloud()` merges Convex → local on sign-in; `syncToCloud()` fires on mutations
+- [x] `stores/theme.ts` — `syncThemeToCloud()` on every toggle
+- [x] `App.vue` — `watch(isSignedIn, loadFromCloud)` + fire on startup if already signed in
+- [x] Deleted `src/stores/auth.ts` + `src/ui/.../stores/auth.ts` (mock JWT dead code)
+- [x] `.env` placeholder file (gitignored)
+- [x] `pnpm tauri:build` ✅ (288 modules, 0 errors) + `cargo check` ✅
+
+### To go live (⛔ blocked — needs accounts)
+
+- [ ] Clerk: create app → paste `VITE_CLERK_PUBLISHABLE_KEY` into `.env`
+- [ ] Convex: `npx convex dev` → paste `VITE_CONVEX_URL` into `.env`
+- [ ] Convex dashboard: set `CLERK_WEBHOOK_SECRET` + `CLERK_JWT_ISSUER_DOMAIN` env vars
+- [ ] Clerk dashboard: add JWT template `"convex"` with Convex issuer URL
+- [ ] Clerk dashboard: add webhook → `https://your-deployment.convex.site/clerk-webhook`
+
+### Post-launch
+
+- [ ] Subscription gating (Polar.sh / Stripe) — `subscriptions` table already in schema
+- [ ] In-app plan management UI (current plan, upgrade CTA)
+- [ ] `sign-up` route with Clerk `<SignUp />` component
 
 ### Build Notes
 - Dev environment: aarch64-linux, Ubuntu GLIBC 2.39

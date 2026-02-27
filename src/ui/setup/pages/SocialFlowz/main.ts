@@ -5,6 +5,7 @@ import { router } from './router'
 import { createPinia } from 'pinia'
 import Ripple from 'primevue/ripple'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
+import { clerkPlugin } from '@clerk/vue'
 
 // Styles PrimeVue
 import 'primevue/resources/themes/lara-light-blue/theme.css' // thème
@@ -33,6 +34,9 @@ const pinia = createPinia()
 
 pinia.use(piniaPluginPersistedstate)
 
+app.use(clerkPlugin, {
+  publishableKey: import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
+})
 app.use(PrimeVue, {
     ripple: true
 })
