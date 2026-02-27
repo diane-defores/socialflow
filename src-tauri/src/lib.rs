@@ -30,27 +30,21 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     let menu = Menu::with_items(
         app,
         &[
-            &show,
-            &separator,
-            &twitter,
-            &instagram,
-            &linkedin,
-            &facebook,
-            &tiktok,
-            &threads,
-            &discord,
-            &reddit,
-            &sep2,
-            &quit,
+            &show, &separator, &twitter, &instagram, &linkedin, &facebook, &tiktok, &threads,
+            &discord, &reddit, &sep2, &quit,
         ],
     )?;
 
-    let icon = Image::from_path("icons/32x32.png").unwrap_or_else(|_| {
-        Image::from_bytes(&[]).expect("empty image fallback")
-    });
+    // Use an embedded icon so startup doesn't depend on a runtime relative path.
+    // If decoding ever fails, skip setting a tray icon instead of crashing.
+    let icon = Image::from_bytes(include_bytes!("../icons/32x32.png")).ok();
 
-    TrayIconBuilder::new()
-        .icon(icon)
+    let mut tray_builder = TrayIconBuilder::new();
+    if let Some(icon) = icon {
+        tray_builder = tray_builder.icon(icon);
+    }
+
+    tray_builder
         .tooltip("SocialFlowz")
         .menu(&menu)
         .on_menu_event(move |app, event| match event.id().as_ref() {
@@ -141,8 +135,7 @@ fn open_webview(
 
     window
         .add_child(
-            WebviewBuilder::new(&label, WebviewUrl::External(parsed))
-                .data_directory(data_dir),
+            WebviewBuilder::new(&label, WebviewUrl::External(parsed)).data_directory(data_dir),
             tauri::LogicalPosition::new(x, y),
             tauri::LogicalSize::new(width, height),
         )
@@ -211,7 +204,9 @@ pub fn run() {
                         .build(),
                 )?;
             }
-            build_tray(app.handle())?;
+            if let Err(err) = build_tray(app.handle()) {
+                eprintln!("tray initialization failed: {err}");
+            }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
