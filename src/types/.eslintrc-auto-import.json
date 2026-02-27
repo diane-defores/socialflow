@@ -372,6 +372,10 @@
     "FacebookPost": true,
     "mockPosts": true,
     "useAuthStore": true,
-    "useFacebookMockStore": true
+    "useFacebookMockStore": true,
+    "WEBVIEW_URLS": true,
+    "useWebviewStore": true,
+    "Account": true,
+    "useAccountsStore": true
   }
 }

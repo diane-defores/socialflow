@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@primevue/themes": "^4.2.5",
+    "@tauri-apps/api": "^2.10.1",
     "@vueuse/core": "^10.11.1",
     "marked": "^15.0.6",
     "notivue": "^2.4.5",
@@ -27,6 +28,7 @@
     "@intlify/unplugin-vue-i18n": "^6.0.3",
     "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/typography": "^0.5.16",
+    "@tauri-apps/cli": "^2.10.0",
     "@types/eslint": "^9.6.1",
     "@types/eslint__js": "~8.42.3",
     "@types/node": "^20.17.17",
@@ -94,6 +96,10 @@
     "url": "https://github.com/mubaidr/vite-vue3-browser-extension-v3"
   },
   "scripts": {
+    "tauri:dev": "vite -c vite.tauri.config.ts",
+    "tauri:build": "vite build -c vite.tauri.config.ts",
+    "tauri:bundle": "pnpm tauri:build && pnpm exec tauri build --no-bundle",
+    "tauri": "pnpm exec tauri",
     "build": "pnpm run build:chrome && pnpm run build:firefox",
     "build:chrome": "cross-env NODE_ENV=production vite build -c vite.chrome.config.ts",
     "build:firefox": "cross-env NODE_ENV=production vite build -c vite.firefox.config.ts",

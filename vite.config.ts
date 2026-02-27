@@ -34,6 +34,15 @@ function getImmediateDirectories(dirPath: string): string[] {
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  server: {
+    port: parseInt(process.env.PORT) || 3000,
+    host: true,
+    hmr: {
+      protocol: 'ws',
+      host: 'localhost',
+      port: parseInt(process.env.PORT) || 3000
+    }
+  },
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("src", import.meta.url)),

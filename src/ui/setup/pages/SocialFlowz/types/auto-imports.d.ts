@@ -6,19 +6,12 @@
 // biome-ignore lint: disable
 export {}
 declare global {
-  const $t: typeof import('vue-i18n')['$t']
   const EffectScope: typeof import('vue')['EffectScope']
-  const Gumroad: typeof import('../utils/payment/gumroad')['Gumroad']
-  const Notification: typeof import('notivue')['Notification']
-  const Notivue: typeof import('notivue')['Notivue']
-  const WEBVIEW_URLS: typeof import('../stores/webviewState')['WEBVIEW_URLS']
+  const WEBVIEW_URLS: typeof import('../../../../../stores/webviewState')['WEBVIEW_URLS']
   const acceptHMRUpdate: typeof import('pinia')['acceptHMRUpdate']
-  const addCheckoutSession: typeof import('../utils/firebase')['addCheckoutSession']
-  const appRouter: typeof import('../utils/router/index')['appRouter']
+  const appRouter: typeof import('../../../../../utils/router/index')['appRouter']
   const asyncComputed: typeof import('@vueuse/core')['asyncComputed']
-  const auth: typeof import('../utils/firebase')['auth']
   const autoResetRef: typeof import('@vueuse/core')['autoResetRef']
-  const browser: typeof import('webextension-polyfill')
   const computed: typeof import('vue')['computed']
   const computedAsync: typeof import('@vueuse/core')['computedAsync']
   const computedEager: typeof import('@vueuse/core')['computedEager']
@@ -37,30 +30,21 @@ declare global {
   const createTemplatePromise: typeof import('@vueuse/core')['createTemplatePromise']
   const createUnrefFn: typeof import('@vueuse/core')['createUnrefFn']
   const customRef: typeof import('vue')['customRef']
-  const customersRef: typeof import('../utils/firebase')['customersRef']
   const debouncedRef: typeof import('@vueuse/core')['debouncedRef']
   const debouncedWatch: typeof import('@vueuse/core')['debouncedWatch']
   const defineAsyncComponent: typeof import('vue')['defineAsyncComponent']
   const defineComponent: typeof import('vue')['defineComponent']
-  const definePage: typeof import('vue-router/auto')['definePage']
   const defineStore: typeof import('pinia')['defineStore']
   const eagerComputed: typeof import('@vueuse/core')['eagerComputed']
   const effectScope: typeof import('vue')['effectScope']
-  const extPay: typeof import('../utils/payment/extPay')['extPay']
   const extendRef: typeof import('@vueuse/core')['extendRef']
-  const firebaseApp: typeof import('../utils/firebase')['firebaseApp']
-  const firebaseConfig: typeof import('../utils/firebase')['firebaseConfig']
-  const firestore: typeof import('../utils/firebase')['firestore']
-  const formatDate: typeof import('../utils/dateFormatter')['formatDate']
-  const functions: typeof import('../utils/firebase')['functions']
+  const formatDate: typeof import('../../../../../utils/dateFormatter')['formatDate']
   const getActivePinia: typeof import('pinia')['getActivePinia']
   const getCurrentInstance: typeof import('vue')['getCurrentInstance']
   const getCurrentScope: typeof import('vue')['getCurrentScope']
-  const getCustomerPortalLink: typeof import('../utils/firebase')['getCustomerPortalLink']
-  const getProductsAndPrices: typeof import('../utils/firebase')['getProductsAndPrices']
-  const getSubscription: typeof import('../utils/firebase')['getSubscription']
+  const gmailMockData: typeof import('../stores/mockData/gmailMock')['gmailMockData']
   const h: typeof import('vue')['h']
-  const i18n: typeof import('../utils/i18n')['i18n']
+  const i18n: typeof import('../../../../../utils/i18n')['i18n']
   const ignorableWatch: typeof import('@vueuse/core')['ignorableWatch']
   const inject: typeof import('vue')['inject']
   const injectLocal: typeof import('@vueuse/core')['injectLocal']
@@ -76,10 +60,9 @@ declare global {
   const mapStores: typeof import('pinia')['mapStores']
   const mapWritableState: typeof import('pinia')['mapWritableState']
   const markRaw: typeof import('vue')['markRaw']
-  const middleware: typeof import('../utils/router/middleware')['middleware']
-  const mockPosts: typeof import('../stores/mockData/facebookMock')['mockPosts']
+  const mockPosts: typeof import('../../../../../stores/mockData/facebookMock')['mockPosts']
   const nextTick: typeof import('vue')['nextTick']
-  const notivue: typeof import('../utils/notifications')['notivue']
+  const notivue: typeof import('../../../../../utils/notifications')['notivue']
   const onActivated: typeof import('vue')['onActivated']
   const onBeforeMount: typeof import('vue')['onBeforeMount']
   const onBeforeRouteLeave: typeof import('vue-router')['onBeforeRouteLeave']
@@ -88,7 +71,6 @@ declare global {
   const onBeforeUpdate: typeof import('vue')['onBeforeUpdate']
   const onClickOutside: typeof import('@vueuse/core')['onClickOutside']
   const onDeactivated: typeof import('vue')['onDeactivated']
-  const onElementRemoval: typeof import('@vueuse/core')['onElementRemoval']
   const onErrorCaptured: typeof import('vue')['onErrorCaptured']
   const onKeyStroke: typeof import('@vueuse/core')['onKeyStroke']
   const onLongPress: typeof import('@vueuse/core')['onLongPress']
@@ -101,15 +83,10 @@ declare global {
   const onUnmounted: typeof import('vue')['onUnmounted']
   const onUpdated: typeof import('vue')['onUpdated']
   const onWatcherCleanup: typeof import('vue')['onWatcherCleanup']
-  const openStripeCheckout: typeof import('../utils/payment/stripe')['openStripeCheckout']
-  const optionsStore: typeof import('../stores/options.store')['default']
   const pausableWatch: typeof import('@vueuse/core')['pausableWatch']
-  const pinia: typeof import('../utils/pinia')['pinia']
-  const productsRef: typeof import('../utils/firebase')['productsRef']
+  const pinia: typeof import('../../../../../utils/pinia')['pinia']
   const provide: typeof import('vue')['provide']
   const provideLocal: typeof import('@vueuse/core')['provideLocal']
-  const push: typeof import('notivue')['push']
-  const pushNotification: typeof import('notivue')['push']
   const reactify: typeof import('@vueuse/core')['reactify']
   const reactifyObject: typeof import('@vueuse/core')['reactifyObject']
   const reactive: typeof import('vue')['reactive']
@@ -123,28 +100,17 @@ declare global {
   const refDefault: typeof import('@vueuse/core')['refDefault']
   const refThrottled: typeof import('@vueuse/core')['refThrottled']
   const refWithControl: typeof import('@vueuse/core')['refWithControl']
-  const resetPassword: typeof import('../utils/auth')['resetPassword']
   const resolveComponent: typeof import('vue')['resolveComponent']
   const resolveRef: typeof import('@vueuse/core')['resolveRef']
   const resolveUnref: typeof import('@vueuse/core')['resolveUnref']
-  const router: typeof import('../utils/router')['router']
   const setActivePinia: typeof import('pinia')['setActivePinia']
   const setMapStoreSuffix: typeof import('pinia')['setMapStoreSuffix']
   const shallowReactive: typeof import('vue')['shallowReactive']
   const shallowReadonly: typeof import('vue')['shallowReadonly']
   const shallowRef: typeof import('vue')['shallowRef']
-  const signInWithEmail: typeof import('../utils/auth')['signInWithEmail']
-  const signInWithGoogle: typeof import('../utils/auth')['signInWithGoogle']
-  const signOut: typeof import('../utils/auth')['signOut']
   const storeToRefs: typeof import('pinia')['storeToRefs']
-  const stripe: typeof import('../utils/payment/stripe')['stripe']
-  const supabase: typeof import('../utils/supabase/supabase')['supabase']
-  const supabaseAuthClient: typeof import('../utils/supabase/supabase')['supabaseAuthClient']
-  const supabaseAuthclient: typeof import('../utils/supabase/supabase')['supabaseAuthclient']
-  const supabaseClient: typeof import('../utils/supabase/supabase')['supabaseClient']
   const syncRef: typeof import('@vueuse/core')['syncRef']
   const syncRefs: typeof import('@vueuse/core')['syncRefs']
-  const t: typeof import('vue-i18n')['t']
   const templateRef: typeof import('@vueuse/core')['templateRef']
   const throttledRef: typeof import('@vueuse/core')['throttledRef']
   const throttledWatch: typeof import('@vueuse/core')['throttledWatch']
@@ -162,7 +128,7 @@ declare global {
   const unref: typeof import('vue')['unref']
   const unrefElement: typeof import('@vueuse/core')['unrefElement']
   const until: typeof import('@vueuse/core')['until']
-  const useAccountsStore: typeof import('../stores/accounts')['useAccountsStore']
+  const useAccountsStore: typeof import('../../../../../stores/accounts')['useAccountsStore']
   const useActiveElement: typeof import('@vueuse/core')['useActiveElement']
   const useAnimate: typeof import('@vueuse/core')['useAnimate']
   const useArrayDifference: typeof import('@vueuse/core')['useArrayDifference']
@@ -180,19 +146,16 @@ declare global {
   const useAsyncQueue: typeof import('@vueuse/core')['useAsyncQueue']
   const useAsyncState: typeof import('@vueuse/core')['useAsyncState']
   const useAttrs: typeof import('vue')['useAttrs']
-  const useAuth: typeof import('../composables/useAuth')['useAuth']
-  const useAuthStore: typeof import('../stores/auth')['useAuthStore']
+  const useAuthStore: typeof import('../../../../../stores/auth')['useAuthStore']
   const useBase64: typeof import('@vueuse/core')['useBase64']
   const useBattery: typeof import('@vueuse/core')['useBattery']
   const useBluetooth: typeof import('@vueuse/core')['useBluetooth']
   const useBreakpoints: typeof import('@vueuse/core')['useBreakpoints']
   const useBroadcastChannel: typeof import('@vueuse/core')['useBroadcastChannel']
-  const useBrowserLocalStorage: typeof import('../composables/useBrowserStorage')['useBrowserLocalStorage']
+  const useBrowserLocalStorage: typeof import('../../../../../composables/useBrowserStorage')['useBrowserLocalStorage']
   const useBrowserLocation: typeof import('@vueuse/core')['useBrowserLocation']
-  const useBrowserSyncStorage: typeof import('../composables/useBrowserStorage')['useBrowserSyncStorage']
+  const useBrowserSyncStorage: typeof import('../../../../../composables/useBrowserStorage')['useBrowserSyncStorage']
   const useCached: typeof import('@vueuse/core')['useCached']
-  const useCheckout: typeof import('../utils/payment/stripe')['useCheckout']
-  const useChromeStorage: typeof import('../composables/useBrowserStorage')['useChromeStorage']
   const useClipboard: typeof import('@vueuse/core')['useClipboard']
   const useClipboardItems: typeof import('@vueuse/core')['useClipboardItems']
   const useCloned: typeof import('@vueuse/core')['useCloned']
@@ -226,7 +189,7 @@ declare global {
   const useEventListener: typeof import('@vueuse/core')['useEventListener']
   const useEventSource: typeof import('@vueuse/core')['useEventSource']
   const useEyeDropper: typeof import('@vueuse/core')['useEyeDropper']
-  const useFacebookMockStore: typeof import('../stores/mockData/facebookMock')['useFacebookMockStore']
+  const useFacebookMockStore: typeof import('../../../../../stores/mockData/facebookMock')['useFacebookMockStore']
   const useFavicon: typeof import('@vueuse/core')['useFavicon']
   const useFetch: typeof import('@vueuse/core')['useFetch']
   const useFileDialog: typeof import('@vueuse/core')['useFileDialog']
@@ -245,13 +208,13 @@ declare global {
   const useIntersectionObserver: typeof import('@vueuse/core')['useIntersectionObserver']
   const useInterval: typeof import('@vueuse/core')['useInterval']
   const useIntervalFn: typeof import('@vueuse/core')['useIntervalFn']
-  const useKanbanStore: typeof import('../stores/kanban')['useKanbanStore']
+  const useKanbanStore: typeof import('../../../../../stores/kanban')['useKanbanStore']
   const useKeyModifier: typeof import('@vueuse/core')['useKeyModifier']
   const useLastChanged: typeof import('@vueuse/core')['useLastChanged']
   const useLink: typeof import('vue-router')['useLink']
   const useLocalStorage: typeof import('@vueuse/core')['useLocalStorage']
-  const useLocale: typeof import('../composables/useLocale')['useLocale']
-  const useLogoCacheStore: typeof import('../stores/logoCache')['useLogoCacheStore']
+  const useLocale: typeof import('../../../../../composables/useLocale')['useLocale']
+  const useLogoCacheStore: typeof import('../../../../../stores/logoCache')['useLogoCacheStore']
   const useMagicKeys: typeof import('@vueuse/core')['useMagicKeys']
   const useManualRefHistory: typeof import('@vueuse/core')['useManualRefHistory']
   const useMediaControls: typeof import('@vueuse/core')['useMediaControls']
@@ -270,11 +233,10 @@ declare global {
   const useObjectUrl: typeof import('@vueuse/core')['useObjectUrl']
   const useOffsetPagination: typeof import('@vueuse/core')['useOffsetPagination']
   const useOnline: typeof import('@vueuse/core')['useOnline']
-  const useOptionsStore: typeof import('../stores/options.store')['useOptionsStore']
+  const useOptionsStore: typeof import('../../../../../stores/options.store')['useOptionsStore']
   const usePageLeave: typeof import('@vueuse/core')['usePageLeave']
   const useParallax: typeof import('@vueuse/core')['useParallax']
   const useParentElement: typeof import('@vueuse/core')['useParentElement']
-  const usePayment: typeof import('../composables/usePayment')['usePayment']
   const usePerformanceObserver: typeof import('@vueuse/core')['usePerformanceObserver']
   const usePermission: typeof import('@vueuse/core')['usePermission']
   const usePointer: typeof import('@vueuse/core')['usePointer']
@@ -285,14 +247,12 @@ declare global {
   const usePreferredDark: typeof import('@vueuse/core')['usePreferredDark']
   const usePreferredLanguages: typeof import('@vueuse/core')['usePreferredLanguages']
   const usePreferredReducedMotion: typeof import('@vueuse/core')['usePreferredReducedMotion']
-  const usePreferredReducedTransparency: typeof import('@vueuse/core')['usePreferredReducedTransparency']
   const usePrevious: typeof import('@vueuse/core')['usePrevious']
   const useRafFn: typeof import('@vueuse/core')['useRafFn']
   const useRefHistory: typeof import('@vueuse/core')['useRefHistory']
   const useResizeObserver: typeof import('@vueuse/core')['useResizeObserver']
   const useRoute: typeof import('vue-router')['useRoute']
   const useRouter: typeof import('vue-router')['useRouter']
-  const useSSRWidth: typeof import('@vueuse/core')['useSSRWidth']
   const useScreenOrientation: typeof import('@vueuse/core')['useScreenOrientation']
   const useScreenSafeArea: typeof import('@vueuse/core')['useScreenSafeArea']
   const useScriptTag: typeof import('@vueuse/core')['useScriptTag']
@@ -301,26 +261,24 @@ declare global {
   const useSessionStorage: typeof import('@vueuse/core')['useSessionStorage']
   const useShare: typeof import('@vueuse/core')['useShare']
   const useSlots: typeof import('vue')['useSlots']
-  const useSocialNetworksStore: typeof import('../stores/socialNetworks')['useSocialNetworksStore']
+  const useSocialNetworksStore: typeof import('../../../../../stores/socialNetworks')['useSocialNetworksStore']
   const useSorted: typeof import('@vueuse/core')['useSorted']
   const useSpeechRecognition: typeof import('@vueuse/core')['useSpeechRecognition']
   const useSpeechSynthesis: typeof import('@vueuse/core')['useSpeechSynthesis']
   const useStepper: typeof import('@vueuse/core')['useStepper']
   const useStorage: typeof import('@vueuse/core')['useStorage']
   const useStorageAsync: typeof import('@vueuse/core')['useStorageAsync']
-  const useStripe: typeof import('../utils/payment/stripe')['useStripe']
-  const useStripeCheckout: typeof import('../utils/payment/stripe')['useStripeCheckout']
   const useStyleTag: typeof import('@vueuse/core')['useStyleTag']
   const useSupported: typeof import('@vueuse/core')['useSupported']
   const useSwipe: typeof import('@vueuse/core')['useSwipe']
   const useTemplateRef: typeof import('vue')['useTemplateRef']
   const useTemplateRefsList: typeof import('@vueuse/core')['useTemplateRefsList']
-  const useTestStore: typeof import('../stores/test.store')['useTestStore']
+  const useTestStore: typeof import('../../../../../stores/test.store')['useTestStore']
   const useTextDirection: typeof import('@vueuse/core')['useTextDirection']
   const useTextSelection: typeof import('@vueuse/core')['useTextSelection']
   const useTextareaAutosize: typeof import('@vueuse/core')['useTextareaAutosize']
-  const useTheme: typeof import('../composables/useTheme')['useTheme']
-  const useThemeStore: typeof import('../stores/theme')['useThemeStore']
+  const useTheme: typeof import('../../../../../composables/useTheme')['useTheme']
+  const useThemeStore: typeof import('../../../../../stores/theme')['useThemeStore']
   const useThrottle: typeof import('@vueuse/core')['useThrottle']
   const useThrottleFn: typeof import('@vueuse/core')['useThrottleFn']
   const useThrottledRefHistory: typeof import('@vueuse/core')['useThrottledRefHistory']
@@ -345,7 +303,7 @@ declare global {
   const useWebSocket: typeof import('@vueuse/core')['useWebSocket']
   const useWebWorker: typeof import('@vueuse/core')['useWebWorker']
   const useWebWorkerFn: typeof import('@vueuse/core')['useWebWorkerFn']
-  const useWebviewStore: typeof import('../stores/webviewState')['useWebviewStore']
+  const useWebviewStore: typeof import('../../../../../stores/webviewState')['useWebviewStore']
   const useWindowFocus: typeof import('@vueuse/core')['useWindowFocus']
   const useWindowScroll: typeof import('@vueuse/core')['useWindowScroll']
   const useWindowSize: typeof import('@vueuse/core')['useWindowSize']
@@ -372,14 +330,14 @@ declare global {
   export type { Component, ComponentPublicInstance, ComputedRef, DirectiveBinding, ExtractDefaultPropTypes, ExtractPropTypes, ExtractPublicPropTypes, InjectionKey, PropType, Ref, MaybeRef, MaybeRefOrGetter, VNode, WritableComputedRef } from 'vue'
   import('vue')
   // @ts-ignore
-  export type { Account } from '../stores/accounts'
-  import('../stores/accounts')
+  export type { Account } from '../../../../../stores/accounts'
+  import('../../../../../stores/accounts')
   // @ts-ignore
-  export type { KanbanItem, KanbanColumnId } from '../stores/kanban'
-  import('../stores/kanban')
+  export type { KanbanItem, KanbanColumnId } from '../../../../../stores/kanban'
+  import('../../../../../stores/kanban')
   // @ts-ignore
-  export type { FacebookPost } from '../stores/mockData/facebookMock'
-  import('../stores/mockData/facebookMock')
+  export type { FacebookPost } from '../../../../../stores/mockData/facebookMock'
+  import('../../../../../stores/mockData/facebookMock')
 }
 
 // for vue template auto import
@@ -388,14 +346,11 @@ declare module 'vue' {
   interface GlobalComponents {}
   interface ComponentCustomProperties {
     readonly EffectScope: UnwrapRef<typeof import('vue')['EffectScope']>
-    readonly Notification: UnwrapRef<typeof import('notivue')['Notification']>
-    readonly Notivue: UnwrapRef<typeof import('notivue')['Notivue']>
-    readonly WEBVIEW_URLS: UnwrapRef<typeof import('../stores/webviewState')['WEBVIEW_URLS']>
+    readonly WEBVIEW_URLS: UnwrapRef<typeof import('../../../../../stores/webviewState')['WEBVIEW_URLS']>
     readonly acceptHMRUpdate: UnwrapRef<typeof import('pinia')['acceptHMRUpdate']>
-    readonly appRouter: UnwrapRef<typeof import('../utils/router/index')['appRouter']>
+    readonly appRouter: UnwrapRef<typeof import('../../../../../utils/router/index')['appRouter']>
     readonly asyncComputed: UnwrapRef<typeof import('@vueuse/core')['asyncComputed']>
     readonly autoResetRef: UnwrapRef<typeof import('@vueuse/core')['autoResetRef']>
-    readonly browser: UnwrapRef<typeof import('webextension-polyfill')>
     readonly computed: UnwrapRef<typeof import('vue')['computed']>
     readonly computedAsync: UnwrapRef<typeof import('@vueuse/core')['computedAsync']>
     readonly computedEager: UnwrapRef<typeof import('@vueuse/core')['computedEager']>
@@ -418,17 +373,16 @@ declare module 'vue' {
     readonly debouncedWatch: UnwrapRef<typeof import('@vueuse/core')['debouncedWatch']>
     readonly defineAsyncComponent: UnwrapRef<typeof import('vue')['defineAsyncComponent']>
     readonly defineComponent: UnwrapRef<typeof import('vue')['defineComponent']>
-    readonly definePage: UnwrapRef<typeof import('vue-router/auto')['definePage']>
     readonly defineStore: UnwrapRef<typeof import('pinia')['defineStore']>
     readonly eagerComputed: UnwrapRef<typeof import('@vueuse/core')['eagerComputed']>
     readonly effectScope: UnwrapRef<typeof import('vue')['effectScope']>
     readonly extendRef: UnwrapRef<typeof import('@vueuse/core')['extendRef']>
-    readonly formatDate: UnwrapRef<typeof import('../utils/dateFormatter')['formatDate']>
+    readonly formatDate: UnwrapRef<typeof import('../../../../../utils/dateFormatter')['formatDate']>
     readonly getActivePinia: UnwrapRef<typeof import('pinia')['getActivePinia']>
     readonly getCurrentInstance: UnwrapRef<typeof import('vue')['getCurrentInstance']>
     readonly getCurrentScope: UnwrapRef<typeof import('vue')['getCurrentScope']>
     readonly h: UnwrapRef<typeof import('vue')['h']>
-    readonly i18n: UnwrapRef<typeof import('../utils/i18n')['i18n']>
+    readonly i18n: UnwrapRef<typeof import('../../../../../utils/i18n')['i18n']>
     readonly ignorableWatch: UnwrapRef<typeof import('@vueuse/core')['ignorableWatch']>
     readonly inject: UnwrapRef<typeof import('vue')['inject']>
     readonly injectLocal: UnwrapRef<typeof import('@vueuse/core')['injectLocal']>
@@ -444,9 +398,9 @@ declare module 'vue' {
     readonly mapStores: UnwrapRef<typeof import('pinia')['mapStores']>
     readonly mapWritableState: UnwrapRef<typeof import('pinia')['mapWritableState']>
     readonly markRaw: UnwrapRef<typeof import('vue')['markRaw']>
-    readonly mockPosts: UnwrapRef<typeof import('../stores/mockData/facebookMock')['mockPosts']>
+    readonly mockPosts: UnwrapRef<typeof import('../../../../../stores/mockData/facebookMock')['mockPosts']>
     readonly nextTick: UnwrapRef<typeof import('vue')['nextTick']>
-    readonly notivue: UnwrapRef<typeof import('../utils/notifications')['notivue']>
+    readonly notivue: UnwrapRef<typeof import('../../../../../utils/notifications')['notivue']>
     readonly onActivated: UnwrapRef<typeof import('vue')['onActivated']>
     readonly onBeforeMount: UnwrapRef<typeof import('vue')['onBeforeMount']>
     readonly onBeforeRouteLeave: UnwrapRef<typeof import('vue-router')['onBeforeRouteLeave']>
@@ -468,10 +422,9 @@ declare module 'vue' {
     readonly onUpdated: UnwrapRef<typeof import('vue')['onUpdated']>
     readonly onWatcherCleanup: UnwrapRef<typeof import('vue')['onWatcherCleanup']>
     readonly pausableWatch: UnwrapRef<typeof import('@vueuse/core')['pausableWatch']>
-    readonly pinia: UnwrapRef<typeof import('../utils/pinia')['pinia']>
+    readonly pinia: UnwrapRef<typeof import('../../../../../utils/pinia')['pinia']>
     readonly provide: UnwrapRef<typeof import('vue')['provide']>
     readonly provideLocal: UnwrapRef<typeof import('@vueuse/core')['provideLocal']>
-    readonly pushNotification: UnwrapRef<typeof import('notivue')['push']>
     readonly reactify: UnwrapRef<typeof import('@vueuse/core')['reactify']>
     readonly reactifyObject: UnwrapRef<typeof import('@vueuse/core')['reactifyObject']>
     readonly reactive: UnwrapRef<typeof import('vue')['reactive']>
@@ -496,7 +449,6 @@ declare module 'vue' {
     readonly storeToRefs: UnwrapRef<typeof import('pinia')['storeToRefs']>
     readonly syncRef: UnwrapRef<typeof import('@vueuse/core')['syncRef']>
     readonly syncRefs: UnwrapRef<typeof import('@vueuse/core')['syncRefs']>
-    readonly t: UnwrapRef<typeof import('vue-i18n')['t']>
     readonly templateRef: UnwrapRef<typeof import('@vueuse/core')['templateRef']>
     readonly throttledRef: UnwrapRef<typeof import('@vueuse/core')['throttledRef']>
     readonly throttledWatch: UnwrapRef<typeof import('@vueuse/core')['throttledWatch']>
@@ -514,7 +466,7 @@ declare module 'vue' {
     readonly unref: UnwrapRef<typeof import('vue')['unref']>
     readonly unrefElement: UnwrapRef<typeof import('@vueuse/core')['unrefElement']>
     readonly until: UnwrapRef<typeof import('@vueuse/core')['until']>
-    readonly useAccountsStore: UnwrapRef<typeof import('../stores/accounts')['useAccountsStore']>
+    readonly useAccountsStore: UnwrapRef<typeof import('../../../../../stores/accounts')['useAccountsStore']>
     readonly useActiveElement: UnwrapRef<typeof import('@vueuse/core')['useActiveElement']>
     readonly useAnimate: UnwrapRef<typeof import('@vueuse/core')['useAnimate']>
     readonly useArrayDifference: UnwrapRef<typeof import('@vueuse/core')['useArrayDifference']>
@@ -532,15 +484,15 @@ declare module 'vue' {
     readonly useAsyncQueue: UnwrapRef<typeof import('@vueuse/core')['useAsyncQueue']>
     readonly useAsyncState: UnwrapRef<typeof import('@vueuse/core')['useAsyncState']>
     readonly useAttrs: UnwrapRef<typeof import('vue')['useAttrs']>
-    readonly useAuthStore: UnwrapRef<typeof import('../stores/auth')['useAuthStore']>
+    readonly useAuthStore: UnwrapRef<typeof import('../../../../../stores/auth')['useAuthStore']>
     readonly useBase64: UnwrapRef<typeof import('@vueuse/core')['useBase64']>
     readonly useBattery: UnwrapRef<typeof import('@vueuse/core')['useBattery']>
     readonly useBluetooth: UnwrapRef<typeof import('@vueuse/core')['useBluetooth']>
     readonly useBreakpoints: UnwrapRef<typeof import('@vueuse/core')['useBreakpoints']>
     readonly useBroadcastChannel: UnwrapRef<typeof import('@vueuse/core')['useBroadcastChannel']>
-    readonly useBrowserLocalStorage: UnwrapRef<typeof import('../composables/useBrowserStorage')['useBrowserLocalStorage']>
+    readonly useBrowserLocalStorage: UnwrapRef<typeof import('../../../../../composables/useBrowserStorage')['useBrowserLocalStorage']>
     readonly useBrowserLocation: UnwrapRef<typeof import('@vueuse/core')['useBrowserLocation']>
-    readonly useBrowserSyncStorage: UnwrapRef<typeof import('../composables/useBrowserStorage')['useBrowserSyncStorage']>
+    readonly useBrowserSyncStorage: UnwrapRef<typeof import('../../../../../composables/useBrowserStorage')['useBrowserSyncStorage']>
     readonly useCached: UnwrapRef<typeof import('@vueuse/core')['useCached']>
     readonly useClipboard: UnwrapRef<typeof import('@vueuse/core')['useClipboard']>
     readonly useClipboardItems: UnwrapRef<typeof import('@vueuse/core')['useClipboardItems']>
@@ -575,7 +527,7 @@ declare module 'vue' {
     readonly useEventListener: UnwrapRef<typeof import('@vueuse/core')['useEventListener']>
     readonly useEventSource: UnwrapRef<typeof import('@vueuse/core')['useEventSource']>
     readonly useEyeDropper: UnwrapRef<typeof import('@vueuse/core')['useEyeDropper']>
-    readonly useFacebookMockStore: UnwrapRef<typeof import('../stores/mockData/facebookMock')['useFacebookMockStore']>
+    readonly useFacebookMockStore: UnwrapRef<typeof import('../../../../../stores/mockData/facebookMock')['useFacebookMockStore']>
     readonly useFavicon: UnwrapRef<typeof import('@vueuse/core')['useFavicon']>
     readonly useFetch: UnwrapRef<typeof import('@vueuse/core')['useFetch']>
     readonly useFileDialog: UnwrapRef<typeof import('@vueuse/core')['useFileDialog']>
@@ -594,13 +546,13 @@ declare module 'vue' {
     readonly useIntersectionObserver: UnwrapRef<typeof import('@vueuse/core')['useIntersectionObserver']>
     readonly useInterval: UnwrapRef<typeof import('@vueuse/core')['useInterval']>
     readonly useIntervalFn: UnwrapRef<typeof import('@vueuse/core')['useIntervalFn']>
-    readonly useKanbanStore: UnwrapRef<typeof import('../stores/kanban')['useKanbanStore']>
+    readonly useKanbanStore: UnwrapRef<typeof import('../../../../../stores/kanban')['useKanbanStore']>
     readonly useKeyModifier: UnwrapRef<typeof import('@vueuse/core')['useKeyModifier']>
     readonly useLastChanged: UnwrapRef<typeof import('@vueuse/core')['useLastChanged']>
     readonly useLink: UnwrapRef<typeof import('vue-router')['useLink']>
     readonly useLocalStorage: UnwrapRef<typeof import('@vueuse/core')['useLocalStorage']>
-    readonly useLocale: UnwrapRef<typeof import('../composables/useLocale')['useLocale']>
-    readonly useLogoCacheStore: UnwrapRef<typeof import('../stores/logoCache')['useLogoCacheStore']>
+    readonly useLocale: UnwrapRef<typeof import('../../../../../composables/useLocale')['useLocale']>
+    readonly useLogoCacheStore: UnwrapRef<typeof import('../../../../../stores/logoCache')['useLogoCacheStore']>
     readonly useMagicKeys: UnwrapRef<typeof import('@vueuse/core')['useMagicKeys']>
     readonly useManualRefHistory: UnwrapRef<typeof import('@vueuse/core')['useManualRefHistory']>
     readonly useMediaControls: UnwrapRef<typeof import('@vueuse/core')['useMediaControls']>
@@ -619,7 +571,7 @@ declare module 'vue' {
     readonly useObjectUrl: UnwrapRef<typeof import('@vueuse/core')['useObjectUrl']>
     readonly useOffsetPagination: UnwrapRef<typeof import('@vueuse/core')['useOffsetPagination']>
     readonly useOnline: UnwrapRef<typeof import('@vueuse/core')['useOnline']>
-    readonly useOptionsStore: UnwrapRef<typeof import('../stores/options.store')['useOptionsStore']>
+    readonly useOptionsStore: UnwrapRef<typeof import('../../../../../stores/options.store')['useOptionsStore']>
     readonly usePageLeave: UnwrapRef<typeof import('@vueuse/core')['usePageLeave']>
     readonly useParallax: UnwrapRef<typeof import('@vueuse/core')['useParallax']>
     readonly useParentElement: UnwrapRef<typeof import('@vueuse/core')['useParentElement']>
@@ -647,7 +599,7 @@ declare module 'vue' {
     readonly useSessionStorage: UnwrapRef<typeof import('@vueuse/core')['useSessionStorage']>
     readonly useShare: UnwrapRef<typeof import('@vueuse/core')['useShare']>
     readonly useSlots: UnwrapRef<typeof import('vue')['useSlots']>
-    readonly useSocialNetworksStore: UnwrapRef<typeof import('../stores/socialNetworks')['useSocialNetworksStore']>
+    readonly useSocialNetworksStore: UnwrapRef<typeof import('../../../../../stores/socialNetworks')['useSocialNetworksStore']>
     readonly useSorted: UnwrapRef<typeof import('@vueuse/core')['useSorted']>
     readonly useSpeechRecognition: UnwrapRef<typeof import('@vueuse/core')['useSpeechRecognition']>
     readonly useSpeechSynthesis: UnwrapRef<typeof import('@vueuse/core')['useSpeechSynthesis']>
@@ -659,12 +611,12 @@ declare module 'vue' {
     readonly useSwipe: UnwrapRef<typeof import('@vueuse/core')['useSwipe']>
     readonly useTemplateRef: UnwrapRef<typeof import('vue')['useTemplateRef']>
     readonly useTemplateRefsList: UnwrapRef<typeof import('@vueuse/core')['useTemplateRefsList']>
-    readonly useTestStore: UnwrapRef<typeof import('../stores/test.store')['useTestStore']>
+    readonly useTestStore: UnwrapRef<typeof import('../../../../../stores/test.store')['useTestStore']>
     readonly useTextDirection: UnwrapRef<typeof import('@vueuse/core')['useTextDirection']>
     readonly useTextSelection: UnwrapRef<typeof import('@vueuse/core')['useTextSelection']>
     readonly useTextareaAutosize: UnwrapRef<typeof import('@vueuse/core')['useTextareaAutosize']>
-    readonly useTheme: UnwrapRef<typeof import('../composables/useTheme')['useTheme']>
-    readonly useThemeStore: UnwrapRef<typeof import('../stores/theme')['useThemeStore']>
+    readonly useTheme: UnwrapRef<typeof import('../../../../../composables/useTheme')['useTheme']>
+    readonly useThemeStore: UnwrapRef<typeof import('../../../../../stores/theme')['useThemeStore']>
     readonly useThrottle: UnwrapRef<typeof import('@vueuse/core')['useThrottle']>
     readonly useThrottleFn: UnwrapRef<typeof import('@vueuse/core')['useThrottleFn']>
     readonly useThrottledRefHistory: UnwrapRef<typeof import('@vueuse/core')['useThrottledRefHistory']>
@@ -689,7 +641,7 @@ declare module 'vue' {
     readonly useWebSocket: UnwrapRef<typeof import('@vueuse/core')['useWebSocket']>
     readonly useWebWorker: UnwrapRef<typeof import('@vueuse/core')['useWebWorker']>
     readonly useWebWorkerFn: UnwrapRef<typeof import('@vueuse/core')['useWebWorkerFn']>
-    readonly useWebviewStore: UnwrapRef<typeof import('../stores/webviewState')['useWebviewStore']>
+    readonly useWebviewStore: UnwrapRef<typeof import('../../../../../stores/webviewState')['useWebviewStore']>
     readonly useWindowFocus: UnwrapRef<typeof import('@vueuse/core')['useWindowFocus']>
     readonly useWindowScroll: UnwrapRef<typeof import('@vueuse/core')['useWindowScroll']>
     readonly useWindowSize: UnwrapRef<typeof import('@vueuse/core')['useWindowSize']>

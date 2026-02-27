@@ -55,6 +55,7 @@ declare module 'vue-router/auto-routes' {
     '/setup/SocialFlowz/components/networks/ThreadsView': RouteRecordInfo<'/setup/SocialFlowz/components/networks/ThreadsView', '/setup/SocialFlowz/components/networks/ThreadsView', Record<never, never>, Record<never, never>>,
     '/setup/SocialFlowz/components/networks/TikTokView': RouteRecordInfo<'/setup/SocialFlowz/components/networks/TikTokView', '/setup/SocialFlowz/components/networks/TikTokView', Record<never, never>, Record<never, never>>,
     '/setup/SocialFlowz/components/networks/TwitterView': RouteRecordInfo<'/setup/SocialFlowz/components/networks/TwitterView', '/setup/SocialFlowz/components/networks/TwitterView', Record<never, never>, Record<never, never>>,
+    '/setup/SocialFlowz/components/NetworkWebviewHost': RouteRecordInfo<'/setup/SocialFlowz/components/NetworkWebviewHost', '/setup/SocialFlowz/components/NetworkWebviewHost', Record<never, never>, Record<never, never>>,
     '/setup/SocialFlowz/components/SocialLogin': RouteRecordInfo<'/setup/SocialFlowz/components/SocialLogin', '/setup/SocialFlowz/components/SocialLogin', Record<never, never>, Record<never, never>>,
     '/setup/SocialFlowz/components/Unauthorized': RouteRecordInfo<'/setup/SocialFlowz/components/Unauthorized', '/setup/SocialFlowz/components/Unauthorized', Record<never, never>, Record<never, never>>,
     '/setup/SocialFlowz/views/LoginView': RouteRecordInfo<'/setup/SocialFlowz/views/LoginView', '/setup/SocialFlowz/views/LoginView', Record<never, never>, Record<never, never>>,
