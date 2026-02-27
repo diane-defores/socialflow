@@ -24,20 +24,22 @@ const toggleRightSidebar = () => {
 <template>
   <header class="app-header">
     <div class="header-left">
-      <Button 
-        icon="pi pi-bars" 
-        text 
-        rounded 
+      <Button
+        icon="pi pi-bars"
+        text
+        rounded
+        aria-label="Toggle sidebar"
         @click="toggleSidebar"
       />
       <h1 class="app-title">SocialFlowz</h1>
     </div>
 
     <div class="header-right">
-      <Button 
-        icon="pi pi-cog" 
-        text 
-        rounded 
+      <Button
+        icon="pi pi-cog"
+        text
+        rounded
+        aria-label="Open settings"
         @click="toggleRightSidebar"
       />
     </div>

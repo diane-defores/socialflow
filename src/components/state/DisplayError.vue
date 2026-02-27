@@ -1,17 +1,10 @@
 <template>
-  <div
-    v-if="error"
-    class="alert alert-error shadow-lg"
-  >
-    <div>
-      <span>{{ error }}</span>
-    </div>
-  </div>
+  <Message v-if="error" severity="error" :closable="false">
+    {{ error }}
+  </Message>
 </template>
 
 <script setup lang="ts">
-import { defineProps } from "vue"
-
 defineProps<{
   error: string
 }>()

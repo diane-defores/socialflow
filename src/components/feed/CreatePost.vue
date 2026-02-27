@@ -8,12 +8,15 @@
         class="mr-2"
       />
       <div class="post-input">
+        <label for="post-content" class="sr-only">Compose your post</label>
         <Textarea
+          id="post-content"
           v-model="content"
           :placeholder="placeholder"
           :autoResize="true"
           rows="3"
           class="w-full"
+          aria-label="Compose your post"
         />
       </div>
     </div>
@@ -25,6 +28,7 @@
         text
         rounded
         class="remove-image"
+        aria-label="Remove image"
         @click="removeImage"
       />
     </div>

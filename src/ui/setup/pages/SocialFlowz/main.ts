@@ -6,6 +6,8 @@ import { createPinia } from 'pinia'
 import Ripple from 'primevue/ripple'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import { clerkPlugin } from '@clerk/vue'
+import ConfirmationService from 'primevue/confirmationservice'
+import ToastService from 'primevue/toastservice'
 
 // Styles PrimeVue
 import 'primevue/resources/themes/lara-light-blue/theme.css' // thème
@@ -28,6 +30,10 @@ import SplitterPanel from 'primevue/splitterpanel'
 import Tooltip from 'primevue/tooltip'
 import MultiSelect from 'primevue/multiselect'
 import Textarea from 'primevue/textarea'
+import ConfirmPopup from 'primevue/confirmpopup'
+import Toast from 'primevue/toast'
+import ProgressSpinner from 'primevue/progressspinner'
+import Message from 'primevue/message'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -37,9 +43,9 @@ pinia.use(piniaPluginPersistedstate)
 app.use(clerkPlugin, {
   publishableKey: import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
 })
-app.use(PrimeVue, {
-    ripple: true
-})
+app.use(PrimeVue, { ripple: true })
+app.use(ConfirmationService)
+app.use(ToastService)
 app.use(router)
 app.use(pinia)
 
@@ -60,5 +66,9 @@ app.component('Splitter', Splitter)
 app.component('SplitterPanel', SplitterPanel)
 app.directive('tooltip', Tooltip)
 app.component('MultiSelect', MultiSelect)
+app.component('ConfirmPopup', ConfirmPopup)
+app.component('Toast', Toast)
+app.component('ProgressSpinner', ProgressSpinner)
+app.component('Message', Message)
 
 app.mount('#app') 

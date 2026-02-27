@@ -105,9 +105,7 @@ const handleDrop = (event: DragEvent, columnId: KanbanColumnId) => {
 }
 
 const deleteItem = (itemId: string) => {
-  if (confirm('Voulez-vous vraiment supprimer cet élément ?')) {
-    store.deleteItem(itemId)
-  }
+  store.deleteItem(itemId)
 }
 </script>
 

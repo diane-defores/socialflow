@@ -2,10 +2,15 @@
 module.exports = {
   content: ['src/**/*.{html,vue,js,ts,jsx,tsx}'],
   theme: {
-    extend: {},
+    extend: {
+      screens: {
+        // Matches breakpoints used across AppHeader, AppSidebar, DashboardFilters
+        'md': '768px',
+        'lg': '1200px',
+      },
+    },
   },
   plugins: [
-    'prettier-plugin-tailwindcss',
     require('@tailwindcss/typography'),
     // require('@tailwindcss/forms'),
     require('daisyui'),

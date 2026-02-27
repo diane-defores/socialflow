@@ -74,7 +74,10 @@ onUnmounted(() => {
 }
 
 :root {
+  /* Brand */
   --primary-color: #2196F3;
+
+  /* Light theme surfaces */
   --text-color: #495057;
   --text-color-secondary: #6c757d;
   --surface-ground: #f8f9fa;
@@ -82,6 +85,25 @@ onUnmounted(() => {
   --surface-border: #dee2e6;
   --surface-hover: #e9ecef;
   --card-shadow: 0 2px 1px -1px rgba(0,0,0,.2), 0 1px 1px 0 rgba(0,0,0,.14), 0 1px 3px 0 rgba(0,0,0,.12);
+
+  /* Spacing scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+}
+
+/* Dark theme */
+.dark {
+  --text-color: #dee2e6;
+  --text-color-secondary: #9da5ae;
+  --surface-ground: #1e1e2e;
+  --surface-card: #28283e;
+  --surface-border: #3d3d5c;
+  --surface-hover: #35354f;
+  --card-shadow: 0 2px 1px -1px rgba(0,0,0,.5), 0 1px 1px 0 rgba(0,0,0,.4), 0 1px 3px 0 rgba(0,0,0,.4);
 }
 
 body {

@@ -86,11 +86,11 @@ const getIconClass = computed(() => {
 }
 
 .tiktok {
-  color: #000000;
+  color: var(--text-color);
 }
 
 .threads {
-  color: #000000;
+  color: var(--text-color);
 }
 
 .discord {

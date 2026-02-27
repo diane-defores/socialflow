@@ -86,6 +86,20 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [x] `.env` placeholder file (gitignored)
 - [x] `pnpm tauri:build` ✅ (288 modules, 0 errors) + `cargo check` ✅
 
+### Audit: Design (2026-02-27, score C+)
+
+- [x] Fixed: missing `computed` import in `SocialAvatar.vue` (runtime crash)
+- [x] Fixed: missing `useTheme` import in `ThemeSwitch.vue` (runtime crash)
+- [x] Fixed: 4× `confirm()` browser dialogs in Kanban + Sidebar removed
+- [x] Fixed: `aria-label` on AppHeader buttons, Textarea, sidebar toggle
+- [x] Fixed: TikTok/Threads brand color `#000000` → `var(--text-color)` (dark mode)
+- [x] Fixed: spurious `defineProps` import in `DisplayError.vue`
+- [x] Account removal: `<ConfirmPopup>` + `useConfirm()` — `ConfirmationService` + `ToastService` registered
+- [x] Design system: spacing scale `--space-1` → `--space-8` in `:root`
+- [x] Dark theme: `.dark {}` token block for all surface colors
+- [x] DaisyUI consolidation: `LoadingSpinner` → PrimeVue `<ProgressSpinner>`, `DisplayError` → PrimeVue `<Message>`
+- [x] Breakpoints: `md: 768px` + `lg: 1200px` in `tailwind.config.cjs`; removed bogus string plugin
+
 ### To go live (⛔ blocked — needs accounts)
 
 - [ ] Clerk: create app → paste `VITE_CLERK_PUBLISHABLE_KEY` into `.env`

@@ -1,9 +1,15 @@
 <template>
   <div
     v-if="loading"
-    class="flex items-center justify-center"
+    class="flex items-center justify-center p-4"
+    role="status"
+    aria-label="Loading"
   >
-    <span class="loading loading-spinner text-primary" />
+    <ProgressSpinner
+      style="width: 2rem; height: 2rem"
+      stroke-width="4"
+      animation-duration=".8s"
+    />
   </div>
 </template>
 

@@ -1,4 +1,5 @@
 <template>
+  <ConfirmPopup />
   <template v-if="modelValue">
     <Splitter 
       ref="splitterRef" 
@@ -13,9 +14,10 @@
       >
         <div class="sidebar-content" :class="{ 'content-centered': iconsOnly }">
           <div class="flex align-items-center mb-3" :class="{ 'justify-content-center': iconsOnly, 'justify-content-between': !iconsOnly }">
-            <Button 
-              icon="pi pi-arrows-h" 
-              text 
+            <Button
+              icon="pi pi-arrows-h"
+              text
+              aria-label="Toggle compact mode"
               @click="toggleIconsOnly"
               v-tooltip.right="'Toggle compact mode'"
             />
@@ -78,7 +80,7 @@
                       size="small"
                       severity="danger"
                       class="remove-account-btn"
-                      @click.stop="removeAccount(account.id)"
+                      @click.stop="removeAccount(account.id, $event)"
                     />
                   </div>
                 </div>
@@ -147,6 +149,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useConfirm } from 'primevue/useconfirm'
 import { useKanbanStore } from '@/stores/kanban'
 import { useWebviewStore } from '@/stores/webviewState'
 import { useAccountsStore } from '@/stores/accounts'
@@ -155,6 +158,7 @@ import type { KanbanItem, KanbanColumnId } from '@/services/kanbanService'
 import Button from 'primevue/button'
 
 const router = useRouter()
+const confirm = useConfirm()
 const kanbanStore = useKanbanStore()
 const webviewStore = useWebviewStore()
 const accountsStore = useAccountsStore()
@@ -221,9 +225,7 @@ const handleDrop = (event: DragEvent, columnId: KanbanColumnId) => {
 }
 
 const deleteKanbanItem = (itemId: string) => {
-  if (confirm('Voulez-vous vraiment supprimer cet élément ?')) {
-    kanbanStore.deleteItem(itemId)
-  }
+  kanbanStore.deleteItem(itemId)
 }
 
 const toggleIconsOnly = () => {
@@ -288,17 +290,27 @@ const switchAccount = (accountId: string, networkId: string): void => {
   webviewStore.selectNetwork(networkId)
 }
 
-const removeAccount = (accountId: string): void => {
+const removeAccount = (accountId: string, event: MouseEvent): void => {
   const account = accountsStore.accounts.find((a) => a.id === accountId)
   if (!account) return
-  if (!confirm(`Remove "${account.label}"? This will delete its session data.`)) return
-  // Delete session data via Tauri IPC (fire-and-forget)
-  if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
-    import('@tauri-apps/api/core').then(({ invoke }) =>
-      invoke('delete_account_session', { accountId }),
-    )
-  }
-  accountsStore.remove(accountId)
+
+  confirm.require({
+    target: event.currentTarget as HTMLElement,
+    message: `Remove "${account.label}"? Session data will be deleted.`,
+    icon: 'pi pi-exclamation-triangle',
+    acceptClass: 'p-button-danger p-button-sm',
+    rejectClass: 'p-button-text p-button-sm',
+    acceptLabel: 'Remove',
+    rejectLabel: 'Cancel',
+    accept: () => {
+      if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
+        import('@tauri-apps/api/core').then(({ invoke }) =>
+          invoke('delete_account_session', { accountId }),
+        )
+      }
+      accountsStore.remove(accountId)
+    },
+  })
 }
 
 onMounted(() => {
