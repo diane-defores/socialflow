@@ -1,4 +1,4 @@
-import type { Email } from '@/types'
+import type { Email } from '../../types'
 
 export const gmailMockData: Email[] = [
   {

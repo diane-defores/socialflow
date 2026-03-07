@@ -34,15 +34,6 @@ function getImmediateDirectories(dirPath: string): string[] {
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  server: {
-    port: parseInt(process.env.PORT) || 3000,
-    host: true,
-    hmr: {
-      protocol: 'ws',
-      host: 'localhost',
-      port: parseInt(process.env.PORT) || 3000
-    }
-  },
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("src", import.meta.url)),
@@ -57,7 +48,7 @@ export default defineConfig({
       scss: {
         api: "modern",
         // additionalData: `@use "/src/assets/base.scss";`,
-        additionalData: (content, filePath) => {
+        additionalData: (content: string, filePath: string) => {
           // do not include base.scss (tailwind etc) in content-script iframe as it will be affect main page styles
           if (filePath.includes("content-script/index.scss")) {
             return content

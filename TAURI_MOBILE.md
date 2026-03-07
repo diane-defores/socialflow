@@ -26,7 +26,7 @@ So a Linux server cannot build iOS locally.
 If your code runs on a remote Linux server and your phone is not directly connected to that server:
 
 1. Push your branch to GitHub.
-2. Run the workflow `Dev Builds (Android + Windows)` (manual or push to `main`).
+2. Run the workflow `Dev Builds (Android + Windows)` (manual or any `git push`).
 3. Download the artifact `socialflowz-android-debug`.
 4. Install the APK on your Android phone and test.
 

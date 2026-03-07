@@ -68,10 +68,11 @@ export default defineConfig({
     }),
 
     Components({
-      // SocialFlowz components take priority; root src/components are the canonical ones
+      // Prefer SocialFlowz-local component variants when names overlap.
       dirs: ['src/components', `${APP_ROOT}/components`],
       dts: `${APP_ROOT}/types/components.d.ts`,
       resolvers: [IconsResolver()],
+      allowOverrides: true,
     }),
 
     Icons({

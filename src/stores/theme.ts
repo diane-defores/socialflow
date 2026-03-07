@@ -33,7 +33,9 @@ export const useThemeStore = defineStore('theme', {
       try {
         const { getToken } = useAuth()
         const client = getConvexClient()
-        const token = await getToken({ template: 'convex' })
+        const tokenFn = getToken.value
+        if (typeof tokenFn !== 'function') return
+        const token = await tokenFn({ template: 'convex' })
         if (!token) return
         client.setAuth(token)
         await client.mutation(api.settings.upsert, { theme })

@@ -101,8 +101,8 @@ import { ref } from 'vue'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import ScrollPanel from 'primevue/scrollpanel'
-import { SocialAvatar, SocialPost, SocialComment, CreatePost } from '@/components/feed'
-import { useFacebookMockStore } from '@/stores/mockData/facebookMock'
+import { SocialAvatar, SocialPost, SocialComment, CreatePost } from '../feed'
+import { useFacebookMockStore } from '../../stores/mockData/facebookMock'
 
 const store = useFacebookMockStore()
 const newComments = ref<Record<string, string>>({})

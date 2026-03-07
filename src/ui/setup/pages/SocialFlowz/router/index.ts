@@ -13,18 +13,21 @@ import GmailView from '../components/networks/GmailView.vue'
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    redirect: '/login'
+    redirect: '/login',
+    meta: { auth: false }
   },
   {
     path: '/login',
     name: 'Login',
-    component: () => import('../views/LoginView.vue')
+    component: () => import('../views/LoginView.vue'),
+    meta: { auth: false }
   },
   {
     path: '/twitter',
     name: 'Twitter',
     component: TwitterView,
     meta: {
+      auth: true,
       requiresAuth: true,
       networkId: 'twitter',
       roles: ['user', 'admin']
@@ -35,6 +38,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Facebook',
     component: FacebookView,
     meta: {
+      auth: true,
       requiresAuth: true,
       networkId: 'facebook',
       roles: ['user', 'admin']
@@ -45,6 +49,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Instagram',
     component: InstagramView,
     meta: {
+      auth: true,
       requiresAuth: true,
       networkId: 'instagram',
       roles: ['user', 'admin']
@@ -55,6 +60,7 @@ const routes: RouteRecordRaw[] = [
     name: 'LinkedIn',
     component: LinkedInView,
     meta: {
+      auth: true,
       requiresAuth: true,
       networkId: 'linkedin',
       roles: ['user', 'admin']
@@ -65,6 +71,7 @@ const routes: RouteRecordRaw[] = [
     name: 'TikTok',
     component: TikTokView,
     meta: {
+      auth: true,
       requiresAuth: true,
       networkId: 'tiktok',
       roles: ['user', 'admin']
@@ -75,6 +82,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Threads',
     component: ThreadsView,
     meta: {
+      auth: true,
       requiresAuth: true,
       networkId: 'threads',
       roles: ['user', 'admin']
@@ -85,6 +93,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Discord',
     component: DiscordView,
     meta: {
+      auth: true,
       requiresAuth: true,
       networkId: 'discord',
       roles: ['user', 'admin']
@@ -95,6 +104,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Reddit',
     component: RedditView,
     meta: {
+      auth: true,
       requiresAuth: true,
       networkId: 'reddit',
       roles: ['user', 'admin']
@@ -105,6 +115,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Gmail',
     component: GmailView,
     meta: {
+      auth: true,
       requiresAuth: true,
       networkId: 'gmail',
       roles: ['user', 'admin']

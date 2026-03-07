@@ -150,11 +150,11 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useConfirm } from 'primevue/useconfirm'
-import { useKanbanStore } from '@/stores/kanban'
+import { useKanbanStore } from '../stores/kanban'
 import { useWebviewStore } from '@/stores/webviewState'
 import { useAccountsStore } from '@/stores/accounts'
-import type { MenuItem } from '@/types'
-import type { KanbanItem, KanbanColumnId } from '@/services/kanbanService'
+import type { MenuItem } from '../types'
+import type { KanbanItem, KanbanColumnId } from '../services/kanbanService'
 import Button from 'primevue/button'
 
 const router = useRouter()

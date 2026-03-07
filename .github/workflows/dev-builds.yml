@@ -3,15 +3,6 @@ name: Dev Builds (Android + Windows)
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
-    paths:
-      - src/**
-      - src-tauri/**
-      - package.json
-      - pnpm-lock.yaml
-      - index.html
-      - vite.tauri.config.ts
 
 permissions:
   contents: read
@@ -41,7 +32,9 @@ jobs:
           sdkmanager --install \
             "platform-tools" \
             "platforms;android-35" \
-            "build-tools;35.0.0"
+            "build-tools;35.0.0" \
+            "cmake;3.22.1" \
+            "ndk;27.0.12077973"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4

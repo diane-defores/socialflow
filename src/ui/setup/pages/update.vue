@@ -1,13 +1,16 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
 const displayName = __DISPLAY_NAME__
 const version = __VERSION__
+const { t } = useI18n()
 </script>
 
 <template>
   <div
     class="w-full h-full flex flex-col justify-center items-center text-center md:my-12"
   >
-    <h1>🎉 {{ $t("updated") }}! 🚀</h1>
+    <h1>🎉 {{ t("updated") }}! 🚀</h1>
     <p>
       Thank you for installing {{ displayName }}! ❤️
       <br />

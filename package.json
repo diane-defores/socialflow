@@ -121,7 +121,9 @@
     "launch:all": "tsx scripts/launch.ts --all",
     "lint": "eslint . --fix --cache",
     "lint:manifest": "web-ext lint --pretty",
-    "typecheck": "vue-tsc --noEmit",
+    "typecheck": "pnpm run -s typecheck:core",
+    "typecheck:core": "pnpm exec tsc --noEmit -p tsconfig.typecheck.core.json",
+    "typecheck:full": "node scripts/vue-tsc-fixed.cjs --noEmit -p tsconfig.json",
     "preview": "vite preview"
   },
   "type": "module",

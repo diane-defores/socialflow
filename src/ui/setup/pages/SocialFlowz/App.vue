@@ -22,9 +22,9 @@ import { useThemeStore } from '@/stores/theme'
 import { useWebviewStore } from '@/stores/webviewState'
 import { useAccountsStore } from '@/stores/accounts'
 import { useAuth } from '@clerk/vue'
-import AppHeader from '@/components/AppHeader.vue'
-import AppSidebar from '@/components/AppSidebar.vue'
-import AppRightSidebar from '@/components/AppRightSidebar.vue'
+import AppHeader from './components/AppHeader.vue'
+import AppSidebar from './components/AppSidebar.vue'
+import AppRightSidebar from './components/AppRightSidebar.vue'
 import NetworkWebviewHost from './components/NetworkWebviewHost.vue'
 
 const sidebarVisible = ref(true)

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { KanbanService, type KanbanItem, type KanbanColumnId } from '@/services/kanbanService'
+import { KanbanService, type KanbanItem, type KanbanColumnId } from '../services/kanbanService'
 
 export const useKanbanStore = defineStore('kanban', {
   state: () => ({

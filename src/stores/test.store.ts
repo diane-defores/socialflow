@@ -1,6 +1,6 @@
 export const useTestStore = defineStore('app', () => {
-  const count = useBrowserLocalStorage('count', 0)
-  const name = useBrowserLocalStorage('name', 'John Doe')
+  const count = useBrowserLocalStorage('count', 0).data
+  const name = useBrowserLocalStorage('name', 'John Doe').data
 
   // You should probably use chrome.storage API instead of localStorage since localStorage history can be cleared by the user.
   // See https://developer.chrome.com/docs/extensions/reference/api/storage

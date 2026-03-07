@@ -105,7 +105,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   'like': []
-  'reply': []
+  'reply': [commentId: string]
   'menu': [event: MouseEvent]
   'like-reply': [replyId: string]
   'menu-reply': [replyId: string, event: MouseEvent]
@@ -134,7 +134,7 @@ const handleLike = () => {
 }
 
 const handleReply = () => {
-  emit('reply')
+  emit('reply', props.comment.id)
 }
 </script>
 

@@ -2,7 +2,7 @@
   <div class="social-avatar" :class="sizeClass">
     <Avatar 
       :image="avatarUrl" 
-      :size="size"
+      :size="avatarSize"
       :shape="shape"
       :pt="{
         root: { style: borderStyle }
@@ -30,9 +30,10 @@ import Badge from 'primevue/badge'
 interface Props {
   user: {
     username?: string
+    name?: string
     network?: string
     avatar?: string
-    status?: 'online' | 'offline' | 'idle' | 'busy'
+    status?: 'online' | 'offline' | 'idle' | 'busy' | string
   }
   size?: 'normal' | 'large' | 'xlarge'
   shape?: 'square' | 'circle'
@@ -54,24 +55,31 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const sizeClass = computed(() => `size-${props.size}`)
+const avatarSize = computed<'normal' | 'large' | 'xlarge'>(() => {
+  return props.size
+})
 
 const borderStyle = computed(() => ({
   border: props.borderWidth ? `${props.borderWidth} solid ${props.borderColor || 'var(--surface-border)'}` : 'none'
 }))
 
+const fallbackAvatar = ref<string | null>(null)
+
+const identity = computed(() => props.user.username || props.user.name || 'default')
+
 const avatarUrl = computed(() => {
+  if (fallbackAvatar.value) return fallbackAvatar.value
   if (props.user.avatar) return props.user.avatar
   
-  if (props.user.username && props.user.network) {
-    return `https://unavatar.io/${props.user.network}/${props.user.username}`
+  if (identity.value && props.user.network) {
+    return `https://unavatar.io/${props.user.network}/${identity.value}`
   }
   
-  return `https://unavatar.io/fallback/${props.user.username || 'default'}`
+  return `https://unavatar.io/fallback/${identity.value}`
 })
 
 const handleAvatarError = () => {
-  const username = props.user.username || 'default'
-  avatarUrl.value = `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`
+  fallbackAvatar.value = `https://api.dicebear.com/7.x/avataaars/svg?seed=${identity.value}`
 }
 </script>
 

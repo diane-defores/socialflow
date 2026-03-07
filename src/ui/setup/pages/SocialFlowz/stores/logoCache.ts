@@ -39,6 +39,6 @@ export const useLogoCacheStore = defineStore('logoCache', {
 
   persist: {
     storage: localStorage,
-    paths: ['cache']
+    pick: ['cache']
   }
-}) 
+})

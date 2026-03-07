@@ -42,6 +42,7 @@ import { useRoute } from 'vue-router'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import DashboardFilters from './DashboardFilters.vue'
+import type { MenuItem } from '../types'
 
 const props = defineProps<{
   sidebarVisible: boolean
@@ -55,10 +56,15 @@ const emit = defineEmits<{
 }>()
 
 const route = useRoute()
-const currentNetwork = computed(() => {
+const currentNetwork = computed<MenuItem | null>(() => {
+  if (route.path === '/' || route.path === '/login') return null
+
+  const label = String(route.name)
   return {
-    name: route.name,
-    path: route.path
+    id: -1,
+    label,
+    icon: 'pi pi-globe',
+    route: route.path
   }
 })
 

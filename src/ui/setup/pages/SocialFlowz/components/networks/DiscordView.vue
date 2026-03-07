@@ -34,7 +34,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import Avatar from 'primevue/avatar'
-import { SocialNetworkLogo } from '@/components/common'
+import { SocialNetworkLogo } from '../common'
 
 const channels = ref([
   { id: 1, name: 'general', icon: 'pi pi-hashtag', members: '245' },

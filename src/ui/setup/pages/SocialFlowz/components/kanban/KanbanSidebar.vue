@@ -54,9 +54,9 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useKanbanStore } from '@/stores/kanban'
+import { useKanbanStore } from '../../stores/kanban'
 import Button from 'primevue/button'
-import type { KanbanItem, KanbanColumnId } from '@/services/kanbanService'
+import type { KanbanItem, KanbanColumnId } from '../../services/kanbanService'
 
 const store = useKanbanStore()
 

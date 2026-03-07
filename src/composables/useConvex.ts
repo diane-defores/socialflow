@@ -1,4 +1,4 @@
-import { ref, onMounted, onUnmounted, type Ref } from "vue";
+import { ref, onMounted, onUnmounted, unref, type Ref } from "vue";
 import { getConvexClient } from "@/lib/convex";
 import { useAuth } from "@clerk/vue";
 import type { FunctionReference, FunctionArgs, FunctionReturnType } from "convex/server";
@@ -6,7 +6,9 @@ import type { FunctionReference, FunctionArgs, FunctionReturnType } from "convex
 async function withAuth(getToken: ReturnType<typeof useAuth>["getToken"]) {
   const client = getConvexClient();
   try {
-    const token = await getToken({ template: "convex" });
+    const tokenFn = unref(getToken);
+    if (typeof tokenFn !== "function") return client;
+    const token = await tokenFn({ template: "convex" });
     if (token) client.setAuth(token);
   } catch {
     // Not signed in or token unavailable — proceed unauthenticated

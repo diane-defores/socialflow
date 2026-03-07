@@ -34,7 +34,7 @@
                   username: email.sender.name,
                   avatar: email.sender.avatar
                 }" 
-                size="small" 
+                size="normal" 
               />
               <span class="sender">{{ email.sender.name }}</span>
               <Button
@@ -69,11 +69,11 @@
 import { ref, onMounted } from 'vue'
 import SocialAvatar from '../feed/SocialAvatar.vue'
 import KanbanBoard from '../kanban/KanbanBoard.vue'
-import { formatDate } from '@/utils/dateFormatter'
-import { useSocialNetworksStore } from '@/stores/socialNetworks'
-import { useKanbanStore } from '@/stores/kanban'
+import { formatDate } from '../../utils/dateFormatter'
+import { useSocialNetworksStore } from '../../stores/socialNetworks'
+import { useKanbanStore } from '../../stores/kanban'
 import Button from 'primevue/button'
-import type { Email } from '@/types'
+import type { Email } from '../../types'
 
 const store = useSocialNetworksStore()
 const kanbanStore = useKanbanStore()

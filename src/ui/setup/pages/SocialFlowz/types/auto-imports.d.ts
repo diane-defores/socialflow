@@ -10,6 +10,7 @@ declare global {
   const WEBVIEW_URLS: typeof import('../../../../../stores/webviewState')['WEBVIEW_URLS']
   const acceptHMRUpdate: typeof import('pinia')['acceptHMRUpdate']
   const appRouter: typeof import('../../../../../utils/router/index')['appRouter']
+  const applyDisableCopyProtection: typeof import('../../../../../utils/disableCopyProtection')['applyDisableCopyProtection']
   const asyncComputed: typeof import('@vueuse/core')['asyncComputed']
   const autoResetRef: typeof import('@vueuse/core')['autoResetRef']
   const computed: typeof import('vue')['computed']
@@ -353,6 +354,7 @@ declare module 'vue' {
     readonly WEBVIEW_URLS: UnwrapRef<typeof import('../../../../../stores/webviewState')['WEBVIEW_URLS']>
     readonly acceptHMRUpdate: UnwrapRef<typeof import('pinia')['acceptHMRUpdate']>
     readonly appRouter: UnwrapRef<typeof import('../../../../../utils/router/index')['appRouter']>
+    readonly applyDisableCopyProtection: UnwrapRef<typeof import('../../../../../utils/disableCopyProtection')['applyDisableCopyProtection']>
     readonly asyncComputed: UnwrapRef<typeof import('@vueuse/core')['asyncComputed']>
     readonly autoResetRef: UnwrapRef<typeof import('@vueuse/core')['autoResetRef']>
     readonly computed: UnwrapRef<typeof import('vue')['computed']>

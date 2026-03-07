@@ -1,7 +1,7 @@
 <template>
   <Avatar 
     :image="user.avatar" 
-    :size="size"
+    :size="avatarSize"
     :shape="shape"
     :class="classes"
   >
@@ -16,8 +16,11 @@ import { computed } from 'vue'
 import Avatar from 'primevue/avatar'
 
 interface User {
-  username: string
+  username?: string
+  name?: string
+  network?: string
   avatar?: string
+  status?: 'online' | 'offline' | 'idle' | 'busy' | string
 }
 
 const props = defineProps<{
@@ -26,6 +29,10 @@ const props = defineProps<{
   shape?: 'square' | 'circle'
   class?: string
 }>()
+
+const avatarSize = computed<'normal' | 'large' | 'xlarge' | undefined>(() => {
+  return props.size
+})
 
 const classes = computed(() => [
   'social-avatar',

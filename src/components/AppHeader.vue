@@ -1,11 +1,17 @@
 <script setup lang="ts">
-import { defineProps, defineEmits } from 'vue'
+import { withDefaults, defineProps, defineEmits } from 'vue'
 import Button from 'primevue/button'
 
-const props = defineProps<{
-  sidebarVisible: boolean,
-  rightSidebarVisible: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    sidebarVisible?: boolean
+    rightSidebarVisible?: boolean
+  }>(),
+  {
+    sidebarVisible: false,
+    rightSidebarVisible: false,
+  },
+)
 
 const emit = defineEmits<{
   (e: 'update:sidebarVisible', value: boolean): void

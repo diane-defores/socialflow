@@ -66,10 +66,10 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useSocialNetworksStore } from '@/stores/socialNetworks'
+import { useSocialNetworksStore } from '../../stores/socialNetworks'
 import Button from 'primevue/button'
 import Avatar from 'primevue/avatar'
-import { SocialNetworkLogo } from '@/components/common'
+import { SocialNetworkLogo } from '../common'
 
 const store = useSocialNetworksStore()
 const isConnected = computed(() => store.isConnected('reddit'))

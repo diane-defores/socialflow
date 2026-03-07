@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import { SocialNetworkLogo } from '@/components/common'
+import { SocialNetworkLogo } from '../common'
 </script>
 
 <style scoped>

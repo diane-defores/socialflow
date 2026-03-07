@@ -1,14 +1,15 @@
 import { defineStore } from 'pinia'
 import { computed } from 'vue'
-import { GmailService } from '@/services/gmailService'
-import { gmailConfig } from '@/config/gmail'
-import type { Email } from '@/types'
+import { GmailService } from '../services/gmailService'
+import { gmailConfig } from '../config/gmail'
+import type { Email } from '../types'
 
 interface NetworkConnection {
   networkId: string
   accessToken: string
   username: string
   connected: boolean
+  userData?: unknown
 }
 
 export const useSocialNetworksStore = defineStore('socialNetworks', {
@@ -18,7 +19,8 @@ export const useSocialNetworksStore = defineStore('socialNetworks', {
       service: new GmailService(gmailConfig),
       emails: [] as Email[],
       initialized: false,
-      connected: false
+      connected: false,
+      unreadCount: 0
     }
   }),
   
@@ -183,6 +185,7 @@ export const useSocialNetworksStore = defineStore('socialNetworks', {
           await this.connectGmail()
         }
         this.gmail.emails = await this.gmail.service.getEmails()
+        this.gmail.unreadCount = this.gmail.emails.filter((email) => !email.isRead).length
       } catch (error) {
         console.error('Erreur lors de la récupération des emails:', error)
         throw error
@@ -195,6 +198,7 @@ export const useSocialNetworksStore = defineStore('socialNetworks', {
         const email = this.gmail.emails.find(e => e.id === messageId)
         if (email) {
           email.isRead = true
+          this.gmail.unreadCount = this.gmail.emails.filter((item) => !item.isRead).length
         }
       } catch (error) {
         console.error('Erreur lors du marquage comme lu:', error)

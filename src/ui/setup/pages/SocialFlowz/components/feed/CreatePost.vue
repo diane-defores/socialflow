@@ -76,7 +76,7 @@
             >
               <img v-if="file.type.startsWith('image/')" 
                 :src="file.preview" 
-                :alt="file.name"
+                :alt="file.file.name"
               />
               <video v-else-if="file.type.startsWith('video/')" controls>
                 <source :src="file.preview" :type="file.type">
@@ -213,14 +213,15 @@ const privacyOptions = [
 const handleTypeClick = (type: typeof postTypes[0]) => {
   showDialog.value = true
   if (type.id === 'photo') {
-    // Déclencher le FileUpload
-    document.querySelector('.hidden-upload input[type="file"]')?.click()
+    const input = document.querySelector('.hidden-upload input[type="file"]') as HTMLInputElement | null
+    input?.click()
   }
 }
 
 const handleToolClick = (tool: typeof postTools[0]) => {
   if (tool.id === 'media') {
-    document.querySelector('.hidden-upload input[type="file"]')?.click()
+    const input = document.querySelector('.hidden-upload input[type="file"]') as HTMLInputElement | null
+    input?.click()
   }
   // Implémenter les autres actions d'outils
 }

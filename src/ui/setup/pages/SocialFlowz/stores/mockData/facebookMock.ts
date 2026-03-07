@@ -6,7 +6,7 @@ export interface FacebookPost {
     id: string;
     name: string;
     avatar: string;
-    type: 'user' | 'page';
+    type?: 'user' | 'page';
     verified?: boolean;
   };
   content: {
@@ -73,6 +73,7 @@ export const useFacebookMockStore = defineStore('facebookMock', {
       id: 'user1',
       name: 'John Doe',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=john',
+      type: 'user',
       friends: 847,
       notifications: 3
     },

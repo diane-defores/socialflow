@@ -17,7 +17,7 @@ export const useSupabaseStore = defineStore('supabase', {
   actions: {
     async initialize() {
       // Écoute les changements d'auth
-      supabase.auth.onAuthStateChange((event, session) => {
+      supabase.auth.onAuthStateChange((_event: unknown, session: any) => {
         this.session = session
         this.user = session?.user ?? null
       })

@@ -25,7 +25,7 @@
 
 <script setup lang="ts">
 import Button from 'primevue/button'
-import { useSocialNetworksStore } from '@/stores/socialNetworks'
+import { useSocialNetworksStore } from '../stores/socialNetworks'
 
 const store = useSocialNetworksStore()
 

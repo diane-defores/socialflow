@@ -1,3 +1,5 @@
+import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router'
+
 export interface RouteGuardContext {
   to: RouteLocationNormalized
   from: RouteLocationNormalized
