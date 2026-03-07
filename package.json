@@ -99,9 +99,16 @@
     "url": "https://github.com/mubaidr/vite-vue3-browser-extension-v3"
   },
   "scripts": {
+    "tauri:info": "pnpm exec tauri info",
     "tauri:dev": "vite -c vite.tauri.config.ts",
     "tauri:build": "vite build -c vite.tauri.config.ts",
     "tauri:bundle": "pnpm tauri:build && pnpm exec tauri build --no-bundle",
+    "tauri:android:init": "pnpm exec tauri android init",
+    "tauri:android:dev": "pnpm exec tauri android dev",
+    "tauri:android:build": "pnpm exec tauri android build",
+    "tauri:ios:init": "pnpm exec tauri ios init",
+    "tauri:ios:dev": "pnpm exec tauri ios dev",
+    "tauri:ios:build": "pnpm exec tauri ios build",
     "tauri": "pnpm exec tauri",
     "build": "pnpm run build:chrome && pnpm run build:firefox",
     "build:chrome": "cross-env NODE_ENV=production vite build -c vite.chrome.config.ts",

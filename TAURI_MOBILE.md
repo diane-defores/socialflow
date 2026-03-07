@@ -1,0 +1,61 @@
+# Tauri 2 Mobile on a Server
+
+This project already uses Tauri 2:
+
+- JS CLI/API: `@tauri-apps/cli` 2.x, `@tauri-apps/api` 2.x
+- Rust: `tauri` 2.x
+
+## Why mobile prerequisites are heavy
+
+Tauri mobile wraps native toolchains:
+
+- Android needs Java + Android SDK/NDK
+- iOS needs Xcode, which only runs on macOS
+
+So a Linux server cannot build iOS locally.
+
+## Practical setup when you dev on a server
+
+1. Keep coding on your server (frontend + Rust shared logic).
+2. Build desktop Linux on server/CI (already configured in `.github/workflows/build.yml`).
+3. Build Android in CI on Ubuntu runners.
+4. Build iOS in CI on macOS runners.
+
+## Hetzner + Termux workflow (recommended)
+
+If your code runs on a remote Linux server and your phone is not directly connected to that server:
+
+1. Push your branch to GitHub.
+2. Run the workflow `Dev Builds (Android + Windows)` (manual or push to `main`).
+3. Download the artifact `socialflowz-android-debug`.
+4. Install the APK on your Android phone and test.
+
+This avoids local Android Studio/SDK setup on your server machine.
+
+## Windows desktop test workflow
+
+To test on Windows without building locally:
+
+1. Push your branch to GitHub.
+2. Run `Dev Builds (Android + Windows)` workflow.
+3. Download artifact `socialflowz-windows-test`.
+4. Install `.msi` or run `.exe` on your Windows machine.
+
+## NPM scripts (already added)
+
+- `pnpm tauri:info`
+- `pnpm tauri:android:init`
+- `pnpm tauri:android:dev`
+- `pnpm tauri:android:build`
+- `pnpm tauri:ios:init`
+- `pnpm tauri:ios:dev`
+- `pnpm tauri:ios:build`
+
+## Notes
+
+- `ios` commands require a macOS machine/runner with Xcode.
+- If you cannot install Android SDK locally, run Android build in CI only.
+- For signing/publishing, add keystore/certificate secrets in CI.
+- `tauri android dev` with live reload needs a machine that has:
+  - Java + Android SDK/NDK
+  - `adb` access to a real Android device (or emulator)

@@ -5,6 +5,9 @@ import { appRouter } from "@/utils/router"
 import { createApp } from "vue"
 import App from "./app.vue"
 import "./index.scss"
+import { applyDisableCopyProtection } from "@/utils/disableCopyProtection"
+
+applyDisableCopyProtection()
 
 appRouter.addRoute({
   path: "/",

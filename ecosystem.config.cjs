@@ -3,9 +3,9 @@ module.exports = {
     name: "ext---socialflowz",
     cwd: "/home/claude/ext---socialflowz",
     script: "bash",
-    args: ["-c", "export PORT=3011 && flox activate -- pnpm dev -- --port 3011 --host"],
+    args: ["-c", "export PORT=3012 && flox activate -- pnpm dev -- --port 3012 --host"],
     env: {
-      PORT: 3011
+      PORT: 3012
     },
     autorestart: true,
     watch: false
