@@ -21,6 +21,13 @@ tauri-build = { version = "2.5.4", features = [] }
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
-tauri = { version = "2.10.0", features = ["unstable", "tray-icon", "image-png"] }
 tauri-plugin-log = "2"
 url = "2"
+
+# Desktop: unstable child-webview API + system tray
+[target.'cfg(not(target_os = "android"))'.dependencies]
+tauri = { version = "2.10.0", features = ["unstable", "tray-icon", "image-png"] }
+
+# Android: minimal build without desktop-only features
+[target.'cfg(target_os = "android")'.dependencies]
+tauri = { version = "2.10.0", features = ["image-png"] }

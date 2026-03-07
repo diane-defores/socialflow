@@ -1,8 +1,12 @@
+use tauri::{AppHandle, Manager};
+
+// ── Desktop-only imports ─────────────────────────────────────────────────────
+#[cfg(not(target_os = "android"))]
 use tauri::{
     image::Image,
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    AppHandle, Emitter, Manager, WebviewBuilder, WebviewUrl,
+    Emitter, WebviewBuilder, WebviewUrl,
 };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -11,8 +15,9 @@ fn webview_label(account_id: &str) -> String {
     format!("social-{}", account_id)
 }
 
-// ─── Tray setup ─────────────────────────────────────────────────────────────
+// ─── Tray setup (desktop only) ───────────────────────────────────────────────
 
+#[cfg(not(target_os = "android"))]
 fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     let show = MenuItem::with_id(app, "show", "Show SocialFlowz", true, None::<&str>)?;
     let separator = MenuItem::with_id(app, "sep", "──────────────", false, None::<&str>)?;
@@ -35,8 +40,6 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
         ],
     )?;
 
-    // Use an embedded icon so startup doesn't depend on a runtime relative path.
-    // If decoding ever fails, skip setting a tray icon instead of crashing.
     let icon = Image::from_bytes(include_bytes!("../icons/32x32.png")).ok();
 
     let mut tray_builder = TrayIconBuilder::new();
@@ -53,13 +56,11 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
             id if id.starts_with("tray:") => {
                 let network = id.trim_start_matches("tray:");
                 show_window(app);
-                // Tell the Vue frontend which network to open
                 let _ = app.emit("tray:open-network", network.to_string());
             }
             _ => {}
         })
         .on_tray_icon_event(|tray, event| {
-            // Left-click toggles window visibility
             if let TrayIconEvent::Click {
                 button: MouseButton::Left,
                 button_state: MouseButtonState::Up,
@@ -75,6 +76,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     Ok(())
 }
 
+#[cfg(not(target_os = "android"))]
 fn show_window(app: &AppHandle) {
     if let Some(window) = app.get_webview_window("main") {
         let _ = window.show();
@@ -83,6 +85,7 @@ fn show_window(app: &AppHandle) {
     }
 }
 
+#[cfg(not(target_os = "android"))]
 fn toggle_window(app: &AppHandle) {
     if let Some(window) = app.get_webview_window("main") {
         if window.is_visible().unwrap_or(false) {
@@ -94,12 +97,11 @@ fn toggle_window(app: &AppHandle) {
     }
 }
 
-// ─── IPC commands ───────────────────────────────────────────────────────────
+// ─── IPC commands ────────────────────────────────────────────────────────────
 
-/// Open or reuse a per-account webview with an isolated data directory.
-/// Each account_id maps to {app_data_dir}/sessions/{account_id}/ — a fully
-/// separate cookie jar, localStorage and IndexedDB for true multi-account.
+/// Open or reuse a per-account child webview (desktop only).
 #[tauri::command]
+#[cfg(not(target_os = "android"))]
 fn open_webview(
     app: AppHandle,
     url: String,
@@ -144,8 +146,23 @@ fn open_webview(
     Ok(())
 }
 
-/// Reposition and resize an account's webview (sidebar resize / window resize).
 #[tauri::command]
+#[cfg(target_os = "android")]
+fn open_webview(
+    _app: AppHandle,
+    _url: String,
+    _account_id: String,
+    _x: f64,
+    _y: f64,
+    _width: f64,
+    _height: f64,
+) -> Result<(), String> {
+    Err("Native child webviews are desktop-only".into())
+}
+
+/// Reposition and resize an account's webview (desktop only).
+#[tauri::command]
+#[cfg(not(target_os = "android"))]
 fn resize_webview(
     app: AppHandle,
     account_id: String,
@@ -165,8 +182,22 @@ fn resize_webview(
     Ok(())
 }
 
-/// Close a specific account's webview (session data on disk is preserved).
 #[tauri::command]
+#[cfg(target_os = "android")]
+fn resize_webview(
+    _app: AppHandle,
+    _account_id: String,
+    _x: f64,
+    _y: f64,
+    _width: f64,
+    _height: f64,
+) -> Result<(), String> {
+    Err("Native child webviews are desktop-only".into())
+}
+
+/// Close a specific account's webview (desktop only).
+#[tauri::command]
+#[cfg(not(target_os = "android"))]
 fn close_webview(app: AppHandle, account_id: String) -> Result<(), String> {
     let label = webview_label(&account_id);
     if let Some(wv) = app.get_webview(&label) {
@@ -175,7 +206,13 @@ fn close_webview(app: AppHandle, account_id: String) -> Result<(), String> {
     Ok(())
 }
 
-/// Wipe the session data directory for an account (full logout + account removal).
+#[tauri::command]
+#[cfg(target_os = "android")]
+fn close_webview(_app: AppHandle, _account_id: String) -> Result<(), String> {
+    Err("Native child webviews are desktop-only".into())
+}
+
+/// Wipe the session data directory for an account (cross-platform).
 #[tauri::command]
 fn delete_account_session(app: AppHandle, account_id: String) -> Result<(), String> {
     let data_dir = app
@@ -204,6 +241,7 @@ pub fn run() {
                         .build(),
                 )?;
             }
+            #[cfg(not(target_os = "android"))]
             if let Err(err) = build_tray(app.handle()) {
                 eprintln!("tray initialization failed: {err}");
             }
