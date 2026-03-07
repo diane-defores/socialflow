@@ -68,7 +68,12 @@
                     :key="account.id"
                     class="account-item"
                     :class="{ 'account-item--active': isAccountActive(account.id, item.route.slice(1)) }"
+                    role="button"
+                    tabindex="0"
+                    :aria-label="`Switch to ${account.label}`"
+                    :aria-pressed="isAccountActive(account.id, item.route.slice(1))"
                     @click="switchAccount(account.id, item.route.slice(1))"
+                    @keydown.enter.space.prevent="switchAccount(account.id, item.route.slice(1))"
                   >
                     <div class="account-dot" />
                     <span class="account-label">{{ account.label }}</span>
@@ -586,6 +591,27 @@ onMounted(() => {
 
 .list-leave-active {
   position: absolute;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .list-move,
+  .list-enter-active,
+  .list-leave-active {
+    transition: none;
+  }
+
+  .sidebar,
+  .kanban-item,
+  .add-account-btn,
+  .remove-account-btn,
+  .account-item {
+    transition: none;
+  }
+
+  :deep(.p-splitter-panel),
+  :deep(.p-splitter-gutter) {
+    transition: none;
+  }
 }
 
 @media (max-width: 768px) {

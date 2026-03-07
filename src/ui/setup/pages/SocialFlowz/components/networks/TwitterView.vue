@@ -211,6 +211,18 @@ const connectTwitter = () => {
   gap: 2rem;
 }
 
+@media (max-width: 900px) {
+  .twitter-content {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-sidebar {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+}
+
 .profile-sidebar {
   display: flex;
   flex-direction: column;
@@ -341,7 +353,7 @@ const connectTwitter = () => {
 
 .tweet-text {
   margin-bottom: 0.5rem;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .tweet-actions {
@@ -363,6 +375,7 @@ const connectTwitter = () => {
   border: none;
   background: transparent;
   resize: none;
+  field-sizing: content;
 }
 
 :deep(.p-inputtextarea:focus) {

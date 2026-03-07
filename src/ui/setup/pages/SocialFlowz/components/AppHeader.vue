@@ -1,9 +1,10 @@
 <template>
   <header class="header">
     <div class="header-start">
-      <Button 
-        icon="pi pi-bars" 
-        text 
+      <Button
+        icon="pi pi-bars"
+        text
+        aria-label="Toggle left sidebar"
         @click="toggleLeftSidebar"
         v-tooltip.bottom="'Toggle left sidebar'"
       />
@@ -26,9 +27,10 @@
     </div>
 
     <div class="header-end">
-      <Button 
-        icon="pi pi-bars" 
-        text 
+      <Button
+        icon="pi pi-bars"
+        text
+        aria-label="Toggle right sidebar"
         @click="toggleRightSidebar"
         v-tooltip.bottom="'Toggle right sidebar'"
       />

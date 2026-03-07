@@ -86,19 +86,21 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [x] `.env` placeholder file (gitignored)
 - [x] `pnpm tauri:build` ✅ (288 modules, 0 errors) + `cargo check` ✅
 
-### Audit: Design (2026-02-27, score C+)
+### Audit: Design (2026-03-07, score B+)
 
-- [x] Fixed: missing `computed` import in `SocialAvatar.vue` (runtime crash)
-- [x] Fixed: missing `useTheme` import in `ThemeSwitch.vue` (runtime crash)
-- [x] Fixed: 4× `confirm()` browser dialogs in Kanban + Sidebar removed
-- [x] Fixed: `aria-label` on AppHeader buttons, Textarea, sidebar toggle
-- [x] Fixed: TikTok/Threads brand color `#000000` → `var(--text-color)` (dark mode)
-- [x] Fixed: spurious `defineProps` import in `DisplayError.vue`
-- [x] Account removal: `<ConfirmPopup>` + `useConfirm()` — `ConfirmationService` + `ToastService` registered
-- [x] Design system: spacing scale `--space-1` → `--space-8` in `:root`
-- [x] Dark theme: `.dark {}` token block for all surface colors
-- [x] DaisyUI consolidation: `LoadingSpinner` → PrimeVue `<ProgressSpinner>`, `DisplayError` → PrimeVue `<Message>`
-- [x] Breakpoints: `md: 768px` + `lg: 1200px` in `tailwind.config.cjs`; removed bogus string plugin
+- [x] Fixed: `aria-label` missing on AppHeader toggle buttons (WCAG violation)
+- [x] Fixed: `Unauthorized.vue` had zero styles — added icon + centered layout
+- [x] Fixed: `.account-item` in AppSidebar not keyboard accessible (role/tabindex/keydown)
+- [x] Fixed: `.channel-item` + `.server-item` in DiscordView not keyboard accessible
+- [x] Fixed: `Math.random()` in DiscordView template — extracted to static data
+- [x] Fixed: `!important` on DiscordView border-radius hover removed
+- [x] Fixed: `prefers-reduced-motion` added to AppSidebar + AppRightSidebar + DiscordView
+- [x] Fixed: TwitterView two-column grid responsive at 900px
+- [x] Fixed: `.tweet-text` line-height 1.4 → 1.5
+- [x] Fixed: `field-sizing: content` on all Textarea (Twitter, LinkedIn, CreatePost)
+- [x] Fixed: Dead `.sidebar-hidden` class removed from AppRightSidebar
+- [ ] 🟡 AppRightSidebar: wire "John Doe" placeholder to real Clerk user data
+- [ ] 🟡 Header search/filters hidden on mobile — add mobile-accessible alternative
 
 ### To go live (⛔ blocked — needs accounts)
 

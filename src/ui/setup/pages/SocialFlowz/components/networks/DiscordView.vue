@@ -10,18 +10,34 @@
     </div>
     <div class="discord-content">
       <div class="servers-list">
-        <div v-for="i in 5" :key="i" class="server-item">
-          <Avatar 
-            :image="`https://api.dicebear.com/7.x/identicon/svg?seed=server${i}`"
+        <div
+          v-for="server in servers"
+          :key="server.id"
+          class="server-item"
+          role="button"
+          tabindex="0"
+          :aria-label="`Server ${server.id}`"
+          @keydown.enter.space.prevent="() => {}"
+        >
+          <Avatar
+            :image="`https://api.dicebear.com/7.x/identicon/svg?seed=server${server.id}`"
             shape="circle"
             size="large"
             class="server-avatar"
           />
-          <div class="notification-badge">{{ Math.floor(Math.random() * 10) }}</div>
+          <div v-if="server.notifications > 0" class="notification-badge">{{ server.notifications }}</div>
         </div>
       </div>
       <div class="channels-section">
-        <div v-for="channel in channels" :key="channel.id" class="channel-item">
+        <div
+          v-for="channel in channels"
+          :key="channel.id"
+          class="channel-item"
+          role="button"
+          tabindex="0"
+          :aria-label="`Channel: ${channel.name}`"
+          @keydown.enter.space.prevent="() => {}"
+        >
           <i :class="channel.icon"></i>
           <span>{{ channel.name }}</span>
           <span class="member-count">{{ channel.members }}</span>
@@ -36,12 +52,20 @@ import { ref } from 'vue'
 import Avatar from 'primevue/avatar'
 import { SocialNetworkLogo } from '../common'
 
+const servers = ref([
+  { id: 1, notifications: 3 },
+  { id: 2, notifications: 0 },
+  { id: 3, notifications: 7 },
+  { id: 4, notifications: 1 },
+  { id: 5, notifications: 0 },
+])
+
 const channels = ref([
   { id: 1, name: 'general', icon: 'pi pi-hashtag', members: '245' },
   { id: 2, name: 'gaming', icon: 'pi pi-hashtag', members: '123' },
   { id: 3, name: 'music', icon: 'pi pi-volume-up', members: '89' },
   { id: 4, name: 'dev-chat', icon: 'pi pi-code', members: '167' },
-  { id: 5, name: 'voice-lounge', icon: 'pi pi-volume-down', members: '34' }
+  { id: 5, name: 'voice-lounge', icon: 'pi pi-volume-down', members: '34' },
 ])
 </script>
 
@@ -81,8 +105,15 @@ const channels = ref([
   transition: border-radius 0.3s;
 }
 
-.server-item:hover .server-avatar {
-  border-radius: 30% !important;
+.server-item:hover :deep(.p-avatar),
+.server-item:focus :deep(.p-avatar) {
+  border-radius: 30%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .server-avatar {
+    transition: none;
+  }
 }
 
 .notification-badge {

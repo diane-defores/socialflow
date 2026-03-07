@@ -321,6 +321,11 @@ const submitPost = () => {
   margin-bottom: 1rem;
 }
 
+:deep(.p-inputtextarea),
+:deep(.p-textarea) {
+  field-sizing: content;
+}
+
 .selected-files {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));

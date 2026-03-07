@@ -472,6 +472,11 @@ const connectLinkedIn = () => {
   padding: 0;
 }
 
+:deep(.p-inputtextarea),
+:deep(.p-textarea) {
+  field-sizing: content;
+}
+
 .header {
   display: flex;
   align-items: center;

@@ -108,10 +108,6 @@ const handleResizeEnd = handleResize
   min-width: 15rem;
 }
 
-.sidebar-hidden {
-  display: none;
-}
-
 .sidebar-content {
   height: 100%;
   padding: 1rem;
@@ -206,5 +202,13 @@ const handleResizeEnd = handleResize
 
 :deep(.p-splitter-panel) {
   transition: flex-basis 0.3s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  :deep(.p-splitter-panel),
+  :deep(.p-splitter-gutter) {
+    transition: none;
+  }
 }
 </style> 
