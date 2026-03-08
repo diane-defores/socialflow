@@ -35,19 +35,23 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [ ] End-to-end smoke test in actual Tauri window (requires display/GUI)
 - [ ] Test all 8 platforms visually
 
-## Phase 4 — Multi-Account Support ✅
+## Phase 4 — Multi-Account Support ✅ → Replaced by Phase 7
 
-- [x] `src/stores/accounts.ts` — Account model: `{ id, networkId, label, addedAt }`, persisted via localStorage
-- [x] `ensureDefault(networkId)` — auto-creates Account 1 on first network click (zero friction)
-- [x] Rust `open_webview` now takes `account_id`, creates `data_directory = {appData}/sessions/{id}/`
-- [x] Each account = isolated cookie jar / localStorage / IndexedDB (true multi-account)
-- [x] `delete_account_session` Rust command — wipes session dir on account removal
-- [x] `useNetworkWebview` composable updated — passes `accountId` to all IPC calls, handles `switchAccount`
-- [x] Sidebar account list — shows accounts under active network, active indicator dot
-- [x] "Add account" button (hover-reveal "+" next to network) — auto-names "Account N"
-- [x] Account switcher — click account chip to switch; webview closes + reopens with isolated session
-- [x] Remove account — trash icon (multi-account only), confirm dialog, deletes session data
-- [x] Account list persisted via `pinia-plugin-persistedstate` (no extra plugin needed)
+- [x] `src/stores/accounts.ts` — Account model (superseded by profiles store in Phase 7)
+- [x] Rust isolated session dirs per account (migrated to profile+network in Phase 7)
+- [x] Multi-account with isolated cookie jars / localStorage / IndexedDB
+
+## Phase 7 — Global Profile System ✅ (2026-03-08)
+
+- [x] Replace per-network "Account 1/2/3" with global **Profiles** ("Business 1", "Perso", etc.)
+- [x] `src/stores/profiles.ts` — Profile: `{ id, name, emoji, createdAt }`, persisted via localStorage
+- [x] Rust `open_webview` now takes `profile_id + network_id` → `sessions/{profileId}/{networkId}/`
+- [x] New Rust commands: `delete_profile_session`, `delete_network_session`
+- [x] `useNetworkWebview` — tracks `activeKey = "profileId:networkId"`, `switchTo()` handles profile or network change
+- [x] `NetworkWebviewHost.vue` — reacts to profile OR network change → auto-switches webview
+- [x] `ProfileSwitcher.vue` — global switcher at top of sidebar: emoji + name, dropdown, add/rename/delete
+- [x] `AppSidebar.vue` — removed per-network account chips, added ProfileSwitcher
+- [x] `App.vue` — replaced accounts cloud sync with `profilesStore.ensureDefault()` on mount
 
 ## Phase 5 — Ship ✅ (code complete, CI ready)
 

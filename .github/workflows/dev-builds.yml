@@ -28,6 +28,8 @@ jobs:
       - name: Install Android SDK packages
         run: |
           yes | sdkmanager --licenses
+          # Uninstall any pre-installed NDK versions to avoid Tauri picking the wrong one
+          sdkmanager --uninstall "ndk;29.0.14206865" 2>/dev/null || true
           sdkmanager --install \
             "platform-tools" \
             "platforms;android-35" \
@@ -63,7 +65,7 @@ jobs:
         run: pnpm exec tauri android init --ci
 
       - name: Build debug APK
-        run: pnpm exec tauri android build --ci --debug --apk -t aarch64
+        run: pnpm exec tauri android build --ci --debug --apk -t aarch64 -- --info
 
       - name: Upload Android artifact
         uses: actions/upload-artifact@v4
