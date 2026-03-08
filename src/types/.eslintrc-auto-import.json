@@ -17,6 +17,7 @@
     "MaybeRefOrGetter": true,
     "Notification": true,
     "Notivue": true,
+    "Profile": true,
     "PropType": true,
     "Ref": true,
     "VNode": true,
@@ -268,6 +269,7 @@
     "usePreferredLanguages": true,
     "usePreferredReducedMotion": true,
     "usePrevious": true,
+    "useProfilesStore": true,
     "useRafFn": true,
     "useRefHistory": true,
     "useResizeObserver": true,
@@ -343,8 +345,6 @@
     "watchThrottled": true,
     "watchTriggerable": true,
     "watchWithFilter": true,
-    "whenever": true,
-    "Profile": true,
-    "useProfilesStore": true
+    "whenever": true
   }
 }
