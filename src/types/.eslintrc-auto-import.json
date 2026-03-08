@@ -24,6 +24,7 @@
     "WritableComputedRef": true,
     "acceptHMRUpdate": true,
     "appRouter": true,
+    "applyDisableCopyProtection": true,
     "asyncComputed": true,
     "autoResetRef": true,
     "browser": true,
@@ -342,7 +343,6 @@
     "watchThrottled": true,
     "watchTriggerable": true,
     "watchWithFilter": true,
-    "whenever": true,
-    "applyDisableCopyProtection": true
+    "whenever": true
   }
 }

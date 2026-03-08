@@ -9,8 +9,12 @@ use tauri::{
     Emitter, WebviewBuilder, WebviewUrl,
 };
 
+#[cfg(target_os = "android")]
+use tauri_plugin_android_webview::AndroidWebviewExt;
+
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
+#[cfg(not(target_os = "android"))]
 fn webview_label(account_id: &str) -> String {
     format!("social-{}", account_id)
 }
@@ -99,7 +103,8 @@ fn toggle_window(app: &AppHandle) {
 
 // ─── IPC commands ────────────────────────────────────────────────────────────
 
-/// Open or reuse a per-account child webview (desktop only).
+// ── Desktop: native child webviews via add_child ─────────────────────────────
+
 #[tauri::command]
 #[cfg(not(target_os = "android"))]
 fn open_webview(
@@ -147,21 +152,6 @@ fn open_webview(
 }
 
 #[tauri::command]
-#[cfg(target_os = "android")]
-fn open_webview(
-    _app: AppHandle,
-    _url: String,
-    _account_id: String,
-    _x: f64,
-    _y: f64,
-    _width: f64,
-    _height: f64,
-) -> Result<(), String> {
-    Err("Native child webviews are desktop-only".into())
-}
-
-/// Reposition and resize an account's webview (desktop only).
-#[tauri::command]
 #[cfg(not(target_os = "android"))]
 fn resize_webview(
     app: AppHandle,
@@ -183,20 +173,6 @@ fn resize_webview(
 }
 
 #[tauri::command]
-#[cfg(target_os = "android")]
-fn resize_webview(
-    _app: AppHandle,
-    _account_id: String,
-    _x: f64,
-    _y: f64,
-    _width: f64,
-    _height: f64,
-) -> Result<(), String> {
-    Err("Native child webviews are desktop-only".into())
-}
-
-/// Close a specific account's webview (desktop only).
-#[tauri::command]
 #[cfg(not(target_os = "android"))]
 fn close_webview(app: AppHandle, account_id: String) -> Result<(), String> {
     let label = webview_label(&account_id);
@@ -206,13 +182,49 @@ fn close_webview(app: AppHandle, account_id: String) -> Result<(), String> {
     Ok(())
 }
 
+// ── Android: delegate to Kotlin plugin ───────────────────────────────────────
+
 #[tauri::command]
 #[cfg(target_os = "android")]
-fn close_webview(_app: AppHandle, _account_id: String) -> Result<(), String> {
-    Err("Native child webviews are desktop-only".into())
+fn open_webview(
+    app: AppHandle,
+    url: String,
+    account_id: String,
+    _x: f64,
+    _y: f64,
+    _width: f64,
+    _height: f64,
+) -> Result<(), String> {
+    app.android_webview()
+        .open(&url, &account_id)
+        .map_err(|e| e.to_string())
 }
 
-/// Wipe the session data directory for an account (cross-platform).
+#[tauri::command]
+#[cfg(target_os = "android")]
+fn resize_webview(
+    _app: AppHandle,
+    _account_id: String,
+    _x: f64,
+    _y: f64,
+    _width: f64,
+    _height: f64,
+) -> Result<(), String> {
+    // On Android the social webview is always full-screen; resize is a no-op
+    Ok(())
+}
+
+#[tauri::command]
+#[cfg(target_os = "android")]
+fn close_webview(app: AppHandle, account_id: String) -> Result<(), String> {
+    app.android_webview()
+        .close(&account_id)
+        .map_err(|e| e.to_string())
+}
+
+// ── Cross-platform ───────────────────────────────────────────────────────────
+
+/// Wipe the session data directory for an account.
 #[tauri::command]
 fn delete_account_session(app: AppHandle, account_id: String) -> Result<(), String> {
     let data_dir = app
@@ -233,6 +245,7 @@ fn delete_account_session(app: AppHandle, account_id: String) -> Result<(), Stri
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_android_webview::init())
         .setup(|app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(
