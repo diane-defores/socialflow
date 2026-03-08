@@ -11,20 +11,25 @@ async function invoke(cmd: string, args?: Record<string, unknown>) {
 }
 
 /**
- * Manages a native Tauri child webview for a specific account, positioned
- * over the given host element. Each account gets its own isolated data
- * directory → separate cookies / localStorage / IndexedDB.
+ * Manages a native Tauri child webview for a (profile, network) pair,
+ * positioned over the given host element.
+ * Each profile×network gets its own isolated data directory
+ * → separate cookies / localStorage / IndexedDB.
  */
 export function useNetworkWebview(hostEl: Ref<HTMLElement | null>) {
   const { x, y, width, height } = useElementBounding(hostEl)
-  const activeAccountId = ref<string | null>(null)
+
+  // Track what's currently open as "profileId:networkId"
+  const activeKey = ref<string | null>(null)
   const isOpen = ref(false)
 
   // Keep bounds in sync on sidebar toggle / window resize
   watch([x, y, width, height], async ([nx, ny, nw, nh]) => {
-    if (isOpen.value && activeAccountId.value && nw > 0 && nh > 0) {
+    if (isOpen.value && activeKey.value && nw > 0 && nh > 0) {
+      const [profileId, networkId] = activeKey.value.split(':')
       await invoke('resize_webview', {
-        accountId: activeAccountId.value,
+        profileId,
+        networkId,
         x: nx,
         y: ny,
         width: nw,
@@ -33,44 +38,44 @@ export function useNetworkWebview(hostEl: Ref<HTMLElement | null>) {
     }
   })
 
-  async function open(url: string, accountId: string) {
+  async function open(url: string, profileId: string, networkId: string) {
     await invoke('open_webview', {
       url,
-      accountId,
+      profileId,
+      networkId,
       x: x.value,
       y: y.value,
       width: width.value,
       height: height.value,
     })
-    activeAccountId.value = accountId
+    activeKey.value = `${profileId}:${networkId}`
     isOpen.value = true
   }
 
   /**
-   * Switch to a different account. Closes the previous webview (session
-   * data stays on disk) and opens the new one.
+   * Switch to a different profile or network.
+   * Closes the previous webview (session data stays on disk) and opens the new one.
    */
-  async function switchAccount(url: string, newAccountId: string) {
-    if (activeAccountId.value && activeAccountId.value !== newAccountId) {
-      await invoke('close_webview', { accountId: activeAccountId.value })
+  async function switchTo(url: string, profileId: string, networkId: string) {
+    const newKey = `${profileId}:${networkId}`
+    if (activeKey.value && activeKey.value !== newKey) {
+      const [oldProfileId, oldNetworkId] = activeKey.value.split(':')
+      await invoke('close_webview', { profileId: oldProfileId, networkId: oldNetworkId })
       isOpen.value = false
     }
-    await open(url, newAccountId)
+    await open(url, profileId, networkId)
   }
 
   async function close() {
-    if (isOpen.value && activeAccountId.value) {
-      await invoke('close_webview', { accountId: activeAccountId.value })
-      activeAccountId.value = null
+    if (isOpen.value && activeKey.value) {
+      const [profileId, networkId] = activeKey.value.split(':')
+      await invoke('close_webview', { profileId, networkId })
+      activeKey.value = null
       isOpen.value = false
     }
-  }
-
-  async function deleteSession(accountId: string) {
-    await invoke('delete_account_session', { accountId })
   }
 
   onUnmounted(close)
 
-  return { open, switchAccount, close, deleteSession, isOpen, activeAccountId }
+  return { open, switchTo, close, isOpen, activeKey }
 }

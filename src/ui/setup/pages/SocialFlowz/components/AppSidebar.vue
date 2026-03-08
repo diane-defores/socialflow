@@ -1,5 +1,4 @@
 <template>
-  <ConfirmPopup />
   <template v-if="modelValue">
     <Splitter 
       ref="splitterRef" 
@@ -13,6 +12,9 @@
         :class="{ 'icons-only': iconsOnly }"
       >
         <div class="sidebar-content" :class="{ 'content-centered': iconsOnly }">
+          <!-- Profile switcher (global — one profile = all networks) -->
+          <ProfileSwitcher :iconsOnly="iconsOnly" />
+
           <div class="flex align-items-center mb-3" :class="{ 'justify-content-center': iconsOnly, 'justify-content-between': !iconsOnly }">
             <Button
               icon="pi pi-arrows-h"
@@ -30,7 +32,6 @@
             </div>
             <div class="menu-items">
               <div v-for="item in menuItems" :key="item.id" class="menu-item-group">
-                <!-- Network row -->
                 <div class="network-row" :class="{ active: isNetworkActive(item) }">
                   <Button
                     :icon="item.icon"
@@ -45,49 +46,6 @@
                     ]"
                     @click="navigateToNetwork(item)"
                   />
-                  <!-- Add account button (only for webview-capable networks, expanded mode) -->
-                  <Button
-                    v-if="!iconsOnly && webviewStore.usesWebview(item.route.slice(1))"
-                    icon="pi pi-plus"
-                    text
-                    rounded
-                    size="small"
-                    class="add-account-btn"
-                    v-tooltip.right="'Add account'"
-                    @click.stop="addAccount(item)"
-                  />
-                </div>
-
-                <!-- Account list (expanded mode, webview networks only) -->
-                <div
-                  v-if="!iconsOnly && isNetworkActive(item) && webviewStore.usesWebview(item.route.slice(1))"
-                  class="account-list"
-                >
-                  <div
-                    v-for="account in accountsStore.getByNetwork(item.route.slice(1))"
-                    :key="account.id"
-                    class="account-item"
-                    :class="{ 'account-item--active': isAccountActive(account.id, item.route.slice(1)) }"
-                    role="button"
-                    tabindex="0"
-                    :aria-label="`Switch to ${account.label}`"
-                    :aria-pressed="isAccountActive(account.id, item.route.slice(1))"
-                    @click="switchAccount(account.id, item.route.slice(1))"
-                    @keydown.enter.space.prevent="switchAccount(account.id, item.route.slice(1))"
-                  >
-                    <div class="account-dot" />
-                    <span class="account-label">{{ account.label }}</span>
-                    <Button
-                      v-if="accountsStore.getByNetwork(item.route.slice(1)).length > 1"
-                      icon="pi pi-times"
-                      text
-                      rounded
-                      size="small"
-                      severity="danger"
-                      class="remove-account-btn"
-                      @click.stop="removeAccount(account.id, $event)"
-                    />
-                  </div>
                 </div>
               </div>
             </div>
@@ -154,19 +112,18 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useConfirm } from 'primevue/useconfirm'
 import { useKanbanStore } from '../stores/kanban'
 import { useWebviewStore } from '@/stores/webviewState'
-import { useAccountsStore } from '@/stores/accounts'
+import { useProfilesStore } from '@/stores/profiles'
 import type { MenuItem } from '../types'
 import type { KanbanItem, KanbanColumnId } from '../services/kanbanService'
 import Button from 'primevue/button'
+import ProfileSwitcher from './ProfileSwitcher.vue'
 
 const router = useRouter()
-const confirm = useConfirm()
 const kanbanStore = useKanbanStore()
 const webviewStore = useWebviewStore()
-const accountsStore = useAccountsStore()
+const profilesStore = useProfilesStore()
 const splitterRef = ref()
 
 const props = defineProps<{
@@ -264,58 +221,18 @@ const menuItems = ref<MenuItem[]>([
 const isNetworkActive = (item: MenuItem): boolean =>
   webviewStore.activeNetworkId === item.route.slice(1)
 
-const isAccountActive = (accountId: string, networkId: string): boolean =>
-  accountsStore.activeAccountId[networkId] === accountId
-
 const navigateToNetwork = (network: MenuItem): void => {
   const networkId = network.route.slice(1) // '/twitter' → 'twitter'
 
   if (webviewStore.usesWebview(networkId)) {
-    // Ensure at least one account exists, then open the webview
-    accountsStore.ensureDefault(networkId)
+    profilesStore.ensureDefault()
     webviewStore.selectNetwork(networkId)
   } else {
-    // Gmail (API-based) and other non-webview pages use the router
     webviewStore.clearNetwork()
     router.push(network.route)
   }
 
   emit('network-selected', network)
-}
-
-const addAccount = (network: MenuItem): void => {
-  const networkId = network.route.slice(1)
-  const count = accountsStore.getByNetwork(networkId).length + 1
-  accountsStore.add(networkId, `Account ${count}`)
-  webviewStore.selectNetwork(networkId)
-}
-
-const switchAccount = (accountId: string, networkId: string): void => {
-  accountsStore.setActive(networkId, accountId)
-  webviewStore.selectNetwork(networkId)
-}
-
-const removeAccount = (accountId: string, event: MouseEvent): void => {
-  const account = accountsStore.accounts.find((a) => a.id === accountId)
-  if (!account) return
-
-  confirm.require({
-    target: event.currentTarget as HTMLElement,
-    message: `Remove "${account.label}"? Session data will be deleted.`,
-    icon: 'pi pi-exclamation-triangle',
-    acceptClass: 'p-button-danger p-button-sm',
-    rejectClass: 'p-button-text p-button-sm',
-    acceptLabel: 'Remove',
-    rejectLabel: 'Cancel',
-    accept: () => {
-      if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
-        import('@tauri-apps/api/core').then(({ invoke }) =>
-          invoke('delete_account_session', { accountId }),
-        )
-      }
-      accountsStore.remove(accountId)
-    },
-  })
 }
 
 onMounted(() => {
@@ -406,76 +323,6 @@ onMounted(() => {
   background-color: var(--surface-hover);
 }
 
-.add-account-btn {
-  opacity: 0;
-  transition: opacity 0.2s;
-  flex-shrink: 0;
-  margin-right: 0.25rem;
-}
-
-.network-row:hover .add-account-btn {
-  opacity: 1;
-}
-
-/* Account list under active network */
-.account-list {
-  padding: 0.25rem 0 0.25rem 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-}
-
-.account-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.35rem 0.5rem;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  color: var(--text-color-secondary);
-  transition: background-color 0.15s;
-}
-
-.account-item:hover {
-  background-color: var(--surface-hover);
-}
-
-.account-item--active {
-  color: var(--text-color);
-  font-weight: 600;
-}
-
-.account-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--surface-border);
-  flex-shrink: 0;
-}
-
-.account-item--active .account-dot {
-  background: var(--primary-color);
-}
-
-.account-label {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.remove-account-btn {
-  opacity: 0;
-  transition: opacity 0.15s;
-  flex-shrink: 0;
-  width: 1.5rem !important;
-  height: 1.5rem !important;
-}
-
-.account-item:hover .remove-account-btn {
-  opacity: 1;
-}
 
 .menu-section {
   margin-bottom: 1rem;
@@ -601,10 +448,7 @@ onMounted(() => {
   }
 
   .sidebar,
-  .kanban-item,
-  .add-account-btn,
-  .remove-account-btn,
-  .account-item {
+  .kanban-item {
     transition: none;
   }
 

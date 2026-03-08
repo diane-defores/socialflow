@@ -6,7 +6,7 @@
       <div class="placeholder-content">
         <i class="pi pi-desktop" style="font-size: 3rem; opacity: 0.3" />
         <p><strong>{{ webviewStore.activeNetworkId }}</strong></p>
-        <p>{{ activeAccount?.label ?? 'No account' }}</p>
+        <p>{{ profilesStore.activeProfile?.emoji }} {{ profilesStore.activeProfile?.name ?? 'No profile' }}</p>
         <p class="hint">Native webview renders here in the Tauri desktop app.</p>
       </div>
     </div>
@@ -16,44 +16,45 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { useWebviewStore } from '@/stores/webviewState'
-import { useAccountsStore } from '@/stores/accounts'
+import { useProfilesStore } from '@/stores/profiles'
 import { useNetworkWebview } from '../composables/useNetworkWebview'
 
 const webviewStore = useWebviewStore()
-const accountsStore = useAccountsStore()
+const profilesStore = useProfilesStore()
 const hostEl = ref<HTMLElement | null>(null)
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
 
-const { open, switchAccount, close } = useNetworkWebview(hostEl)
-
-const activeAccount = computed(() =>
-  webviewStore.activeNetworkId
-    ? accountsStore.getActive(webviewStore.activeNetworkId)
-    : undefined,
-)
+const { open, switchTo, close } = useNetworkWebview(hostEl)
 
 const activeUrl = computed(() => webviewStore.activeUrl)
+const activeNetworkId = computed(() => webviewStore.activeNetworkId)
+const activeProfileId = computed(() => profilesStore.activeProfileId)
 
-// React to network/account changes — open or switch the webview
+// React to network or profile changes — open or switch the webview
 watch(
-  [activeUrl, activeAccount],
-  async ([url, account], [prevUrl, prevAccount]) => {
-    if (!url || !account) {
+  [activeUrl, activeNetworkId, activeProfileId],
+  async ([url, networkId, profileId], [prevUrl, prevNetworkId, prevProfileId]) => {
+    if (!url || !networkId || !profileId) {
       await close()
       return
     }
-    if (prevAccount && prevAccount.id !== account.id) {
-      await switchAccount(url, account.id)
-    } else if (url !== prevUrl || !prevAccount) {
-      await open(url, account.id)
+    const keyChanged =
+      networkId !== prevNetworkId || profileId !== prevProfileId || url !== prevUrl
+    if (keyChanged && (prevNetworkId || prevProfileId)) {
+      await switchTo(url, profileId, networkId)
+    } else if (!prevNetworkId && !prevProfileId) {
+      await open(url, profileId, networkId)
     }
   },
   { immediate: true },
 )
 
 onMounted(async () => {
-  if (activeUrl.value && activeAccount.value) {
-    await open(activeUrl.value, activeAccount.value.id)
+  const url = activeUrl.value
+  const networkId = activeNetworkId.value
+  const profileId = activeProfileId.value
+  if (url && networkId && profileId) {
+    await open(url, profileId, networkId)
   }
 })
 </script>

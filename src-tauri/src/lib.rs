@@ -14,9 +14,10 @@ use tauri_plugin_android_webview::AndroidWebviewExt;
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
+/// Unique label per (profile, network) pair — ensures isolated webviews.
 #[cfg(not(target_os = "android"))]
-fn webview_label(account_id: &str) -> String {
-    format!("social-{}", account_id)
+fn webview_label(profile_id: &str, network_id: &str) -> String {
+    format!("social-{}-{}", profile_id, network_id)
 }
 
 // ─── Tray setup (desktop only) ───────────────────────────────────────────────
@@ -110,13 +111,14 @@ fn toggle_window(app: &AppHandle) {
 fn open_webview(
     app: AppHandle,
     url: String,
-    account_id: String,
+    profile_id: String,
+    network_id: String,
     x: f64,
     y: f64,
     width: f64,
     height: f64,
 ) -> Result<(), String> {
-    let label = webview_label(&account_id);
+    let label = webview_label(&profile_id, &network_id);
     let parsed: url::Url = url.parse().map_err(|e: url::ParseError| e.to_string())?;
 
     if let Some(wv) = app.get_webview(&label) {
@@ -129,12 +131,14 @@ fn open_webview(
         return Ok(());
     }
 
+    // Session data isolated per (profile, network) — cookies/localStorage/IndexedDB
     let data_dir = app
         .path()
         .app_data_dir()
         .map_err(|e| e.to_string())?
         .join("sessions")
-        .join(&account_id);
+        .join(&profile_id)
+        .join(&network_id);
 
     let window = app
         .get_window("main")
@@ -155,13 +159,14 @@ fn open_webview(
 #[cfg(not(target_os = "android"))]
 fn resize_webview(
     app: AppHandle,
-    account_id: String,
+    profile_id: String,
+    network_id: String,
     x: f64,
     y: f64,
     width: f64,
     height: f64,
 ) -> Result<(), String> {
-    let label = webview_label(&account_id);
+    let label = webview_label(&profile_id, &network_id);
     if let Some(wv) = app.get_webview(&label) {
         wv.set_bounds(tauri::Rect {
             position: tauri::Position::Logical(tauri::LogicalPosition::new(x, y)),
@@ -174,8 +179,8 @@ fn resize_webview(
 
 #[tauri::command]
 #[cfg(not(target_os = "android"))]
-fn close_webview(app: AppHandle, account_id: String) -> Result<(), String> {
-    let label = webview_label(&account_id);
+fn close_webview(app: AppHandle, profile_id: String, network_id: String) -> Result<(), String> {
+    let label = webview_label(&profile_id, &network_id);
     if let Some(wv) = app.get_webview(&label) {
         wv.close().map_err(|e| e.to_string())?;
     }
@@ -189,14 +194,17 @@ fn close_webview(app: AppHandle, account_id: String) -> Result<(), String> {
 fn open_webview(
     app: AppHandle,
     url: String,
-    account_id: String,
+    profile_id: String,
+    network_id: String,
     _x: f64,
     _y: f64,
     _width: f64,
     _height: f64,
 ) -> Result<(), String> {
+    // Use "profileId-networkId" as the session key for Android
+    let session_key = format!("{}-{}", profile_id, network_id);
     app.android_webview()
-        .open(&url, &account_id)
+        .open(&url, &session_key)
         .map_err(|e| e.to_string())
 }
 
@@ -204,7 +212,8 @@ fn open_webview(
 #[cfg(target_os = "android")]
 fn resize_webview(
     _app: AppHandle,
-    _account_id: String,
+    _profile_id: String,
+    _network_id: String,
     _x: f64,
     _y: f64,
     _width: f64,
@@ -216,23 +225,45 @@ fn resize_webview(
 
 #[tauri::command]
 #[cfg(target_os = "android")]
-fn close_webview(app: AppHandle, account_id: String) -> Result<(), String> {
+fn close_webview(app: AppHandle, profile_id: String, network_id: String) -> Result<(), String> {
+    let session_key = format!("{}-{}", profile_id, network_id);
     app.android_webview()
-        .close(&account_id)
+        .close(&session_key)
         .map_err(|e| e.to_string())
 }
 
 // ── Cross-platform ───────────────────────────────────────────────────────────
 
-/// Wipe the session data directory for an account.
+/// Wipe all session data for a profile (all networks).
 #[tauri::command]
-fn delete_account_session(app: AppHandle, account_id: String) -> Result<(), String> {
+fn delete_profile_session(app: AppHandle, profile_id: String) -> Result<(), String> {
     let data_dir = app
         .path()
         .app_data_dir()
         .map_err(|e| e.to_string())?
         .join("sessions")
-        .join(&account_id);
+        .join(&profile_id);
+
+    if data_dir.exists() {
+        std::fs::remove_dir_all(&data_dir).map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+/// Wipe session data for a single (profile, network) pair.
+#[tauri::command]
+fn delete_network_session(
+    app: AppHandle,
+    profile_id: String,
+    network_id: String,
+) -> Result<(), String> {
+    let data_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| e.to_string())?
+        .join("sessions")
+        .join(&profile_id)
+        .join(&network_id);
 
     if data_dir.exists() {
         std::fs::remove_dir_all(&data_dir).map_err(|e| e.to_string())?;
@@ -264,7 +295,8 @@ pub fn run() {
             open_webview,
             resize_webview,
             close_webview,
-            delete_account_session,
+            delete_profile_session,
+            delete_network_session,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
