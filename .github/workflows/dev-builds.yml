@@ -64,23 +64,8 @@ jobs:
       - name: Initialize Android target
         run: pnpm exec tauri android init --ci
 
-      - name: Show generated Android project structure
-        run: |
-          echo "=== settings.gradle.kts ==="
-          cat src-tauri/gen/android/settings.gradle.kts || echo "NOT FOUND"
-          echo "=== app/build.gradle.kts ==="
-          cat src-tauri/gen/android/app/build.gradle.kts || echo "NOT FOUND"
-          echo "=== Included modules ==="
-          ls src-tauri/gen/android/ || echo "dir not found"
-
       - name: Build debug APK
         run: pnpm exec tauri android build --ci --debug --apk -t aarch64
-
-      - name: Show Gradle error details (on failure)
-        if: failure()
-        run: |
-          cd src-tauri/gen/android
-          ./gradlew assembleDebug --stacktrace 2>&1 | tail -150 || true
 
       - name: Upload Android artifact
         uses: actions/upload-artifact@v4
