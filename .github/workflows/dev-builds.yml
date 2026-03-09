@@ -25,19 +25,23 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install Android SDK packages
+      - name: Accept licenses & set NDK
         run: |
-          yes | sdkmanager --licenses
-          # Uninstall any pre-installed NDK versions to avoid Tauri picking the wrong one
-          sdkmanager --uninstall "ndk;29.0.14206865" 2>/dev/null || true
-          sdkmanager --install \
-            "platform-tools" \
-            "platforms;android-35" \
-            "build-tools;35.0.0" \
-            "cmake;3.22.1" \
-            "ndk;27.0.12077973"
-          echo "NDK_HOME=$ANDROID_HOME/ndk/27.0.12077973" >> $GITHUB_ENV
-          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.0.12077973" >> $GITHUB_ENV
+          yes | sdkmanager --licenses > /dev/null 2>&1 || true
+          # Use the NDK the runner already has — auto-detect from ANDROID_HOME/ndk/
+          NDK_VERSION=$(ls "$ANDROID_HOME/ndk" | sort -V | tail -1)
+          echo "NDK_HOME=$ANDROID_HOME/ndk/$NDK_VERSION" >> $GITHUB_ENV
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$NDK_VERSION" >> $GITHUB_ENV
+          echo "Using NDK: $NDK_VERSION"
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ hashFiles('**/*.gradle.kts', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4

@@ -8,6 +8,7 @@ use crate::error::{Error, Result};
 pub struct OpenRequest {
     pub url: String,
     pub account_id: String,
+    pub network_id: String,
 }
 
 #[derive(Serialize)]
@@ -19,13 +20,14 @@ pub struct AccountRequest {
 pub struct AndroidWebview<R: Runtime>(pub PluginHandle<R>);
 
 impl<R: Runtime> AndroidWebview<R> {
-    pub fn open(&self, url: &str, account_id: &str) -> Result<()> {
+    pub fn open(&self, url: &str, account_id: &str, network_id: &str) -> Result<()> {
         self.0
             .run_mobile_plugin(
                 "openWebView",
                 OpenRequest {
                     url: url.to_string(),
                     account_id: account_id.to_string(),
+                    network_id: network_id.to_string(),
                 },
             )
             .map_err(|e| Error::PluginInvoke(e.to_string()))

@@ -1,18 +1,23 @@
 <template>
   <div class="app-container">
-    <AppHeader
-      v-model:sidebar-visible="sidebarVisible"
-      v-model:right-sidebar-visible="rightSidebarVisible"
-    />
+    <!-- Mobile layout (≤768px): single-column, no panels -->
+    <MobileLayout v-if="isMobile" />
 
-    <AppSidebar v-model="sidebarVisible">
-      <AppRightSidebar v-model="rightSidebarVisible">
-        <!-- Native Tauri webview host: shown when a webview-capable network is active -->
-        <NetworkWebviewHost v-if="webviewStore.activeUrl" />
-        <!-- Router-view for Gmail (API), login, and other non-webview pages -->
-        <router-view v-else />
-      </AppRightSidebar>
-    </AppSidebar>
+    <!-- Desktop layout: header + resizable sidebars -->
+    <template v-else>
+      <AppHeader
+        v-model:sidebar-visible="sidebarVisible"
+        v-model:right-sidebar-visible="rightSidebarVisible"
+      />
+      <AppSidebar v-model="sidebarVisible">
+        <AppRightSidebar v-model="rightSidebarVisible">
+          <!-- Native Tauri webview host: shown when a webview-capable network is active -->
+          <NetworkWebviewHost v-if="webviewStore.activeUrl" />
+          <!-- Router-view for Gmail (API), login, and other non-webview pages -->
+          <router-view v-else />
+        </AppRightSidebar>
+      </AppSidebar>
+    </template>
   </div>
 </template>
 
@@ -25,6 +30,7 @@ import AppHeader from './components/AppHeader.vue'
 import AppSidebar from './components/AppSidebar.vue'
 import AppRightSidebar from './components/AppRightSidebar.vue'
 import NetworkWebviewHost from './components/NetworkWebviewHost.vue'
+import MobileLayout from './components/MobileLayout.vue'
 
 const sidebarVisible = ref(true)
 const rightSidebarVisible = ref(true)
@@ -33,24 +39,48 @@ const themeStore = useThemeStore()
 const webviewStore = useWebviewStore()
 const profilesStore = useProfilesStore()
 
+// Mobile detection — reactive on window resize
+const isMobile = ref(window.innerWidth <= 768)
+const handleResize = () => { isMobile.value = window.innerWidth <= 768 }
+
 let unlistenTray: (() => void) | undefined
+let unlistenBack: (() => void) | undefined
+let unlistenSwitch: (() => void) | undefined
 
 onMounted(async () => {
   themeStore.initTheme()
   profilesStore.ensureDefault()
 
-  // Listen for tray menu "open network" events (only in Tauri)
+  window.addEventListener('resize', handleResize)
+
+  // Listen for Tauri events (only in Tauri)
   if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
     const { listen } = await import('@tauri-apps/api/event')
+
+    // Desktop tray: open network
     unlistenTray = await listen<string>('tray:open-network', ({ payload: networkId }) => {
       profilesStore.ensureDefault()
       webviewStore.selectNetwork(networkId)
+    })
+
+    // Android native overlay: back button pressed → return to dashboard
+    unlistenBack = await listen('webview-back', () => {
+      webviewStore.clearNetwork()
+    })
+
+    // Android native overlay: switch to another network
+    unlistenSwitch = await listen<{ networkId: string }>('webview-switch-network', ({ payload }) => {
+      profilesStore.ensureDefault()
+      webviewStore.selectNetwork(payload.networkId)
     })
   }
 })
 
 onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
   unlistenTray?.()
+  unlistenBack?.()
+  unlistenSwitch?.()
 })
 </script>
 

@@ -204,7 +204,7 @@ fn open_webview(
     // Use "profileId-networkId" as the session key for Android
     let session_key = format!("{}-{}", profile_id, network_id);
     app.android_webview()
-        .open(&url, &session_key)
+        .open(&url, &session_key, &network_id)
         .map_err(|e| e.to_string())
 }
 
