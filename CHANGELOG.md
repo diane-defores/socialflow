@@ -2,6 +2,13 @@
 
 All notable changes to SocialFlow are documented here.
 
+## [Unreleased] — 2026-03-10 (c)
+
+### Fixed
+- Android CI: declare `androidx.activity:activity-ktx` as an explicit dependency in the plugin `build.gradle.kts` — Gradle APK build was failing because `OnBackPressedCallback` / `ComponentActivity` are not transitively exposed by `tauri-android`
+
+---
+
 ## [Unreleased] — 2026-03-10 (b)
 
 ### Added
