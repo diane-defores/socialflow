@@ -5,6 +5,7 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.os.Build
 import android.view.Gravity
 import android.view.HapticFeedbackConstants
 import android.view.View
@@ -302,8 +303,10 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             currentAccountId = args.accountId
             currentNetworkId = args.networkId
 
-            // Apply persisted mute state to the new webview
-            webView.setAudioMuted(isMuted)
+            // Apply persisted mute state to the new webview (API 26+)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                webView.setAudioMuted(isMuted)
+            }
 
             webView.loadUrl(args.url)
             invoke.resolve(JSObject())
@@ -458,7 +461,9 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         btn.setOnClickListener {
             btn.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
             isMuted = !isMuted
-            socialWebView?.setAudioMuted(isMuted)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                socialWebView?.setAudioMuted(isMuted)
+            }
             updateMuteButtonIcon(btn)
         }
         return btn
