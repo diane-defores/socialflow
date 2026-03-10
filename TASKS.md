@@ -122,6 +122,7 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [x] Vue mobile overlay bar removed — single native Kotlin bottom bar (no duplicate) (2026-03-10)
 - [x] BuildFlowz inspector script removed from index.html (2026-03-10)
 - [x] `viewport-fit=cover` added — enables `env(safe-area-inset-top)` on Android (2026-03-10)
+- [x] Android CI build fix — add `androidx.activity:activity-ktx:1.9.3` to plugin `build.gradle.kts` (OnBackPressedCallback missing dep) (2026-03-10)
 - [ ] 🟡 Header search/filters hidden on mobile — add mobile-accessible alternative
 - [ ] 🟡 Android: test `navigate_webview` network switching end-to-end on device
 - [ ] 🟡 Android: verify edge-to-edge status bar color inversion (light icons on dark home screen)
