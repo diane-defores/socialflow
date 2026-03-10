@@ -112,7 +112,19 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [x] Android: bottom bar network buttons fully circular with per-network brand colors (2026-03-10)
 - [x] Android: `closeWebView` now synchronous (CountDownLatch) — fixes network-switch race condition (2026-03-10)
 - [x] Mobile Vue: overlay bar moved from top to bottom — consistent with native Android bar (2026-03-10)
+- [x] Android: grayscale toggle now also applies ColorMatrix to native bottom bar (2026-03-10)
+- [x] Android: cookie consent auto-accept improved — Instagram + TikTok specific selectors, fallback global scan, 5s timeout (2026-03-10)
+- [x] Android: back button fixed — triggers Vue event first, no blank-page flash (2026-03-10)
+- [x] Android: network switching fixed — `navigate_webview` command (fast URL swap, no destroy/recreate) (2026-03-10)
+- [x] Android: network button tags fixed — `updateBottomBarActiveNetwork` now correctly highlights active network (2026-03-10)
+- [x] Android: edge-to-edge mode — transparent status bar, content extends to top like Instagram/TikTok (2026-03-10)
+- [x] Mobile home screen redesigned — profile card (centered emoji + name), networks as vertical card list with brand colors (2026-03-10)
+- [x] Vue mobile overlay bar removed — single native Kotlin bottom bar (no duplicate) (2026-03-10)
+- [x] BuildFlowz inspector script removed from index.html (2026-03-10)
+- [x] `viewport-fit=cover` added — enables `env(safe-area-inset-top)` on Android (2026-03-10)
 - [ ] 🟡 Header search/filters hidden on mobile — add mobile-accessible alternative
+- [ ] 🟡 Android: test `navigate_webview` network switching end-to-end on device
+- [ ] 🟡 Android: verify edge-to-edge status bar color inversion (light icons on dark home screen)
 
 ### To go live (⛔ blocked — needs accounts)
 

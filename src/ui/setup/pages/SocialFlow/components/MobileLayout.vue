@@ -1,77 +1,56 @@
 <template>
-  <!-- Webview active: fullscreen webview host + bottom overlay bar -->
+  <!-- Webview active: transparent host — the native Kotlin overlay covers everything -->
   <div v-if="webviewStore.activeUrl" class="mobile-webview-screen">
-    <!-- Host div fills the available space above the bottom bar -->
     <NetworkWebviewHost class="mobile-webview-host" />
-
-    <div class="mobile-overlay-bar">
-      <button class="overlay-btn overlay-back" @click="goBack" aria-label="Retour">
-        <i class="pi pi-arrow-left" />
-      </button>
-
-      <div class="overlay-current-network">
-        <i :class="currentNetwork?.icon" />
-        <span>{{ currentNetwork?.label }}</span>
-      </div>
-
-      <div class="overlay-network-switcher">
-        <button
-          v-for="item in webviewNetworks"
-          :key="item.id"
-          class="overlay-btn overlay-network-btn"
-          :class="{ active: isNetworkActive(item) }"
-          :aria-label="item.label"
-          v-tooltip.top="item.label"
-          @click="navigateToNetwork(item)"
-        >
-          <i :class="item.icon" />
-        </button>
-      </div>
-    </div>
   </div>
 
-  <!-- Default view: profile on top, network grid on bottom -->
+  <!-- Home screen -->
   <div v-else class="mobile-home">
-    <!-- Profile section (top) -->
-    <div class="mobile-profile-section">
-      <ProfileSwitcher :iconsOnly="false" />
 
-      <div class="mobile-menu-buttons">
-        <button class="mobile-menu-btn">
-          <i class="pi pi-home" /><span>Fil d'actualité</span>
-        </button>
-        <button class="mobile-menu-btn">
-          <i class="pi pi-user" /><span>Profil</span>
-        </button>
-        <button class="mobile-menu-btn">
-          <i class="pi pi-users" /><span>Amis</span>
-        </button>
-        <button class="mobile-menu-btn">
-          <i class="pi pi-bell" /><span>Notifications</span>
-          <span class="badge">3</span>
-        </button>
-        <button class="mobile-menu-btn">
-          <i class="pi pi-bookmark" /><span>Enregistrements</span>
-        </button>
-        <button class="mobile-menu-btn">
-          <i class="pi pi-calendar" /><span>Événements</span>
-        </button>
+    <!-- Profile card -->
+    <div class="profile-card" @click="profileMenuVisible = !profileMenuVisible">
+      <div class="profile-avatar">{{ profilesStore.activeProfile?.emoji ?? '👤' }}</div>
+      <div class="profile-info">
+        <span class="profile-name">{{ profilesStore.activeProfile?.name ?? 'Profil' }}</span>
+        <span class="profile-sub">Appuyer pour changer</span>
       </div>
+      <i class="pi pi-chevron-down profile-chevron" :class="{ rotated: profileMenuVisible }" />
     </div>
 
-    <!-- Network grid (bottom) -->
-    <div class="mobile-network-section">
-      <h3 class="section-title">Réseaux sociaux</h3>
-      <div class="network-grid">
+    <!-- Profile switcher dropdown -->
+    <div v-if="profileMenuVisible" class="profile-dropdown">
+      <div
+        v-for="profile in profilesStore.profiles"
+        :key="profile.id"
+        class="profile-option"
+        :class="{ active: profile.id === profilesStore.activeProfileId }"
+        @click="selectProfile(profile.id)"
+      >
+        <span class="profile-option-emoji">{{ profile.emoji }}</span>
+        <span class="profile-option-name">{{ profile.name }}</span>
+        <i v-if="profile.id === profilesStore.activeProfileId" class="pi pi-check" />
+      </div>
+      <button class="add-profile-btn" @click.stop="addProfile">
+        <i class="pi pi-plus" /><span>Nouveau profil</span>
+      </button>
+    </div>
+
+    <!-- Network list -->
+    <div class="networks-section">
+      <p class="section-title">Réseaux sociaux</p>
+      <div class="network-list">
         <button
           v-for="item in menuItems"
           :key="item.id"
-          class="network-tile"
+          class="network-card"
           :class="{ active: isNetworkActive(item) }"
           @click="navigateToNetwork(item)"
         >
-          <i :class="item.icon" />
-          <span>{{ item.label }}</span>
+          <span class="network-icon-wrap" :style="{ background: networkColors[item.id] }">
+            <i :class="item.icon" />
+          </span>
+          <span class="network-name">{{ item.label }}</span>
+          <i class="pi pi-chevron-right network-arrow" />
         </button>
       </div>
     </div>
@@ -79,20 +58,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useWebviewStore } from '@/stores/webviewState'
 import { useProfilesStore } from '@/stores/profiles'
 import type { MenuItem } from '../types'
-import ProfileSwitcher from './ProfileSwitcher.vue'
 import NetworkWebviewHost from './NetworkWebviewHost.vue'
 
 const router = useRouter()
 const webviewStore = useWebviewStore()
 const profilesStore = useProfilesStore()
 
+const profileMenuVisible = ref(false)
+
 const menuItems = ref<MenuItem[]>([
-  { id: 1, label: 'Twitter', icon: 'pi pi-twitter', route: '/twitter' },
+  { id: 1, label: 'Twitter / X', icon: 'pi pi-twitter', route: '/twitter' },
   { id: 2, label: 'Facebook', icon: 'pi pi-facebook', route: '/facebook' },
   { id: 3, label: 'Instagram', icon: 'pi pi-instagram', route: '/instagram' },
   { id: 4, label: 'LinkedIn', icon: 'pi pi-linkedin', route: '/linkedin' },
@@ -104,19 +84,24 @@ const menuItems = ref<MenuItem[]>([
   { id: 10, label: 'Kanban', icon: 'pi pi-th-large', route: '/kanban' },
 ])
 
-// Only webview-capable networks for the quick-switch bar
-const webviewNetworks = computed(() =>
-  menuItems.value.filter(item => webviewStore.usesWebview(item.route.slice(1)))
-)
-
-const currentNetwork = computed(() =>
-  menuItems.value.find(item => item.route.slice(1) === webviewStore.activeNetworkId)
-)
+const networkColors: Record<number, string> = {
+  1:  '#000000',
+  2:  '#1877F2',
+  3:  'linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)',
+  4:  '#0A66C2',
+  5:  '#010101',
+  6:  '#000000',
+  7:  '#5865F2',
+  8:  '#FF4500',
+  9:  '#EA4335',
+  10: '#6366F1',
+}
 
 const isNetworkActive = (item: MenuItem) =>
   webviewStore.activeNetworkId === item.route.slice(1)
 
 const navigateToNetwork = (network: MenuItem) => {
+  profileMenuVisible.value = false
   const networkId = network.route.slice(1)
   if (webviewStore.usesWebview(networkId)) {
     profilesStore.ensureDefault()
@@ -127,8 +112,15 @@ const navigateToNetwork = (network: MenuItem) => {
   }
 }
 
-const goBack = () => {
-  webviewStore.clearNetwork()
+function selectProfile(profileId: string) {
+  profilesStore.setActive(profileId)
+  profileMenuVisible.value = false
+}
+
+function addProfile() {
+  const name = `Profil ${profilesStore.profiles.length + 1}`
+  profilesStore.add(name)
+  profileMenuVisible.value = false
 }
 </script>
 
@@ -136,99 +128,13 @@ const goBack = () => {
 /* ─── Webview screen ─────────────────────────────────────────── */
 
 .mobile-webview-screen {
-  display: flex;
-  flex-direction: column;
   height: 100vh;
   width: 100%;
-  overflow: hidden;
 }
 
-/* Overlay bar sits BELOW the native webview, at the bottom of the screen */
-.mobile-overlay-bar {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  height: 3.25rem;
-  padding: 0 0.75rem;
-  padding-bottom: env(safe-area-inset-bottom, 0);
-  background: var(--surface-card);
-  border-top: 1px solid var(--surface-border);
-  z-index: 100;
-}
-
-.overlay-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--text-color);
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-  flex-shrink: 0;
-  transition: background-color 0.15s;
-}
-
-.overlay-btn:hover,
-.overlay-btn:active {
-  background-color: var(--surface-hover);
-}
-
-.overlay-back {
-  font-size: 1.1rem;
-}
-
-.overlay-current-network {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-weight: 600;
-  font-size: 0.95rem;
-  color: var(--text-color);
-  flex-shrink: 0;
-}
-
-.overlay-current-network i {
-  font-size: 1rem;
-  color: var(--primary-color);
-}
-
-/* Scrollable quick-switch network icons */
-.overlay-network-switcher {
-  display: flex;
-  align-items: center;
-  gap: 0.15rem;
-  margin-left: auto;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-
-.overlay-network-switcher::-webkit-scrollbar {
-  display: none;
-}
-
-.overlay-network-btn {
-  font-size: 1rem;
-  width: 2.25rem;
-  height: 2.25rem;
-}
-
-.overlay-network-btn.active {
-  background-color: color-mix(in srgb, var(--primary-color) 15%, transparent);
-  color: var(--primary-color);
-}
-
-/* The webview host fills the space above the bottom overlay bar */
 .mobile-webview-host {
-  flex: 1;
   width: 100%;
-  min-height: 0;
-  overflow: hidden;
+  height: 100%;
 }
 
 /* ─── Home screen ────────────────────────────────────────────── */
@@ -238,121 +144,226 @@ const goBack = () => {
   flex-direction: column;
   height: 100%;
   overflow-y: auto;
+  /* Background fills to the very top (behind status bar icons), content is padded below */
+  background: var(--surface-ground);
+  padding-top: env(safe-area-inset-top, 24px);
 }
 
-/* Profile section */
-.mobile-profile-section {
-  background: var(--surface-card);
-  border-bottom: 1px solid var(--surface-border);
-  padding-bottom: 0.5rem;
-}
 
-.mobile-menu-buttons {
-  display: flex;
-  flex-direction: column;
-}
+/* ─── Profile card ───────────────────────────────────────────── */
 
-.mobile-menu-btn {
+.profile-card {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  background: none;
-  border: none;
+  gap: 0.9rem;
+  margin: 1rem;
+  padding: 1rem 1.1rem;
+  background: var(--surface-card);
+  border-radius: 16px;
+  border: 1px solid var(--surface-border);
   cursor: pointer;
-  color: var(--text-color);
-  padding: 0.85rem 1.25rem;
-  font-size: 0.95rem;
-  text-align: left;
-  width: 100%;
-  position: relative;
+  box-shadow: var(--card-shadow);
   transition: background-color 0.15s;
 }
 
-.mobile-menu-btn:hover,
-.mobile-menu-btn:active {
-  background-color: var(--surface-hover);
+.profile-card:active {
+  background: var(--surface-hover);
 }
 
-.mobile-menu-btn i {
-  font-size: 1.1rem;
-  color: var(--text-color-secondary);
-  width: 1.25rem;
+.profile-avatar {
+  font-size: 2.2rem;
+  line-height: 1;
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-ground);
+  border-radius: 50%;
   flex-shrink: 0;
 }
 
-.mobile-menu-btn .badge {
-  position: absolute;
-  right: 1.25rem;
-  background: var(--primary-color);
-  color: #fff;
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 0.1rem 0.4rem;
-  border-radius: 1rem;
-  line-height: 1.4;
+.profile-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  overflow: hidden;
 }
 
-/* Network section */
-.mobile-network-section {
+.profile-name {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-sub {
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+}
+
+.profile-chevron {
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+.profile-chevron.rotated {
+  transform: rotate(180deg);
+}
+
+/* ─── Profile dropdown ───────────────────────────────────────── */
+
+.profile-dropdown {
+  margin: 0 1rem 0.5rem;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--card-shadow);
+}
+
+.profile-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.12s;
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.profile-option:last-of-type {
+  border-bottom: none;
+}
+
+.profile-option:active,
+.profile-option:hover {
+  background: var(--surface-hover);
+}
+
+.profile-option.active {
+  background: color-mix(in srgb, var(--primary-color) 8%, transparent);
+}
+
+.profile-option-emoji {
+  font-size: 1.2rem;
+}
+
+.profile-option-name {
   flex: 1;
-  padding: 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.profile-option .pi-check {
+  font-size: 0.8rem;
+  color: var(--primary-color);
+}
+
+.add-profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--surface-border);
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+  transition: background-color 0.12s, color 0.12s;
+}
+
+.add-profile-btn:hover,
+.add-profile-btn:active {
+  background: var(--surface-hover);
+  color: var(--text-color);
+}
+
+/* ─── Network list ───────────────────────────────────────────── */
+
+.networks-section {
+  flex: 1;
+  padding: 0 1rem 1rem;
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
 }
 
 .section-title {
-  margin: 0 0 0.75rem;
-  font-size: 0.8rem;
+  margin: 0.5rem 0 0.6rem 0.25rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-color-secondary);
 }
 
-.network-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.75rem;
-}
-
-.network-tile {
+.network-list {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  background: var(--surface-card);
-  border: 1px solid var(--surface-border);
-  border-radius: 12px;
-  padding: 0.9rem 0.5rem;
-  cursor: pointer;
-  font-size: 0.75rem;
-  color: var(--text-color);
-  transition: background-color 0.15s, transform 0.1s;
+  gap: 0.5rem;
 }
 
-.network-tile i {
-  font-size: 1.5rem;
+.network-card {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.85rem 1rem;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.15s, transform 0.1s;
+  box-shadow: var(--card-shadow);
+}
+
+.network-card:active {
+  transform: scale(0.98);
+  background: var(--surface-hover);
+}
+
+.network-card.active {
+  border-color: var(--primary-color);
+  background: color-mix(in srgb, var(--primary-color) 6%, var(--surface-card));
+}
+
+.network-icon-wrap {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.network-icon-wrap i {
+  font-size: 1.15rem;
+  color: #fff;
+}
+
+.network-name {
+  flex: 1;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.network-arrow {
+  font-size: 0.7rem;
   color: var(--text-color-secondary);
 }
 
-.network-tile.active {
-  background-color: color-mix(in srgb, var(--primary-color) 12%, transparent);
-  border-color: var(--primary-color);
-}
-
-.network-tile.active i {
-  color: var(--primary-color);
-}
-
-.network-tile:hover,
-.network-tile:active {
-  background-color: var(--surface-hover);
-  transform: scale(0.97);
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .overlay-btn,
-  .mobile-menu-btn,
-  .network-tile {
+  .network-card,
+  .profile-chevron {
     transition: none;
   }
 }

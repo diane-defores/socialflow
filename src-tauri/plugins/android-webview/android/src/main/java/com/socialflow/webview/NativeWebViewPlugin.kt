@@ -5,10 +5,12 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.os.Build
 import android.view.Gravity
 import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.webkit.CookieManager
 import android.webkit.WebChromeClient
 import android.webkit.WebSettings
@@ -41,6 +43,12 @@ class AccountArgs {
 @InvokeArg
 class GrayscaleArgs {
     var enabled: Boolean = false
+}
+
+@InvokeArg
+class NavigateArgs {
+    var url: String = ""
+    var networkId: String = ""
 }
 
 // Network metadata for the bottom bar switcher
@@ -129,7 +137,7 @@ private val COOKIE_ACCEPT_SCRIPT = """
   if (window.__sfzCookieWatcher) return; // already installed
   window.__sfzCookieWatcher = true;
 
-  // Specific CMP selectors (OneTrust, CookieBot, Didomi, Axeptio, Quantcast…)
+  // Specific CMP selectors (OneTrust, CookieBot, Didomi, Axeptio, Quantcast, Meta/Instagram…)
   var SELECTORS = [
     '#onetrust-accept-btn-handler',
     '#accept-recommended-btn-handler',
@@ -143,15 +151,23 @@ private val COOKIE_ACCEPT_SCRIPT = """
     '.qc-cmp2-summary-buttons button:last-child',
     '.sp_choice_type_11',
     '[data-testid="GDPR-accept"]',
+    '[data-testid="cookie-policy-manage-dialog-accept-button"]',
     '[data-cookiebanner="accept_button"]',
     '#L2AGLb',
     '.tOjcNe',
     '[aria-label="Accept all"]',
-    '[aria-label="Tout accepter"]'
+    '[aria-label="Tout accepter"]',
+    '[aria-label="Allow all cookies"]',
+    '[aria-label="Autoriser tous les cookies"]',
+    // TikTok
+    '[data-e2e="cookie-banner-accept"]',
+    '.tiktok-cookie-banner button:last-child',
+    '[class*="CookieBanner"] button:last-child',
+    '[class*="cookie-banner"] button:last-child'
   ];
 
   // Text patterns matched case-insensitively against button innerText / aria-label
-  var ACCEPT_RE = /^(accept( all( cookies?)?)?|accepter( tout( les cookies?)?)?|tout accepter|autoriser( tout)?|allow( all)?|i agree|j'accepte|ok|got it|i accept|confirm all|agree)$/i;
+  var ACCEPT_RE = /^(accept( all( cookies?)?)?|accepter( tout(es)?( les cookies?)?)?|tout accepter|autoriser( tous?( les cookies?)?)?|allow( all( cookies?)?)?|i agree|j'accepte|ok|got it|i accept|confirm all|agree)$/i;
 
   function clickIfVisible(el) {
     if (!el) return false;
@@ -183,12 +199,21 @@ private val COOKIE_ACCEPT_SCRIPT = """
         if (ACCEPT_RE.test(label) && clickIfVisible(btns[b])) return;
       }
     }
+
+    // 3. Fallback: scan ALL visible buttons on the page (catches Meta/Instagram dialogs
+    //    that use no cookie-related class names on their container)
+    var allBtns = document.querySelectorAll('button, [role="button"]');
+    for (var i = 0; i < allBtns.length; i++) {
+      var label = (allBtns[i].textContent || allBtns[i].getAttribute('aria-label') || '').trim();
+      if (ACCEPT_RE.test(label) && clickIfVisible(allBtns[i])) return;
+    }
   }
 
   // Run immediately, then after common CMP lazy-load delays
   tryAccept();
   setTimeout(tryAccept, 800);
   setTimeout(tryAccept, 2500);
+  setTimeout(tryAccept, 5000);
 
   // Watch for dialogs injected into the DOM after initial load
   var observer = new MutationObserver(function(mutations) {
@@ -215,6 +240,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     // Grayscale state — survives network switches within a session
     private var isGrayscale = false
     private var grayscaleBtn: TextView? = null
+    private var bottomBarView: LinearLayout? = null
 
     // PrimeIcons typeface — loaded once from assets/primeicons.ttf
     private val primeIconsTypeface: Typeface by lazy {
@@ -234,6 +260,51 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     /** Returns NETWORKS sorted by usage count descending (most used → first). */
     private fun sortedNetworks(): List<NetworkInfo> =
         NETWORKS.sortedByDescending { prefs.getInt(it.id, 0) }
+
+    // ── Display setup (edge-to-edge) ─────────────────────────────────────────
+
+    @Command
+    fun setupDisplay(invoke: Invoke) {
+        activity.runOnUiThread { setupEdgeToEdge() }
+        invoke.resolve(JSObject())
+    }
+
+    /**
+     * Edge-to-edge mode: content extends behind the status bar.
+     * The status bar becomes a transparent overlay showing only time & battery icons.
+     * Matches what Instagram, TikTok, and other social apps do.
+     */
+    private fun setupEdgeToEdge() {
+        val window = activity.window
+
+        // Allow app content to draw behind the status bar
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window.setDecorFitsSystemWindows(false)
+        } else {
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = (
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+            )
+        }
+
+        // Transparent status bar — only icons float, no background bar
+        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+        window.statusBarColor = Color.TRANSPARENT
+
+        // White (light) icons — readable on dark or colorful content
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window.insetsController?.setSystemBarsAppearance(
+                0, // 0 = light icons (white)
+                android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = window.decorView.systemUiVisibility and
+                View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv()
+        }
+    }
 
     // ── Open / navigate ──────────────────────────────────────────────────────
 
@@ -279,6 +350,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
             // ── Bottom overlay bar (above nav bar) ───────────────────────────
             val bottomBar = buildBottomBar(density, navBarHeight, args.networkId, sortedNetworks())
+            bottomBarView = bottomBar
             val bottomBarParams = FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 barHeight + navBarHeight
@@ -306,6 +378,19 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             applyMuteToWebView(webView)
 
             webView.loadUrl(args.url)
+            invoke.resolve(JSObject())
+        }
+    }
+
+    // ── Navigate (reuse existing webview, no destroy/recreate) ───────────────
+
+    @Command
+    fun navigateWebView(invoke: Invoke) {
+        val args = invoke.parseArgs(NavigateArgs::class.java)
+        activity.runOnUiThread {
+            socialWebView?.loadUrl(args.url)
+            currentNetworkId = args.networkId
+            updateBottomBarActiveNetwork(args.networkId)
             invoke.resolve(JSObject())
         }
     }
@@ -347,6 +432,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         activity.runOnUiThread {
             isGrayscale = args.enabled
             applyGrayscaleToWebView(socialWebView)
+            applyGrayscaleToBottomBar(bottomBarView)
             grayscaleBtn?.let { updateGrayscaleButtonIcon(it) }
         }
         invoke.resolve(JSObject())
@@ -437,7 +523,8 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         btn.layoutParams = LinearLayout.LayoutParams(size, size)
         btn.setOnClickListener {
             btn.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-            destroySocialView()
+            // Trigger the event first — Vue will call clearNetwork() which sends close_webview IPC
+            // which then destroys the native overlay. This prevents the blank-page flash.
             trigger("webview-back", JSObject())
         }
         return btn
@@ -490,6 +577,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             btn.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
             isGrayscale = !isGrayscale
             applyGrayscaleToWebView(socialWebView)
+            applyGrayscaleToBottomBar(bottomBarView)
             updateGrayscaleButtonIcon(btn)
             // Notify Vue so it applies grayscale to the app UI and syncs the settings toggle
             val event = JSObject()
@@ -514,6 +602,19 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         view?.evaluateJavascript(js, null)
     }
 
+    private fun applyGrayscaleToBottomBar(bar: LinearLayout?) {
+        bar ?: return
+        if (isGrayscale) {
+            val cm = android.graphics.ColorMatrix()
+            cm.setSaturation(0f)
+            val paint = android.graphics.Paint()
+            paint.colorFilter = android.graphics.ColorMatrixColorFilter(cm)
+            bar.setLayerType(android.view.View.LAYER_TYPE_HARDWARE, paint)
+        } else {
+            bar.setLayerType(android.view.View.LAYER_TYPE_NONE, null)
+        }
+    }
+
     private fun buildNetworkButton(density: Float, net: NetworkInfo, isActive: Boolean): TextView {
         val btn = TextView(activity)
         btn.text = net.iconChar
@@ -529,6 +630,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         btn.layoutParams = params
 
         applyNetworkButtonBackground(btn, net, isActive, size)
+        btn.tag = net.id  // used by updateBottomBarActiveNetwork
 
         btn.isClickable = true
         btn.isFocusable = true
@@ -626,6 +728,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         socialRoot = null
         muteBtn = null
         grayscaleBtn = null
+        bottomBarView = null
         currentAccountId = null
         currentNetworkId = null
     }

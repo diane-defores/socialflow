@@ -64,6 +64,10 @@ onMounted(async () => {
   window.addEventListener('resize', handleResize)
 
   if (isTauri) {
+    const { invoke } = await import('@tauri-apps/api/core')
+    // Edge-to-edge: transparent status bar, content extends to top of screen
+    invoke('setup_display').catch(() => {})
+
     const { listen } = await import('@tauri-apps/api/event')
 
     unlistenTray = await listen<string>('tray:open-network', ({ payload: networkId }) => {
