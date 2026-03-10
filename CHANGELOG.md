@@ -2,6 +2,26 @@
 
 All notable changes to SocialFlow are documented here.
 
+## [Unreleased] — 2026-03-10 (b)
+
+### Added
+- Edge-to-edge display mode — transparent status bar with floating time/battery icons, matching Instagram and TikTok behaviour
+- `navigate_webview` Kotlin command — switches social network by loading a new URL in the existing WebView (no destroy/recreate, instant transition)
+- Cookie consent improvements — Instagram and TikTok specific selectors, global button scan fallback, extended 5 s timeout for late-loading dialogs
+- Home screen redesigned — profile card with large emoji avatar, networks as a vertical list of brand-colored cards
+- Grayscale mode now also applies ColorMatrix to the native Android bottom bar
+
+### Changed
+- Back button fires Vue event first before tearing down the overlay — eliminates blank-page flash on return to home screen
+- Vue mobile overlay bar removed — single native Kotlin bottom bar is the sole navigation surface
+- `viewport-fit=cover` added — activates `env(safe-area-inset-top)` for correct Android safe-area padding
+- Network button tags fixed so active network highlight updates correctly after switching
+
+### Removed
+- BuildFlowz web inspector script removed from `index.html`
+
+---
+
 ## [Unreleased] — 2026-03-10
 
 ### Added
