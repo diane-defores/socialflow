@@ -9,10 +9,19 @@
 
     <!-- Profile card -->
     <div class="profile-card" @click="profileMenuVisible = !profileMenuVisible">
-      <div class="profile-avatar">{{ profilesStore.activeProfile?.emoji ?? '👤' }}</div>
+      <div class="profile-avatar-wrap">
+        <div class="profile-avatar">{{ profilesStore.activeProfile?.emoji ?? '👤' }}</div>
+        <div class="profile-avatar-ring" />
+      </div>
       <div class="profile-info">
         <span class="profile-name">{{ profilesStore.activeProfile?.name ?? 'Profil' }}</span>
-        <span class="profile-sub">Appuyer pour changer</span>
+        <span class="profile-sub">
+          <i class="pi pi-th-large" style="font-size:0.65rem; margin-right:0.3rem;" />
+          {{ menuItems.length }} réseaux · Appuyer pour changer
+        </span>
+        <div class="profile-pills">
+          <span v-for="item in menuItems.slice(0, 5)" :key="item.id" class="profile-pill" :style="{ background: pillColor(item.id) }" />
+        </div>
       </div>
       <i class="pi pi-chevron-down profile-chevron" :class="{ rotated: profileMenuVisible }" />
     </div>
@@ -35,14 +44,14 @@
       </button>
     </div>
 
-    <!-- Network list -->
+    <!-- Network grid -->
     <div class="networks-section">
       <p class="section-title">Réseaux sociaux</p>
-      <div class="network-list">
+      <div class="network-grid">
         <button
           v-for="item in menuItems"
           :key="item.id"
-          class="network-card"
+          class="network-tile"
           :class="{ active: isNetworkActive(item) }"
           @click="navigateToNetwork(item)"
         >
@@ -50,7 +59,6 @@
             <i :class="item.icon" />
           </span>
           <span class="network-name">{{ item.label }}</span>
-          <i class="pi pi-chevron-right network-arrow" />
         </button>
       </div>
     </div>
@@ -99,6 +107,12 @@ const networkColors: Record<number, string> = {
 
 const isNetworkActive = (item: MenuItem) =>
   webviewStore.activeNetworkId === item.route.slice(1)
+
+// Solid colour for profile pills (strip gradient fallback)
+const pillColor = (id: number) => {
+  const c = networkColors[id]
+  return c.startsWith('linear') ? '#e6683c' : c
+}
 
 const navigateToNetwork = (network: MenuItem) => {
   profileMenuVisible.value = false
@@ -155,11 +169,11 @@ function addProfile() {
 .profile-card {
   display: flex;
   align-items: center;
-  gap: 0.9rem;
+  gap: 1rem;
   margin: 1rem;
   padding: 1rem 1.1rem;
   background: var(--surface-card);
-  border-radius: 16px;
+  border-radius: 18px;
   border: 1px solid var(--surface-border);
   cursor: pointer;
   box-shadow: var(--card-shadow);
@@ -170,30 +184,42 @@ function addProfile() {
   background: var(--surface-hover);
 }
 
+.profile-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
 .profile-avatar {
   font-size: 2.2rem;
   line-height: 1;
-  width: 3rem;
-  height: 3rem;
+  width: 3.4rem;
+  height: 3.4rem;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--surface-ground);
   border-radius: 50%;
-  flex-shrink: 0;
+}
+
+.profile-avatar-ring {
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 2.5px solid var(--primary-color);
+  opacity: 0.6;
 }
 
 .profile-info {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
+  gap: 0.15rem;
   overflow: hidden;
 }
 
 .profile-name {
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 1.05rem;
   color: var(--text-color);
   white-space: nowrap;
   overflow: hidden;
@@ -201,8 +227,23 @@ function addProfile() {
 }
 
 .profile-sub {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-color-secondary);
+  display: flex;
+  align-items: center;
+}
+
+.profile-pills {
+  display: flex;
+  gap: 0.3rem;
+  margin-top: 0.35rem;
+}
+
+.profile-pill {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  opacity: 0.85;
 }
 
 .profile-chevron {
@@ -287,57 +328,57 @@ function addProfile() {
   color: var(--text-color);
 }
 
-/* ─── Network list ───────────────────────────────────────────── */
+/* ─── Network grid ───────────────────────────────────────────── */
 
 .networks-section {
   flex: 1;
-  padding: 0 1rem 1rem;
-  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  padding: 0 0.75rem;
+  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
 }
 
 .section-title {
-  margin: 0.5rem 0 0.6rem 0.25rem;
-  font-size: 0.75rem;
+  margin: 0.25rem 0 0.5rem 0.25rem;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-color-secondary);
 }
 
-.network-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+.network-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
 }
 
-.network-card {
+.network-tile {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.9rem;
-  padding: 0.85rem 1rem;
+  gap: 0.5rem;
+  padding: 0.9rem 0.5rem;
   background: var(--surface-card);
   border: 1px solid var(--surface-border);
-  border-radius: 14px;
+  border-radius: 16px;
   cursor: pointer;
-  text-align: left;
   transition: background-color 0.15s, transform 0.1s;
   box-shadow: var(--card-shadow);
 }
 
-.network-card:active {
-  transform: scale(0.98);
+.network-tile:active {
+  transform: scale(0.96);
   background: var(--surface-hover);
 }
 
-.network-card.active {
+.network-tile.active {
   border-color: var(--primary-color);
   background: color-mix(in srgb, var(--primary-color) 6%, var(--surface-card));
 }
 
 .network-icon-wrap {
-  width: 2.4rem;
-  height: 2.4rem;
-  border-radius: 10px;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -345,24 +386,20 @@ function addProfile() {
 }
 
 .network-icon-wrap i {
-  font-size: 1.15rem;
+  font-size: 1.35rem;
   color: #fff;
 }
 
 .network-name {
-  flex: 1;
-  font-size: 0.95rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-color);
-}
-
-.network-arrow {
-  font-size: 0.7rem;
-  color: var(--text-color-secondary);
+  text-align: center;
+  line-height: 1.2;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .network-card,
+  .network-tile,
   .profile-chevron {
     transition: none;
   }

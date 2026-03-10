@@ -26,6 +26,7 @@ import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useThemeStore } from '@/stores/theme'
 import { useWebviewStore } from '@/stores/webviewState'
 import { useProfilesStore } from '@/stores/profiles'
+import { useFriendsFilter } from './composables/useFriendsFilter'
 import AppHeader from './components/AppHeader.vue'
 import AppSidebar from './components/AppSidebar.vue'
 import AppRightSidebar from './components/AppRightSidebar.vue'
@@ -38,6 +39,7 @@ const rightSidebarVisible = ref(true)
 const themeStore = useThemeStore()
 const webviewStore = useWebviewStore()
 const profilesStore = useProfilesStore()
+useFriendsFilter() // Activates watchers: injects filter into webviews when settings change
 
 // Mobile detection — reactive on window resize
 const isMobile = ref(window.innerWidth <= 768)

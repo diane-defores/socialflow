@@ -51,6 +51,49 @@
             </div>
           </div>
 
+          <!-- Filtre Amis -->
+          <div class="friends-section" v-if="webviewStore.activeNetworkId">
+            <div class="section-header" v-if="!iconsOnly">
+              <h3>Amis</h3>
+              <Button
+                icon="pi pi-users"
+                text
+                size="small"
+                aria-label="Gérer les amis"
+                v-tooltip.right="'Gérer la liste d\'amis'"
+                @click="showFriendsPanel = true"
+              />
+            </div>
+            <div class="friends-toggle" :class="{ 'friends-toggle--centered': iconsOnly }">
+              <ToggleButton
+                :modelValue="filterEnabled"
+                @update:modelValue="setFilterEnabled"
+                :onLabel="iconsOnly ? undefined : 'Amis seulement'"
+                :offLabel="iconsOnly ? undefined : 'Voir tout'"
+                onIcon="pi pi-filter-fill"
+                offIcon="pi pi-filter"
+                :pt="{ root: { style: 'width: 100%; border-radius: 0; height: 2.5rem;' } }"
+                v-tooltip.right="iconsOnly ? (filterEnabled ? 'Filtre amis actif' : 'Filtre amis désactivé') : undefined"
+              />
+              <Button
+                v-if="iconsOnly"
+                icon="pi pi-users"
+                text
+                size="small"
+                class="friends-manage-btn"
+                aria-label="Gérer les amis"
+                v-tooltip.right="'Gérer la liste d\'amis'"
+                @click="showFriendsPanel = true"
+              />
+            </div>
+          </div>
+
+          <FriendsPanel
+            v-if="webviewStore.activeNetworkId"
+            v-model="showFriendsPanel"
+            :networkId="webviewStore.activeNetworkId"
+          />
+
           <!-- Kanban Columns -->
           <div class="kanban-section" v-if="!iconsOnly">
             <div class="kanban-columns">
@@ -115,16 +158,30 @@ import { useRouter } from 'vue-router'
 import { useKanbanStore } from '../stores/kanban'
 import { useWebviewStore } from '@/stores/webviewState'
 import { useProfilesStore } from '@/stores/profiles'
+import { useFriendsFilterStore } from '@/stores/friendsFilter'
 import type { MenuItem } from '../types'
 import type { KanbanItem, KanbanColumnId } from '../services/kanbanService'
 import Button from 'primevue/button'
+import ToggleButton from 'primevue/togglebutton'
 import ProfileSwitcher from './ProfileSwitcher.vue'
+import FriendsPanel from './FriendsPanel.vue'
 
 const router = useRouter()
 const kanbanStore = useKanbanStore()
 const webviewStore = useWebviewStore()
 const profilesStore = useProfilesStore()
+const filterStore = useFriendsFilterStore()
 const splitterRef = ref()
+
+const showFriendsPanel = ref(false)
+
+const filterEnabled = computed(() =>
+  webviewStore.activeNetworkId ? filterStore.isEnabled(webviewStore.activeNetworkId) : false,
+)
+
+const setFilterEnabled = (value: boolean) => {
+  if (webviewStore.activeNetworkId) filterStore.setEnabled(webviewStore.activeNetworkId, value)
+}
 
 const props = defineProps<{
   modelValue: boolean
@@ -339,6 +396,26 @@ onMounted(() => {
   margin: 0;
   font-size: 1rem;
   color: var(--text-color-secondary);
+}
+
+.friends-section {
+  margin-bottom: 0.5rem;
+  border-top: 1px solid var(--surface-border);
+  padding-top: 0.5rem;
+}
+
+.friends-toggle {
+  display: flex;
+  flex-direction: column;
+}
+
+.friends-toggle--centered {
+  align-items: center;
+  padding: 0.25rem 0;
+}
+
+.friends-manage-btn {
+  margin-top: 0.25rem;
 }
 
 .kanban-columns {

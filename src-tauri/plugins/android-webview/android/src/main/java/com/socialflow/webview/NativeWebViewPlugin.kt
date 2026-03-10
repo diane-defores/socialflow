@@ -21,6 +21,7 @@ import android.widget.HorizontalScrollView
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.activity.OnBackPressedCallback
 import app.tauri.annotation.Command
 import app.tauri.annotation.InvokeArg
 import app.tauri.annotation.TauriPlugin
@@ -242,6 +243,9 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     private var grayscaleBtn: TextView? = null
     private var bottomBarView: LinearLayout? = null
 
+    // Hardware back button intercept — registered when webview opens, removed when closed
+    private var backCallback: OnBackPressedCallback? = null
+
     // PrimeIcons typeface — loaded once from assets/primeicons.ttf
     private val primeIconsTypeface: Typeface by lazy {
         Typeface.createFromAsset(activity.assets, "primeicons.ttf")
@@ -373,6 +377,10 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             socialWebView = webView
             currentAccountId = args.accountId
             currentNetworkId = args.networkId
+
+            // Intercept the Android hardware back button while the social webview is visible.
+            // Priority: go back in webview history → if no history, signal Vue to close overlay.
+            registerBackCallback()
 
             // Apply persisted mute state to the new webview via JS
             applyMuteToWebView(webView)
@@ -523,11 +531,39 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         btn.layoutParams = LinearLayout.LayoutParams(size, size)
         btn.setOnClickListener {
             btn.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-            // Trigger the event first — Vue will call clearNetwork() which sends close_webview IPC
-            // which then destroys the native overlay. This prevents the blank-page flash.
-            trigger("webview-back", JSObject())
+            navigateBackOrClose()
         }
         return btn
+    }
+
+    /**
+     * Shared back navigation logic used by both the UI back button and the hardware back button.
+     * - If the webview has history → go back one page.
+     * - Otherwise → signal Vue to close the overlay (Vue calls clearNetwork → close_webview IPC).
+     */
+    private fun navigateBackOrClose() {
+        if (socialWebView?.canGoBack() == true) {
+            socialWebView?.goBack()
+        } else {
+            trigger("webview-back", JSObject())
+        }
+    }
+
+    /**
+     * Register an Android back-press callback so the hardware back button is intercepted
+     * while the social webview is visible. Removes itself when the webview is destroyed.
+     */
+    private fun registerBackCallback() {
+        backCallback?.remove()
+        val callback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                navigateBackOrClose()
+            }
+        }
+        (activity as? androidx.activity.ComponentActivity)
+            ?.onBackPressedDispatcher
+            ?.addCallback(callback)
+        backCallback = callback
     }
 
     private fun buildMuteButton(density: Float): TextView {
@@ -722,6 +758,8 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     }
 
     private fun destroySocialView() {
+        backCallback?.remove()
+        backCallback = null
         socialWebView?.destroy()
         socialRoot?.let { (it.parent as? ViewGroup)?.removeView(it) }
         socialWebView = null

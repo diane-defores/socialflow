@@ -246,6 +246,35 @@ fn set_grayscale(_app: AppHandle, _enabled: bool) -> Result<(), String> {
     Ok(()) // no-op on desktop — Vue applies the CSS filter directly
 }
 
+/// Injects a JavaScript string into a running social webview.
+/// Used by the friends filter to hide posts from non-friends.
+#[tauri::command]
+#[cfg(not(target_os = "android"))]
+fn inject_script(
+    app: AppHandle,
+    profile_id: String,
+    network_id: String,
+    script: String,
+) -> Result<(), String> {
+    let label = webview_label(&profile_id, &network_id);
+    if let Some(wv) = app.get_webview(&label) {
+        wv.eval(&script).map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
+#[cfg(target_os = "android")]
+fn inject_script(
+    _app: AppHandle,
+    _profile_id: String,
+    _network_id: String,
+    _script: String,
+) -> Result<(), String> {
+    // Android: script injection via Kotlin plugin not yet implemented
+    Ok(())
+}
+
 // ── Cross-platform ───────────────────────────────────────────────────────────
 
 /// Wipe all session data for a profile (all networks).
@@ -310,6 +339,7 @@ pub fn run() {
             resize_webview,
             close_webview,
             set_grayscale,
+            inject_script,
             delete_profile_session,
             delete_network_session,
         ])

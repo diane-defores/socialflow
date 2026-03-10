@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useWebviewStore } from '@/stores/webviewState'
 import { useProfilesStore } from '@/stores/profiles'
 import { useNetworkWebview } from '../composables/useNetworkWebview'
@@ -25,6 +25,32 @@ const hostEl = ref<HTMLElement | null>(null)
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
 
 const { open, switchTo, close } = useNetworkWebview(hostEl)
+
+// ── Listen to events fired by the native Kotlin bottom bar ───────────────────
+// These run in Vue so they update Pinia state → watch() below reacts and calls
+// close() / switchTo() via the IPC composable.
+type UnlistenFn = () => void
+let unlistenBack: UnlistenFn | null = null
+let unlistenSwitch: UnlistenFn | null = null
+
+if (isTauri) {
+  import('@tauri-apps/api/event').then(({ listen }) => {
+    // ← Back pressed (UI button or hardware button, no webview history left)
+    listen<void>('webview-back', () => {
+      webviewStore.clearNetwork()
+    }).then(fn => { unlistenBack = fn })
+
+    // ↔ Network switch button tapped in the bottom bar
+    listen<{ networkId: string }>('webview-switch-network', (event) => {
+      webviewStore.selectNetwork(event.payload.networkId)
+    }).then(fn => { unlistenSwitch = fn })
+  })
+}
+
+onUnmounted(() => {
+  unlistenBack?.()
+  unlistenSwitch?.()
+})
 
 const activeUrl = computed(() => webviewStore.activeUrl)
 const activeNetworkId = computed(() => webviewStore.activeNetworkId)
