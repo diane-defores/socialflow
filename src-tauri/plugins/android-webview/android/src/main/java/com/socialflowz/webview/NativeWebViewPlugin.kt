@@ -37,18 +37,20 @@ class AccountArgs {
     var accountId: String = ""
 }
 
-// Network metadata for the top bar switcher
-private data class NetworkInfo(val id: String, val abbr: String)
+// Network metadata for the bottom bar switcher
+// iconChar: PrimeIcons codepoint (same font as the Vue app, loaded from assets/primeicons.ttf)
+// color:    brand color shown as button background when active
+private data class NetworkInfo(val id: String, val iconChar: String, val color: Int)
 
 private val NETWORKS = listOf(
-    NetworkInfo("twitter",   "X"),
-    NetworkInfo("facebook",  "FB"),
-    NetworkInfo("instagram", "IG"),
-    NetworkInfo("linkedin",  "LI"),
-    NetworkInfo("tiktok",    "TK"),
-    NetworkInfo("threads",   "TH"),
-    NetworkInfo("discord",   "DC"),
-    NetworkInfo("reddit",    "RD"),
+    NetworkInfo("twitter",   "\ue9b6", Color.parseColor("#000000")),
+    NetworkInfo("facebook",  "\ue9b4", Color.parseColor("#1877F2")),
+    NetworkInfo("instagram", "\ue9cc", Color.parseColor("#E4405F")),
+    NetworkInfo("linkedin",  "\ue9cb", Color.parseColor("#0A66C2")),
+    NetworkInfo("tiktok",    "\ue962", Color.parseColor("#010101")),
+    NetworkInfo("threads",   "\ue9d8", Color.parseColor("#000000")),
+    NetworkInfo("discord",   "\ue9c0", Color.parseColor("#5865F2")),
+    NetworkInfo("reddit",    "\ue9e8", Color.parseColor("#FF4500")),
 )
 
 @TauriPlugin
@@ -58,6 +60,11 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     private var socialWebView: WebView? = null
     private var currentAccountId: String? = null
     private var currentNetworkId: String? = null
+
+    // PrimeIcons typeface — loaded once from assets/primeicons.ttf
+    private val primeIconsTypeface: Typeface by lazy {
+        Typeface.createFromAsset(activity.assets, "primeicons.ttf")
+    }
 
     // ── Open / navigate ──────────────────────────────────────────────────────
 
@@ -71,7 +78,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                 socialWebView?.loadUrl(args.url)
                 currentAccountId = args.accountId
                 currentNetworkId = args.networkId
-                updateTopBarActiveNetwork(args.networkId)
+                updateBottomBarActiveNetwork(args.networkId)
                 showSocialView()
                 invoke.resolve(JSObject())
                 return@runOnUiThread
@@ -84,7 +91,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             val statusBarHeight = windowInsets?.systemWindowInsetTop ?: 0
             val navBarHeight   = windowInsets?.systemWindowInsetBottom ?: 0
 
-            val topBarHeight = (52 * density).toInt()
+            val barHeight = (52 * density).toInt()
 
             // ── Root container ───────────────────────────────────────────────
             val root = FrameLayout(activity)
@@ -96,14 +103,14 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
             wvParams.topMargin = statusBarHeight
-            wvParams.bottomMargin = navBarHeight + topBarHeight
+            wvParams.bottomMargin = navBarHeight + barHeight
             webView.layoutParams = wvParams
 
             // ── Bottom overlay bar (above nav bar) ───────────────────────────
             val bottomBar = buildBottomBar(density, navBarHeight, args.networkId)
             val bottomBarParams = FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                topBarHeight + navBarHeight
+                barHeight + navBarHeight
             )
             bottomBarParams.gravity = Gravity.BOTTOM
             bottomBar.layoutParams = bottomBarParams
@@ -129,13 +136,16 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         }
     }
 
-    // ── Close (destroy) ──────────────────────────────────────────────────────
+    // ── Close (destroy) — blocks until UI thread completes ───────────────────
 
     @Command
     fun closeWebView(invoke: Invoke) {
+        val latch = java.util.concurrent.CountDownLatch(1)
         activity.runOnUiThread {
             destroySocialView()
+            latch.countDown()
         }
+        latch.await()
         invoke.resolve(JSObject())
     }
 
@@ -189,9 +199,10 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         divider.layoutParams = dvParams
         innerRow.addView(divider)
 
-        // Scrollable network switcher
+        // Scrollable network switcher — explicitly allows click pass-through
         val scrollView = HorizontalScrollView(activity)
         scrollView.isHorizontalScrollBarEnabled = false
+        scrollView.isSmoothScrollingEnabled = true
         scrollView.layoutParams = LinearLayout.LayoutParams(
             0,
             ViewGroup.LayoutParams.MATCH_PARENT,
@@ -234,13 +245,13 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
     private fun buildNetworkButton(density: Float, net: NetworkInfo, isActive: Boolean): TextView {
         val btn = TextView(activity)
-        btn.text = net.abbr
-        btn.textSize = 11f
-        btn.typeface = Typeface.DEFAULT_BOLD
+        btn.text = net.iconChar
+        btn.typeface = primeIconsTypeface
+        btn.textSize = 18f
         btn.gravity = Gravity.CENTER
-        btn.setTextColor(if (isActive) Color.WHITE else Color.parseColor("#9A9AB0"))
+        btn.setTextColor(Color.WHITE)
 
-        val size = (40 * density).toInt()
+        val size = (44 * density).toInt()
         val margin = (3 * density).toInt()
         val params = LinearLayout.LayoutParams(size, size)
         params.setMargins(margin, margin, margin, margin)
@@ -248,10 +259,20 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
         val bg = GradientDrawable()
         bg.shape = GradientDrawable.RECTANGLE
-        bg.cornerRadius = 8 * density
-        bg.setColor(if (isActive) Color.parseColor("#6366F1") else Color.parseColor("#2A2A42"))
+        bg.cornerRadius = size / 2f  // fully circular
+        if (isActive) {
+            bg.setColor(net.color)
+        } else {
+            // Muted: blend brand color at 25% opacity over dark base
+            val r = ((Color.red(net.color) * 0.25f) + (0x1C * 0.75f)).toInt()
+            val g = ((Color.green(net.color) * 0.25f) + (0x1C * 0.75f)).toInt()
+            val b = ((Color.blue(net.color) * 0.25f) + (0x2E * 0.75f)).toInt()
+            bg.setColor(Color.rgb(r, g, b))
+        }
         btn.background = bg
 
+        btn.isClickable = true
+        btn.isFocusable = true
         btn.setOnClickListener {
             btn.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
             val event = JSObject()
@@ -262,7 +283,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         return btn
     }
 
-    private fun updateTopBarActiveNetwork(activeNetworkId: String) {
+    private fun updateBottomBarActiveNetwork(activeNetworkId: String) {
         val root = socialRoot ?: return
         val density = activity.resources.displayMetrics.density
         // bottom bar is child 1 of root → inner row is child 0 → scrollView is child 2 → networkRow is child 0
@@ -274,12 +295,20 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         for (i in 0 until networkRow.childCount) {
             val btn = networkRow.getChildAt(i) as? TextView ?: continue
             val netId = btn.tag as? String ?: continue
+            val net = NETWORKS.find { it.id == netId } ?: continue
             val isActive = netId == activeNetworkId
-            btn.setTextColor(if (isActive) Color.WHITE else Color.parseColor("#9A9AB0"))
             val bg = GradientDrawable()
+            val size = btn.layoutParams.width
             bg.shape = GradientDrawable.RECTANGLE
-            bg.cornerRadius = 8 * density
-            bg.setColor(if (isActive) Color.parseColor("#6366F1") else Color.parseColor("#2A2A42"))
+            bg.cornerRadius = size / 2f
+            if (isActive) {
+                bg.setColor(net.color)
+            } else {
+                val r = ((Color.red(net.color) * 0.25f) + (0x1C * 0.75f)).toInt()
+                val g = ((Color.green(net.color) * 0.25f) + (0x1C * 0.75f)).toInt()
+                val b = ((Color.blue(net.color) * 0.25f) + (0x2E * 0.75f)).toInt()
+                bg.setColor(Color.rgb(r, g, b))
+            }
             btn.background = bg
         }
     }

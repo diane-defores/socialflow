@@ -1,6 +1,9 @@
 <template>
-  <!-- Webview active: overlay bar + fullscreen webview host -->
+  <!-- Webview active: fullscreen webview host + bottom overlay bar -->
   <div v-if="webviewStore.activeUrl" class="mobile-webview-screen">
+    <!-- Host div fills the available space above the bottom bar -->
+    <NetworkWebviewHost class="mobile-webview-host" />
+
     <div class="mobile-overlay-bar">
       <button class="overlay-btn overlay-back" @click="goBack" aria-label="Retour">
         <i class="pi pi-arrow-left" />
@@ -18,16 +21,13 @@
           class="overlay-btn overlay-network-btn"
           :class="{ active: isNetworkActive(item) }"
           :aria-label="item.label"
-          v-tooltip.bottom="item.label"
+          v-tooltip.top="item.label"
           @click="navigateToNetwork(item)"
         >
           <i :class="item.icon" />
         </button>
       </div>
     </div>
-
-    <!-- Host div: starts below overlay bar, fills the rest of the screen -->
-    <NetworkWebviewHost class="mobile-webview-host" />
   </div>
 
   <!-- Default view: profile on top, network grid on bottom -->
@@ -143,7 +143,7 @@ const goBack = () => {
   overflow: hidden;
 }
 
-/* Overlay bar sits ABOVE the native webview */
+/* Overlay bar sits BELOW the native webview, at the bottom of the screen */
 .mobile-overlay-bar {
   flex-shrink: 0;
   display: flex;
@@ -151,8 +151,9 @@ const goBack = () => {
   gap: 0.5rem;
   height: 3.25rem;
   padding: 0 0.75rem;
+  padding-bottom: env(safe-area-inset-bottom, 0);
   background: var(--surface-card);
-  border-bottom: 1px solid var(--surface-border);
+  border-top: 1px solid var(--surface-border);
   z-index: 100;
 }
 
@@ -222,11 +223,12 @@ const goBack = () => {
   color: var(--primary-color);
 }
 
-/* The webview host fills the remaining height after the overlay bar */
+/* The webview host fills the space above the bottom overlay bar */
 .mobile-webview-host {
   flex: 1;
   width: 100%;
   min-height: 0;
+  overflow: hidden;
 }
 
 /* ─── Home screen ────────────────────────────────────────────── */

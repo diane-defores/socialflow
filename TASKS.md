@@ -104,6 +104,14 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [x] Fixed: `field-sizing: content` on all Textarea (Twitter, LinkedIn, CreatePost)
 - [x] Fixed: Dead `.sidebar-hidden` class removed from AppRightSidebar
 - [ ] 🟡 AppRightSidebar: wire "John Doe" placeholder to real Clerk user data
+- [x] Mobile layout: `MobileLayout.vue` — single-column, profile top + network grid bottom (2026-03-09)
+- [x] Android: replace FAB with native bottom bar (back btn + scrollable network switcher) (2026-03-09)
+- [x] Android: fix system insets — webview respects status bar + navigation bar height (2026-03-09)
+- [x] Android: Tauri events `webview-back` / `webview-switch-network` wired to Vue store (2026-03-09)
+- [x] Android: PrimeIcons font loaded as native Typeface — bottom bar shows real icons with brand colors (2026-03-10)
+- [x] Android: bottom bar network buttons fully circular with per-network brand colors (2026-03-10)
+- [x] Android: `closeWebView` now synchronous (CountDownLatch) — fixes network-switch race condition (2026-03-10)
+- [x] Mobile Vue: overlay bar moved from top to bottom — consistent with native Android bar (2026-03-10)
 - [ ] 🟡 Header search/filters hidden on mobile — add mobile-accessible alternative
 
 ### To go live (⛔ blocked — needs accounts)
