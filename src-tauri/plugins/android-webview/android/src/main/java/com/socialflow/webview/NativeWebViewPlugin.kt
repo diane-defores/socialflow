@@ -5,7 +5,6 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
-import android.os.Build
 import android.view.Gravity
 import android.view.HapticFeedbackConstants
 import android.view.View
@@ -303,10 +302,8 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             currentAccountId = args.accountId
             currentNetworkId = args.networkId
 
-            // Apply persisted mute state to the new webview (API 26+)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                webView.setAudioMuted(isMuted)
-            }
+            // Apply persisted mute state to the new webview via JS
+            applyMuteToWebView(webView)
 
             webView.loadUrl(args.url)
             invoke.resolve(JSObject())
@@ -461,12 +458,15 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         btn.setOnClickListener {
             btn.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
             isMuted = !isMuted
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                socialWebView?.setAudioMuted(isMuted)
-            }
+            applyMuteToWebView(socialWebView)
             updateMuteButtonIcon(btn)
         }
         return btn
+    }
+
+    private fun applyMuteToWebView(webView: WebView?) {
+        val js = "document.querySelectorAll('video,audio').forEach(function(el){el.muted=${isMuted};});"
+        webView?.evaluateJavascript(js, null)
     }
 
     private fun updateMuteButtonIcon(btn: TextView) {
@@ -602,6 +602,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                 view.evaluateJavascript(COOKIE_ACCEPT_SCRIPT, null)
                 view.evaluateJavascript(DISMISS_APP_BANNERS_SCRIPT, null)
                 if (isGrayscale) applyGrayscaleToWebView(view)
+                if (isMuted) applyMuteToWebView(view)
             }
         }
         webView.webChromeClient = WebChromeClient()
