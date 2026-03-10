@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useThemeStore } from '@/stores/theme'
 import { useWebviewStore } from '@/stores/webviewState'
 import { useProfilesStore } from '@/stores/profiles'
@@ -46,6 +46,16 @@ const handleResize = () => { isMobile.value = window.innerWidth <= 768 }
 let unlistenTray: (() => void) | undefined
 let unlistenBack: (() => void) | undefined
 let unlistenSwitch: (() => void) | undefined
+let unlistenGrayscale: (() => void) | undefined
+
+const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
+
+// When the settings toggle changes, sync the native webview on Android
+watch(() => themeStore.grayscaleEnabled, async (enabled) => {
+  if (!isTauri) return
+  const { invoke } = await import('@tauri-apps/api/core')
+  invoke('set_grayscale', { enabled }).catch(() => {})
+})
 
 onMounted(async () => {
   themeStore.initTheme()
@@ -53,25 +63,26 @@ onMounted(async () => {
 
   window.addEventListener('resize', handleResize)
 
-  // Listen for Tauri events (only in Tauri)
-  if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
+  if (isTauri) {
     const { listen } = await import('@tauri-apps/api/event')
 
-    // Desktop tray: open network
     unlistenTray = await listen<string>('tray:open-network', ({ payload: networkId }) => {
       profilesStore.ensureDefault()
       webviewStore.selectNetwork(networkId)
     })
 
-    // Android native overlay: back button pressed → return to dashboard
     unlistenBack = await listen('webview-back', () => {
       webviewStore.clearNetwork()
     })
 
-    // Android native overlay: switch to another network
     unlistenSwitch = await listen<{ networkId: string }>('webview-switch-network', ({ payload }) => {
       profilesStore.ensureDefault()
       webviewStore.selectNetwork(payload.networkId)
+    })
+
+    // Android native button toggled grayscale → sync store (which applies CSS to Vue UI)
+    unlistenGrayscale = await listen<{ enabled: boolean }>('grayscale-changed', ({ payload }) => {
+      themeStore.setGrayscale(payload.enabled)
     })
   }
 })
@@ -81,6 +92,7 @@ onUnmounted(() => {
   unlistenTray?.()
   unlistenBack?.()
   unlistenSwitch?.()
+  unlistenGrayscale?.()
 })
 </script>
 

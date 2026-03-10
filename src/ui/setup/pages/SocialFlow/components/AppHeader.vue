@@ -8,7 +8,7 @@
         @click="toggleLeftSidebar"
         v-tooltip.bottom="'Toggle left sidebar'"
       />
-      <h1 class="app-title">SocialFlowz</h1>
+      <h1 class="app-title">SocialFlow</h1>
     </div>
 
     <div class="header-center">

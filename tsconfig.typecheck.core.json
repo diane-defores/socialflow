@@ -14,6 +14,6 @@
     "src/stores/accounts.ts",
     "src/stores/theme.ts",
     "src/stores/webviewState.ts",
-    "src/ui/setup/pages/SocialFlowz/composables/useNetworkWebview.ts"
+    "src/ui/setup/pages/SocialFlow/composables/useNetworkWebview.ts"
   ]
 }

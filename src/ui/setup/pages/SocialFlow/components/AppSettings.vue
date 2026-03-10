@@ -18,6 +18,17 @@
 
       <Divider />
 
+      <!-- Grayscale / focus mode -->
+      <div class="setting-item">
+        <div class="setting-label">
+          <i class="pi pi-palette mr-2"></i>
+          <span>Mode focus (niveaux de gris)</span>
+        </div>
+        <InputSwitch :modelValue="themeStore.grayscaleEnabled" @change="themeStore.setGrayscale(!themeStore.grayscaleEnabled)" />
+      </div>
+
+      <Divider />
+
       <!-- Other settings -->
       <div class="setting-item">
         <div class="setting-label">

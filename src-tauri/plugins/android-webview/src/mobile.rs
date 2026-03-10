@@ -17,6 +17,12 @@ pub struct AccountRequest {
     pub account_id: String,
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GrayscaleRequest {
+    pub enabled: bool,
+}
+
 pub struct AndroidWebview<R: Runtime>(pub PluginHandle<R>);
 
 impl<R: Runtime> AndroidWebview<R> {
@@ -58,6 +64,12 @@ impl<R: Runtime> AndroidWebview<R> {
     pub fn hide(&self) -> Result<()> {
         self.0
             .run_mobile_plugin::<()>("hideWebView", ())
+            .map_err(|e| Error::PluginInvoke(e.to_string()))
+    }
+
+    pub fn set_grayscale(&self, enabled: bool) -> Result<()> {
+        self.0
+            .run_mobile_plugin("setGrayscale", GrayscaleRequest { enabled })
             .map_err(|e| Error::PluginInvoke(e.to_string()))
     }
 }

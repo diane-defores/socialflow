@@ -24,7 +24,7 @@ fn webview_label(profile_id: &str, network_id: &str) -> String {
 
 #[cfg(not(target_os = "android"))]
 fn build_tray(app: &AppHandle) -> tauri::Result<()> {
-    let show = MenuItem::with_id(app, "show", "Show SocialFlowz", true, None::<&str>)?;
+    let show = MenuItem::with_id(app, "show", "Show SocialFlow", true, None::<&str>)?;
     let separator = MenuItem::with_id(app, "sep", "──────────────", false, None::<&str>)?;
     let twitter = MenuItem::with_id(app, "tray:twitter", "Twitter / X", true, None::<&str>)?;
     let instagram = MenuItem::with_id(app, "tray:instagram", "Instagram", true, None::<&str>)?;
@@ -53,7 +53,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     }
 
     tray_builder
-        .tooltip("SocialFlowz")
+        .tooltip("SocialFlow")
         .menu(&menu)
         .on_menu_event(move |app, event| match event.id().as_ref() {
             "show" => show_window(app),
@@ -232,6 +232,20 @@ fn close_webview(app: AppHandle, profile_id: String, network_id: String) -> Resu
         .map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+#[cfg(target_os = "android")]
+fn set_grayscale(app: AppHandle, enabled: bool) -> Result<(), String> {
+    app.android_webview()
+        .set_grayscale(enabled)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+#[cfg(not(target_os = "android"))]
+fn set_grayscale(_app: AppHandle, _enabled: bool) -> Result<(), String> {
+    Ok(()) // no-op on desktop — Vue applies the CSS filter directly
+}
+
 // ── Cross-platform ───────────────────────────────────────────────────────────
 
 /// Wipe all session data for a profile (all networks).
@@ -295,6 +309,7 @@ pub fn run() {
             open_webview,
             resize_webview,
             close_webview,
+            set_grayscale,
             delete_profile_session,
             delete_network_session,
         ])

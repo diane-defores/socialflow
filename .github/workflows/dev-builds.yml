@@ -74,7 +74,7 @@ jobs:
       - name: Upload Android artifact
         uses: actions/upload-artifact@v4
         with:
-          name: socialflowz-android-debug
+          name: socialflow-android-debug
           path: src-tauri/gen/android/app/build/outputs/**/*.apk
           if-no-files-found: error
           retention-days: 14
@@ -113,7 +113,7 @@ jobs:
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
-          name: socialflowz-windows-test
+          name: socialflow-windows-test
           path: |
             src-tauri/target/release/bundle/msi/*.msi
             src-tauri/target/release/bundle/nsis/*.exe

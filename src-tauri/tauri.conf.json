@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "SocialFlowz",
+  "productName": "SocialFlow",
   "version": "0.1.0",
-  "identifier": "com.socialflowz.desktop",
+  "identifier": "com.socialflow.desktop",
   "build": {
     "frontendDist": "../dist/tauri",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "SocialFlowz",
+        "title": "SocialFlow",
         "width": 1280,
         "height": 800,
         "minWidth": 900,

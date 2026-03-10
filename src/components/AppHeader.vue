@@ -37,7 +37,7 @@ const toggleRightSidebar = () => {
         aria-label="Toggle sidebar"
         @click="toggleSidebar"
       />
-      <h1 class="app-title">SocialFlowz</h1>
+      <h1 class="app-title">SocialFlow</h1>
     </div>
 
     <div class="header-right">

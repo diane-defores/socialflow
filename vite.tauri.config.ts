@@ -9,7 +9,7 @@ import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 import { defineConfig } from 'vite'
 import 'dotenv/config'
 
-const APP_ROOT = 'src/ui/setup/pages/SocialFlowz'
+const APP_ROOT = 'src/ui/setup/pages/SocialFlow'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -62,13 +62,13 @@ export default defineConfig({
         },
       ],
       dts: `${APP_ROOT}/types/auto-imports.d.ts`,
-      // Only scan root src/ — SocialFlowz subfolder stores are duplicates
+      // Only scan root src/ — SocialFlow subfolder stores are duplicates
       dirs: ['src/composables/**', 'src/stores/**', 'src/utils/**'],
       vueTemplate: true,
     }),
 
     Components({
-      // Prefer SocialFlowz-local component variants when names overlap.
+      // Prefer SocialFlow-local component variants when names overlap.
       dirs: ['src/components', `${APP_ROOT}/components`],
       dts: `${APP_ROOT}/types/components.d.ts`,
       resolvers: [IconsResolver()],
