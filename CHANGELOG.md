@@ -1,6 +1,28 @@
 # Changelog
 
-All notable changes to SocialFlowz are documented here.
+All notable changes to SocialFlow are documented here.
+
+## [Unreleased] — 2026-03-10
+
+### Added
+- Android native bottom bar: PrimeIcons font loaded as Android Typeface for consistent icons matching the Vue app
+- Per-network brand colors on Android bar buttons (X black, Facebook blue, Instagram pink, LinkedIn blue, Discord purple, Reddit orange, etc.)
+- Usage-based network sorting — most-used networks appear leftmost in the Android bar, sorted by open frequency via SharedPreferences
+- Mute/unmute button in Android bottom bar with system-level WebView audio muting (API 26+)
+- Grayscale focus mode button in Android bottom bar — toggles CSS `filter: grayscale(1)` on native WebView content
+- Grayscale focus mode setting in Vue Settings dialog — syncs bidirectionally with Android native button via Tauri IPC
+- Auto cookie consent — JS injected on every page load to accept cookie banners across all major CMPs (CookieBot, OneTrust, GDPR.eu, etc.) and text-pattern fallback
+- Auto app-banner dismiss — JS injected to hide "download our app" / "open in app" prompts that block web usage
+
+### Changed
+- App renamed **SocialFlowz → SocialFlow** throughout: package name, Kotlin namespace, Tauri product identifier, folder paths, git remote, CI artifacts, tray tooltip
+- Android overlay bar moved from top to bottom — consistent with native Android bottom bar placement
+- Vue mobile overlay bar DOM order swapped: webview fills space, bar anchors to bottom with safe-area inset
+
+### Fixed
+- Network switch race condition on Android: `closeWebView` now uses `CountDownLatch` to block until UI thread completes before `openWebView` starts
+
+---
 
 ## [Unreleased]
 
