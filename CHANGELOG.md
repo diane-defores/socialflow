@@ -2,6 +2,16 @@
 
 All notable changes to SocialFlow are documented here.
 
+## [Unreleased] — 2026-03-11 (c)
+
+### Added
+- Dark mode — full end-to-end implementation: Vue CSS variables toggle light/dark surfaces, Kotlin bottom bar adapts (white bg + dark icons in light mode, dark bg + light icons in dark mode), Android status bar icon color inverts, initial state synced on mount via `set_dark_mode` Tauri IPC
+- Home button on Android bottom bar — replaces back button with `pi-home` PrimeIcons icon; tapping always returns to dashboard (hardware back still navigates webview history first)
+- Network visibility per profile — long-press any network tile on the mobile dashboard to enter edit mode; toggle switches hide/show individual networks per profile; hidden networks persisted in `hiddenNetworks[]` on Profile model via Pinia
+- Smaller network buttons in Kotlin bottom bar — 44dp → 36dp with 15sp icons (was 18sp), fits more networks in horizontal scroll
+
+---
+
 ## [Unreleased] — 2026-03-11 (b)
 
 ### Added

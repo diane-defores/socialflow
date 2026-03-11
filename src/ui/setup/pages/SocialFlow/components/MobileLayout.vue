@@ -5,10 +5,10 @@
   </div>
 
   <!-- Home screen -->
-  <div v-else class="mobile-home">
+  <div v-else class="mobile-home" @click.self="exitEditMode">
 
     <!-- Profile card -->
-    <div class="profile-card" @click="profileSheetVisible = true">
+    <div class="profile-card" @click="networkEditMode ? exitEditMode() : (profileSheetVisible = true)">
       <div class="profile-avatar-wrap">
         <div class="profile-avatar">
           <img v-if="profilesStore.activeProfile?.avatar" :src="profilesStore.activeProfile.avatar" class="profile-avatar-img" />
@@ -20,10 +20,10 @@
         <span class="profile-name">{{ profilesStore.activeProfile?.name ?? 'Profil' }}</span>
         <span class="profile-sub">
           <i class="pi pi-th-large" style="font-size:0.65rem; margin-right:0.3rem;" />
-          {{ menuItems.length }} réseaux · Appuyer pour gérer
+          {{ visibleMenuItems.length }} réseaux · Appuyer pour gérer
         </span>
         <div class="profile-pills">
-          <span v-for="item in menuItems.slice(0, 5)" :key="item.id" class="profile-pill" :style="{ background: pillColor(item.id) }" />
+          <span v-for="item in visibleMenuItems.slice(0, 5)" :key="item.id" class="profile-pill" :style="{ background: pillColor(item.id) }" />
         </div>
       </div>
       <i class="pi pi-chevron-down profile-chevron" />
@@ -70,22 +70,30 @@
     </div>
 
     <!-- Network grid -->
-    <div class="networks-section">
+    <div class="networks-section" @click.self="exitEditMode">
       <p class="section-title">Réseaux sociaux</p>
       <div class="network-grid">
         <button
-          v-for="item in menuItems"
+          v-for="item in visibleMenuItems"
           :key="item.id"
           class="network-tile"
-          :class="{ active: isNetworkActive(item) }"
-          @click="navigateToNetwork(item)"
+          :class="{ active: isNetworkActive(item), 'edit-mode': networkEditMode }"
+          @click="networkEditMode ? toggleNetworkVisibility(item) : navigateToNetwork(item)"
+          @touchstart="startLongPress(item)"
+          @touchend="cancelLongPress"
+          @touchmove="cancelLongPress"
+          @contextmenu.prevent
         >
           <span class="network-icon-wrap" :style="{ background: networkColors[item.id] }">
             <i :class="item.icon" />
           </span>
           <span class="network-name">{{ item.label }}</span>
+          <span v-if="networkEditMode" class="network-toggle" :class="{ hidden: isNetworkHiddenForProfile(item) }">
+            <span class="network-toggle-thumb" />
+          </span>
         </button>
       </div>
+      <p v-if="networkEditMode" class="edit-hint">Appuyez à l'extérieur pour terminer</p>
     </div>
 
     <!-- Settings button -->
@@ -326,6 +334,50 @@ const pendingAvatarProfileId = ref<string | null>(null)
 // ─── Notifications ────────────────────────────────────────────
 const notificationsVisible = ref(false)
 const notificationCount = ref(3)
+
+// ─── Network edit mode (long press to show/hide networks) ────
+const networkEditMode = ref(false)
+let longPressTimer: ReturnType<typeof setTimeout> | null = null
+
+function startLongPress(_item: MenuItem) {
+  cancelLongPress()
+  longPressTimer = setTimeout(() => {
+    networkEditMode.value = true
+    longPressTimer = null
+  }, 500)
+}
+
+function cancelLongPress() {
+  if (longPressTimer) {
+    clearTimeout(longPressTimer)
+    longPressTimer = null
+  }
+}
+
+function exitEditMode() {
+  networkEditMode.value = false
+}
+
+const networkIdFromItem = (item: MenuItem) => item.route.slice(1)
+
+function toggleNetworkVisibility(item: MenuItem) {
+  const profileId = profilesStore.activeProfileId
+  if (!profileId) return
+  profilesStore.toggleNetworkHidden(profileId, networkIdFromItem(item))
+}
+
+function isNetworkHiddenForProfile(item: MenuItem): boolean {
+  const profileId = profilesStore.activeProfileId
+  if (!profileId) return false
+  return profilesStore.isNetworkHidden(profileId, networkIdFromItem(item))
+}
+
+const visibleMenuItems = computed(() => {
+  if (networkEditMode.value) return menuItems.value
+  const profileId = profilesStore.activeProfileId
+  if (!profileId) return menuItems.value
+  return menuItems.value.filter(item => !profilesStore.isNetworkHidden(profileId, networkIdFromItem(item)))
+})
 
 // ─── Friends filter ───────────────────────────────────────────
 const friendsFilterEnabled = computed(() =>
@@ -834,6 +886,57 @@ function handleAvatarChange(event: Event) {
   color: var(--text-color);
   text-align: left;
   line-height: 1.2;
+  flex: 1;
+}
+
+/* ─── Network edit mode (long press) ────────────────────────── */
+
+.network-tile.edit-mode {
+  animation: tile-wiggle 0.3s ease;
+}
+
+.network-toggle {
+  width: 2.2rem;
+  height: 1.3rem;
+  border-radius: 0.75rem;
+  background: var(--primary-color);
+  position: relative;
+  flex-shrink: 0;
+  transition: background-color 0.2s;
+}
+
+.network-toggle.hidden {
+  background: var(--surface-border);
+}
+
+.network-toggle-thumb {
+  position: absolute;
+  top: 2.5px;
+  right: 3px;
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  transition: transform 0.2s;
+}
+
+.network-toggle.hidden .network-toggle-thumb {
+  transform: translateX(-0.85rem);
+}
+
+.edit-hint {
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--text-color-secondary);
+  margin: 0.5rem 0 0;
+  font-style: italic;
+}
+
+@keyframes tile-wiggle {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.97); }
+  100% { transform: scale(1); }
 }
 
 /* ─── Settings button ────────────────────────────────────────── */

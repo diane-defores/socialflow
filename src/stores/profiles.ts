@@ -5,6 +5,7 @@ export interface Profile {
   name: string
   emoji: string
   avatar?: string   // base64 data URL or remote URL
+  hiddenNetworks?: string[]  // network IDs hidden for this profile (e.g. ['tiktok', 'discord'])
   createdAt: number
 }
 
@@ -61,6 +62,25 @@ export const useProfilesStore = defineStore('profiles', {
     /** Switch the active profile. */
     setActive(profileId: string) {
       this.activeProfileId = profileId
+    },
+
+    /** Toggle a network's visibility for a profile. */
+    toggleNetworkHidden(profileId: string, networkId: string) {
+      const profile = this.profiles.find((p) => p.id === profileId)
+      if (!profile) return
+      if (!profile.hiddenNetworks) profile.hiddenNetworks = []
+      const idx = profile.hiddenNetworks.indexOf(networkId)
+      if (idx === -1) {
+        profile.hiddenNetworks.push(networkId)
+      } else {
+        profile.hiddenNetworks.splice(idx, 1)
+      }
+    },
+
+    /** Check if a network is hidden for a profile. */
+    isNetworkHidden(profileId: string, networkId: string): boolean {
+      const profile = this.profiles.find((p) => p.id === profileId)
+      return profile?.hiddenNetworks?.includes(networkId) ?? false
     },
 
     /**

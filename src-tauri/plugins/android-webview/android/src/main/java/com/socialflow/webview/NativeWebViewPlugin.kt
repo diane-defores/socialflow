@@ -50,6 +50,11 @@ class GrayscaleArgs {
 }
 
 @InvokeArg
+class DarkModeArgs {
+    var enabled: Boolean = false
+}
+
+@InvokeArg
 class NavigateArgs {
     var url: String = ""
     var networkId: String = ""
@@ -299,6 +304,9 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     private var grayscaleBtn: TextView? = null
     private var bottomBarView: LinearLayout? = null
 
+    // Dark mode state — synced from Vue settings toggle
+    private var isDarkMode = false
+
     // Hardware back button intercept — registered when webview opens, removed when closed
     private var backCallback: OnBackPressedCallback? = null
 
@@ -472,16 +480,30 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         window.statusBarColor = Color.TRANSPARENT
         window.navigationBarColor = Color.TRANSPARENT
 
-        // White (light) icons — readable on dark or colorful content
+        applyStatusBarIconColor()
+    }
+
+    /** Light mode → dark status bar icons; dark mode → white status bar icons. */
+    private fun applyStatusBarIconColor() {
+        val window = activity.window
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            window.insetsController?.setSystemBarsAppearance(
-                0, // 0 = light icons (white)
-                android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
-            )
+            val flag = android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+            if (isDarkMode) {
+                // White icons for dark backgrounds
+                window.insetsController?.setSystemBarsAppearance(0, flag)
+            } else {
+                // Dark icons for light backgrounds
+                window.insetsController?.setSystemBarsAppearance(flag, flag)
+            }
         } else {
             @Suppress("DEPRECATION")
-            window.decorView.systemUiVisibility = window.decorView.systemUiVisibility and
-                View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv()
+            if (isDarkMode) {
+                window.decorView.systemUiVisibility = window.decorView.systemUiVisibility and
+                    View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv()
+            } else {
+                window.decorView.systemUiVisibility = window.decorView.systemUiVisibility or
+                    View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+            }
         }
     }
 
@@ -629,6 +651,19 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         invoke.resolve(JSObject())
     }
 
+    // ── Set dark mode (called from Vue settings toggle) ────────────────────
+
+    @Command
+    fun setDarkMode(invoke: Invoke) {
+        val args = invoke.parseArgs(DarkModeArgs::class.java)
+        activity.runOnUiThread {
+            isDarkMode = args.enabled
+            applyDarkModeToBottomBar(bottomBarView)
+            applyStatusBarIconColor()
+        }
+        invoke.resolve(JSObject())
+    }
+
     // ── Build bottom bar ─────────────────────────────────────────────────────
 
     private fun buildBottomBar(
@@ -640,7 +675,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         val bar = LinearLayout(activity)
         bar.orientation = LinearLayout.HORIZONTAL
         bar.gravity = Gravity.TOP or Gravity.CENTER_VERTICAL
-        bar.setBackgroundColor(Color.parseColor("#1C1C2E"))
+        bar.setBackgroundColor(if (isDarkMode) Color.parseColor("#1C1C2E") else Color.parseColor("#FFFFFF"))
         bar.setPadding(0, 0, 0, navBarHeight)
 
         // Inner row sits at the top of the bar (nav bar padding is below)
@@ -653,9 +688,9 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             innerHeight
         )
 
-        // ← Back button
-        val backBtn = buildBackButton(density)
-        innerRow.addView(backBtn)
+        // 🏠 Home button — returns to dashboard
+        val homeBtn = buildHomeButton(density)
+        innerRow.addView(homeBtn)
 
         // Thin divider
         innerRow.addView(buildDivider(density))
@@ -698,25 +733,36 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
     private fun buildDivider(density: Float): View {
         val divider = View(activity)
-        divider.setBackgroundColor(Color.parseColor("#3D3D5C"))
+        divider.setBackgroundColor(if (isDarkMode) Color.parseColor("#3D3D5C") else Color.parseColor("#DEE2E6"))
         val params = LinearLayout.LayoutParams((1 * density).toInt(), (24 * density).toInt())
         params.setMargins((4 * density).toInt(), 0, (4 * density).toInt(), 0)
         divider.layoutParams = params
         return divider
     }
 
-    private fun buildBackButton(density: Float): ImageButton {
-        val btn = ImageButton(activity)
-        btn.setImageResource(android.R.drawable.ic_menu_revert)
-        btn.setColorFilter(Color.parseColor("#E0E0E0"))
+    private fun buildHomeButton(density: Float): TextView {
+        val btn = TextView(activity)
+        btn.text = "\ue941"  // pi-home — PrimeIcons home icon
+        btn.typeface = primeIconsTypeface
+        btn.textSize = 18f
+        btn.gravity = Gravity.CENTER
+        btn.setTextColor(if (isDarkMode) Color.parseColor("#E0E0E0") else Color.parseColor("#495057"))
         btn.background = null
         val size = (48 * density).toInt()
         btn.layoutParams = LinearLayout.LayoutParams(size, size)
+        btn.isClickable = true
+        btn.isFocusable = true
         btn.setOnClickListener {
             btn.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-            navigateBackOrClose()
+            goHome()
         }
         return btn
+    }
+
+    /** Hide the social webview and return to the Vue dashboard. */
+    private fun goHome() {
+        hideSocialView()
+        dispatchToVue("sfz-webview-back")
     }
 
     /**
@@ -759,7 +805,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         btn.typeface = primeIconsTypeface
         btn.textSize = 18f
         btn.gravity = Gravity.CENTER
-        btn.setTextColor(Color.parseColor("#E0E0E0"))
+        btn.setTextColor(if (isDarkMode) Color.parseColor("#E0E0E0") else Color.parseColor("#495057"))
         btn.background = null
         val size = (48 * density).toInt()
         btn.layoutParams = LinearLayout.LayoutParams(size, size)
@@ -812,7 +858,9 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     private fun updateGrayscaleButtonIcon(btn: TextView) {
         // \ue9dd = pi-palette — full color when active (grayscale ON = palette "disabled")
         btn.text = "\ue9dd"
-        btn.setTextColor(if (isGrayscale) Color.parseColor("#9A9AB0") else Color.parseColor("#E0E0E0"))
+        val normalColor = if (isDarkMode) Color.parseColor("#E0E0E0") else Color.parseColor("#495057")
+        val mutedColor = if (isDarkMode) Color.parseColor("#9A9AB0") else Color.parseColor("#ADB5BD")
+        btn.setTextColor(if (isGrayscale) mutedColor else normalColor)
         btn.alpha = if (isGrayscale) 0.45f else 1.0f
     }
 
@@ -837,16 +885,38 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         }
     }
 
+    /** Re-apply dark/light colors to an existing bottom bar without rebuilding it. */
+    private fun applyDarkModeToBottomBar(bar: LinearLayout?) {
+        bar ?: return
+        bar.setBackgroundColor(if (isDarkMode) Color.parseColor("#1C1C2E") else Color.parseColor("#FFFFFF"))
+        val iconColor = if (isDarkMode) Color.parseColor("#E0E0E0") else Color.parseColor("#495057")
+        // Walk the inner row and update dividers + utility button colors
+        val innerRow = bar.getChildAt(0) as? LinearLayout ?: return
+        for (i in 0 until innerRow.childCount) {
+            val child = innerRow.getChildAt(i)
+            // Dividers are plain Views (not TextView, not ImageButton, not HorizontalScrollView)
+            if (child is View && child !is ViewGroup && child !is TextView && child !is ImageButton) {
+                child.setBackgroundColor(if (isDarkMode) Color.parseColor("#3D3D5C") else Color.parseColor("#DEE2E6"))
+            }
+        }
+        // Update home button (first TextView in inner row, before the scroll view)
+        (innerRow.getChildAt(0) as? TextView)?.setTextColor(iconColor)
+        // Update mute button color
+        muteBtn?.setTextColor(iconColor)
+        // Update grayscale button color
+        grayscaleBtn?.let { updateGrayscaleButtonIcon(it) }
+    }
+
     private fun buildNetworkButton(density: Float, net: NetworkInfo, isActive: Boolean): TextView {
         val btn = TextView(activity)
         btn.text = net.iconChar
         btn.typeface = primeIconsTypeface
-        btn.textSize = 18f
+        btn.textSize = 15f
         btn.gravity = Gravity.CENTER
         btn.setTextColor(Color.WHITE)
 
-        val size = (44 * density).toInt()
-        val margin = (3 * density).toInt()
+        val size = (36 * density).toInt()
+        val margin = (2 * density).toInt()
         val params = LinearLayout.LayoutParams(size, size)
         params.setMargins(margin, margin, margin, margin)
         btn.layoutParams = params
@@ -885,12 +955,20 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         if (isActive) {
             bg.setColor(net.color)
         } else {
-            val r = ((Color.red(net.color) * 0.25f) + (0x1C * 0.75f)).toInt()
-            val g = ((Color.green(net.color) * 0.25f) + (0x1C * 0.75f)).toInt()
-            val b = ((Color.blue(net.color) * 0.25f) + (0x2E * 0.75f)).toInt()
+            // Blend brand color with bar background — different base for light vs dark
+            val baseR = if (isDarkMode) 0x1C else 0xE8
+            val baseG = if (isDarkMode) 0x1C else 0xE8
+            val baseB = if (isDarkMode) 0x2E else 0xF0
+            val brandWeight = if (isDarkMode) 0.25f else 0.3f
+            val baseWeight = 1f - brandWeight
+            val r = ((Color.red(net.color) * brandWeight) + (baseR * baseWeight)).toInt()
+            val g = ((Color.green(net.color) * brandWeight) + (baseG * baseWeight)).toInt()
+            val b = ((Color.blue(net.color) * brandWeight) + (baseB * baseWeight)).toInt()
             bg.setColor(Color.rgb(r, g, b))
         }
         btn.background = bg
+        // Icon color: white on dark, darker on light (for inactive with light bg)
+        btn.setTextColor(if (isActive || isDarkMode) Color.WHITE else Color.parseColor("#495057"))
     }
 
     private fun updateBottomBarActiveNetwork(activeNetworkId: String) {

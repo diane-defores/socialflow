@@ -246,6 +246,20 @@ fn set_grayscale(_app: AppHandle, _enabled: bool) -> Result<(), String> {
     Ok(()) // no-op on desktop — Vue applies the CSS filter directly
 }
 
+#[tauri::command]
+#[cfg(target_os = "android")]
+fn set_dark_mode(app: AppHandle, enabled: bool) -> Result<(), String> {
+    app.android_webview()
+        .set_dark_mode(enabled)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+#[cfg(not(target_os = "android"))]
+fn set_dark_mode(_app: AppHandle, _enabled: bool) -> Result<(), String> {
+    Ok(()) // no-op on desktop — Vue applies the CSS class directly
+}
+
 /// Injects a JavaScript string into a running social webview.
 /// Used by the friends filter to hide posts from non-friends.
 #[tauri::command]
@@ -339,6 +353,7 @@ pub fn run() {
             resize_webview,
             close_webview,
             set_grayscale,
+            set_dark_mode,
             inject_script,
             delete_profile_session,
             delete_network_session,

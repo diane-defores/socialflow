@@ -56,6 +56,13 @@ watch(() => themeStore.grayscaleEnabled, async (enabled) => {
   invoke('set_grayscale', { enabled }).catch(() => {})
 })
 
+// Sync dark mode state to native Android bottom bar
+watch(() => themeStore.isDarkMode, async (enabled) => {
+  if (!isTauri) return
+  const { invoke } = await import('@tauri-apps/api/core')
+  invoke('set_dark_mode', { enabled }).catch(() => {})
+})
+
 onMounted(async () => {
   themeStore.initTheme()
   profilesStore.ensureDefault()
@@ -66,6 +73,8 @@ onMounted(async () => {
     const { invoke } = await import('@tauri-apps/api/core')
     // Edge-to-edge: transparent status bar, content extends to top of screen
     invoke('setup_display').catch(() => {})
+    // Sync initial dark mode state to native bar
+    invoke('set_dark_mode', { enabled: themeStore.isDarkMode }).catch(() => {})
 
     // Tray events use Rust Emitter.emit() → listen() from @tauri-apps/api/event
     const { listen } = await import('@tauri-apps/api/event')

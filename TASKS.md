@@ -142,6 +142,10 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [x] Gmail replaced by Messenger in dashboard + bottom bar + webview store (2026-03-11)
 - [x] Mobile settings bottom sheet — username, email, dark mode toggle, grayscale toggle (2026-03-11)
 - [x] Theme store: dark mode preference now persists to localStorage (2026-03-11)
+- [x] Dark mode: full implementation — Vue CSS variables, Kotlin bottom bar light/dark colors, status bar icon inversion, Tauri IPC sync (2026-03-11)
+- [x] Home button: replaced back button with pi-home icon in Kotlin bottom bar — goes straight to dashboard (2026-03-11)
+- [x] Network visibility per profile: long-press edit mode on dashboard tiles, toggle networks on/off, persisted in profiles store (2026-03-11)
+- [x] Smaller network buttons: 44dp→36dp + 18sp→15sp in Kotlin bottom bar — fits more networks in horizontal scroll (2026-03-11)
 - [ ] 🟡 Header search/filters hidden on mobile — add mobile-accessible alternative
 - [ ] 🟡 Android: verify edge-to-edge status bar color inversion (light icons on dark home screen)
 - [ ] 🟡 Android: test cookie isolation across profile switches on device
