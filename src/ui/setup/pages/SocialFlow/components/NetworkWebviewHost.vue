@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 import { useWebviewStore } from '@/stores/webviewState'
 import { useProfilesStore } from '@/stores/profiles'
 import { useNetworkWebview } from '../composables/useNetworkWebview'
@@ -53,14 +53,8 @@ watch(
   { immediate: true },
 )
 
-onMounted(async () => {
-  const url = activeUrl.value
-  const networkId = activeNetworkId.value
-  const profileId = activeProfileId.value
-  if (url && networkId && profileId) {
-    await open(url, profileId, networkId)
-  }
-})
+// The watch({ immediate: true }) above handles the initial open on mount.
+// No separate onMounted needed — it would cause a redundant double open_webview IPC.
 </script>
 
 <style scoped>

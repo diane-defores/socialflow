@@ -2,6 +2,14 @@
 
 All notable changes to SocialFlow are documented here.
 
+## [Unreleased] — 2026-03-11 (d)
+
+### Fixed
+- Android network flash on open — `goHome()` and `navigateBackOrClose()` now call `destroySocialView()` instead of `hideSocialView()`, preventing stale content (e.g. Facebook) from flashing when opening a different network (e.g. Twitter) from the dashboard
+- Redundant double `open_webview` IPC removed — `NetworkWebviewHost` `onMounted` duplicated the `watch({ immediate: true })` initial open, causing unnecessary webview reload
+
+---
+
 ## [Unreleased] — 2026-03-11 (c)
 
 ### Added

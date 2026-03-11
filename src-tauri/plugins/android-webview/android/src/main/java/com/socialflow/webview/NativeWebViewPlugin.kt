@@ -759,9 +759,9 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         return btn
     }
 
-    /** Hide the social webview and return to the Vue dashboard. */
+    /** Destroy the social webview and return to the Vue dashboard. */
     private fun goHome() {
-        hideSocialView()
+        destroySocialView()
         dispatchToVue("sfz-webview-back")
     }
 
@@ -777,8 +777,8 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         if (currentIndex > baseline) {
             socialWebView?.goBack()
         } else {
-            hideSocialView()
-            // Tell Vue to clear its store state — this triggers close_webview IPC for proper cleanup
+            destroySocialView()
+            // Tell Vue to clear its store state (close_webview IPC will be a no-op since already destroyed)
             dispatchToVue("sfz-webview-back")
         }
     }
