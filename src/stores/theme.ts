@@ -13,6 +13,7 @@ export const useThemeStore = defineStore('theme', {
     toggleTheme() {
       this.isDarkMode = !this.isDarkMode
       this.applyTheme()
+      localStorage.setItem('theme', this.isDarkMode ? 'dark' : 'light')
       this.syncThemeToCloud(this.isDarkMode ? 'dark' : 'light')
     },
 

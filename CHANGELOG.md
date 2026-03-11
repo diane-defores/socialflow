@@ -2,6 +2,26 @@
 
 All notable changes to SocialFlow are documented here.
 
+## [Unreleased] — 2026-03-11 (b)
+
+### Added
+- Mobile settings bottom sheet — username, email, dark mode toggle, and grayscale toggle accessible from dashboard
+- Messenger added to dashboard, sidebar, and Android bottom bar (replaces Gmail)
+- Android cookie isolation per profile — cookies saved/restored via SharedPreferences on webview open/close/switch, enabling multi-account usage across profiles
+- Android `getMainWebView()` with view-hierarchy fallback — fixes Kotlin→Vue communication when plugin `load()` isn't called
+- TikTok cookie consent Shadow DOM support — pierces `<tiktok-cookie-banner>.shadowRoot` to auto-accept
+- Facebook/Instagram/Threads "Download app" and "Open in app" banners auto-hidden via CSS + text-match
+
+### Changed
+- TikTok icon corrected — `pi-video` → `pi-tiktok` (`\uea21`) across Kotlin bottom bar, Vue sidebar, and mobile layout
+
+### Fixed
+- Android `intent://` and `market://` URLs blocked in `shouldOverrideUrlLoading` — prevents "Page web non disponible" crash on Instagram/Threads "Open in app"
+- Android webview bottom gap eliminated — `addContentView` content frame is already system-inset, removed duplicate `navBarHeight` offset
+- Dark mode preference now persists to localStorage on toggle (was reading but never saving)
+
+---
+
 ## [Unreleased] — 2026-03-11
 
 ### Added

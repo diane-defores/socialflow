@@ -87,6 +87,13 @@
         </button>
       </div>
     </div>
+
+    <!-- Settings button -->
+    <button class="settings-btn" @click="settingsVisible = true">
+      <i class="pi pi-cog" />
+      <span>Paramètres</span>
+      <i class="pi pi-chevron-right quick-action-arrow" />
+    </button>
   </div>
 
   <!-- ─── Profile bottom sheet (Teleport avoids overflow clipping) ─── -->
@@ -180,6 +187,88 @@
     </Transition>
   </Teleport>
 
+  <!-- ─── Settings bottom sheet ─── -->
+  <Teleport to="body">
+    <Transition name="sheet">
+      <div v-if="settingsVisible" class="sheet-overlay" @click.self="settingsVisible = false">
+        <div class="profile-sheet settings-sheet">
+          <div class="sheet-handle" />
+          <div class="sheet-header">
+            <span class="sheet-title">Paramètres</span>
+            <button class="sheet-close-btn" @click="settingsVisible = false">
+              <i class="pi pi-times" />
+            </button>
+          </div>
+
+          <div class="settings-content">
+            <!-- User info section -->
+            <p class="settings-section-label">Compte</p>
+
+            <div class="settings-field">
+              <label class="settings-label" for="settings-username">
+                <i class="pi pi-user" />
+                Nom d'utilisateur
+              </label>
+              <input
+                id="settings-username"
+                v-model="settingsUsername"
+                class="settings-input"
+                placeholder="Votre nom…"
+                @blur="saveSettings"
+              />
+            </div>
+
+            <div class="settings-field">
+              <label class="settings-label" for="settings-email">
+                <i class="pi pi-envelope" />
+                E-mail
+              </label>
+              <input
+                id="settings-email"
+                v-model="settingsEmail"
+                type="email"
+                class="settings-input"
+                placeholder="votre@email.com"
+                @blur="saveSettings"
+              />
+            </div>
+
+            <!-- Preferences section -->
+            <p class="settings-section-label">Préférences</p>
+
+            <div class="settings-toggle-row">
+              <span class="settings-toggle-label">
+                <i class="pi pi-moon" />
+                Mode sombre
+              </span>
+              <button
+                class="friends-toggle-pill"
+                :class="{ enabled: themeStore.isDarkMode }"
+                @click="themeStore.toggleTheme()"
+              >
+                <span class="toggle-thumb" />
+              </button>
+            </div>
+
+            <div class="settings-toggle-row">
+              <span class="settings-toggle-label">
+                <i class="pi pi-palette" />
+                Mode focus (niveaux de gris)
+              </span>
+              <button
+                class="friends-toggle-pill"
+                :class="{ enabled: themeStore.grayscaleEnabled }"
+                @click="themeStore.setGrayscale(!themeStore.grayscaleEnabled)"
+              >
+                <span class="toggle-thumb" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
+
   <!-- Hidden file input for avatar upload -->
   <input
     ref="avatarFileInput"
@@ -195,6 +284,7 @@ import { ref, computed, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useWebviewStore } from '@/stores/webviewState'
 import { useProfilesStore } from '@/stores/profiles'
+import { useThemeStore } from '@/stores/theme'
 import { useFriendsFilterStore } from '@/stores/friendsFilter'
 import type { Profile } from '@/stores/profiles'
 import type { MenuItem } from '../types'
@@ -203,10 +293,21 @@ import NetworkWebviewHost from './NetworkWebviewHost.vue'
 const router = useRouter()
 const webviewStore = useWebviewStore()
 const profilesStore = useProfilesStore()
+const themeStore = useThemeStore()
 const filterStore = useFriendsFilterStore()
 
 // ─── Sheet state ──────────────────────────────────────────────
 const profileSheetVisible = ref(false)
+const settingsVisible = ref(false)
+
+// ─── Settings state ──────────────────────────────────────────
+const settingsUsername = ref(localStorage.getItem('sfz_username') ?? '')
+const settingsEmail = ref(localStorage.getItem('sfz_email') ?? '')
+
+function saveSettings() {
+  localStorage.setItem('sfz_username', settingsUsername.value.trim())
+  localStorage.setItem('sfz_email', settingsEmail.value.trim())
+}
 
 // ─── Rename state ─────────────────────────────────────────────
 const editingId = ref<string | null>(null)
@@ -242,11 +343,11 @@ const menuItems = ref<MenuItem[]>([
   { id: 2, label: 'Facebook', icon: 'pi pi-facebook', route: '/facebook' },
   { id: 3, label: 'Instagram', icon: 'pi pi-instagram', route: '/instagram' },
   { id: 4, label: 'LinkedIn', icon: 'pi pi-linkedin', route: '/linkedin' },
-  { id: 5, label: 'TikTok', icon: 'pi pi-video', route: '/tiktok' },
+  { id: 5, label: 'TikTok', icon: 'pi pi-tiktok', route: '/tiktok' },
   { id: 6, label: 'Threads', icon: 'pi pi-at', route: '/threads' },
   { id: 7, label: 'Discord', icon: 'pi pi-discord', route: '/discord' },
   { id: 8, label: 'Reddit', icon: 'pi pi-reddit', route: '/reddit' },
-  { id: 9, label: 'Gmail', icon: 'pi pi-envelope', route: '/gmail' },
+  { id: 9, label: 'Messenger', icon: 'pi pi-comments', route: '/messenger' },
   { id: 10, label: 'Kanban', icon: 'pi pi-th-large', route: '/kanban' },
 ])
 
@@ -259,7 +360,7 @@ const networkColors: Record<number, string> = {
   6:  '#000000',
   7:  '#5865F2',
   8:  '#FF4500',
-  9:  '#EA4335',
+  9:  '#0084FF',
   10: '#6366F1',
 }
 
@@ -670,8 +771,7 @@ function handleAvatarChange(event: Event) {
 
 .networks-section {
   flex: 1;
-  padding: 0 0.75rem;
-  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  padding: 0 0.75rem 0.5rem;
 }
 
 .section-title {
@@ -734,6 +834,123 @@ function handleAvatarChange(event: Event) {
   color: var(--text-color);
   text-align: left;
   line-height: 1.2;
+}
+
+/* ─── Settings button ────────────────────────────────────────── */
+
+.settings-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.5rem 1rem calc(1rem + env(safe-area-inset-bottom, 0px));
+  padding: 0.85rem 1rem;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 16px;
+  cursor: pointer;
+  box-shadow: var(--card-shadow);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-color);
+  transition: background-color 0.12s;
+}
+
+.settings-btn:active {
+  background: var(--surface-hover);
+}
+
+.settings-btn > i:first-child {
+  font-size: 1rem;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-ground);
+  border-radius: 8px;
+}
+
+.settings-btn > span {
+  flex: 1;
+  text-align: left;
+}
+
+/* ─── Settings sheet ─────────────────────────────────────────── */
+
+.settings-content {
+  padding: 0 1.25rem 1.5rem;
+  overflow-y: auto;
+}
+
+.settings-section-label {
+  margin: 1rem 0 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-color-secondary);
+}
+
+.settings-field {
+  margin-bottom: 0.75rem;
+}
+
+.settings-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-color-secondary);
+  margin-bottom: 0.35rem;
+}
+
+.settings-label i {
+  font-size: 0.85rem;
+}
+
+.settings-input {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.9rem;
+  background: var(--surface-ground);
+  border: 1px solid var(--surface-border);
+  border-radius: 10px;
+  color: var(--text-color);
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+
+.settings-input:focus {
+  border-color: var(--primary-color);
+}
+
+.settings-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.settings-toggle-row:last-child {
+  border-bottom: none;
+}
+
+.settings-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.settings-toggle-label i {
+  font-size: 1rem;
+  width: 2rem;
+  text-align: center;
 }
 
 /* ─── Profile bottom sheet ───────────────────────────────────── */

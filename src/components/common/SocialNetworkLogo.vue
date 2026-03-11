@@ -26,7 +26,7 @@ const getIconClass = computed(() => {
     case 'linkedin':
       return 'pi pi-linkedin'
     case 'tiktok':
-      return 'pi pi-video'
+      return 'pi pi-tiktok'
     case 'threads':
       return 'pi pi-at'
     case 'discord':

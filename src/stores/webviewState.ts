@@ -11,6 +11,7 @@ export const WEBVIEW_URLS: Record<string, string> = {
   threads: 'https://threads.net',
   discord: 'https://discord.com/app',
   reddit: 'https://reddit.com',
+  messenger: 'https://www.messenger.com',
 }
 
 export const useWebviewStore = defineStore('webview', {

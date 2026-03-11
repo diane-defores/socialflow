@@ -22,7 +22,6 @@ import android.widget.HorizontalScrollView
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import app.tauri.annotation.Command
 import app.tauri.annotation.InvokeArg
@@ -66,10 +65,11 @@ private val NETWORKS = listOf(
     NetworkInfo("facebook",  "\ue9b4", Color.parseColor("#1877F2"), "https://facebook.com"),
     NetworkInfo("instagram", "\ue9cc", Color.parseColor("#E4405F"), "https://instagram.com"),
     NetworkInfo("linkedin",  "\ue9cb", Color.parseColor("#0A66C2"), "https://linkedin.com"),
-    NetworkInfo("tiktok",    "\ue962", Color.parseColor("#010101"), "https://tiktok.com"),
+    NetworkInfo("tiktok",    "\uea21", Color.parseColor("#010101"), "https://tiktok.com"),
     NetworkInfo("threads",   "\ue9d8", Color.parseColor("#000000"), "https://threads.net"),
     NetworkInfo("discord",   "\ue9c0", Color.parseColor("#5865F2"), "https://discord.com/app"),
     NetworkInfo("reddit",    "\ue9e8", Color.parseColor("#FF4500"), "https://reddit.com"),
+    NetworkInfo("messenger", "\ue97e", Color.parseColor("#0084FF"), "https://www.messenger.com"),
 )
 
 // JavaScript injected after every page load to dismiss "open in app" / "get the app" prompts.
@@ -89,7 +89,14 @@ private val DISMISS_APP_BANNERS_SCRIPT = """
     '.IgCMI,' +
     '#app-download-guide,' +
     '[id*="app-banner" i], [id*="app-download" i], [id*="install-banner" i],' +
-    '[class*="AppBanner"], [class*="app-install-prompt"]' +
+    '[class*="AppBanner"], [class*="app-install-prompt"],' +
+    // Facebook / Instagram / Threads (Meta) — "Download" & "Open in app" banners
+    '[data-sigil="mbasic_inline_feed_promo"], [data-sigil="app_banner"],' +
+    '[id*="download-app" i], [class*="download-app" i],' +
+    '[class*="MobileAppPromoBanner"], [class*="appBanner"],' +
+    '#mobile-install-banner, [data-testid="mobile_app_banner"],' +
+    '[class*="open-in-app" i], [class*="openInApp" i],' +
+    '[data-testid*="open-in-app" i], [data-testid*="app_upsell" i]' +
     '{ display: none !important; }';
   (document.head || document.documentElement).appendChild(style);
 
@@ -100,10 +107,25 @@ private val DISMISS_APP_BANNERS_SCRIPT = """
   }
 
   // Text patterns for "stay in browser / not now" dismiss buttons
-  var DISMISS_RE = /^(not now|pas maintenant|no thanks|non merci|continue in browser|continuer dans le navigateur|stay in browser|rester sur le site|use web|utiliser le web|continue to site|maybe later|peut-être plus tard|dismiss|ignorer|skip|passer|×|✕|close|fermer)$/i;
+  var DISMISS_RE = /^(not now|pas maintenant|no thanks|non merci|continue in browser|continuer dans le navigateur|stay in browser|rester sur le site|use web|utiliser le web|continue to site|maybe later|peut-être plus tard|dismiss|ignorer|skip|passer|×|✕|close|fermer|log in|se connecter)$/i;
+
+  // Hide banners by text content (e.g. "Download Facebook for Android")
+  var DOWNLOAD_RE = /t(é|e)l(é|e)charger.*(facebook|instagram|threads|android)|download.*(facebook|instagram|threads|android)|naviguer plus vite|browse faster|open in app|ouvrir.*(l.application|l.app)|get the app|installer l.app/i;
+  function hideDownloadBanners() {
+    var els = document.querySelectorAll('div, section, aside, header, [role="banner"]');
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      if (el.children.length > 10 || el.offsetHeight > 120) continue;
+      var txt = (el.textContent || '').trim();
+      if (txt.length < 200 && DOWNLOAD_RE.test(txt)) {
+        el.style.display = 'none';
+      }
+    }
+  }
 
   function dismissAppPrompts() {
     removeSmartBannerMeta();
+    hideDownloadBanners();
 
     var btns = document.querySelectorAll('button, a[role="button"], [role="button"], a');
     for (var i = 0; i < btns.length; i++) {
@@ -172,7 +194,7 @@ private val COOKIE_ACCEPT_SCRIPT = """
   ];
 
   // Text patterns matched case-insensitively against button innerText / aria-label
-  var ACCEPT_RE = /^(accept( all( cookies?)?)?|accepter( tout(es)?( les cookies?)?)?|tout accepter|autoriser( tous?( les cookies?)?)?|allow( all( cookies?)?)?|i agree|j'accepte|ok|got it|i accept|confirm all|agree)$/i;
+  var ACCEPT_RE = /^(accept( all( cookies?)?)?|accept cookies on this browser|accepter( tout(es)?( les cookies?)?)?|tout accepter|tout autoriser|autoriser( tous?( les cookies?)?)?|allow( all( cookies?)?)?|i agree|j'accepte|ok|got it|i accept|confirm all|agree)$/i;
 
   function clickIfVisible(el) {
     if (!el) return false;
@@ -182,7 +204,27 @@ private val COOKIE_ACCEPT_SCRIPT = """
     return true;
   }
 
+  // TikTok uses <tiktok-cookie-banner> custom element with Shadow DOM.
+  // Normal selectors can't reach inside — we must access shadowRoot directly.
+  function tryTikTokShadowBanner() {
+    try {
+      var banner = document.querySelector('tiktok-cookie-banner');
+      if (!banner || !banner.shadowRoot) return false;
+      var btns = banner.shadowRoot.querySelectorAll('button');
+      for (var i = 0; i < btns.length; i++) {
+        var label = (btns[i].textContent || '').trim();
+        if (ACCEPT_RE.test(label)) { btns[i].click(); return true; }
+      }
+      // Fallback: click the last button (typically "Allow all" / "Accept")
+      if (btns.length > 0) { btns[btns.length - 1].click(); return true; }
+    } catch(e) {}
+    return false;
+  }
+
   function tryAccept() {
+    // 0. TikTok shadow DOM banner (must be checked before normal selectors)
+    if (tryTikTokShadowBanner()) return;
+
     // 1. Try known CMP selectors
     for (var i = 0; i < SELECTORS.length; i++) {
       try {
@@ -266,7 +308,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     }
 
     init {
-        Log.i(TAG, "NativeWebViewPlugin instantiated — activity=${activity.javaClass.name}")
+        Log.i(TAG, "NativeWebViewPlugin instantiated")
     }
 
     /**
@@ -313,6 +355,62 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         activity.getSharedPreferences("sfz_network_usage", Context.MODE_PRIVATE)
     }
 
+    // Cookie isolation — save/restore cookies per (profile, network) pair.
+    // Android CookieManager is a singleton shared by all WebViews, so we manually
+    // save cookies before closing and restore them before opening.
+    private val cookiePrefs by lazy {
+        activity.getSharedPreferences("sfz_cookies", Context.MODE_PRIVATE)
+    }
+
+    // All base URLs we need to save/restore cookies for
+    private val COOKIE_URLS = NETWORKS.map { it.url } + listOf(
+        "https://www.facebook.com", "https://m.facebook.com",
+        "https://www.instagram.com", "https://m.instagram.com",
+        "https://www.threads.net", "https://mobile.twitter.com",
+        "https://www.tiktok.com", "https://www.reddit.com",
+        "https://www.linkedin.com", "https://www.messenger.com",
+    )
+
+    /** Save all cookies for the current profile session key. */
+    private fun saveCookiesForSession(sessionKey: String) {
+        val cm = CookieManager.getInstance()
+        val editor = cookiePrefs.edit()
+        for (url in COOKIE_URLS) {
+            val cookies = cm.getCookie(url)
+            if (cookies != null) {
+                editor.putString("$sessionKey|$url", cookies)
+            } else {
+                editor.remove("$sessionKey|$url")
+            }
+        }
+        editor.apply()
+        Log.i(TAG, "Cookies saved for session: $sessionKey")
+    }
+
+    /** Clear all cookies, then restore saved cookies for the target session. */
+    private fun restoreCookiesForSession(sessionKey: String) {
+        val cm = CookieManager.getInstance()
+        // Clear everything first
+        cm.removeAllCookies(null)
+        cm.flush()
+
+        // Restore saved cookies for this session
+        var restored = 0
+        for (url in COOKIE_URLS) {
+            val cookies = cookiePrefs.getString("$sessionKey|$url", null) ?: continue
+            // setCookie expects one cookie at a time; the stored string may have multiple
+            for (cookie in cookies.split(";")) {
+                val trimmed = cookie.trim()
+                if (trimmed.isNotEmpty()) {
+                    cm.setCookie(url, trimmed)
+                }
+            }
+            restored++
+        }
+        cm.flush()
+        Log.i(TAG, "Cookies restored for session: $sessionKey ($restored URLs)")
+    }
+
     /** Capture the main Tauri WebView on plugin load — this is the Vue app webview. */
     override fun load(webView: WebView) {
         mainWebView = webView
@@ -325,17 +423,9 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
      * as evaluateJavascript() used for grayscale/mute on the social webview.
      */
     private fun dispatchToVue(eventName: String, detailJson: String = "{}") {
-        val wv = getMainWebView()
-        if (wv == null) {
-            Log.e(TAG, "dispatchToVue('$eventName') FAILED — mainWebView not found anywhere!")
-            Toast.makeText(activity, "SFZ: mainWebView NULL!", Toast.LENGTH_LONG).show()
-            return
-        }
+        val wv = getMainWebView() ?: return
         val js = "window.dispatchEvent(new CustomEvent('$eventName', { detail: $detailJson }))"
-        Log.i(TAG, "dispatchToVue: $eventName → evaluateJavascript on wv#${wv.hashCode()}")
-        wv.evaluateJavascript(js) { result ->
-            Log.i(TAG, "dispatchToVue: $eventName callback result=$result")
-        }
+        wv.evaluateJavascript(js, null)
     }
 
     private fun incrementUsage(networkId: String) {
@@ -400,12 +490,14 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     @Command
     fun openWebView(invoke: Invoke) {
         val args = invoke.parseArgs(OpenWebViewArgs::class.java)
-        Log.i(TAG, "openWebView: url=${args.url}, networkId=${args.networkId}, accountId=${args.accountId}")
-
         incrementUsage(args.networkId)
 
         activity.runOnUiThread {
             if (socialWebView != null) {
+                // Save cookies for the old session before switching
+                currentAccountId?.let { saveCookiesForSession(it) }
+                // Restore cookies for the new session
+                restoreCookiesForSession(args.accountId)
                 // Reuse existing webview — just navigate and update active highlight
                 initialBackIndex = -1  // Reset baseline for new network URL
                 socialWebView?.loadUrl(args.url)
@@ -418,33 +510,28 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             }
 
             val density = activity.resources.displayMetrics.density
-
-            // System window insets (status bar top, nav bar bottom)
-            val windowInsets = activity.window.decorView.rootWindowInsets
-            val statusBarHeight = windowInsets?.systemWindowInsetTop ?: 0
-            val navBarHeight   = windowInsets?.systemWindowInsetBottom ?: 0
-
             val barHeight = (52 * density).toInt()
 
             // ── Root container ───────────────────────────────────────────────
+            // addContentView puts us inside the already-inset content frame,
+            // so we do NOT add system bar offsets ourselves.
             val root = FrameLayout(activity)
 
-            // ── WebView (full screen minus bottom bar + nav bar) ─────────────
+            // ── WebView (full screen minus our bottom bar) ───────────────────
             val webView = createWebView()
             val wvParams = FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
-            wvParams.topMargin = statusBarHeight
-            wvParams.bottomMargin = navBarHeight + barHeight
+            wvParams.bottomMargin = barHeight
             webView.layoutParams = wvParams
 
-            // ── Bottom overlay bar (above nav bar) ───────────────────────────
-            val bottomBar = buildBottomBar(density, navBarHeight, args.networkId, sortedNetworks())
+            // ── Bottom overlay bar ───────────────────────────────────────────
+            val bottomBar = buildBottomBar(density, 0, args.networkId, sortedNetworks())
             bottomBarView = bottomBar
             val bottomBarParams = FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                barHeight + navBarHeight
+                barHeight
             )
             bottomBarParams.gravity = Gravity.BOTTOM
             bottomBar.layoutParams = bottomBarParams
@@ -468,6 +555,9 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             // Intercept the Android hardware back button while the social webview is visible.
             // Priority: go back in webview history → if no history, signal Vue to close overlay.
             registerBackCallback()
+
+            // Restore cookies for this profile session before loading
+            restoreCookiesForSession(args.accountId)
 
             // Apply persisted mute state to the new webview via JS
             applyMuteToWebView(webView)
@@ -633,13 +723,9 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         val list = socialWebView?.copyBackForwardList()
         val currentIndex = list?.currentIndex ?: 0
         val baseline = initialBackIndex.coerceAtLeast(0)
-        Log.i(TAG, "navigateBackOrClose: currentIndex=$currentIndex, baseline=$baseline, socialWebView=${socialWebView != null}, mainWebView=${mainWebView != null}")
         if (currentIndex > baseline) {
-            Log.i(TAG, "→ goBack()")
             socialWebView?.goBack()
         } else {
-            Log.i(TAG, "→ hideSocialView + dispatchToVue('sfz-webview-back')")
-            Toast.makeText(activity, "SFZ: closing → dashboard", Toast.LENGTH_SHORT).show()
             hideSocialView()
             // Tell Vue to clear its store state — this triggers close_webview IPC for proper cleanup
             dispatchToVue("sfz-webview-back")
@@ -767,23 +853,20 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         btn.isFocusable = true
         btn.setOnClickListener {
             btn.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-            Log.i(TAG, "Network tap: ${net.id} (url=${net.url}), current=$currentNetworkId, socialWebView=${socialWebView != null}")
-            Toast.makeText(activity, "SFZ: ${net.id} → ${net.url}", Toast.LENGTH_SHORT).show()
             if (net.id != currentNetworkId) {
-                initialBackIndex = -1  // Reset back-stack baseline for new site
-                val wv = socialWebView
-                if (wv != null) {
-                    Log.i(TAG, "→ loadUrl(${net.url}) on ${wv.hashCode()}")
-                    wv.loadUrl(net.url)
-                } else {
-                    Log.e(TAG, "→ socialWebView is NULL, cannot loadUrl!")
-                    Toast.makeText(activity, "SFZ: socialWebView is NULL!", Toast.LENGTH_LONG).show()
+                // Save cookies for old network, restore for new (same profile)
+                currentAccountId?.let { oldKey ->
+                    saveCookiesForSession(oldKey)
+                    val profilePrefix = oldKey.substringBeforeLast("-")
+                    val newKey = "$profilePrefix-${net.id}"
+                    restoreCookiesForSession(newKey)
+                    currentAccountId = newKey
                 }
+                initialBackIndex = -1
+                socialWebView?.loadUrl(net.url)
                 currentNetworkId = net.id
                 incrementUsage(net.id)
                 updateBottomBarActiveNetwork(net.id)
-            } else {
-                Log.i(TAG, "→ same network, skipping")
             }
         }
 
@@ -846,12 +929,16 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         // Auto-accept cookie dialogs + dismiss app-download prompts + restore grayscale
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, request: android.webkit.WebResourceRequest): Boolean {
-                Log.i(TAG, "shouldOverrideUrlLoading: ${request.url}")
-                return false  // Allow all navigation
+                val url = request.url.toString()
+                // Block intent:// and market:// URLs — these crash the WebView
+                // (e.g. Instagram "Open in app" triggers intent://instagram.com/...)
+                if (url.startsWith("intent:") || url.startsWith("market:")) {
+                    return true  // consume — don't navigate
+                }
+                return false
             }
             override fun onPageFinished(view: WebView, url: String) {
                 super.onPageFinished(view, url)
-                Log.i(TAG, "onPageFinished: $url (backIndex=${view.copyBackForwardList().currentIndex})")
                 view.evaluateJavascript(COOKIE_ACCEPT_SCRIPT, null)
                 view.evaluateJavascript(DISMISS_APP_BANNERS_SCRIPT, null)
                 if (isGrayscale) applyGrayscaleToWebView(view)
@@ -878,6 +965,9 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     }
 
     private fun destroySocialView() {
+        // Save cookies for the current session before destroying
+        currentAccountId?.let { saveCookiesForSession(it) }
+
         backCallback?.remove()
         backCallback = null
         socialWebView?.destroy()

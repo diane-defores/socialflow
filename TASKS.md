@@ -131,9 +131,20 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [x] Mobile: quick actions bar — notifications badge + friends filter toggle pill (2026-03-11)
 - [x] Mobile: network tiles redesigned as horizontal rows (icon + label left-aligned) (2026-03-11)
 - [x] `profiles.ts`: added `avatar` field + `setAvatar()` action (2026-03-11)
+- [x] Android: Kotlin→Vue communication fixed — `getMainWebView()` with view-hierarchy fallback when `load()` not called (2026-03-11)
+- [x] Android: bottom bar network switching + back-to-dashboard now work end-to-end (2026-03-11)
+- [x] Android: `intent://` and `market://` URLs blocked in `shouldOverrideUrlLoading` — fixes Instagram/Threads crash (2026-03-11)
+- [x] Android: webview bottom gap fixed — removed double `navBarHeight` offset from layout (2026-03-11)
+- [x] Android: TikTok icon fixed — `pi-video` → `pi-tiktok` (codepoint `\uea21`) across Kotlin + Vue (2026-03-11)
+- [x] Android: TikTok cookie consent — Shadow DOM support for `<tiktok-cookie-banner>` (2026-03-11)
+- [x] Android: Facebook/Instagram/Threads "Download app" / "Open in app" banners hidden (2026-03-11)
+- [x] Android: cookie isolation per profile — save/restore via SharedPreferences on webview open/close/switch (2026-03-11)
+- [x] Gmail replaced by Messenger in dashboard + bottom bar + webview store (2026-03-11)
+- [x] Mobile settings bottom sheet — username, email, dark mode toggle, grayscale toggle (2026-03-11)
+- [x] Theme store: dark mode preference now persists to localStorage (2026-03-11)
 - [ ] 🟡 Header search/filters hidden on mobile — add mobile-accessible alternative
 - [ ] 🟡 Android: verify edge-to-edge status bar color inversion (light icons on dark home screen)
-- [ ] 🟡 Android: test full back-button + network-switch flow end-to-end on device
+- [ ] 🟡 Android: test cookie isolation across profile switches on device
 
 ### To go live (⛔ blocked — needs accounts)
 

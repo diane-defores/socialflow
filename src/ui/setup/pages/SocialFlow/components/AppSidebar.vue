@@ -267,11 +267,11 @@ const menuItems = ref<MenuItem[]>([
   { id: 2, label: 'Facebook', icon: 'pi pi-facebook', route: '/facebook' },
   { id: 3, label: 'Instagram', icon: 'pi pi-instagram', route: '/instagram' },
   { id: 4, label: 'LinkedIn', icon: 'pi pi-linkedin', route: '/linkedin' },
-  { id: 5, label: 'TikTok', icon: 'pi pi-video', route: '/tiktok' },
+  { id: 5, label: 'TikTok', icon: 'pi pi-tiktok', route: '/tiktok' },
   { id: 6, label: 'Threads', icon: 'pi pi-at', route: '/threads' },
   { id: 7, label: 'Discord', icon: 'pi pi-discord', route: '/discord' },
   { id: 8, label: 'Reddit', icon: 'pi pi-reddit', route: '/reddit' },
-  { id: 9, label: 'Gmail', icon: 'pi pi-envelope', route: '/gmail' },
+  { id: 9, label: 'Messenger', icon: 'pi pi-comments', route: '/messenger' },
   { id: 10, label: 'Kanban', icon: 'pi pi-th-large', route: '/kanban' }
 ])
 
