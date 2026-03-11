@@ -234,6 +234,11 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     private var currentAccountId: String? = null
     private var currentNetworkId: String? = null
 
+    // Back-stack baseline — set after the initial page+redirects settle.
+    // canGoBack() returns true for redirect-created entries too, so we only treat
+    // it as real navigable history if currentIndex > initialBackIndex.
+    private var initialBackIndex = -1
+
     // Mute state — survives network switches within a session
     private var isMuted = false
     private var muteBtn: TextView? = null
@@ -288,14 +293,17 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             @Suppress("DEPRECATION")
             window.decorView.systemUiVisibility = (
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
             )
         }
 
-        // Transparent status bar — only icons float, no background bar
+        // Transparent status + nav bars — content draws behind both
         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
         window.statusBarColor = Color.TRANSPARENT
+        window.navigationBarColor = Color.TRANSPARENT
 
         // White (light) icons — readable on dark or colorful content
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -321,6 +329,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         activity.runOnUiThread {
             if (socialWebView != null) {
                 // Reuse existing webview — just navigate and update active highlight
+                initialBackIndex = -1  // Reset baseline for new network URL
                 socialWebView?.loadUrl(args.url)
                 currentAccountId = args.accountId
                 currentNetworkId = args.networkId
@@ -396,6 +405,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     fun navigateWebView(invoke: Invoke) {
         val args = invoke.parseArgs(NavigateArgs::class.java)
         activity.runOnUiThread {
+            initialBackIndex = -1  // Reset baseline for new network URL
             socialWebView?.loadUrl(args.url)
             currentNetworkId = args.networkId
             updateBottomBarActiveNetwork(args.networkId)
@@ -542,7 +552,10 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
      * - Otherwise → signal Vue to close the overlay (Vue calls clearNetwork → close_webview IPC).
      */
     private fun navigateBackOrClose() {
-        if (socialWebView?.canGoBack() == true) {
+        val list = socialWebView?.copyBackForwardList()
+        val currentIndex = list?.currentIndex ?: 0
+        val baseline = initialBackIndex.coerceAtLeast(0)
+        if (currentIndex > baseline) {
             socialWebView?.goBack()
         } else {
             trigger("webview-back", JSObject())
@@ -741,6 +754,11 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                 view.evaluateJavascript(DISMISS_APP_BANNERS_SCRIPT, null)
                 if (isGrayscale) applyGrayscaleToWebView(view)
                 if (isMuted) applyMuteToWebView(view)
+                // Record back-stack depth after the initial page+redirects settle.
+                // We only consider deeper entries as real user navigation.
+                if (initialBackIndex < 0) {
+                    initialBackIndex = view.copyBackForwardList().currentIndex
+                }
             }
         }
         webView.webChromeClient = WebChromeClient()

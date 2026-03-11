@@ -4,6 +4,7 @@ export interface Profile {
   id: string
   name: string
   emoji: string
+  avatar?: string   // base64 data URL or remote URL
   createdAt: number
 }
 
@@ -49,6 +50,12 @@ export const useProfilesStore = defineStore('profiles', {
     rename(profileId: string, name: string) {
       const profile = this.profiles.find((p) => p.id === profileId)
       if (profile) profile.name = name
+    },
+
+    /** Set or clear a profile avatar (base64 data URL). */
+    setAvatar(profileId: string, avatar: string | undefined) {
+      const profile = this.profiles.find((p) => p.id === profileId)
+      if (profile) profile.avatar = avatar
     },
 
     /** Switch the active profile. */

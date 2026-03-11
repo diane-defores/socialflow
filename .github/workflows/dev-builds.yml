@@ -7,6 +7,9 @@ on:
 permissions:
   contents: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   android-debug:
     name: Android debug APK (arm64)
@@ -15,6 +18,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Configure git safe directory
+        run: git config --global --add safe.directory '*'
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -86,6 +92,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Configure git safe directory
+        run: git config --global --add safe.directory '*'
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4

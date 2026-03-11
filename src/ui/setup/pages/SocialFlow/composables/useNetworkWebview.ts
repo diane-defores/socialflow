@@ -53,23 +53,14 @@ export function useNetworkWebview(hostEl: Ref<HTMLElement | null>) {
   }
 
   /**
-   * Switch to a different profile or network.
-   * Same profile → fast navigate (reuse existing webview, no flash).
-   * Different profile → close old + open new (each profile has isolated session data).
+   * Switch to a different profile or network — always close old then open new.
+   * Each network is a different site so a fresh load is appropriate either way.
    */
   async function switchTo(url: string, profileId: string, networkId: string) {
-    const newKey = `${profileId}:${networkId}`
     if (isOpen.value && activeKey.value) {
-      const [oldProfileId] = activeKey.value.split(':')
-      if (oldProfileId === profileId) {
-        // Same profile, different network: just load the new URL, keep the webview alive
-        await invoke('navigate_webview', { url, networkId })
-        activeKey.value = newKey
-        return
-      }
-      // Different profile: close old session, open new one
-      const [, oldNetworkId] = activeKey.value.split(':')
+      const [oldProfileId, oldNetworkId] = activeKey.value.split(':')
       await invoke('close_webview', { profileId: oldProfileId, networkId: oldNetworkId })
+      activeKey.value = null
       isOpen.value = false
     }
     await open(url, profileId, networkId)

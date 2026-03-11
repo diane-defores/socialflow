@@ -123,9 +123,17 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [x] BuildFlowz inspector script removed from index.html (2026-03-10)
 - [x] `viewport-fit=cover` added — enables `env(safe-area-inset-top)` on Android (2026-03-10)
 - [x] Android CI build fix — add `androidx.activity:activity-ktx:1.9.3` to plugin `build.gradle.kts` (OnBackPressedCallback missing dep) (2026-03-10)
+- [x] CI: opt into Node.js 24 (`FORCE_JAVASCRIPT_ACTIONS_TO_NODE24`) + `git config safe.directory` fix (2026-03-11)
+- [x] Android: back button fixed — `initialBackIndex` baseline prevents redirect-loop trap; fires `webview-back` correctly (2026-03-11)
+- [x] Android: edge-to-edge bottom fixed — `navigationBarColor = TRANSPARENT` + `LAYOUT_HIDE_NAVIGATION` flag (2026-03-11)
+- [x] Android: network switching fixed — `switchTo()` now always close+open (removed missing `navigate_webview` IPC call) (2026-03-11)
+- [x] Mobile: profile card → bottom sheet with rename, avatar upload (base64), delete (2026-03-11)
+- [x] Mobile: quick actions bar — notifications badge + friends filter toggle pill (2026-03-11)
+- [x] Mobile: network tiles redesigned as horizontal rows (icon + label left-aligned) (2026-03-11)
+- [x] `profiles.ts`: added `avatar` field + `setAvatar()` action (2026-03-11)
 - [ ] 🟡 Header search/filters hidden on mobile — add mobile-accessible alternative
-- [ ] 🟡 Android: test `navigate_webview` network switching end-to-end on device
 - [ ] 🟡 Android: verify edge-to-edge status bar color inversion (light icons on dark home screen)
+- [ ] 🟡 Android: test full back-button + network-switch flow end-to-end on device
 
 ### To go live (⛔ blocked — needs accounts)
 
