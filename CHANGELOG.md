@@ -2,6 +2,25 @@
 
 All notable changes to SocialFlow are documented here.
 
+## [Unreleased] — 2026-03-11
+
+### Added
+- Mobile profile management bottom sheet — tap the profile card to open a slide-up panel with rename, avatar upload (photo from device), and delete actions
+- Quick actions bar on mobile home screen — notification badge and friends-filter toggle pill
+- Profile avatars — `avatar` field on profiles (base64 data URL), displayed in profile card and bottom sheet
+
+### Changed
+- Mobile network tiles redesigned as horizontal rows (icon + label left-aligned) — more readable at a glance
+- CI workflows opt into Node.js 24 (`FORCE_JAVASCRIPT_ACTIONS_TO_NODE24`) — eliminates deprecation warnings ahead of June 2026 deadline
+
+### Fixed
+- Android back button no longer loops through redirect history — `initialBackIndex` baseline records where the back stack stands after the initial page load, so tapping back on the social home page correctly returns to the dashboard instead of cycling through `x.com → x.com/home` redirects
+- Android network switching via bottom bar icons now works — previous implementation called a `navigate_webview` IPC command that was never registered on Android; `switchTo()` now always closes the current webview and opens a fresh one
+- Android edge-to-edge bottom — navigation bar is now fully transparent (`navigationBarColor = TRANSPARENT` + `LAYOUT_HIDE_NAVIGATION` on pre-API 30); the custom bottom bar no longer sits behind the system nav bar
+- CI Android and Windows builds no longer fail with git exit code 128 — `git config --global --add safe.directory '*'` added before steps that run git internally
+
+---
+
 ## [Unreleased] — 2026-03-10 (c)
 
 ### Fixed
