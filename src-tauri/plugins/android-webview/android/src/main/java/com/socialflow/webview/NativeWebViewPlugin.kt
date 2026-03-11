@@ -510,28 +510,33 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             }
 
             val density = activity.resources.displayMetrics.density
+
+            // System window insets (status bar top, nav bar bottom)
+            val windowInsets = activity.window.decorView.rootWindowInsets
+            val statusBarHeight = windowInsets?.systemWindowInsetTop ?: 0
+            val navBarHeight   = windowInsets?.systemWindowInsetBottom ?: 0
+
             val barHeight = (52 * density).toInt()
 
             // ── Root container ───────────────────────────────────────────────
-            // addContentView puts us inside the already-inset content frame,
-            // so we do NOT add system bar offsets ourselves.
             val root = FrameLayout(activity)
 
-            // ── WebView (full screen minus our bottom bar) ───────────────────
+            // ── WebView (below status bar, above our bar + nav bar) ──────────
             val webView = createWebView()
             val wvParams = FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
-            wvParams.bottomMargin = barHeight
+            wvParams.topMargin = statusBarHeight
+            wvParams.bottomMargin = navBarHeight + barHeight
             webView.layoutParams = wvParams
 
-            // ── Bottom overlay bar ───────────────────────────────────────────
-            val bottomBar = buildBottomBar(density, 0, args.networkId, sortedNetworks())
+            // ── Bottom overlay bar (above nav bar) ───────────────────────────
+            val bottomBar = buildBottomBar(density, navBarHeight, args.networkId, sortedNetworks())
             bottomBarView = bottomBar
             val bottomBarParams = FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                barHeight
+                barHeight + navBarHeight
             )
             bottomBarParams.gravity = Gravity.BOTTOM
             bottomBar.layoutParams = bottomBarParams
