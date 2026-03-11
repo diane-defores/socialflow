@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
+import android.util.Log
 import android.view.Gravity
 import android.view.HapticFeedbackConstants
 import android.view.View
@@ -21,6 +22,7 @@ import android.widget.HorizontalScrollView
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import app.tauri.annotation.Command
 import app.tauri.annotation.InvokeArg
@@ -28,6 +30,8 @@ import app.tauri.annotation.TauriPlugin
 import app.tauri.plugin.Invoke
 import app.tauri.plugin.JSObject
 import app.tauri.plugin.Plugin
+
+private const val TAG = "SFZ"
 
 @InvokeArg
 class OpenWebViewArgs {
@@ -261,6 +265,49 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         Typeface.createFromAsset(activity.assets, "primeicons.ttf")
     }
 
+    init {
+        Log.i(TAG, "NativeWebViewPlugin instantiated — activity=${activity.javaClass.name}")
+    }
+
+    /**
+     * Walk the view hierarchy to find the FIRST WebView that is NOT our social webview.
+     * This is the Tauri/WRY main WebView running the Vue app.
+     */
+    private fun findMainWebViewInHierarchy(): WebView? {
+        val root = activity.window?.decorView as? ViewGroup ?: return null
+        return findWebViewRecursive(root)
+    }
+
+    private fun findWebViewRecursive(parent: ViewGroup): WebView? {
+        for (i in 0 until parent.childCount) {
+            val child = parent.getChildAt(i)
+            if (child is WebView && child !== socialWebView) {
+                return child
+            }
+            if (child is ViewGroup) {
+                val found = findWebViewRecursive(child)
+                if (found != null) return found
+            }
+        }
+        return null
+    }
+
+    /**
+     * Get the main Tauri WebView — uses load() reference, with view-hierarchy fallback.
+     */
+    private fun getMainWebView(): WebView? {
+        mainWebView?.let { return it }
+        // Fallback: walk the view hierarchy
+        val found = findMainWebViewInHierarchy()
+        if (found != null) {
+            mainWebView = found
+            Log.i(TAG, "mainWebView found via view hierarchy fallback: ${found.hashCode()}")
+        } else {
+            Log.e(TAG, "mainWebView not found — load() was not called and hierarchy search failed")
+        }
+        return found
+    }
+
     // Usage counters — persisted across app restarts via SharedPreferences
     private val prefs by lazy {
         activity.getSharedPreferences("sfz_network_usage", Context.MODE_PRIVATE)
@@ -269,6 +316,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     /** Capture the main Tauri WebView on plugin load — this is the Vue app webview. */
     override fun load(webView: WebView) {
         mainWebView = webView
+        Log.i(TAG, "load() called — mainWebView captured: ${webView.hashCode()}")
     }
 
     /**
@@ -277,10 +325,17 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
      * as evaluateJavascript() used for grayscale/mute on the social webview.
      */
     private fun dispatchToVue(eventName: String, detailJson: String = "{}") {
-        mainWebView?.evaluateJavascript(
-            "window.dispatchEvent(new CustomEvent('$eventName', { detail: $detailJson }))",
-            null
-        )
+        val wv = getMainWebView()
+        if (wv == null) {
+            Log.e(TAG, "dispatchToVue('$eventName') FAILED — mainWebView not found anywhere!")
+            Toast.makeText(activity, "SFZ: mainWebView NULL!", Toast.LENGTH_LONG).show()
+            return
+        }
+        val js = "window.dispatchEvent(new CustomEvent('$eventName', { detail: $detailJson }))"
+        Log.i(TAG, "dispatchToVue: $eventName → evaluateJavascript on wv#${wv.hashCode()}")
+        wv.evaluateJavascript(js) { result ->
+            Log.i(TAG, "dispatchToVue: $eventName callback result=$result")
+        }
     }
 
     private fun incrementUsage(networkId: String) {
@@ -345,6 +400,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     @Command
     fun openWebView(invoke: Invoke) {
         val args = invoke.parseArgs(OpenWebViewArgs::class.java)
+        Log.i(TAG, "openWebView: url=${args.url}, networkId=${args.networkId}, accountId=${args.accountId}")
 
         incrementUsage(args.networkId)
 
@@ -577,10 +633,13 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         val list = socialWebView?.copyBackForwardList()
         val currentIndex = list?.currentIndex ?: 0
         val baseline = initialBackIndex.coerceAtLeast(0)
+        Log.i(TAG, "navigateBackOrClose: currentIndex=$currentIndex, baseline=$baseline, socialWebView=${socialWebView != null}, mainWebView=${mainWebView != null}")
         if (currentIndex > baseline) {
+            Log.i(TAG, "→ goBack()")
             socialWebView?.goBack()
         } else {
-            // Hide overlay instantly so user sees the dashboard immediately
+            Log.i(TAG, "→ hideSocialView + dispatchToVue('sfz-webview-back')")
+            Toast.makeText(activity, "SFZ: closing → dashboard", Toast.LENGTH_SHORT).show()
             hideSocialView()
             // Tell Vue to clear its store state — this triggers close_webview IPC for proper cleanup
             dispatchToVue("sfz-webview-back")
@@ -708,14 +767,23 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         btn.isFocusable = true
         btn.setOnClickListener {
             btn.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-            // Load the URL directly — no round-trip through Vue/Tauri IPC needed.
-            // Same approach as grayscale: Kotlin acts on the webview directly.
+            Log.i(TAG, "Network tap: ${net.id} (url=${net.url}), current=$currentNetworkId, socialWebView=${socialWebView != null}")
+            Toast.makeText(activity, "SFZ: ${net.id} → ${net.url}", Toast.LENGTH_SHORT).show()
             if (net.id != currentNetworkId) {
                 initialBackIndex = -1  // Reset back-stack baseline for new site
-                socialWebView?.loadUrl(net.url)
+                val wv = socialWebView
+                if (wv != null) {
+                    Log.i(TAG, "→ loadUrl(${net.url}) on ${wv.hashCode()}")
+                    wv.loadUrl(net.url)
+                } else {
+                    Log.e(TAG, "→ socialWebView is NULL, cannot loadUrl!")
+                    Toast.makeText(activity, "SFZ: socialWebView is NULL!", Toast.LENGTH_LONG).show()
+                }
                 currentNetworkId = net.id
                 incrementUsage(net.id)
                 updateBottomBarActiveNetwork(net.id)
+            } else {
+                Log.i(TAG, "→ same network, skipping")
             }
         }
 
@@ -777,8 +845,13 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
         // Auto-accept cookie dialogs + dismiss app-download prompts + restore grayscale
         webView.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(view: WebView, request: android.webkit.WebResourceRequest): Boolean {
+                Log.i(TAG, "shouldOverrideUrlLoading: ${request.url}")
+                return false  // Allow all navigation
+            }
             override fun onPageFinished(view: WebView, url: String) {
                 super.onPageFinished(view, url)
+                Log.i(TAG, "onPageFinished: $url (backIndex=${view.copyBackForwardList().currentIndex})")
                 view.evaluateJavascript(COOKIE_ACCEPT_SCRIPT, null)
                 view.evaluateJavascript(DISMISS_APP_BANNERS_SCRIPT, null)
                 if (isGrayscale) applyGrayscaleToWebView(view)
