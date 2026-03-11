@@ -26,31 +26,9 @@ const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
 
 const { open, switchTo, close } = useNetworkWebview(hostEl)
 
-// ── Listen to events fired by the native Kotlin bottom bar ───────────────────
-// Plugin events (trigger() in Kotlin) MUST use addPluginListener, NOT listen().
-// listen() from @tauri-apps/api/event is only for Rust core events (Emitter.emit).
-type PluginCleanup = { unregister: () => Promise<void> }
-let pluginBack: PluginCleanup | null = null
-let pluginSwitch: PluginCleanup | null = null
-
-if (isTauri) {
-  import('@tauri-apps/api/core').then(({ addPluginListener }) => {
-    // ← Back pressed (UI button or hardware button, no webview history left)
-    addPluginListener('android-webview', 'webview-back', () => {
-      webviewStore.clearNetwork()
-    }).then(listener => { pluginBack = listener })
-
-    // ↔ Network switch button tapped in the bottom bar
-    addPluginListener('android-webview', 'webview-switch-network', (data: any) => {
-      webviewStore.selectNetwork(data.networkId)
-    }).then(listener => { pluginSwitch = listener })
-  }).catch(() => {}) // plugin not registered on desktop — safe to ignore
-}
-
-onUnmounted(() => {
-  pluginBack?.unregister()
-  pluginSwitch?.unregister()
-})
+// Kotlin bottom bar events are handled in App.vue via CustomEvents (evaluateJavascript).
+// Network switching is handled entirely in Kotlin (direct loadUrl) — no Vue IPC needed.
+// Back/close sends 'sfz-webview-back' CustomEvent → App.vue calls clearNetwork().
 
 const activeUrl = computed(() => webviewStore.activeUrl)
 const activeNetworkId = computed(() => webviewStore.activeNetworkId)

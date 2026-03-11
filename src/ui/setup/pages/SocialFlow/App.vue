@@ -46,11 +46,6 @@ const isMobile = ref(window.innerWidth <= 768)
 const handleResize = () => { isMobile.value = window.innerWidth <= 768 }
 
 let unlistenTray: (() => void) | undefined
-// Plugin events (Kotlin trigger()) use addPluginListener — returns { unregister() }
-type PluginCleanup = { unregister: () => Promise<void> }
-let pluginBack: PluginCleanup | undefined
-let pluginSwitch: PluginCleanup | undefined
-let pluginGrayscale: PluginCleanup | undefined
 
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
 
@@ -68,7 +63,7 @@ onMounted(async () => {
   window.addEventListener('resize', handleResize)
 
   if (isTauri) {
-    const { invoke, addPluginListener } = await import('@tauri-apps/api/core')
+    const { invoke } = await import('@tauri-apps/api/core')
     // Edge-to-edge: transparent status bar, content extends to top of screen
     invoke('setup_display').catch(() => {})
 
@@ -78,34 +73,22 @@ onMounted(async () => {
       profilesStore.ensureDefault()
       webviewStore.selectNetwork(networkId)
     })
-
-    // Kotlin plugin events use trigger() → addPluginListener() from @tauri-apps/api/core
-    // (listen() from event API does NOT receive plugin trigger() events)
-    try {
-      pluginBack = await addPluginListener('android-webview', 'webview-back', () => {
-        webviewStore.clearNetwork()
-      })
-
-      pluginSwitch = await addPluginListener('android-webview', 'webview-switch-network', (data: any) => {
-        profilesStore.ensureDefault()
-        webviewStore.selectNetwork(data.networkId)
-      })
-
-      pluginGrayscale = await addPluginListener('android-webview', 'grayscale-changed', (data: any) => {
-        themeStore.setGrayscale(data.enabled)
-      })
-    } catch {
-      // Plugin not registered on desktop — safe to ignore
-    }
   }
+
+  // Kotlin bottom bar communicates via CustomEvents dispatched on the main Tauri WebView.
+  // This uses evaluateJavascript() — the same proven mechanism as grayscale/mute injection.
+  // (Plugin trigger() + addPluginListener was unreliable in production.)
+  window.addEventListener('sfz-webview-back', () => {
+    webviewStore.clearNetwork()
+  })
+  window.addEventListener('sfz-grayscale-changed', ((e: CustomEvent) => {
+    themeStore.setGrayscale(e.detail.enabled)
+  }) as EventListener)
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
   unlistenTray?.()
-  pluginBack?.unregister()
-  pluginSwitch?.unregister()
-  pluginGrayscale?.unregister()
 })
 </script>
 

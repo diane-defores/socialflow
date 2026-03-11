@@ -55,17 +55,17 @@ class NavigateArgs {
 // Network metadata for the bottom bar switcher
 // iconChar: PrimeIcons codepoint (same font as the Vue app, loaded from assets/primeicons.ttf)
 // color:    brand color shown as button background when active
-private data class NetworkInfo(val id: String, val iconChar: String, val color: Int)
+private data class NetworkInfo(val id: String, val iconChar: String, val color: Int, val url: String)
 
 private val NETWORKS = listOf(
-    NetworkInfo("twitter",   "\ue9b6", Color.parseColor("#000000")),
-    NetworkInfo("facebook",  "\ue9b4", Color.parseColor("#1877F2")),
-    NetworkInfo("instagram", "\ue9cc", Color.parseColor("#E4405F")),
-    NetworkInfo("linkedin",  "\ue9cb", Color.parseColor("#0A66C2")),
-    NetworkInfo("tiktok",    "\ue962", Color.parseColor("#010101")),
-    NetworkInfo("threads",   "\ue9d8", Color.parseColor("#000000")),
-    NetworkInfo("discord",   "\ue9c0", Color.parseColor("#5865F2")),
-    NetworkInfo("reddit",    "\ue9e8", Color.parseColor("#FF4500")),
+    NetworkInfo("twitter",   "\ue9b6", Color.parseColor("#000000"), "https://x.com"),
+    NetworkInfo("facebook",  "\ue9b4", Color.parseColor("#1877F2"), "https://facebook.com"),
+    NetworkInfo("instagram", "\ue9cc", Color.parseColor("#E4405F"), "https://instagram.com"),
+    NetworkInfo("linkedin",  "\ue9cb", Color.parseColor("#0A66C2"), "https://linkedin.com"),
+    NetworkInfo("tiktok",    "\ue962", Color.parseColor("#010101"), "https://tiktok.com"),
+    NetworkInfo("threads",   "\ue9d8", Color.parseColor("#000000"), "https://threads.net"),
+    NetworkInfo("discord",   "\ue9c0", Color.parseColor("#5865F2"), "https://discord.com/app"),
+    NetworkInfo("reddit",    "\ue9e8", Color.parseColor("#FF4500"), "https://reddit.com"),
 )
 
 // JavaScript injected after every page load to dismiss "open in app" / "get the app" prompts.
@@ -229,6 +229,11 @@ private val COOKIE_ACCEPT_SCRIPT = """
 @TauriPlugin
 class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
+    // Main Tauri WebView (the one running Vue) — used to dispatch CustomEvents to Vue
+    // via evaluateJavascript(). This is the reliable Kotlin→Vue communication channel.
+    // (Plugin trigger() + addPluginListener was unreliable in testing.)
+    private var mainWebView: WebView? = null
+
     private var socialRoot: FrameLayout? = null
     private var socialWebView: WebView? = null
     private var currentAccountId: String? = null
@@ -259,6 +264,23 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     // Usage counters — persisted across app restarts via SharedPreferences
     private val prefs by lazy {
         activity.getSharedPreferences("sfz_network_usage", Context.MODE_PRIVATE)
+    }
+
+    /** Capture the main Tauri WebView on plugin load — this is the Vue app webview. */
+    override fun load(webView: WebView) {
+        mainWebView = webView
+    }
+
+    /**
+     * Dispatch a CustomEvent on the main Tauri WebView (the Vue app).
+     * This is the reliable Kotlin→Vue communication channel — same mechanism
+     * as evaluateJavascript() used for grayscale/mute on the social webview.
+     */
+    private fun dispatchToVue(eventName: String, detailJson: String = "{}") {
+        mainWebView?.evaluateJavascript(
+            "window.dispatchEvent(new CustomEvent('$eventName', { detail: $detailJson }))",
+            null
+        )
     }
 
     private fun incrementUsage(networkId: String) {
@@ -549,7 +571,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     /**
      * Shared back navigation logic used by both the UI back button and the hardware back button.
      * - If the webview has history → go back one page.
-     * - Otherwise → signal Vue to close the overlay (Vue calls clearNetwork → close_webview IPC).
+     * - Otherwise → hide overlay immediately + tell Vue to clear store (which triggers close_webview IPC).
      */
     private fun navigateBackOrClose() {
         val list = socialWebView?.copyBackForwardList()
@@ -558,7 +580,10 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         if (currentIndex > baseline) {
             socialWebView?.goBack()
         } else {
-            trigger("webview-back", JSObject())
+            // Hide overlay instantly so user sees the dashboard immediately
+            hideSocialView()
+            // Tell Vue to clear its store state — this triggers close_webview IPC for proper cleanup
+            dispatchToVue("sfz-webview-back")
         }
     }
 
@@ -629,9 +654,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             applyGrayscaleToBottomBar(bottomBarView)
             updateGrayscaleButtonIcon(btn)
             // Notify Vue so it applies grayscale to the app UI and syncs the settings toggle
-            val event = JSObject()
-            event.put("enabled", isGrayscale)
-            trigger("grayscale-changed", event)
+            dispatchToVue("sfz-grayscale-changed", """{"enabled": $isGrayscale}""")
         }
         return btn
     }
@@ -685,9 +708,15 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         btn.isFocusable = true
         btn.setOnClickListener {
             btn.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-            val event = JSObject()
-            event.put("networkId", net.id)
-            trigger("webview-switch-network", event)
+            // Load the URL directly — no round-trip through Vue/Tauri IPC needed.
+            // Same approach as grayscale: Kotlin acts on the webview directly.
+            if (net.id != currentNetworkId) {
+                initialBackIndex = -1  // Reset back-stack baseline for new site
+                socialWebView?.loadUrl(net.url)
+                currentNetworkId = net.id
+                incrementUsage(net.id)
+                updateBottomBarActiveNetwork(net.id)
+            }
         }
 
         return btn
