@@ -46,9 +46,11 @@ const isMobile = ref(window.innerWidth <= 768)
 const handleResize = () => { isMobile.value = window.innerWidth <= 768 }
 
 let unlistenTray: (() => void) | undefined
-let unlistenBack: (() => void) | undefined
-let unlistenSwitch: (() => void) | undefined
-let unlistenGrayscale: (() => void) | undefined
+// Plugin events (Kotlin trigger()) use addPluginListener — returns { unregister() }
+type PluginCleanup = { unregister: () => Promise<void> }
+let pluginBack: PluginCleanup | undefined
+let pluginSwitch: PluginCleanup | undefined
+let pluginGrayscale: PluginCleanup | undefined
 
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
 
@@ -66,39 +68,44 @@ onMounted(async () => {
   window.addEventListener('resize', handleResize)
 
   if (isTauri) {
-    const { invoke } = await import('@tauri-apps/api/core')
+    const { invoke, addPluginListener } = await import('@tauri-apps/api/core')
     // Edge-to-edge: transparent status bar, content extends to top of screen
     invoke('setup_display').catch(() => {})
 
+    // Tray events use Rust Emitter.emit() → listen() from @tauri-apps/api/event
     const { listen } = await import('@tauri-apps/api/event')
-
     unlistenTray = await listen<string>('tray:open-network', ({ payload: networkId }) => {
       profilesStore.ensureDefault()
       webviewStore.selectNetwork(networkId)
     })
 
-    unlistenBack = await listen('webview-back', () => {
-      webviewStore.clearNetwork()
-    })
+    // Kotlin plugin events use trigger() → addPluginListener() from @tauri-apps/api/core
+    // (listen() from event API does NOT receive plugin trigger() events)
+    try {
+      pluginBack = await addPluginListener('android-webview', 'webview-back', () => {
+        webviewStore.clearNetwork()
+      })
 
-    unlistenSwitch = await listen<{ networkId: string }>('webview-switch-network', ({ payload }) => {
-      profilesStore.ensureDefault()
-      webviewStore.selectNetwork(payload.networkId)
-    })
+      pluginSwitch = await addPluginListener('android-webview', 'webview-switch-network', (data: any) => {
+        profilesStore.ensureDefault()
+        webviewStore.selectNetwork(data.networkId)
+      })
 
-    // Android native button toggled grayscale → sync store (which applies CSS to Vue UI)
-    unlistenGrayscale = await listen<{ enabled: boolean }>('grayscale-changed', ({ payload }) => {
-      themeStore.setGrayscale(payload.enabled)
-    })
+      pluginGrayscale = await addPluginListener('android-webview', 'grayscale-changed', (data: any) => {
+        themeStore.setGrayscale(data.enabled)
+      })
+    } catch {
+      // Plugin not registered on desktop — safe to ignore
+    }
   }
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
   unlistenTray?.()
-  unlistenBack?.()
-  unlistenSwitch?.()
-  unlistenGrayscale?.()
+  pluginBack?.unregister()
+  pluginSwitch?.unregister()
+  pluginGrayscale?.unregister()
 })
 </script>
 
