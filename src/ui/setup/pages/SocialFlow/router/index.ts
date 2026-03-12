@@ -9,6 +9,7 @@ import ThreadsView from '../components/networks/ThreadsView.vue'
 import DiscordView from '../components/networks/DiscordView.vue'
 import RedditView from '../components/networks/RedditView.vue'
 import GmailView from '../components/networks/GmailView.vue'
+import SnapchatView from '../components/networks/SnapchatView.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -107,6 +108,17 @@ const routes: RouteRecordRaw[] = [
       auth: true,
       requiresAuth: true,
       networkId: 'reddit',
+      roles: ['user', 'admin']
+    }
+  },
+  {
+    path: '/snapchat',
+    name: 'Snapchat',
+    component: SnapchatView,
+    meta: {
+      auth: true,
+      requiresAuth: true,
+      networkId: 'snapchat',
       roles: ['user', 'admin']
     }
   },

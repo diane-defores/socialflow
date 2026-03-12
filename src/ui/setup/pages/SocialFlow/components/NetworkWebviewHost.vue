@@ -14,8 +14,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onUnmounted } from 'vue'
-import { useWebviewStore } from '@/stores/webviewState'
+import { ref, computed, watch } from 'vue'
+import { useWebviewStore, WEBVIEW_URLS } from '@/stores/webviewState'
 import { useProfilesStore } from '@/stores/profiles'
 import { useNetworkWebview } from '../composables/useNetworkWebview'
 
@@ -34,6 +34,19 @@ const activeUrl = computed(() => webviewStore.activeUrl)
 const activeNetworkId = computed(() => webviewStore.activeNetworkId)
 const activeProfileId = computed(() => profilesStore.activeProfileId)
 
+/** Send the list of visible webview network IDs to the Android bottom bar. */
+async function syncBarNetworks() {
+  if (!isTauri) return
+  const profileId = profilesStore.activeProfileId
+  if (!profileId) return
+  const allWebviewIds = Object.keys(WEBVIEW_URLS)
+  const visibleIds = allWebviewIds.filter(id => !profilesStore.isNetworkHidden(profileId, id))
+  try {
+    const { invoke } = await import('@tauri-apps/api/core')
+    await invoke('set_bar_networks', { networkIds: visibleIds })
+  } catch { /* no-op on desktop */ }
+}
+
 // React to network or profile changes — open or switch the webview
 watch(
   [activeUrl, activeNetworkId, activeProfileId],
@@ -46,8 +59,10 @@ watch(
       networkId !== prevNetworkId || profileId !== prevProfileId || url !== prevUrl
     if (keyChanged && (prevNetworkId || prevProfileId)) {
       await switchTo(url, profileId, networkId)
+      syncBarNetworks()
     } else if (!prevNetworkId && !prevProfileId) {
       await open(url, profileId, networkId)
+      syncBarNetworks()
     }
   },
   { immediate: true },

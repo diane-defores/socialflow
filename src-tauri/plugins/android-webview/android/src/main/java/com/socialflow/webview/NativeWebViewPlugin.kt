@@ -60,6 +60,11 @@ class NavigateArgs {
     var networkId: String = ""
 }
 
+@InvokeArg
+class BarNetworksArgs {
+    var networkIds: ArrayList<String> = arrayListOf()
+}
+
 // Network metadata for the bottom bar switcher
 // iconChar: PrimeIcons codepoint (same font as the Vue app, loaded from assets/primeicons.ttf)
 // color:    brand color shown as button background when active
@@ -75,6 +80,12 @@ private val NETWORKS = listOf(
     NetworkInfo("discord",   "\ue9c0", Color.parseColor("#5865F2"), "https://discord.com/app"),
     NetworkInfo("reddit",    "\ue9e8", Color.parseColor("#FF4500"), "https://reddit.com"),
     NetworkInfo("messenger", "\ue97e", Color.parseColor("#0084FF"), "https://www.messenger.com"),
+    NetworkInfo("snapchat",  "\ue96c", Color.parseColor("#FFFC00"), "https://web.snapchat.com"),
+    NetworkInfo("quora",     "\ue959", Color.parseColor("#B92B27"), "https://www.quora.com"),
+    NetworkInfo("pinterest", "\uea09", Color.parseColor("#E60023"), "https://www.pinterest.com"),
+    NetworkInfo("whatsapp",  "\ue9d0", Color.parseColor("#25D366"), "https://web.whatsapp.com"),
+    NetworkInfo("telegram",  "\ue9d3", Color.parseColor("#0088CC"), "https://web.telegram.org"),
+    NetworkInfo("nextdoor",  "\ue968", Color.parseColor("#8ED500"), "https://nextdoor.com"),
 )
 
 // Anti-fingerprint JS — patches WebView detection vectors used by Akamai, PerimeterX, etc.
@@ -336,15 +347,16 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
     // Mute state — survives network switches within a session
     private var isMuted = false
-    private var muteBtn: TextView? = null
 
     // Grayscale state — survives network switches within a session
     private var isGrayscale = false
-    private var grayscaleBtn: TextView? = null
     private var bottomBarView: LinearLayout? = null
 
     // Dark mode state — synced from Vue settings toggle
     private var isDarkMode = false
+
+    // Visible network IDs — synced from Vue profile visibility (null = show all)
+    private var visibleNetworkIds: Set<String>? = null
 
     // Hardware back button intercept — registered when webview opens, removed when closed
     private var backCallback: OnBackPressedCallback? = null
@@ -480,9 +492,13 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         prefs.edit().putInt(networkId, count + 1).apply()
     }
 
-    /** Returns NETWORKS sorted by usage count descending (most used → first). */
-    private fun sortedNetworks(): List<NetworkInfo> =
-        NETWORKS.sortedByDescending { prefs.getInt(it.id, 0) }
+    /** Returns NETWORKS sorted by usage count descending (most used → first),
+     *  filtered by the visible set from the active profile. */
+    private fun sortedNetworks(): List<NetworkInfo> {
+        val visible = visibleNetworkIds
+        val base = if (visible != null) NETWORKS.filter { it.id in visible } else NETWORKS
+        return base.sortedByDescending { prefs.getInt(it.id, 0) }
+    }
 
     // ── Display setup (edge-to-edge) ─────────────────────────────────────────
 
@@ -685,7 +701,6 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             isGrayscale = args.enabled
             applyGrayscaleToWebView(socialWebView)
             applyGrayscaleToBottomBar(bottomBarView)
-            grayscaleBtn?.let { updateGrayscaleButtonIcon(it) }
         }
         invoke.resolve(JSObject())
     }
@@ -701,6 +716,43 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             applyStatusBarIconColor()
         }
         invoke.resolve(JSObject())
+    }
+
+    /** Update which networks appear in the bottom bar (synced from per-profile visibility). */
+    @Command
+    fun setBarNetworks(invoke: Invoke) {
+        val args = invoke.parseArgs(BarNetworksArgs::class.java)
+        activity.runOnUiThread {
+            visibleNetworkIds = if (args.networkIds.isEmpty()) null else args.networkIds.toSet()
+            rebuildBottomBar()
+        }
+        invoke.resolve(JSObject())
+    }
+
+    /** Tear down and rebuild the bottom bar with the current filtered/sorted networks. */
+    private fun rebuildBottomBar() {
+        val root = socialRoot ?: return
+        val oldBar = bottomBarView ?: return
+        root.removeView(oldBar)
+
+        val density = activity.resources.displayMetrics.density
+        val windowInsets = root.rootWindowInsets
+        val navBarHeight = windowInsets?.systemWindowInsetBottom ?: 0
+        val activeId = currentNetworkId ?: ""
+
+        val newBar = buildBottomBar(density, navBarHeight, activeId, sortedNetworks())
+        bottomBarView = newBar
+
+        val barHeight = (52 * density).toInt()
+        val params = FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            barHeight + navBarHeight
+        )
+        params.gravity = Gravity.BOTTOM
+        newBar.layoutParams = params
+        root.addView(newBar)
+
+        if (isGrayscale) applyGrayscaleToBottomBar(newBar)
     }
 
     // ── Build bottom bar ─────────────────────────────────────────────────────
@@ -753,18 +805,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         scrollView.addView(networkRow)
         innerRow.addView(scrollView)
 
-        // Thin divider before mute
-        innerRow.addView(buildDivider(density))
-
-        // 🔊 Mute / unmute button
-        val mute = buildMuteButton(density)
-        muteBtn = mute
-        innerRow.addView(mute)
-
-        // 🎨 Grayscale toggle button (far right)
-        val gray = buildGrayscaleButton(density)
-        grayscaleBtn = gray
-        innerRow.addView(gray)
+        // (mute + grayscale are now in the home button popup menu)
 
         bar.addView(innerRow)
         return bar
@@ -779,6 +820,8 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         return divider
     }
 
+    private var popupMenuView: LinearLayout? = null
+
     private fun buildHomeButton(density: Float): TextView {
         val btn = TextView(activity)
         btn.text = "\ue941"  // pi-home — PrimeIcons home icon
@@ -791,11 +834,173 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         btn.layoutParams = LinearLayout.LayoutParams(size, size)
         btn.isClickable = true
         btn.isFocusable = true
+        btn.isLongClickable = true
+
+        // Single tap → show/hide popup menu
         btn.setOnClickListener {
             btn.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-            goHome()
+            togglePopupMenu(density)
         }
+
+        // Long press → go home (dashboard)
+        btn.setOnLongClickListener {
+            btn.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+            dismissPopupMenu()
+            goHome()
+            true
+        }
+
         return btn
+    }
+
+    private fun togglePopupMenu(density: Float) {
+        if (popupMenuView != null) {
+            dismissPopupMenu()
+            return
+        }
+        showPopupMenu(density)
+    }
+
+    private fun dismissPopupMenu() {
+        popupMenuView?.let { menu ->
+            (menu.parent as? ViewGroup)?.removeView(menu)
+        }
+        popupMenuView = null
+    }
+
+    private fun showPopupMenu(density: Float) {
+        val root = socialRoot ?: return
+        val bar = bottomBarView ?: return
+
+        val menu = LinearLayout(activity)
+        menu.orientation = LinearLayout.VERTICAL
+        val bgColor = if (isDarkMode) Color.parseColor("#1C1C1E") else Color.parseColor("#FFFFFF")
+        val menuBg = GradientDrawable()
+        menuBg.setColor(bgColor)
+        menuBg.cornerRadius = 16 * density
+        menu.background = menuBg
+        menu.elevation = 8 * density
+        val pad = (8 * density).toInt()
+        menu.setPadding(pad, pad, pad, pad)
+
+        val menuWidth = (220 * density).toInt()
+        val menuParams = FrameLayout.LayoutParams(menuWidth, ViewGroup.LayoutParams.WRAP_CONTENT)
+        menuParams.gravity = Gravity.BOTTOM or Gravity.START
+        menuParams.leftMargin = (8 * density).toInt()
+        menuParams.bottomMargin = bar.layoutParams.height + (8 * density).toInt()
+        menu.layoutParams = menuParams
+
+        // ── Menu items ──
+
+        // 1. Change profile (pi-user = \ue939)
+        menu.addView(buildPopupMenuItem(density, "\ue939", "Changer de profil") {
+            dismissPopupMenu()
+            dispatchToVue("sfz-open-profile-sheet")
+        })
+
+        // 2. Mute toggle
+        val muteLabel = if (isMuted) "Son activé" else "Couper le son"
+        val muteIcon = if (isMuted) "\ue978" else "\ue977"
+        menu.addView(buildPopupMenuItem(density, muteIcon, muteLabel) {
+            isMuted = !isMuted
+            applyMuteToWebView(socialWebView)
+            dismissPopupMenu()
+        })
+
+        // 3. Grayscale toggle
+        val grayLabel = if (isGrayscale) "Désactiver niveaux de gris" else "Niveaux de gris"
+        menu.addView(buildPopupMenuItem(density, "\ue9dd", grayLabel, dimmed = isGrayscale) {
+            isGrayscale = !isGrayscale
+            applyGrayscaleToWebView(socialWebView)
+            applyGrayscaleToBottomBar(bottomBarView)
+            dispatchToVue("sfz-grayscale-changed", """{"enabled": $isGrayscale}""")
+            dismissPopupMenu()
+        })
+
+        // 4. Dark mode toggle
+        val darkLabel = if (isDarkMode) "Mode clair" else "Mode sombre"
+        val darkIcon = if (isDarkMode) "\ue9c8" else "\ue9c7"  // pi-sun / pi-moon
+        menu.addView(buildPopupMenuItem(density, darkIcon, darkLabel) {
+            dismissPopupMenu()
+            dispatchToVue("sfz-toggle-dark-mode")
+        })
+
+        root.addView(menu)
+        popupMenuView = menu
+    }
+
+    private fun buildPopupMenuItem(
+        density: Float,
+        iconChar: String,
+        label: String,
+        dimmed: Boolean = false,
+        onClick: () -> Unit
+    ): LinearLayout {
+        val row = LinearLayout(activity)
+        row.orientation = LinearLayout.HORIZONTAL
+        row.gravity = Gravity.CENTER_VERTICAL
+        val rowPadH = (12 * density).toInt()
+        val rowPadV = (11 * density).toInt()
+        row.setPadding(rowPadH, rowPadV, rowPadH, rowPadV)
+        row.isClickable = true
+        row.isFocusable = true
+
+        // Rounded hover/press background
+        val rippleBg = GradientDrawable()
+        rippleBg.cornerRadius = 10 * density
+        rippleBg.setColor(Color.TRANSPARENT)
+        row.background = rippleBg
+        row.setOnTouchListener { v, event ->
+            when (event.action) {
+                android.view.MotionEvent.ACTION_DOWN -> {
+                    rippleBg.setColor(if (isDarkMode) Color.parseColor("#2C2C2E") else Color.parseColor("#F2F2F7"))
+                    v.invalidate()
+                }
+                android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> {
+                    rippleBg.setColor(Color.TRANSPARENT)
+                    v.invalidate()
+                }
+            }
+            false
+        }
+
+        val textColor = if (isDarkMode) Color.parseColor("#E0E0E0") else Color.parseColor("#1C1C1E")
+        val dimColor = if (isDarkMode) Color.parseColor("#9A9AB0") else Color.parseColor("#ADB5BD")
+
+        // Icon
+        val icon = TextView(activity)
+        icon.text = iconChar
+        icon.typeface = primeIconsTypeface
+        icon.textSize = 16f
+        icon.gravity = Gravity.CENTER
+        icon.setTextColor(if (dimmed) dimColor else textColor)
+        val iconSize = (28 * density).toInt()
+        icon.layoutParams = LinearLayout.LayoutParams(iconSize, iconSize)
+        row.addView(icon)
+
+        // Spacing
+        val spacer = View(activity)
+        spacer.layoutParams = LinearLayout.LayoutParams((10 * density).toInt(), 1)
+        row.addView(spacer)
+
+        // Label
+        val text = TextView(activity)
+        text.text = label
+        text.textSize = 14f
+        text.setTextColor(if (dimmed) dimColor else textColor)
+        text.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+        text.layoutParams = LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+        row.addView(text)
+
+        row.setOnClickListener {
+            it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+            onClick()
+        }
+
+        return row
     }
 
     /** Destroy the social webview and return to the Vue dashboard. */
@@ -839,68 +1044,9 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         backCallback = callback
     }
 
-    private fun buildMuteButton(density: Float): TextView {
-        val btn = TextView(activity)
-        btn.typeface = primeIconsTypeface
-        btn.textSize = 18f
-        btn.gravity = Gravity.CENTER
-        btn.setTextColor(if (isDarkMode) Color.parseColor("#E0E0E0") else Color.parseColor("#495057"))
-        btn.background = null
-        val size = (48 * density).toInt()
-        btn.layoutParams = LinearLayout.LayoutParams(size, size)
-        updateMuteButtonIcon(btn)
-        btn.isClickable = true
-        btn.isFocusable = true
-        btn.setOnClickListener {
-            btn.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-            isMuted = !isMuted
-            applyMuteToWebView(socialWebView)
-            updateMuteButtonIcon(btn)
-        }
-        return btn
-    }
-
     private fun applyMuteToWebView(webView: WebView?) {
         val js = "document.querySelectorAll('video,audio').forEach(function(el){el.muted=${isMuted};});"
         webView?.evaluateJavascript(js, null)
-    }
-
-    private fun updateMuteButtonIcon(btn: TextView) {
-        // \ue977 = pi-volume-up (sound on), \ue978 = pi-volume-off (muted)
-        btn.text = if (isMuted) "\ue978" else "\ue977"
-        btn.alpha = if (isMuted) 0.45f else 1.0f
-    }
-
-    private fun buildGrayscaleButton(density: Float): TextView {
-        val btn = TextView(activity)
-        btn.typeface = primeIconsTypeface
-        btn.textSize = 18f
-        btn.gravity = Gravity.CENTER
-        btn.background = null
-        val size = (48 * density).toInt()
-        btn.layoutParams = LinearLayout.LayoutParams(size, size)
-        updateGrayscaleButtonIcon(btn)
-        btn.isClickable = true
-        btn.isFocusable = true
-        btn.setOnClickListener {
-            btn.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-            isGrayscale = !isGrayscale
-            applyGrayscaleToWebView(socialWebView)
-            applyGrayscaleToBottomBar(bottomBarView)
-            updateGrayscaleButtonIcon(btn)
-            // Notify Vue so it applies grayscale to the app UI and syncs the settings toggle
-            dispatchToVue("sfz-grayscale-changed", """{"enabled": $isGrayscale}""")
-        }
-        return btn
-    }
-
-    private fun updateGrayscaleButtonIcon(btn: TextView) {
-        // \ue9dd = pi-palette — full color when active (grayscale ON = palette "disabled")
-        btn.text = "\ue9dd"
-        val normalColor = if (isDarkMode) Color.parseColor("#E0E0E0") else Color.parseColor("#495057")
-        val mutedColor = if (isDarkMode) Color.parseColor("#9A9AB0") else Color.parseColor("#ADB5BD")
-        btn.setTextColor(if (isGrayscale) mutedColor else normalColor)
-        btn.alpha = if (isGrayscale) 0.45f else 1.0f
     }
 
     private fun applyGrayscaleToWebView(view: WebView?) {
@@ -940,15 +1086,13 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         }
         // Update home button (first TextView in inner row, before the scroll view)
         (innerRow.getChildAt(0) as? TextView)?.setTextColor(iconColor)
-        // Update mute button color
-        muteBtn?.setTextColor(iconColor)
-        // Update grayscale button color
-        grayscaleBtn?.let { updateGrayscaleButtonIcon(it) }
         // Re-apply network button backgrounds (blend base changes between dark/light)
         updateBottomBarActiveNetwork(currentNetworkId ?: "")
     }
 
-    private fun buildNetworkButton(density: Float, net: NetworkInfo, isActive: Boolean): TextView {
+    private fun buildNetworkButton(density: Float, net: NetworkInfo, isActive: Boolean): View {
+        if (net.id == "threads") return buildThreadsButton(density, net, isActive)
+
         val btn = TextView(activity)
         btn.text = net.iconChar
         btn.typeface = primeIconsTypeface
@@ -969,6 +1113,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         btn.isFocusable = true
         btn.setOnClickListener {
             btn.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+            dismissPopupMenu()
             if (net.id != currentNetworkId) {
                 // Save cookies for old network, restore for new (same profile)
                 currentAccountId?.let { oldKey ->
@@ -989,7 +1134,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         return btn
     }
 
-    private fun applyNetworkButtonBackground(btn: TextView, net: NetworkInfo, isActive: Boolean, size: Int) {
+    private fun applyNetworkButtonBackground(btn: View, net: NetworkInfo, isActive: Boolean, size: Int) {
         val bg = GradientDrawable()
         bg.shape = GradientDrawable.RECTANGLE
         bg.cornerRadius = size / 2f  // fully circular
@@ -1009,7 +1154,146 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         }
         btn.background = bg
         // Icon color: white on dark, darker on light (for inactive with light bg)
-        btn.setTextColor(if (isActive || isDarkMode) Color.WHITE else Color.parseColor("#495057"))
+        val iconColor = if (isActive || isDarkMode) Color.WHITE else Color.parseColor("#495057")
+        if (btn is TextView) {
+            btn.setTextColor(iconColor)
+        } else if (btn is FrameLayout && btn.childCount > 0) {
+            // Threads custom icon — pass color via tag and redraw
+            val child = btn.getChildAt(0)
+            child.tag = iconColor
+            child.invalidate()
+        }
+    }
+
+    /** Build a button with the real Threads logo (SVG path drawn on Canvas). */
+    private fun buildThreadsButton(density: Float, net: NetworkInfo, isActive: Boolean): View {
+        val size = (36 * density).toInt()
+        val margin = (2 * density).toInt()
+
+        val iconView = object : View(activity) {
+            private val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
+            private val path = android.graphics.Path()
+            override fun onDraw(canvas: android.graphics.Canvas) {
+                super.onDraw(canvas)
+                initPath(
+                    (width - paddingLeft - paddingRight).toFloat(),
+                    (height - paddingTop - paddingBottom).toFloat()
+                )
+
+                // Color can be updated via tag from applyNetworkButtonBackground
+                val color = (tag as? Int) ?: if (isDarkMode) Color.WHITE else Color.parseColor("#495057")
+                paint.color = color
+                paint.style = android.graphics.Paint.Style.FILL
+
+                canvas.save()
+                canvas.translate(paddingLeft.toFloat(), paddingTop.toFloat())
+                canvas.drawPath(path, paint)
+                canvas.restore()
+            }
+
+            private fun initPath(w: Float, h: Float) {
+                path.reset()
+                // Threads logo path, scaled from 192x192 viewBox to actual view size
+                val sx = w / 192f
+                val sy = h / 192f
+                val m = android.graphics.Matrix()
+                m.setScale(sx, sy)
+
+                val original = android.graphics.Path()
+                // Outer shape
+                original.moveTo(141.537f, 88.988f)
+                original.cubicTo(141.537f, 88.988f, 140.148f, 88.36f, 139.019f, 87.845f)
+                original.cubicTo(137.537f, 60.538f, 122.616f, 44.905f, 97.562f, 44.745f)
+                original.lineTo(97.164f, 44.745f)
+                original.cubicTo(82.194f, 44.825f, 69.998f, 50.945f, 62.827f, 61.988f)
+                original.lineTo(76.071f, 71.076f)
+                original.cubicTo(81.418f, 62.969f, 89.763f, 58.873f, 100.993f, 58.873f)
+                original.lineTo(101.215f, 58.873f)
+                original.cubicTo(110.853f, 58.933f, 118.115f, 61.731f, 122.799f, 67.19f)
+                original.cubicTo(126.215f, 71.172f, 128.492f, 76.671f, 129.642f, 83.662f)
+                original.cubicTo(125.142f, 82.955f, 120.442f, 82.355f, 115.445f, 82.155f) // approximate
+                original.cubicTo(109.945f, 81.905f, 104.745f, 81.905f, 99.945f, 81.905f)
+                original.cubicTo(79.811f, 81.93f, 66.862f, 90.61f, 64.498f, 105.66f)
+                original.cubicTo(63.281f, 113.402f, 65.248f, 120.69f, 70.038f, 126.176f)
+                original.cubicTo(75.103f, 131.978f, 82.393f, 135.03f, 91.154f, 135.03f)
+                original.cubicTo(102.699f, 135.03f, 111.766f, 130.1f, 118.1f, 120.37f)
+                original.cubicTo(122.922f, 112.97f, 125.876f, 103.287f, 126.997f, 91.152f)
+                original.cubicTo(132.321f, 94.352f, 136.287f, 98.631f, 138.597f, 103.78f)
+                original.cubicTo(142.527f, 112.548f, 142.757f, 126.934f, 135.132f, 134.56f)
+                original.cubicTo(128.399f, 141.293f, 120.307f, 144.197f, 104.459f, 144.309f)
+                original.cubicTo(86.905f, 144.185f, 73.621f, 138.547f, 64.981f, 127.554f)
+                original.cubicTo(56.842f, 118.79f, 52.267f, 104.12f, 52.143f, 86.2f) // approximate midpoint
+                original.cubicTo(52.267f, 68.28f, 56.843f, 53.61f, 65.743f, 42.645f)
+                original.cubicTo(76.093f, 29.902f, 91.437f, 23.353f, 111.347f, 23.175f)
+                original.lineTo(111.569f, 23.175f)
+                original.cubicTo(131.501f, 23.353f, 147.039f, 29.995f, 157.769f, 42.923f)
+                original.cubicTo(162.933f, 49.135f, 166.904f, 56.753f, 169.625f, 65.508f)
+                original.lineTo(184.765f, 61.438f)
+                original.cubicTo(181.585f, 51.034f, 176.825f, 41.978f, 170.535f, 34.408f)
+                original.cubicTo(157.012f, 18.676f, 138.419f, 10.4f, 115.787f, 10.2f)
+                original.lineTo(115.519f, 10.2f)
+                original.cubicTo(92.957f, 10.4f, 74.629f, 18.838f, 61.647f, 35.2f)
+                original.cubicTo(50.185f, 49.552f, 44.209f, 68.734f, 44.057f, 92f)
+                original.lineTo(44.055f, 92.6f)
+                original.lineTo(44.057f, 93.2f)
+                original.cubicTo(44.209f, 116.466f, 50.185f, 135.648f, 61.647f, 150f)
+                original.cubicTo(74.629f, 166.244f, 92.957f, 174.704f, 116.147f, 174.9f)
+                original.lineTo(116.415f, 174.9f)
+                original.cubicTo(135.467f, 174.768f, 146.589f, 170.502f, 155.993f, 161.098f)
+                original.cubicTo(168.635f, 148.456f, 168.095f, 127.356f, 162.585f, 115.074f)
+                original.cubicTo(158.627f, 106.248f, 151.399f, 99.279f, 141.373f, 94.496f)
+                original.close()
+                // Inner cutout (the hole in the @ shape)
+                original.moveTo(110.85f, 126.12f)
+                original.cubicTo(106.632f, 126.072f, 103.27f, 124.75f, 101.148f, 122.318f)
+                original.cubicTo(98.316f, 119.072f, 98.14f, 114.346f, 98.658f, 111.051f)
+                original.cubicTo(100.056f, 102.156f, 108.796f, 96.589f, 122.758f, 96.589f)
+                original.cubicTo(128.438f, 96.589f, 133.793f, 97.129f, 138.73f, 98.189f)
+                original.cubicTo(137.93f, 115.971f, 128.078f, 126.119f, 110.85f, 126.119f)
+                original.close()
+
+                path.addPath(original, m)
+            }
+        }
+
+        val wrapper = FrameLayout(activity)
+        val wrapperParams = LinearLayout.LayoutParams(size, size)
+        wrapperParams.setMargins(margin, margin, margin, margin)
+        wrapper.layoutParams = wrapperParams
+
+        val iconPad = (size * 0.22f).toInt() // padding so logo doesn't fill the entire button
+        val iconParams = FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+        iconView.layoutParams = iconParams
+        iconView.setPadding(iconPad, iconPad, iconPad, iconPad)
+
+        wrapper.addView(iconView)
+        applyNetworkButtonBackground(wrapper, net, isActive, size)
+        wrapper.tag = net.id
+        wrapper.isClickable = true
+        wrapper.isFocusable = true
+        wrapper.setOnClickListener {
+            wrapper.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+            dismissPopupMenu()
+            if (net.id != currentNetworkId) {
+                currentAccountId?.let { oldKey ->
+                    saveCookiesForSession(oldKey)
+                    val profilePrefix = oldKey.substringBeforeLast("-")
+                    val newKey = "$profilePrefix-${net.id}"
+                    restoreCookiesForSession(newKey)
+                    currentAccountId = newKey
+                }
+                initialBackIndex = -1
+                socialWebView?.loadUrl(net.url)
+                currentNetworkId = net.id
+                incrementUsage(net.id)
+                updateBottomBarActiveNetwork(net.id)
+            }
+        }
+
+        return wrapper
     }
 
     private fun updateBottomBarActiveNetwork(activeNetworkId: String) {
@@ -1022,7 +1306,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         val networkRow = scrollView.getChildAt(0) as? LinearLayout ?: return
 
         for (i in 0 until networkRow.childCount) {
-            val btn = networkRow.getChildAt(i) as? TextView ?: continue
+            val btn = networkRow.getChildAt(i)
             val netId = btn.tag as? String ?: continue
             val net = NETWORKS.find { it.id == netId } ?: continue
             applyNetworkButtonBackground(btn, net, netId == activeNetworkId, btn.layoutParams.width)
@@ -1093,14 +1377,13 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         // Save cookies for the current session before destroying
         currentAccountId?.let { saveCookiesForSession(it) }
 
+        dismissPopupMenu()
         backCallback?.remove()
         backCallback = null
         socialWebView?.destroy()
         socialRoot?.let { (it.parent as? ViewGroup)?.removeView(it) }
         socialWebView = null
         socialRoot = null
-        muteBtn = null
-        grayscaleBtn = null
         bottomBarView = null
         currentAccountId = null
         currentNetworkId = null

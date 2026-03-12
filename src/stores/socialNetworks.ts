@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 
-type SocialNetwork = 'twitter' | 'facebook' | 'instagram' | 'linkedin' | 'tiktok' | 'threads' | 'discord' | 'reddit' | 'gmail'
+type SocialNetwork = 'twitter' | 'facebook' | 'instagram' | 'linkedin' | 'tiktok' | 'threads' | 'discord' | 'reddit' | 'gmail' | 'snapchat'
 
 interface NetworkState {
   isConnected: boolean
@@ -25,7 +25,8 @@ export const useSocialNetworksStore = defineStore('socialNetworks', {
       threads: { isConnected: false },
       discord: { isConnected: false },
       reddit: { isConnected: false },
-      gmail: { isConnected: false }
+      gmail: { isConnected: false },
+      snapchat: { isConnected: false }
     }
   }),
 

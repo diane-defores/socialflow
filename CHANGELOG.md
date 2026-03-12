@@ -2,6 +2,18 @@
 
 All notable changes to SocialFlow are documented here.
 
+## [Unreleased] — 2026-03-12 (c)
+
+### Added
+- 5 new social networks — Quora, Pinterest, WhatsApp, Telegram, Nextdoor added to webview store, sidebar, mobile layout, Kotlin bottom bar, system tray, and FriendsPanel
+- Custom links per profile — users can add arbitrary URLs as webview tiles; `customLinks` Pinia store with UUID-based IDs; add/remove via long-press edit mode on mobile and "Liens personnalisés" section in desktop sidebar; routes through `selectCustom()` in webviewStore
+- Kotlin bottom bar profile sync — `set_bar_networks` IPC command + `rebuildBottomBar()` in Kotlin; bar icons now reflect which networks are visible for the active profile
+
+### Changed
+- Friends filter toggle simplified — single global boolean instead of per-network map; toggle on dashboard or sidebar enables/disables for all networks at once
+
+---
+
 ## [Unreleased] — 2026-03-12 (b)
 
 ### Added

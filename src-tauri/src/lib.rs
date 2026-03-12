@@ -103,6 +103,12 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     let threads = MenuItem::with_id(app, "tray:threads", "Threads", true, None::<&str>)?;
     let discord = MenuItem::with_id(app, "tray:discord", "Discord", true, None::<&str>)?;
     let reddit = MenuItem::with_id(app, "tray:reddit", "Reddit", true, None::<&str>)?;
+    let snapchat = MenuItem::with_id(app, "tray:snapchat", "Snapchat", true, None::<&str>)?;
+    let quora = MenuItem::with_id(app, "tray:quora", "Quora", true, None::<&str>)?;
+    let pinterest = MenuItem::with_id(app, "tray:pinterest", "Pinterest", true, None::<&str>)?;
+    let whatsapp = MenuItem::with_id(app, "tray:whatsapp", "WhatsApp", true, None::<&str>)?;
+    let telegram = MenuItem::with_id(app, "tray:telegram", "Telegram", true, None::<&str>)?;
+    let nextdoor = MenuItem::with_id(app, "tray:nextdoor", "Nextdoor", true, None::<&str>)?;
     let sep2 = MenuItem::with_id(app, "sep2", "──────────────", false, None::<&str>)?;
     let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
 
@@ -110,7 +116,8 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
         app,
         &[
             &show, &separator, &twitter, &instagram, &linkedin, &facebook, &tiktok, &threads,
-            &discord, &reddit, &sep2, &quit,
+            &discord, &reddit, &snapchat, &quora, &pinterest, &whatsapp, &telegram,
+            &nextdoor, &sep2, &quit,
         ],
     )?;
 
@@ -332,6 +339,21 @@ fn set_dark_mode(_app: AppHandle, _enabled: bool) -> Result<(), String> {
     Ok(()) // no-op on desktop — Vue applies the CSS class directly
 }
 
+/// Sync the bottom bar network icons with the profile's visible networks.
+#[tauri::command]
+#[cfg(target_os = "android")]
+fn set_bar_networks(app: AppHandle, network_ids: Vec<String>) -> Result<(), String> {
+    app.android_webview()
+        .set_bar_networks(network_ids)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+#[cfg(not(target_os = "android"))]
+fn set_bar_networks(_app: AppHandle, _network_ids: Vec<String>) -> Result<(), String> {
+    Ok(()) // no-op on desktop — no overlay bar
+}
+
 /// Injects a JavaScript string into a running social webview.
 /// Used by the friends filter to hide posts from non-friends.
 #[tauri::command]
@@ -420,19 +442,28 @@ fn export_backup(
     let zip_bytes = backup::create_backup_archive(&sessions_dir, &store_data)?;
     let blob = backup::encrypt_archive(&zip_bytes, &password)?;
 
-    // Show native save dialog (blocking via channel)
-    let (tx, rx) = std::sync::mpsc::channel();
-    app.dialog()
+    // Show native save dialog (blocking — safe because IPC commands run on thread pool)
+    let file_path = app
+        .dialog()
         .file()
         .set_file_name("socialflow-backup.sfbak")
         .add_filter("SocialFlow Backup", &["sfbak"])
-        .save_file(move |path| {
-            let _ = tx.send(path);
-        });
+        .blocking_save_file()
+        .ok_or_else(|| "No file selected".to_string())?;
 
-    let file_path = rx.recv().map_err(|_| "Dialog cancelled".to_string())?;
-    let file_path = file_path.ok_or_else(|| "No file selected".to_string())?;
-    let path = file_path.into_path().map_err(|e| format!("Invalid path: {e}"))?;
+    // Handle both Path and file:// URL variants
+    let path = file_path
+        .as_path()
+        .map(|p| p.to_path_buf())
+        .unwrap_or_else(|| {
+            // Fallback: convert display string to PathBuf (handles file:// URLs on GTK)
+            let s = file_path.to_string();
+            if let Some(stripped) = s.strip_prefix("file://") {
+                std::path::PathBuf::from(stripped)
+            } else {
+                std::path::PathBuf::from(s)
+            }
+        });
 
     std::fs::write(&path, &blob).map_err(|e| format!("Write failed: {e}"))?;
     Ok(path.display().to_string())
@@ -442,18 +473,26 @@ fn export_backup(
 fn import_backup(app: AppHandle, password: String) -> Result<String, String> {
     use tauri_plugin_dialog::DialogExt;
 
-    // Show native open dialog (blocking via channel)
-    let (tx, rx) = std::sync::mpsc::channel();
-    app.dialog()
+    // Show native open dialog (blocking — safe because IPC commands run on thread pool)
+    let file_path = app
+        .dialog()
         .file()
         .add_filter("SocialFlow Backup", &["sfbak"])
-        .pick_file(move |path| {
-            let _ = tx.send(path);
-        });
+        .blocking_pick_file()
+        .ok_or_else(|| "No file selected".to_string())?;
 
-    let file_path = rx.recv().map_err(|_| "Dialog cancelled".to_string())?;
-    let file_path = file_path.ok_or_else(|| "No file selected".to_string())?;
-    let path = file_path.into_path().map_err(|e| format!("Invalid path: {e}"))?;
+    // Handle both Path and file:// URL variants
+    let path = file_path
+        .as_path()
+        .map(|p| p.to_path_buf())
+        .unwrap_or_else(|| {
+            let s = file_path.to_string();
+            if let Some(stripped) = s.strip_prefix("file://") {
+                std::path::PathBuf::from(stripped)
+            } else {
+                std::path::PathBuf::from(s)
+            }
+        });
 
     let sessions_dir = app
         .path()
@@ -496,6 +535,7 @@ pub fn run() {
             close_webview,
             set_grayscale,
             set_dark_mode,
+            set_bar_networks,
             inject_script,
             delete_profile_session,
             delete_network_session,

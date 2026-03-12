@@ -78,22 +78,51 @@
           :key="item.id"
           class="network-tile"
           :class="{ active: isNetworkActive(item), 'edit-mode': networkEditMode }"
-          @click="networkEditMode ? toggleNetworkVisibility(item) : navigateToNetwork(item)"
+          @click="networkEditMode ? handleEditClick(item) : navigateToNetwork(item)"
           @touchstart="startLongPress(item)"
           @touchend="cancelLongPress"
           @touchmove="cancelLongPress"
           @contextmenu.prevent
         >
-          <span class="network-icon-wrap" :style="{ background: networkColors[item.id] }">
-            <i :class="item.icon" />
+          <span class="network-icon-wrap" :style="{ background: networkColors[item.id] ?? 'var(--surface-hover)' }">
+            <ThreadsIcon v-if="item.route === '/threads'" size="1.35rem" color="#fff" />
+            <i v-else :class="item.icon" />
           </span>
           <span class="network-name">{{ item.label }}</span>
-          <span v-if="networkEditMode" class="network-toggle" :class="{ hidden: isNetworkHiddenForProfile(item) }">
+          <span v-if="networkEditMode && !item.route.startsWith('/custom-')" class="network-toggle" :class="{ hidden: isNetworkHiddenForProfile(item) }">
             <span class="network-toggle-thumb" />
           </span>
+          <span v-if="networkEditMode && item.route.startsWith('/custom-')" class="custom-delete-badge">
+            <i class="pi pi-times" />
+          </span>
+        </button>
+
+        <!-- Add custom link tile (only in edit mode) -->
+        <button
+          v-if="networkEditMode"
+          class="network-tile add-custom-tile edit-mode"
+          @click="showAddLinkForm = true"
+        >
+          <span class="network-icon-wrap" style="background: var(--surface-hover)">
+            <i class="pi pi-plus" />
+          </span>
+          <span class="network-name">Ajouter</span>
         </button>
       </div>
       <p v-if="networkEditMode" class="edit-hint">Appuyez à l'extérieur pour terminer</p>
+
+      <!-- Add custom link form -->
+      <div v-if="showAddLinkForm" class="add-link-sheet" @click.self="showAddLinkForm = false">
+        <div class="add-link-card">
+          <p class="add-link-title">Ajouter un lien</p>
+          <input v-model="newLinkLabel" class="add-link-input" placeholder="Nom (ex: Mon site)" />
+          <input v-model="newLinkUrl" class="add-link-input" placeholder="URL (ex: example.com)" @keydown.enter="submitCustomLink" />
+          <div class="add-link-actions">
+            <button class="add-link-cancel" @click="showAddLinkForm = false">Annuler</button>
+            <button class="add-link-confirm" :disabled="!newLinkLabel.trim() || !newLinkUrl.trim()" @click="submitCustomLink">Ajouter</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Settings button -->
@@ -190,7 +219,8 @@
                 class="clear-cookie-row"
                 @click="clearNetworkCookies(nw.id)"
               >
-                <i :class="nw.icon" class="clear-cookie-icon" />
+                <ThreadsIcon v-if="nw.id === 'threads'" size="0.9rem" class="clear-cookie-icon" />
+                <i v-else :class="nw.icon" class="clear-cookie-icon" />
                 <span class="clear-cookie-label">{{ nw.label }}</span>
                 <span v-if="clearedNetworks.has(`${clearCookiesProfileId}:${nw.id}`)" class="clear-cookie-done">
                   <i class="pi pi-check" />
@@ -321,26 +351,38 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useWebviewStore, WEBVIEW_URLS } from '@/stores/webviewState'
 import { useProfilesStore } from '@/stores/profiles'
 import { useThemeStore } from '@/stores/theme'
 import { useFriendsFilterStore } from '@/stores/friendsFilter'
+import { useCustomLinksStore } from '@/stores/customLinks'
 import type { Profile } from '@/stores/profiles'
 import type { MenuItem } from '../types'
 import NetworkWebviewHost from './NetworkWebviewHost.vue'
 import BackupRestore from './BackupRestore.vue'
+import ThreadsIcon from './icons/ThreadsIcon.vue'
 
 const router = useRouter()
 const webviewStore = useWebviewStore()
 const profilesStore = useProfilesStore()
 const themeStore = useThemeStore()
 const filterStore = useFriendsFilterStore()
+const customLinksStore = useCustomLinksStore()
 
 // ─── Sheet state ──────────────────────────────────────────────
 const profileSheetVisible = ref(false)
 const settingsVisible = ref(false)
+
+// Listen for native popup menu "Changer de profil" event
+const openProfileSheetFromNative = () => { profileSheetVisible.value = true }
+onMounted(() => {
+  window.addEventListener('sfz-show-profile-sheet', openProfileSheetFromNative)
+})
+onUnmounted(() => {
+  window.removeEventListener('sfz-show-profile-sheet', openProfileSheetFromNative)
+})
 
 // ─── Settings state ──────────────────────────────────────────
 const settingsUsername = ref(localStorage.getItem('sfz_username') ?? '')
@@ -374,11 +416,15 @@ const webviewNetworks = computed(() => {
     twitter: 'pi pi-twitter', facebook: 'pi pi-facebook', instagram: 'pi pi-instagram',
     linkedin: 'pi pi-linkedin', tiktok: 'pi pi-tiktok', threads: 'pi pi-at',
     discord: 'pi pi-discord', reddit: 'pi pi-reddit', messenger: 'pi pi-comments',
+    snapchat: 'pi pi-camera', quora: 'pi pi-question-circle', pinterest: 'pi pi-pinterest',
+    whatsapp: 'pi pi-whatsapp', telegram: 'pi pi-telegram', nextdoor: 'pi pi-map-marker',
   }
   const labelMap: Record<string, string> = {
     twitter: 'Twitter / X', facebook: 'Facebook', instagram: 'Instagram',
     linkedin: 'LinkedIn', tiktok: 'TikTok', threads: 'Threads',
     discord: 'Discord', reddit: 'Reddit', messenger: 'Messenger',
+    snapchat: 'Snapchat', quora: 'Quora', pinterest: 'Pinterest',
+    whatsapp: 'WhatsApp', telegram: 'Telegram', nextdoor: 'Nextdoor',
   }
   return Object.keys(WEBVIEW_URLS).map(id => ({
     id,
@@ -443,12 +489,51 @@ function isNetworkHiddenForProfile(item: MenuItem): boolean {
   return profilesStore.isNetworkHidden(profileId, networkIdFromItem(item))
 }
 
-const visibleMenuItems = computed(() => {
-  if (networkEditMode.value) return menuItems.value
+/** Built-in menu items + custom links from the active profile, merged. */
+const allMenuItems = computed(() => {
   const profileId = profilesStore.activeProfileId
   if (!profileId) return menuItems.value
-  return menuItems.value.filter(item => !profilesStore.isNetworkHidden(profileId, networkIdFromItem(item)))
+  const customs = customLinksStore.getLinks(profileId)
+  const customItems: MenuItem[] = customs.map((link, i) => ({
+    id: 1000 + i,
+    label: link.label,
+    icon: link.icon,
+    route: `/${link.id}`,
+  }))
+  return [...menuItems.value, ...customItems]
 })
+
+const visibleMenuItems = computed(() => {
+  if (networkEditMode.value) return allMenuItems.value
+  const profileId = profilesStore.activeProfileId
+  if (!profileId) return allMenuItems.value
+  return allMenuItems.value.filter(item => !profilesStore.isNetworkHidden(profileId, networkIdFromItem(item)))
+})
+
+// ─── Custom links ────────────────────────────────────────────
+const showAddLinkForm = ref(false)
+const newLinkLabel = ref('')
+const newLinkUrl = ref('')
+
+function submitCustomLink() {
+  const profileId = profilesStore.activeProfileId
+  if (!profileId || !newLinkLabel.value.trim() || !newLinkUrl.value.trim()) return
+  customLinksStore.addLink(profileId, newLinkLabel.value, newLinkUrl.value)
+  newLinkLabel.value = ''
+  newLinkUrl.value = ''
+  showAddLinkForm.value = false
+}
+
+function handleEditClick(item: MenuItem) {
+  const nId = networkIdFromItem(item)
+  if (nId.startsWith('custom-')) {
+    // Delete custom link
+    const profileId = profilesStore.activeProfileId
+    if (profileId) customLinksStore.removeLink(profileId, nId)
+  } else {
+    toggleNetworkVisibility(item)
+  }
+}
 
 // ─── Friends filter ───────────────────────────────────────────
 const friendsFilterEnabled = computed(() => filterStore.enabled)
@@ -465,7 +550,13 @@ const menuItems = ref<MenuItem[]>([
   { id: 7, label: 'Discord', icon: 'pi pi-discord', route: '/discord' },
   { id: 8, label: 'Reddit', icon: 'pi pi-reddit', route: '/reddit' },
   { id: 9, label: 'Messenger', icon: 'pi pi-comments', route: '/messenger' },
-  { id: 10, label: 'Kanban', icon: 'pi pi-th-large', route: '/kanban' },
+  { id: 10, label: 'Snapchat', icon: 'pi pi-camera', route: '/snapchat' },
+  { id: 11, label: 'Quora', icon: 'pi pi-question-circle', route: '/quora' },
+  { id: 12, label: 'Pinterest', icon: 'pi pi-pinterest', route: '/pinterest' },
+  { id: 13, label: 'WhatsApp', icon: 'pi pi-whatsapp', route: '/whatsapp' },
+  { id: 14, label: 'Telegram', icon: 'pi pi-telegram', route: '/telegram' },
+  { id: 15, label: 'Nextdoor', icon: 'pi pi-map-marker', route: '/nextdoor' },
+  { id: 16, label: 'Kanban', icon: 'pi pi-th-large', route: '/kanban' },
 ])
 
 const networkColors: Record<number, string> = {
@@ -478,7 +569,13 @@ const networkColors: Record<number, string> = {
   7:  '#5865F2',
   8:  '#FF4500',
   9:  '#0084FF',
-  10: '#6366F1',
+  10: '#FFFC00',
+  11: '#B92B27',
+  12: '#E60023',
+  13: '#25D366',
+  14: '#0088cc',
+  15: '#8ED500',
+  16: '#6366F1',
 }
 
 const isNetworkActive = (item: MenuItem) =>
@@ -492,7 +589,15 @@ const pillColor = (id: number) => {
 // ─── Navigation ───────────────────────────────────────────────
 const navigateToNetwork = (network: MenuItem) => {
   const networkId = network.route.slice(1)
-  if (webviewStore.usesWebview(networkId)) {
+  if (networkId.startsWith('custom-')) {
+    const profileId = profilesStore.activeProfileId
+    if (!profileId) return
+    const link = customLinksStore.getLinks(profileId).find(l => l.id === networkId)
+    if (link) {
+      profilesStore.ensureDefault()
+      webviewStore.selectCustom(networkId, link.url)
+    }
+  } else if (webviewStore.usesWebview(networkId)) {
     profilesStore.ensureDefault()
     webviewStore.selectNetwork(networkId)
   } else {
@@ -998,6 +1103,102 @@ function handleAvatarChange(event: Event) {
   color: var(--text-color-secondary);
   margin: 0.5rem 0 0;
   font-style: italic;
+}
+
+.custom-delete-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ef4444;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+}
+
+.add-custom-tile {
+  border: 2px dashed var(--surface-border);
+  background: transparent;
+}
+
+.add-link-sheet {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.add-link-card {
+  background: var(--surface-card);
+  border-radius: 16px;
+  padding: 1.25rem;
+  width: 100%;
+  max-width: 20rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.add-link-title {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--text-color);
+}
+
+.add-link-input {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 10px;
+  background: var(--surface-ground);
+  color: var(--text-color);
+  font-size: 0.9rem;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.add-link-input:focus {
+  border-color: var(--primary-color);
+}
+
+.add-link-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.add-link-cancel,
+.add-link-confirm {
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.add-link-cancel {
+  background: var(--surface-hover);
+  color: var(--text-color);
+}
+
+.add-link-confirm {
+  background: var(--primary-color);
+  color: #fff;
+}
+
+.add-link-confirm:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 @keyframes tile-wiggle {

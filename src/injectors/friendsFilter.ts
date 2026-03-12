@@ -105,6 +105,32 @@ export function buildFriendsFilterScript(
         var el = post.querySelector('[id^="message-username-"], [class*="username_"]');
         return el ? (el.textContent || '').trim() : '';
       }
+    },
+    quora: {
+      // Quora answers/posts use dom_annotate_question_answer_item or similar
+      postSelector: 'div[class*="Answer"], div[class*="Post"]',
+      getAuthor: function (post) {
+        var link = post.querySelector('a[href*="/profile/"]');
+        if (link) return (link.textContent || '').trim();
+        // Fallback: look for profile link in header area
+        var spans = post.querySelectorAll('span');
+        for (var i = 0; i < Math.min(spans.length, 5); i++) {
+          var t = (spans[i].textContent || '').trim();
+          if (t.length > 1 && t.length < 50 && !t.includes('http')) return t;
+        }
+        return '';
+      }
+    },
+    pinterest: {
+      // Pinterest pins are rendered in a masonry grid
+      postSelector: 'div[data-test-id="pin"], div[data-grid-item]',
+      getAuthor: function (post) {
+        var link = post.querySelector('a[href*="/pin/"] + div a, a[data-test-id*="creator"]');
+        if (link) return (link.textContent || '').trim();
+        // Fallback: look for creator name near bottom of pin
+        var el = post.querySelector('[data-test-id*="pinner-name"], [data-test-id*="creator-name"]');
+        return el ? (el.textContent || '').trim() : '';
+      }
     }
   };
 

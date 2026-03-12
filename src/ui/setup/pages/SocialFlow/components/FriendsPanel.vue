@@ -98,6 +98,11 @@ const NETWORK_LABELS: Record<string, string> = {
   threads: 'Threads',
   discord: 'Discord',
   reddit: 'Reddit',
+  quora: 'Quora',
+  pinterest: 'Pinterest',
+  whatsapp: 'WhatsApp',
+  telegram: 'Telegram',
+  nextdoor: 'Nextdoor',
 }
 
 const networkLabel = computed(() => NETWORK_LABELS[props.networkId] ?? props.networkId)

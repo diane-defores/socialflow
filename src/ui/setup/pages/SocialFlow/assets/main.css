@@ -14,6 +14,16 @@
   --border-color: #404040;
 }
 
+* {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+input, textarea, [contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 body {
   background-color: var(--background-color);
   color: var(--text-color);

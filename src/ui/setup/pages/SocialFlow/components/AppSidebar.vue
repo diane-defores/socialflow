@@ -34,7 +34,7 @@
               <div v-for="item in menuItems" :key="item.id" class="menu-item-group">
                 <div class="network-row" :class="{ active: isNetworkActive(item) }">
                   <Button
-                    :icon="item.icon"
+                    :icon="item.route === '/threads' ? undefined : item.icon"
                     :label="iconsOnly ? undefined : item.label"
                     :tooltip="iconsOnly ? item.label : undefined"
                     :tooltipOptions="{ position: 'right' }"
@@ -45,7 +45,11 @@
                       { 'network-btn--active': isNetworkActive(item) }
                     ]"
                     @click="navigateToNetwork(item)"
-                  />
+                  >
+                    <template v-if="item.route === '/threads'" #icon>
+                      <ThreadsIcon size="1rem" />
+                    </template>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -92,6 +96,89 @@
             v-model="showFriendsPanel"
             :networkId="webviewStore.activeNetworkId ?? 'twitter'"
           />
+
+          <!-- Custom Links -->
+          <div class="custom-links-section" v-if="customLinkItems.length || !iconsOnly">
+            <div class="section-header" v-if="!iconsOnly">
+              <h3>Liens personnalisés</h3>
+              <Button
+                icon="pi pi-plus"
+                text
+                size="small"
+                aria-label="Ajouter un lien"
+                v-tooltip.right="'Ajouter un lien'"
+                @click="showAddLinkDialog = true"
+              />
+            </div>
+            <div class="menu-items" v-if="customLinkItems.length">
+              <div v-for="item in customLinkItems" :key="item.id" class="menu-item-group">
+                <div class="network-row" :class="{ active: isNetworkActive(item) }">
+                  <Button
+                    :icon="item.icon"
+                    :label="iconsOnly ? undefined : item.label"
+                    :tooltip="iconsOnly ? item.label : undefined"
+                    :tooltipOptions="{ position: 'right' }"
+                    text
+                    :class="[
+                      'network-btn',
+                      iconsOnly ? 'justify-content-center' : 'justify-content-start',
+                      { 'network-btn--active': isNetworkActive(item) }
+                    ]"
+                    @click="navigateToNetwork(item)"
+                  />
+                  <Button
+                    v-if="!iconsOnly"
+                    icon="pi pi-times"
+                    text
+                    rounded
+                    size="small"
+                    severity="danger"
+                    class="custom-link-delete"
+                    @click="removeCustomLink(item.route.slice(1))"
+                    aria-label="Supprimer"
+                  />
+                </div>
+              </div>
+            </div>
+            <Button
+              v-if="iconsOnly"
+              icon="pi pi-plus"
+              text
+              size="small"
+              class="custom-link-add-icon"
+              aria-label="Ajouter un lien"
+              v-tooltip.right="'Ajouter un lien'"
+              @click="showAddLinkDialog = true"
+            />
+          </div>
+
+          <Dialog
+            v-model:visible="showAddLinkDialog"
+            header="Ajouter un lien"
+            :modal="true"
+            style="width: 24rem; max-width: 95vw"
+          >
+            <div class="add-link-form">
+              <InputText
+                v-model="newLinkLabel"
+                placeholder="Nom (ex: Mon site)"
+                class="add-link-input"
+                @keydown.enter="addCustomLink"
+              />
+              <InputText
+                v-model="newLinkUrl"
+                placeholder="URL (ex: example.com)"
+                class="add-link-input"
+                @keydown.enter="addCustomLink"
+              />
+              <Button
+                label="Ajouter"
+                icon="pi pi-plus"
+                :disabled="!newLinkLabel.trim() || !newLinkUrl.trim()"
+                @click="addCustomLink"
+              />
+            </div>
+          </Dialog>
 
           <!-- Kanban Columns -->
           <div class="kanban-section" v-if="!iconsOnly">
@@ -158,21 +245,29 @@ import { useKanbanStore } from '../stores/kanban'
 import { useWebviewStore } from '@/stores/webviewState'
 import { useProfilesStore } from '@/stores/profiles'
 import { useFriendsFilterStore } from '@/stores/friendsFilter'
+import { useCustomLinksStore } from '@/stores/customLinks'
 import type { MenuItem } from '../types'
 import type { KanbanItem, KanbanColumnId } from '../services/kanbanService'
 import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import Dialog from 'primevue/dialog'
 import ToggleButton from 'primevue/togglebutton'
 import ProfileSwitcher from './ProfileSwitcher.vue'
 import FriendsPanel from './FriendsPanel.vue'
+import ThreadsIcon from './icons/ThreadsIcon.vue'
 
 const router = useRouter()
 const kanbanStore = useKanbanStore()
 const webviewStore = useWebviewStore()
 const profilesStore = useProfilesStore()
 const filterStore = useFriendsFilterStore()
+const customLinksStore = useCustomLinksStore()
 const splitterRef = ref()
 
 const showFriendsPanel = ref(false)
+const showAddLinkDialog = ref(false)
+const newLinkLabel = ref('')
+const newLinkUrl = ref('')
 
 const filterEnabled = computed(() => filterStore.enabled)
 
@@ -267,8 +362,24 @@ const menuItems = ref<MenuItem[]>([
   { id: 7, label: 'Discord', icon: 'pi pi-discord', route: '/discord' },
   { id: 8, label: 'Reddit', icon: 'pi pi-reddit', route: '/reddit' },
   { id: 9, label: 'Messenger', icon: 'pi pi-comments', route: '/messenger' },
-  { id: 10, label: 'Kanban', icon: 'pi pi-th-large', route: '/kanban' }
+  { id: 10, label: 'Snapchat', icon: 'pi pi-camera', route: '/snapchat' },
+  { id: 11, label: 'Quora', icon: 'pi pi-question-circle', route: '/quora' },
+  { id: 12, label: 'Pinterest', icon: 'pi pi-pinterest', route: '/pinterest' },
+  { id: 13, label: 'WhatsApp', icon: 'pi pi-whatsapp', route: '/whatsapp' },
+  { id: 14, label: 'Telegram', icon: 'pi pi-telegram', route: '/telegram' },
+  { id: 15, label: 'Nextdoor', icon: 'pi pi-map-marker', route: '/nextdoor' },
+  { id: 16, label: 'Kanban', icon: 'pi pi-th-large', route: '/kanban' }
 ])
+
+const customLinkItems = computed<MenuItem[]>(() => {
+  const profileId = profilesStore.activeProfileId ?? ''
+  return customLinksStore.getLinks(profileId).map((link, i) => ({
+    id: 1000 + i,
+    label: link.label,
+    icon: link.icon,
+    route: `/${link.id}`,
+  }))
+})
 
 const isNetworkActive = (item: MenuItem): boolean =>
   webviewStore.activeNetworkId === item.route.slice(1)
@@ -276,7 +387,14 @@ const isNetworkActive = (item: MenuItem): boolean =>
 const navigateToNetwork = (network: MenuItem): void => {
   const networkId = network.route.slice(1) // '/twitter' → 'twitter'
 
-  if (webviewStore.usesWebview(networkId)) {
+  if (networkId.startsWith('custom-')) {
+    const profileId = profilesStore.activeProfileId ?? ''
+    const link = customLinksStore.getLinks(profileId).find(l => l.id === networkId)
+    if (link) {
+      profilesStore.ensureDefault()
+      webviewStore.selectCustom(link.id, link.url)
+    }
+  } else if (webviewStore.usesWebview(networkId)) {
     profilesStore.ensureDefault()
     webviewStore.selectNetwork(networkId)
   } else {
@@ -285,6 +403,20 @@ const navigateToNetwork = (network: MenuItem): void => {
   }
 
   emit('network-selected', network)
+}
+
+const addCustomLink = () => {
+  if (!newLinkLabel.value.trim() || !newLinkUrl.value.trim()) return
+  const profileId = profilesStore.activeProfileId ?? ''
+  customLinksStore.addLink(profileId, newLinkLabel.value, newLinkUrl.value)
+  newLinkLabel.value = ''
+  newLinkUrl.value = ''
+  showAddLinkDialog.value = false
+}
+
+const removeCustomLink = (linkId: string) => {
+  const profileId = profilesStore.activeProfileId ?? ''
+  customLinksStore.removeLink(profileId, linkId)
 }
 
 onMounted(() => {
@@ -411,6 +543,32 @@ onMounted(() => {
 
 .friends-manage-btn {
   margin-top: 0.25rem;
+}
+
+.custom-links-section {
+  border-top: 1px solid var(--surface-border);
+  padding-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.custom-link-delete {
+  position: absolute;
+  right: 0.25rem;
+}
+
+.custom-link-add-icon {
+  margin: 0.25rem auto;
+  display: block;
+}
+
+.add-link-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.add-link-input {
+  width: 100%;
 }
 
 .kanban-columns {

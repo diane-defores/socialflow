@@ -146,9 +146,18 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [x] Home button: replaced back button with pi-home icon in Kotlin bottom bar — goes straight to dashboard (2026-03-11)
 - [x] Network visibility per profile: long-press edit mode on dashboard tiles, toggle networks on/off, persisted in profiles store (2026-03-11)
 - [x] Smaller network buttons: 44dp→36dp + 18sp→15sp in Kotlin bottom bar — fits more networks in horizontal scroll (2026-03-11)
+- [x] Friends filter plugin — JS injection via `webview.eval()`, semantic DOM selectors (ARIA roles, data-testid), MutationObserver for infinite scroll, global toggle (2026-03-12)
+- [x] Backup/restore — encrypted `.sfbak` archives (AES-256-GCM + Argon2), native file dialogs, sessions + stores export/import (2026-03-12)
+- [x] Anti-fingerprint stealth — Chrome UA + JS patches on desktop + Android (webdriver, plugins, WebGL, chrome object) (2026-03-12)
+- [x] Clear cookies per network — eraser button in profile sheet, per-network session wipe (2026-03-12)
+- [x] Added Quora, Pinterest, WhatsApp, Telegram, Nextdoor as social networks (2026-03-12)
+- [x] Custom links per profile — `customLinks` store, add/remove on mobile + desktop sidebar (2026-03-12)
+- [x] Kotlin bottom bar synced with profile network visibility — `set_bar_networks` IPC + `rebuildBottomBar()` (2026-03-12)
 - [ ] 🟡 Header search/filters hidden on mobile — add mobile-accessible alternative
 - [ ] 🟡 Android: verify edge-to-edge status bar color inversion (light icons on dark home screen)
 - [ ] 🟡 Android: test cookie isolation across profile switches on device
+- [ ] 🟡 Android: test friends filter end-to-end on device
+- [ ] 🟡 Desktop sidebar: custom links not yet tested visually
 
 ### To go live (⛔ blocked — needs accounts)
 

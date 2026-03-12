@@ -93,6 +93,21 @@ onMounted(async () => {
   window.addEventListener('sfz-grayscale-changed', ((e: CustomEvent) => {
     themeStore.setGrayscale(e.detail.enabled)
   }) as EventListener)
+
+  // Popup menu: open profile sheet (Kotlin dispatches this when user taps "Changer de profil")
+  window.addEventListener('sfz-open-profile-sheet', () => {
+    // Close the webview first, then the profile sheet is shown by MobileLayout
+    webviewStore.clearNetwork()
+    // Small delay so MobileLayout renders before we trigger the sheet
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('sfz-show-profile-sheet'))
+    }, 100)
+  })
+
+  // Popup menu: toggle dark mode (Kotlin dispatches this)
+  window.addEventListener('sfz-toggle-dark-mode', () => {
+    themeStore.toggleTheme()
+  })
 })
 
 onUnmounted(() => {
