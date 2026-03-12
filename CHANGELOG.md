@@ -2,6 +2,19 @@
 
 All notable changes to SocialFlow are documented here.
 
+## [Unreleased] — 2026-03-12
+
+### Added
+- Friends filter plugin — inject JS into native webviews to hide posts from non-friends using semantic DOM selectors (ARIA roles, `data-testid`, custom elements); MutationObserver for infinite scroll; `history.pushState` interception for SPA navigation; per-network friends list + toggle in sidebar and mobile layout
+- Backup/restore — encrypted `.sfbak` archives using AES-256-GCM + Argon2 key derivation; native OS save/open file dialogs via `tauri-plugin-dialog`; exports sessions directory + Pinia stores; password-protected import/export from Settings
+- `inject_script` Rust IPC command — evaluates arbitrary JS in a running social webview, identified by (profileId, networkId) pair
+
+### Changed
+- Dark mode CSS overhauled — `html.dark` selector replaces `.dark` for higher specificity over PrimeVue defaults; added full surface scale (21 CSS variables), focus ring, highlight colors, and `color-scheme: dark`
+- Android bottom bar dark mode sync — `applyDarkModeToBottomBar()` updates divider colors, icon tints, and network button backgrounds without rebuilding the bar
+
+---
+
 ## [Unreleased] — 2026-03-11 (d)
 
 ### Fixed

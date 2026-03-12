@@ -37,6 +37,7 @@ declare module 'vue-router/auto-routes' {
     '/setup/SocialFlow/components/AppRightSidebar': RouteRecordInfo<'/setup/SocialFlow/components/AppRightSidebar', '/setup/SocialFlow/components/AppRightSidebar', Record<never, never>, Record<never, never>>,
     '/setup/SocialFlow/components/AppSettings': RouteRecordInfo<'/setup/SocialFlow/components/AppSettings', '/setup/SocialFlow/components/AppSettings', Record<never, never>, Record<never, never>>,
     '/setup/SocialFlow/components/AppSidebar': RouteRecordInfo<'/setup/SocialFlow/components/AppSidebar', '/setup/SocialFlow/components/AppSidebar', Record<never, never>, Record<never, never>>,
+    '/setup/SocialFlow/components/BackupRestore': RouteRecordInfo<'/setup/SocialFlow/components/BackupRestore', '/setup/SocialFlow/components/BackupRestore', Record<never, never>, Record<never, never>>,
     '/setup/SocialFlow/components/common/NetworkLogo': RouteRecordInfo<'/setup/SocialFlow/components/common/NetworkLogo', '/setup/SocialFlow/components/common/NetworkLogo', Record<never, never>, Record<never, never>>,
     '/setup/SocialFlow/components/common/SocialNetworkLogo': RouteRecordInfo<'/setup/SocialFlow/components/common/SocialNetworkLogo', '/setup/SocialFlow/components/common/SocialNetworkLogo', Record<never, never>, Record<never, never>>,
     '/setup/SocialFlow/components/DashboardFilters': RouteRecordInfo<'/setup/SocialFlow/components/DashboardFilters', '/setup/SocialFlow/components/DashboardFilters', Record<never, never>, Record<never, never>>,

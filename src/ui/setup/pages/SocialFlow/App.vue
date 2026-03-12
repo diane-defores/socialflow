@@ -129,15 +129,43 @@ onUnmounted(() => {
   --space-8: 2rem;
 }
 
-/* Dark theme */
-.dark {
-  --text-color: #dee2e6;
-  --text-color-secondary: #9da5ae;
-  --surface-ground: #1e1e2e;
-  --surface-card: #28283e;
-  --surface-border: #3d3d5c;
-  --surface-hover: #35354f;
-  --card-shadow: 0 2px 1px -1px rgba(0,0,0,.5), 0 1px 1px 0 rgba(0,0,0,.4), 0 1px 3px 0 rgba(0,0,0,.4);
+/* Dark theme — html.dark beats PrimeVue's :root (specificity 0,1,1 > 0,1,0) */
+html.dark {
+  color-scheme: dark;
+
+  --primary-color: #5BA8F5;
+  --text-color: #e4e4e7;
+  --text-color-secondary: #a1a1aa;
+  --surface-ground: #09090b;
+  --surface-card: #18181b;
+  --surface-border: #27272a;
+  --surface-hover: #27272a;
+  --card-shadow: 0 2px 4px rgba(0,0,0,.6);
+
+  /* Override PrimeVue surface scale */
+  --surface-a: #18181b;
+  --surface-b: #18181b;
+  --surface-c: #27272a;
+  --surface-d: #3f3f46;
+  --surface-e: #18181b;
+  --surface-f: #18181b;
+  --surface-section: #09090b;
+  --surface-overlay: #18181b;
+  --surface-0: #09090b;
+  --surface-50: #18181b;
+  --surface-100: #27272a;
+  --surface-200: #3f3f46;
+  --surface-300: #52525b;
+  --surface-400: #71717a;
+  --surface-500: #a1a1aa;
+  --surface-600: #d4d4d8;
+  --surface-700: #e4e4e7;
+  --surface-800: #f4f4f5;
+  --surface-900: #fafafa;
+  --focus-ring: 0 0 0 0.2rem rgba(91,168,245,0.4);
+  --highlight-bg: rgba(91,168,245,0.16);
+  --highlight-text-color: #93c5fd;
+  --maskbg: rgba(0, 0, 0, 0.6);
 }
 
 body {
@@ -145,5 +173,11 @@ body {
   font-family: var(--font-family);
   color: var(--text-color);
   background: var(--surface-ground);
+}
+
+/* Ensure body dark bg beats any PrimeVue body rules */
+html.dark body {
+  background: var(--surface-ground);
+  color: var(--text-color);
 }
 </style>

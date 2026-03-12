@@ -271,6 +271,10 @@
                 <span class="toggle-thumb" />
               </button>
             </div>
+
+            <!-- Backup / Restore -->
+            <p class="settings-section-label">Sauvegarde</p>
+            <BackupRestore />
           </div>
         </div>
       </div>
@@ -297,6 +301,7 @@ import { useFriendsFilterStore } from '@/stores/friendsFilter'
 import type { Profile } from '@/stores/profiles'
 import type { MenuItem } from '../types'
 import NetworkWebviewHost from './NetworkWebviewHost.vue'
+import BackupRestore from './BackupRestore.vue'
 
 const router = useRouter()
 const webviewStore = useWebviewStore()

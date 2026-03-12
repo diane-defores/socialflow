@@ -23,7 +23,13 @@ serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
 tauri-plugin-log = "2"
 tauri-plugin-android-webview = { path = "plugins/android-webview" }
+tauri-plugin-dialog = "2"
 url = "2"
+aes-gcm = "0.10"
+argon2 = "0.5"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+rand = "0.8"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
 
 # Desktop: unstable child-webview API + system tray
 [target.'cfg(not(target_os = "android"))'.dependencies]

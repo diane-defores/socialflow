@@ -675,7 +675,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         val bar = LinearLayout(activity)
         bar.orientation = LinearLayout.HORIZONTAL
         bar.gravity = Gravity.TOP or Gravity.CENTER_VERTICAL
-        bar.setBackgroundColor(if (isDarkMode) Color.parseColor("#1C1C2E") else Color.parseColor("#FFFFFF"))
+        bar.setBackgroundColor(if (isDarkMode) Color.parseColor("#09090B") else Color.parseColor("#FFFFFF"))
         bar.setPadding(0, 0, 0, navBarHeight)
 
         // Inner row sits at the top of the bar (nav bar padding is below)
@@ -733,7 +733,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
     private fun buildDivider(density: Float): View {
         val divider = View(activity)
-        divider.setBackgroundColor(if (isDarkMode) Color.parseColor("#3D3D5C") else Color.parseColor("#DEE2E6"))
+        divider.setBackgroundColor(if (isDarkMode) Color.parseColor("#27272A") else Color.parseColor("#DEE2E6"))
         val params = LinearLayout.LayoutParams((1 * density).toInt(), (24 * density).toInt())
         params.setMargins((4 * density).toInt(), 0, (4 * density).toInt(), 0)
         divider.layoutParams = params
@@ -888,7 +888,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     /** Re-apply dark/light colors to an existing bottom bar without rebuilding it. */
     private fun applyDarkModeToBottomBar(bar: LinearLayout?) {
         bar ?: return
-        bar.setBackgroundColor(if (isDarkMode) Color.parseColor("#1C1C2E") else Color.parseColor("#FFFFFF"))
+        bar.setBackgroundColor(if (isDarkMode) Color.parseColor("#09090B") else Color.parseColor("#FFFFFF"))
         val iconColor = if (isDarkMode) Color.parseColor("#E0E0E0") else Color.parseColor("#495057")
         // Walk the inner row and update dividers + utility button colors
         val innerRow = bar.getChildAt(0) as? LinearLayout ?: return
@@ -896,7 +896,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             val child = innerRow.getChildAt(i)
             // Dividers are plain Views (not TextView, not ImageButton, not HorizontalScrollView)
             if (child is View && child !is ViewGroup && child !is TextView && child !is ImageButton) {
-                child.setBackgroundColor(if (isDarkMode) Color.parseColor("#3D3D5C") else Color.parseColor("#DEE2E6"))
+                child.setBackgroundColor(if (isDarkMode) Color.parseColor("#27272A") else Color.parseColor("#DEE2E6"))
             }
         }
         // Update home button (first TextView in inner row, before the scroll view)
@@ -905,6 +905,8 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         muteBtn?.setTextColor(iconColor)
         // Update grayscale button color
         grayscaleBtn?.let { updateGrayscaleButtonIcon(it) }
+        // Re-apply network button backgrounds (blend base changes between dark/light)
+        updateBottomBarActiveNetwork(currentNetworkId ?: "")
     }
 
     private fun buildNetworkButton(density: Float, net: NetworkInfo, isActive: Boolean): TextView {
@@ -956,9 +958,9 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             bg.setColor(net.color)
         } else {
             // Blend brand color with bar background — different base for light vs dark
-            val baseR = if (isDarkMode) 0x1C else 0xE8
-            val baseG = if (isDarkMode) 0x1C else 0xE8
-            val baseB = if (isDarkMode) 0x2E else 0xF0
+            val baseR = if (isDarkMode) 0x09 else 0xE8
+            val baseG = if (isDarkMode) 0x09 else 0xE8
+            val baseB = if (isDarkMode) 0x0B else 0xF0
             val brandWeight = if (isDarkMode) 0.25f else 0.3f
             val baseWeight = 1f - brandWeight
             val r = ((Color.red(net.color) * brandWeight) + (baseR * baseWeight)).toInt()

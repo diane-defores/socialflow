@@ -37,6 +37,17 @@
         </div>
         <InputSwitch v-model="notifications" />
       </div>
+
+      <Divider />
+
+      <!-- Backup / Restore -->
+      <div class="setting-item">
+        <div class="setting-label">
+          <i class="pi pi-database mr-2"></i>
+          <span>Sauvegarde</span>
+        </div>
+      </div>
+      <BackupRestore />
     </div>
   </Dialog>
 </template>
@@ -47,6 +58,7 @@ import { useThemeStore } from '@/stores/theme'
 import Dialog from 'primevue/dialog'
 import InputSwitch from 'primevue/inputswitch'
 import Divider from 'primevue/divider'
+import BackupRestore from './BackupRestore.vue'
 
 const visible = ref(false)
 const notifications = ref(true)

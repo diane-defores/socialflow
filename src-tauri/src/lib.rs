@@ -1,5 +1,7 @@
 use tauri::{AppHandle, Manager};
 
+mod backup;
+
 // ── Desktop-only imports ─────────────────────────────────────────────────────
 #[cfg(not(target_os = "android"))]
 use tauri::{
@@ -328,12 +330,82 @@ fn delete_network_session(
     Ok(())
 }
 
+// ─── Backup / Restore ────────────────────────────────────────────────────────
+
+#[tauri::command]
+fn export_backup(
+    app: AppHandle,
+    store_data: String,
+    password: String,
+) -> Result<String, String> {
+    use tauri_plugin_dialog::DialogExt;
+
+    let sessions_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| e.to_string())?
+        .join("sessions");
+
+    // Create zip + encrypt
+    let zip_bytes = backup::create_backup_archive(&sessions_dir, &store_data)?;
+    let blob = backup::encrypt_archive(&zip_bytes, &password)?;
+
+    // Show native save dialog (blocking via channel)
+    let (tx, rx) = std::sync::mpsc::channel();
+    app.dialog()
+        .file()
+        .set_file_name("socialflow-backup.sfbak")
+        .add_filter("SocialFlow Backup", &["sfbak"])
+        .save_file(move |path| {
+            let _ = tx.send(path);
+        });
+
+    let file_path = rx.recv().map_err(|_| "Dialog cancelled".to_string())?;
+    let file_path = file_path.ok_or_else(|| "No file selected".to_string())?;
+    let path = file_path.as_path().ok_or_else(|| "Invalid path".to_string())?;
+
+    std::fs::write(&path, &blob).map_err(|e| format!("Write failed: {e}"))?;
+    Ok(path.display().to_string())
+}
+
+#[tauri::command]
+fn import_backup(app: AppHandle, password: String) -> Result<String, String> {
+    use tauri_plugin_dialog::DialogExt;
+
+    // Show native open dialog (blocking via channel)
+    let (tx, rx) = std::sync::mpsc::channel();
+    app.dialog()
+        .file()
+        .add_filter("SocialFlow Backup", &["sfbak"])
+        .pick_file(move |path| {
+            let _ = tx.send(path);
+        });
+
+    let file_path = rx.recv().map_err(|_| "Dialog cancelled".to_string())?;
+    let file_path = file_path.ok_or_else(|| "No file selected".to_string())?;
+    let path = file_path.as_path().ok_or_else(|| "Invalid path".to_string())?.to_path_buf();
+
+    let sessions_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| e.to_string())?
+        .join("sessions");
+
+    // Read + decrypt + extract
+    let blob = std::fs::read(&path).map_err(|e| format!("Read failed: {e}"))?;
+    let zip_bytes = backup::decrypt_archive(&blob, &password)?;
+    let store_data = backup::extract_backup_archive(&zip_bytes, &sessions_dir)?;
+
+    Ok(store_data)
+}
+
 // ─── Entry point ─────────────────────────────────────────────────────────────
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_android_webview::init())
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(
@@ -357,6 +429,8 @@ pub fn run() {
             inject_script,
             delete_profile_session,
             delete_network_session,
+            export_backup,
+            import_backup,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
