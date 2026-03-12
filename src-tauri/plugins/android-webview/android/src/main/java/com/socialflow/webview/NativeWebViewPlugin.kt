@@ -77,6 +77,45 @@ private val NETWORKS = listOf(
     NetworkInfo("messenger", "\ue97e", Color.parseColor("#0084FF"), "https://www.messenger.com"),
 )
 
+// Anti-fingerprint JS — patches WebView detection vectors used by Akamai, PerimeterX, etc.
+private val STEALTH_SCRIPT = """
+(function(){
+  if (window.__sfzStealth) return;
+  window.__sfzStealth = true;
+  // navigator.webdriver — automation/WebView flag
+  Object.defineProperty(navigator, 'webdriver', { get: () => false });
+  // window.chrome — real Chrome exposes this, WebViews don't
+  if (!window.chrome) {
+    window.chrome = { runtime: {}, loadTimes: function(){}, csi: function(){}, app: { isInstalled: false } };
+  }
+  // navigator.plugins — WebViews report empty
+  Object.defineProperty(navigator, 'plugins', {
+    get: () => {
+      var arr = [
+        { name: 'Chrome PDF Plugin', filename: 'internal-pdf-viewer', description: 'Portable Document Format' },
+        { name: 'Chrome PDF Viewer', filename: 'mhjfbmdgcfjbbpaeojofohoefgiehjai', description: '' },
+        { name: 'Native Client', filename: 'internal-nacl-plugin', description: '' }
+      ];
+      arr.item = function(i) { return arr[i] || null; };
+      arr.namedItem = function(n) { return arr.find(function(p) { return p.name === n; }) || null; };
+      arr.refresh = function() {};
+      return arr;
+    }
+  });
+  // navigator.languages
+  Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
+  // permissions.query — Notification permission detection
+  var origQuery = window.Permissions && Permissions.prototype.query;
+  if (origQuery) {
+    Permissions.prototype.query = function(params) {
+      return params.name === 'notifications'
+        ? Promise.resolve({ state: Notification.permission })
+        : origQuery.call(this, params);
+    };
+  }
+})();
+""".trimIndent()
+
 // JavaScript injected after every page load to dismiss "open in app" / "get the app" prompts.
 // Strategy: inject persistent CSS to hide known banner elements, then click "Not now" buttons.
 private val DISMISS_APP_BANNERS_SCRIPT = """
@@ -1004,8 +1043,8 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         settings.useWideViewPort = true
         settings.builtInZoomControls = true
         settings.displayZoomControls = false
-        // Remove "wv" marker so social sites don't block us
-        settings.userAgentString = settings.userAgentString.replace("; wv", "")
+        // Full Chrome Mobile UA so social sites (TikTok, etc.) don't block us
+        settings.userAgentString = "Mozilla/5.0 (Linux; Android 14; SM-S928B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36"
 
         val cookieManager = CookieManager.getInstance()
         cookieManager.setAcceptCookie(true)
@@ -1024,6 +1063,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             }
             override fun onPageFinished(view: WebView, url: String) {
                 super.onPageFinished(view, url)
+                view.evaluateJavascript(STEALTH_SCRIPT, null)
                 view.evaluateJavascript(COOKIE_ACCEPT_SCRIPT, null)
                 view.evaluateJavascript(DISMISS_APP_BANNERS_SCRIPT, null)
                 if (isGrayscale) applyGrayscaleToWebView(view)

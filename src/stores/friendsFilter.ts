@@ -4,14 +4,11 @@ import { ref } from 'vue'
 export const useFriendsFilterStore = defineStore('friendsFilter', () => {
   /** Per-network friend names/usernames (case-insensitive match at runtime) */
   const friends = ref<Record<string, string[]>>({})
-  /** Per-network enabled flag */
-  const enabled = ref<Record<string, boolean>>({})
+  /** Global on/off — applies to ALL webview networks */
+  const enabled = ref(false)
 
   const getFriends = (networkId: string): string[] =>
     friends.value[networkId] ?? []
-
-  const isEnabled = (networkId: string): boolean =>
-    enabled.value[networkId] ?? false
 
   const addFriend = (networkId: string, name: string) => {
     const trimmed = name.trim()
@@ -26,9 +23,7 @@ export const useFriendsFilterStore = defineStore('friendsFilter', () => {
     friends.value[networkId] = (friends.value[networkId] ?? []).filter(f => f !== name)
   }
 
-  const setEnabled = (networkId: string, value: boolean) => {
-    enabled.value[networkId] = value
-  }
+  const toggle = () => { enabled.value = !enabled.value }
 
-  return { friends, enabled, getFriends, isEnabled, addFriend, removeFriend, setEnabled }
+  return { friends, enabled, getFriends, addFriend, removeFriend, toggle }
 }, { persist: true })

@@ -2,6 +2,17 @@
 
 All notable changes to SocialFlow are documented here.
 
+## [Unreleased] — 2026-03-12 (b)
+
+### Added
+- Anti-fingerprint stealth for native webviews — Chrome-on-Windows User-Agent (desktop) and Samsung Chrome Mobile UA (Android); `initialization_script` (desktop) and `onPageFinished` (Android) inject JS patches: `navigator.webdriver=false`, fake `window.chrome` object, default Chrome plugins array, `navigator.languages`, permissions.query fix, WebGL vendor/renderer spoofing (NVIDIA GTX 1650)
+- Clear cookies per network — eraser icon button on each profile in the profile sheet; expands to 2-column grid of all 9 webview networks; tapping a network closes its webview + wipes session data (cookies, localStorage, IndexedDB) via `delete_network_session` IPC; green checkmark confirms completion; other networks remain untouched
+
+### Fixed
+- AppSidebar.vue syntax error — stray `}` after `setFilterEnabled` arrow function removed (was blocking Vite build)
+
+---
+
 ## [Unreleased] — 2026-03-12
 
 ### Added

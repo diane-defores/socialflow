@@ -12,6 +12,7 @@ declare module 'vue' {
     AppRightSidebar: typeof import('./../components/AppRightSidebar.vue')['default']
     AppSettings: typeof import('./../components/AppSettings.vue')['default']
     AppSidebar: typeof import('./../components/AppSidebar.vue')['default']
+    BackupRestore: typeof import('./../components/BackupRestore.vue')['default']
     CreatePost: typeof import('./../components/feed/CreatePost.vue')['default']
     DashboardFilters: typeof import('./../components/DashboardFilters.vue')['default']
     DiscordView: typeof import('./../components/networks/DiscordView.vue')['default']

@@ -2,6 +2,73 @@ use tauri::{AppHandle, Manager};
 
 mod backup;
 
+/// Chrome-on-Windows User-Agent — most common browser fingerprint, least suspicious.
+const CHROME_UA: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
+
+/// Anti-fingerprint JS injected before every page load.
+/// Patches the most common WebView detection vectors used by Akamai, PerimeterX, etc.
+#[cfg(not(target_os = "android"))]
+const STEALTH_SCRIPT: &str = r#"
+(function(){
+  // 1. navigator.webdriver — WebView/automation flag
+  Object.defineProperty(navigator, 'webdriver', { get: () => false });
+
+  // 2. window.chrome — real Chrome exposes this, WebViews don't
+  if (!window.chrome) {
+    window.chrome = {
+      runtime: {},
+      loadTimes: function(){},
+      csi: function(){},
+      app: { isInstalled: false, InstallState: { DISABLED: 'disabled', INSTALLED: 'installed', NOT_INSTALLED: 'not_installed' }, getDetails: function(){}, getIsInstalled: function(){}, runningState: function(){ return 'cannot_run'; } },
+    };
+  }
+
+  // 3. navigator.plugins — WebViews report empty, Chrome has defaults
+  Object.defineProperty(navigator, 'plugins', {
+    get: () => {
+      const arr = [
+        { name: 'Chrome PDF Plugin', filename: 'internal-pdf-viewer', description: 'Portable Document Format' },
+        { name: 'Chrome PDF Viewer', filename: 'mhjfbmdgcfjbbpaeojofohoefgiehjai', description: '' },
+        { name: 'Native Client', filename: 'internal-nacl-plugin', description: '' },
+      ];
+      arr.item = (i) => arr[i] || null;
+      arr.namedItem = (n) => arr.find(p => p.name === n) || null;
+      arr.refresh = () => {};
+      return arr;
+    }
+  });
+
+  // 4. navigator.languages — must match UA locale
+  Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
+
+  // 5. permissions.query — Notification permission detection
+  const origQuery = window.Permissions && Permissions.prototype.query;
+  if (origQuery) {
+    Permissions.prototype.query = function(params) {
+      return params.name === 'notifications'
+        ? Promise.resolve({ state: Notification.permission })
+        : origQuery.call(this, params);
+    };
+  }
+
+  // 6. WebGL vendor/renderer — avoid "Google SwiftShader" (headless signal)
+  const getParameter = WebGLRenderingContext.prototype.getParameter;
+  WebGLRenderingContext.prototype.getParameter = function(param) {
+    if (param === 37445) return 'Google Inc. (NVIDIA)';       // UNMASKED_VENDOR_WEBGL
+    if (param === 37446) return 'ANGLE (NVIDIA, NVIDIA GeForce GTX 1650, OpenGL 4.5)'; // UNMASKED_RENDERER_WEBGL
+    return getParameter.call(this, param);
+  };
+  if (typeof WebGL2RenderingContext !== 'undefined') {
+    const getParameter2 = WebGL2RenderingContext.prototype.getParameter;
+    WebGL2RenderingContext.prototype.getParameter = function(param) {
+      if (param === 37445) return 'Google Inc. (NVIDIA)';
+      if (param === 37446) return 'ANGLE (NVIDIA, NVIDIA GeForce GTX 1650, OpenGL 4.5)';
+      return getParameter2.call(this, param);
+    };
+  }
+})();
+"#;
+
 // ── Desktop-only imports ─────────────────────────────────────────────────────
 #[cfg(not(target_os = "android"))]
 use tauri::{
@@ -148,7 +215,10 @@ fn open_webview(
 
     window
         .add_child(
-            WebviewBuilder::new(&label, WebviewUrl::External(parsed)).data_directory(data_dir),
+            WebviewBuilder::new(&label, WebviewUrl::External(parsed))
+                .user_agent(CHROME_UA)
+                .initialization_script(STEALTH_SCRIPT)
+                .data_directory(data_dir),
             tauri::LogicalPosition::new(x, y),
             tauri::LogicalSize::new(width, height),
         )
@@ -362,7 +432,7 @@ fn export_backup(
 
     let file_path = rx.recv().map_err(|_| "Dialog cancelled".to_string())?;
     let file_path = file_path.ok_or_else(|| "No file selected".to_string())?;
-    let path = file_path.as_path().ok_or_else(|| "Invalid path".to_string())?;
+    let path = file_path.into_path().map_err(|e| format!("Invalid path: {e}"))?;
 
     std::fs::write(&path, &blob).map_err(|e| format!("Write failed: {e}"))?;
     Ok(path.display().to_string())
@@ -383,7 +453,7 @@ fn import_backup(app: AppHandle, password: String) -> Result<String, String> {
 
     let file_path = rx.recv().map_err(|_| "Dialog cancelled".to_string())?;
     let file_path = file_path.ok_or_else(|| "No file selected".to_string())?;
-    let path = file_path.as_path().ok_or_else(|| "Invalid path".to_string())?.to_path_buf();
+    let path = file_path.into_path().map_err(|e| format!("Invalid path: {e}"))?;
 
     let sessions_dir = app
         .path()

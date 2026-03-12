@@ -52,7 +52,7 @@
           </div>
 
           <!-- Filtre Amis -->
-          <div class="friends-section" v-if="webviewStore.activeNetworkId">
+          <div class="friends-section">
             <div class="section-header" v-if="!iconsOnly">
               <h3>Amis</h3>
               <Button
@@ -67,7 +67,7 @@
             <div class="friends-toggle" :class="{ 'friends-toggle--centered': iconsOnly }">
               <ToggleButton
                 :modelValue="filterEnabled"
-                @update:modelValue="setFilterEnabled"
+                @change="setFilterEnabled"
                 :onLabel="iconsOnly ? undefined : 'Amis seulement'"
                 :offLabel="iconsOnly ? undefined : 'Voir tout'"
                 onIcon="pi pi-filter-fill"
@@ -89,9 +89,8 @@
           </div>
 
           <FriendsPanel
-            v-if="webviewStore.activeNetworkId"
             v-model="showFriendsPanel"
-            :networkId="webviewStore.activeNetworkId"
+            :networkId="webviewStore.activeNetworkId ?? 'twitter'"
           />
 
           <!-- Kanban Columns -->
@@ -175,13 +174,9 @@ const splitterRef = ref()
 
 const showFriendsPanel = ref(false)
 
-const filterEnabled = computed(() =>
-  webviewStore.activeNetworkId ? filterStore.isEnabled(webviewStore.activeNetworkId) : false,
-)
+const filterEnabled = computed(() => filterStore.enabled)
 
-const setFilterEnabled = (value: boolean) => {
-  if (webviewStore.activeNetworkId) filterStore.setEnabled(webviewStore.activeNetworkId, value)
-}
+const setFilterEnabled = () => filterStore.toggle()
 
 const props = defineProps<{
   modelValue: boolean

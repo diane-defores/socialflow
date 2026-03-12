@@ -159,6 +159,9 @@
                 <button class="sheet-action" title="Photo de profil" @click.stop="pickAvatar(profile.id)">
                   <i class="pi pi-camera" />
                 </button>
+                <button class="sheet-action" title="Effacer les cookies" @click.stop="clearCookiesProfileId = clearCookiesProfileId === profile.id ? null : profile.id">
+                  <i class="pi pi-eraser" />
+                </button>
                 <button
                   v-if="profilesStore.profiles.length > 1"
                   class="sheet-action sheet-action--danger"
@@ -168,6 +171,32 @@
                   <i class="pi pi-trash" />
                 </button>
               </div>
+            </div>
+          </div>
+
+          <!-- Clear cookies per network (expandable per profile) -->
+          <div v-if="clearCookiesProfileId" class="clear-cookies-section">
+            <div class="clear-cookies-header">
+              <i class="pi pi-trash" />
+              <span>Effacer les cookies — {{ profilesStore.profiles.find(p => p.id === clearCookiesProfileId)?.name }}</span>
+              <button class="sheet-close-btn" @click="clearCookiesProfileId = null" style="margin-left:auto;">
+                <i class="pi pi-times" />
+              </button>
+            </div>
+            <div class="clear-cookies-list">
+              <button
+                v-for="nw in webviewNetworks"
+                :key="nw.id"
+                class="clear-cookie-row"
+                @click="clearNetworkCookies(nw.id)"
+              >
+                <i :class="nw.icon" class="clear-cookie-icon" />
+                <span class="clear-cookie-label">{{ nw.label }}</span>
+                <span v-if="clearedNetworks.has(`${clearCookiesProfileId}:${nw.id}`)" class="clear-cookie-done">
+                  <i class="pi pi-check" />
+                </span>
+                <i v-else class="pi pi-eraser clear-cookie-action" />
+              </button>
             </div>
           </div>
 
@@ -294,7 +323,7 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { useWebviewStore } from '@/stores/webviewState'
+import { useWebviewStore, WEBVIEW_URLS } from '@/stores/webviewState'
 import { useProfilesStore } from '@/stores/profiles'
 import { useThemeStore } from '@/stores/theme'
 import { useFriendsFilterStore } from '@/stores/friendsFilter'
@@ -335,6 +364,43 @@ const addInputRef = ref<HTMLInputElement | null>(null)
 // ─── Avatar state ─────────────────────────────────────────────
 const avatarFileInput = ref<HTMLInputElement | null>(null)
 const pendingAvatarProfileId = ref<string | null>(null)
+
+// ─── Clear cookies per network ────────────────────────────────
+const clearCookiesProfileId = ref<string | null>(null)
+const clearedNetworks = ref<Set<string>>(new Set())
+
+const webviewNetworks = computed(() => {
+  const iconMap: Record<string, string> = {
+    twitter: 'pi pi-twitter', facebook: 'pi pi-facebook', instagram: 'pi pi-instagram',
+    linkedin: 'pi pi-linkedin', tiktok: 'pi pi-tiktok', threads: 'pi pi-at',
+    discord: 'pi pi-discord', reddit: 'pi pi-reddit', messenger: 'pi pi-comments',
+  }
+  const labelMap: Record<string, string> = {
+    twitter: 'Twitter / X', facebook: 'Facebook', instagram: 'Instagram',
+    linkedin: 'LinkedIn', tiktok: 'TikTok', threads: 'Threads',
+    discord: 'Discord', reddit: 'Reddit', messenger: 'Messenger',
+  }
+  return Object.keys(WEBVIEW_URLS).map(id => ({
+    id,
+    icon: iconMap[id] ?? 'pi pi-globe',
+    label: labelMap[id] ?? id,
+  }))
+})
+
+async function clearNetworkCookies(networkId: string) {
+  const profileId = clearCookiesProfileId.value
+  if (!profileId) return
+  try {
+    const { invoke } = await import('@tauri-apps/api/core')
+    // Close webview if it's currently open for this profile+network
+    await invoke('close_webview', { profileId, networkId }).catch(() => {})
+    // Wipe session data (cookies, localStorage, IndexedDB)
+    await invoke('delete_network_session', { profileId, networkId })
+    clearedNetworks.value.add(`${profileId}:${networkId}`)
+  } catch (e) {
+    console.error('Failed to clear cookies:', e)
+  }
+}
 
 // ─── Notifications ────────────────────────────────────────────
 const notificationsVisible = ref(false)
@@ -385,14 +451,8 @@ const visibleMenuItems = computed(() => {
 })
 
 // ─── Friends filter ───────────────────────────────────────────
-const friendsFilterEnabled = computed(() =>
-  webviewStore.activeNetworkId ? filterStore.isEnabled(webviewStore.activeNetworkId) : false
-)
-
-const toggleFriendsFilter = () => {
-  const networkId = webviewStore.activeNetworkId ?? 'global'
-  filterStore.setEnabled(networkId, !filterStore.isEnabled(networkId))
-}
+const friendsFilterEnabled = computed(() => filterStore.enabled)
+const toggleFriendsFilter = () => filterStore.toggle()
 
 // ─── Network list ─────────────────────────────────────────────
 const menuItems = ref<MenuItem[]>([
@@ -444,6 +504,8 @@ const navigateToNetwork = (network: MenuItem) => {
 // ─── Sheet actions ────────────────────────────────────────────
 function closeSheet() {
   profileSheetVisible.value = false
+  clearCookiesProfileId.value = null
+  clearedNetworks.value.clear()
   cancelEdit()
   cancelAdd()
 }
@@ -1251,6 +1313,72 @@ function handleAvatarChange(event: Event) {
 
 .sheet-action--danger:active {
   color: #ef4444;
+}
+
+/* Clear cookies section */
+.clear-cookies-section {
+  border-top: 1px solid var(--surface-border);
+  padding: 0.5rem 0.75rem;
+}
+
+.clear-cookies-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-color);
+  padding: 0.25rem 0.25rem 0.5rem;
+}
+
+.clear-cookies-header i:first-child {
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+}
+
+.clear-cookies-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem;
+}
+
+.clear-cookie-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.6rem;
+  background: var(--surface-ground);
+  border: 1px solid var(--surface-border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.12s;
+}
+
+.clear-cookie-row:active {
+  background: var(--surface-hover);
+}
+
+.clear-cookie-icon {
+  font-size: 0.9rem;
+  color: var(--text-color-secondary);
+}
+
+.clear-cookie-label {
+  flex: 1;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-color);
+  text-align: left;
+}
+
+.clear-cookie-action {
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+}
+
+.clear-cookie-done {
+  color: #22c55e;
+  font-size: 0.8rem;
 }
 
 /* Footer */

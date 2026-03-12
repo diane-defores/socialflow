@@ -9,7 +9,7 @@ import { buildFriendsFilterScript } from '@/injectors/friendsFilter'
  *
  * Call once in App.vue to activate global watchers:
  *   - Injects filter 2.5s after a network becomes active (page load delay)
- *   - Re-injects immediately when friends list or enabled state changes
+ *   - Re-injects immediately when the global toggle or friends list changes
  */
 export function useFriendsFilter() {
   const filterStore = useFriendsFilterStore()
@@ -26,7 +26,7 @@ export function useFriendsFilter() {
     const script = buildFriendsFilterScript(
       nId,
       filterStore.getFriends(nId),
-      filterStore.isEnabled(nId),
+      filterStore.enabled,
     )
 
     if (!isTauri) return // Dev browser — skip IPC
@@ -48,16 +48,14 @@ export function useFriendsFilter() {
     },
   )
 
-  // Re-inject immediately when filter settings change for the active network
+  // Re-inject when global toggle or friends list changes
   watch(
-    () => {
-      const nId = webviewStore.activeNetworkId
-      if (!nId) return null
-      return {
-        enabled: filterStore.enabled[nId],
-        friends: filterStore.friends[nId],
-      }
-    },
+    () => ({
+      enabled: filterStore.enabled,
+      friends: webviewStore.activeNetworkId
+        ? filterStore.friends[webviewStore.activeNetworkId]
+        : null,
+    }),
     () => applyFilter(),
     { deep: true },
   )
