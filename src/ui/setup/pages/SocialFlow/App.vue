@@ -63,6 +63,18 @@ watch(() => themeStore.isDarkMode, async (enabled) => {
   invoke('set_dark_mode', { enabled }).catch(() => {})
 })
 
+// Sync profile list to Android popup menu whenever profiles or active profile changes
+watch(
+  () => [profilesStore.profiles, profilesStore.activeProfileId] as const,
+  async ([profiles, activeId]) => {
+    if (!isTauri) return
+    const { invoke } = await import('@tauri-apps/api/core')
+    const profilesJson = JSON.stringify(profiles.map(p => ({ id: p.id, name: p.name, emoji: p.emoji })))
+    invoke('set_profiles', { profilesJson, activeProfileId: activeId }).catch(() => {})
+  },
+  { immediate: true, deep: true },
+)
+
 onMounted(async () => {
   themeStore.initTheme()
   profilesStore.ensureDefault()
@@ -103,6 +115,20 @@ onMounted(async () => {
       window.dispatchEvent(new CustomEvent('sfz-show-profile-sheet'))
     }, 100)
   })
+
+  // Popup menu: inline profile switch (Kotlin dispatches this with { profileId })
+  window.addEventListener('sfz-switch-profile', ((e: CustomEvent) => {
+    const { profileId } = e.detail
+    if (profileId && profileId !== profilesStore.activeProfileId) {
+      profilesStore.setActive(profileId)
+      // Reload the current network with the new profile's session
+      const networkId = webviewStore.activeNetworkId
+      if (networkId) {
+        webviewStore.clearNetwork()
+        setTimeout(() => webviewStore.selectNetwork(networkId), 100)
+      }
+    }
+  }) as EventListener)
 
   // Popup menu: toggle dark mode (Kotlin dispatches this)
   window.addEventListener('sfz-toggle-dark-mode', () => {

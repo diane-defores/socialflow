@@ -35,6 +35,13 @@ pub struct BarNetworksRequest {
     pub network_ids: Vec<String>,
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SetProfilesRequest {
+    pub profiles_json: String,
+    pub active_profile_id: String,
+}
+
 pub struct AndroidWebview<R: Runtime>(pub PluginHandle<R>);
 
 impl<R: Runtime> AndroidWebview<R> {
@@ -94,6 +101,18 @@ impl<R: Runtime> AndroidWebview<R> {
     pub fn set_bar_networks(&self, network_ids: Vec<String>) -> Result<()> {
         self.0
             .run_mobile_plugin("setBarNetworks", BarNetworksRequest { network_ids })
+            .map_err(|e| Error::PluginInvoke(e.to_string()))
+    }
+
+    pub fn set_profiles(&self, profiles_json: String, active_profile_id: String) -> Result<()> {
+        self.0
+            .run_mobile_plugin(
+                "setProfiles",
+                SetProfilesRequest {
+                    profiles_json,
+                    active_profile_id,
+                },
+            )
             .map_err(|e| Error::PluginInvoke(e.to_string()))
     }
 }

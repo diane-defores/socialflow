@@ -34,7 +34,7 @@
               <div v-for="item in menuItems" :key="item.id" class="menu-item-group">
                 <div class="network-row" :class="{ active: isNetworkActive(item) }">
                   <Button
-                    :icon="item.route === '/threads' ? undefined : item.icon"
+                    :icon="hasCustomIcon(item) ? undefined : item.icon"
                     :label="iconsOnly ? undefined : item.label"
                     :tooltip="iconsOnly ? item.label : undefined"
                     :tooltipOptions="{ position: 'right' }"
@@ -46,8 +46,10 @@
                     ]"
                     @click="navigateToNetwork(item)"
                   >
-                    <template v-if="item.route === '/threads'" #icon>
-                      <ThreadsIcon size="1rem" />
+                    <template v-if="hasCustomIcon(item)" #icon>
+                      <ThreadsIcon v-if="item.route === '/threads'" size="1rem" />
+                      <SnapchatIcon v-else-if="item.route === '/snapchat'" size="1rem" />
+                      <NextdoorIcon v-else-if="item.route === '/nextdoor'" size="1rem" />
                     </template>
                   </Button>
                 </div>
@@ -255,6 +257,8 @@ import ToggleButton from 'primevue/togglebutton'
 import ProfileSwitcher from './ProfileSwitcher.vue'
 import FriendsPanel from './FriendsPanel.vue'
 import ThreadsIcon from './icons/ThreadsIcon.vue'
+import SnapchatIcon from './icons/SnapchatIcon.vue'
+import NextdoorIcon from './icons/NextdoorIcon.vue'
 
 const router = useRouter()
 const kanbanStore = useKanbanStore()
@@ -380,6 +384,9 @@ const customLinkItems = computed<MenuItem[]>(() => {
     route: `/${link.id}`,
   }))
 })
+
+const CUSTOM_ICON_ROUTES = ['/threads', '/snapchat', '/nextdoor']
+const hasCustomIcon = (item: MenuItem) => CUSTOM_ICON_ROUTES.includes(item.route)
 
 const isNetworkActive = (item: MenuItem): boolean =>
   webviewStore.activeNetworkId === item.route.slice(1)

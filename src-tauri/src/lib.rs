@@ -354,6 +354,21 @@ fn set_bar_networks(_app: AppHandle, _network_ids: Vec<String>) -> Result<(), St
     Ok(()) // no-op on desktop — no overlay bar
 }
 
+/// Send profile list to the Android popup menu for inline profile switching.
+#[tauri::command]
+#[cfg(target_os = "android")]
+fn set_profiles(app: AppHandle, profiles_json: String, active_profile_id: String) -> Result<(), String> {
+    app.android_webview()
+        .set_profiles(profiles_json, active_profile_id)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+#[cfg(not(target_os = "android"))]
+fn set_profiles(_app: AppHandle, _profiles_json: String, _active_profile_id: String) -> Result<(), String> {
+    Ok(())
+}
+
 /// Injects a JavaScript string into a running social webview.
 /// Used by the friends filter to hide posts from non-friends.
 #[tauri::command]
@@ -465,6 +480,11 @@ fn export_backup(
             }
         });
 
+    // Ensure parent directory exists (GTK save dialog doesn't always create it)
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)
+            .map_err(|e| format!("Cannot create directory: {e}"))?;
+    }
     std::fs::write(&path, &blob).map_err(|e| format!("Write failed: {e}"))?;
     Ok(path.display().to_string())
 }
@@ -536,6 +556,7 @@ pub fn run() {
             set_grayscale,
             set_dark_mode,
             set_bar_networks,
+            set_profiles,
             inject_script,
             delete_profile_session,
             delete_network_session,

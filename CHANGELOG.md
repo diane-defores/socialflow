@@ -2,6 +2,19 @@
 
 All notable changes to SocialFlow are documented here.
 
+## [Unreleased] — 2026-03-13
+
+### Added
+- Inline profile switching in Android popup menu — profiles listed with emoji + name, active profile highlighted, instant network reload on switch
+- `set_profiles` IPC command (Rust + Kotlin) syncs profile list from Vue to Android popup
+- Snapchat and Nextdoor custom SVG icons
+
+### Changed
+- Android popup menu: "Changer de profil" replaced with full inline profile list + section label + divider
+- Profile switch from popup reloads current network with new profile's session data
+
+---
+
 ## [Unreleased] — 2026-03-12 (c)
 
 ### Added

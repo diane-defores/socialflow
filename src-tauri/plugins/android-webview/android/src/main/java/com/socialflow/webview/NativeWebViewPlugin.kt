@@ -65,6 +65,15 @@ class BarNetworksArgs {
     var networkIds: ArrayList<String> = arrayListOf()
 }
 
+@InvokeArg
+class SetProfilesArgs {
+    var profilesJson: String = "[]"
+    var activeProfileId: String = ""
+}
+
+// Lightweight profile data for the popup menu
+private data class ProfileMenuItem(val id: String, val name: String, val emoji: String)
+
 // Network metadata for the bottom bar switcher
 // iconChar: PrimeIcons codepoint (same font as the Vue app, loaded from assets/primeicons.ttf)
 // color:    brand color shown as button background when active
@@ -357,6 +366,10 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
     // Visible network IDs — synced from Vue profile visibility (null = show all)
     private var visibleNetworkIds: Set<String>? = null
+
+    // Profile list for the popup menu — synced from Vue whenever profiles change
+    private var menuProfiles: List<ProfileMenuItem> = emptyList()
+    private var activeProfileId: String = ""
 
     // Hardware back button intercept — registered when webview opens, removed when closed
     private var backCallback: OnBackPressedCallback? = null
@@ -729,6 +742,30 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         invoke.resolve(JSObject())
     }
 
+    @Command
+    fun setProfiles(invoke: Invoke) {
+        val args = invoke.parseArgs(SetProfilesArgs::class.java)
+        try {
+            val arr = org.json.JSONArray(args.profilesJson)
+            val list = mutableListOf<ProfileMenuItem>()
+            for (i in 0 until arr.length()) {
+                val obj = arr.getJSONObject(i)
+                list.add(ProfileMenuItem(
+                    id = obj.getString("id"),
+                    name = obj.getString("name"),
+                    emoji = obj.optString("emoji", "")
+                ))
+            }
+            activity.runOnUiThread {
+                menuProfiles = list
+                activeProfileId = args.activeProfileId
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "setProfiles parse error: ${e.message}")
+        }
+        invoke.resolve(JSObject())
+    }
+
     /** Tear down and rebuild the bottom bar with the current filtered/sorted networks. */
     private fun rebuildBottomBar() {
         val root = socialRoot ?: return
@@ -892,11 +929,37 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
         // ── Menu items ──
 
-        // 1. Change profile (pi-user = \ue939)
-        menu.addView(buildPopupMenuItem(density, "\ue939", "Changer de profil") {
-            dismissPopupMenu()
-            dispatchToVue("sfz-open-profile-sheet")
-        })
+        // 1. Profile list — inline switcher
+        if (menuProfiles.isNotEmpty()) {
+            val sectionColor = if (isDarkMode) Color.parseColor("#9A9AB0") else Color.parseColor("#ADB5BD")
+            val sectionLabel = TextView(activity)
+            sectionLabel.text = "Profils"
+            sectionLabel.textSize = 11f
+            sectionLabel.setTextColor(sectionColor)
+            sectionLabel.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+            val slPad = (12 * density).toInt()
+            sectionLabel.setPadding(slPad, (4 * density).toInt(), slPad, (2 * density).toInt())
+            menu.addView(sectionLabel)
+
+            for (profile in menuProfiles) {
+                val isActive = profile.id == activeProfileId
+                val label = "${profile.emoji}  ${profile.name}"
+                menu.addView(buildPopupMenuItem(density, "\ue939", label, dimmed = !isActive) {
+                    dismissPopupMenu()
+                    dispatchToVue("sfz-switch-profile", """{"profileId": "${profile.id}"}""")
+                })
+            }
+
+            // Divider
+            val divider = View(activity)
+            val divColor = if (isDarkMode) Color.parseColor("#2C2C2E") else Color.parseColor("#E5E5EA")
+            divider.setBackgroundColor(divColor)
+            val divParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (1 * density).toInt())
+            val divMargin = (8 * density).toInt()
+            divParams.setMargins(divMargin, (4 * density).toInt(), divMargin, (4 * density).toInt())
+            divider.layoutParams = divParams
+            menu.addView(divider)
+        }
 
         // 2. Mute toggle
         val muteLabel = if (isMuted) "Son activé" else "Couper le son"

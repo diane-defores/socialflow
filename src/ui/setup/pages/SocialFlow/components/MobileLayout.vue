@@ -6,6 +6,7 @@
 
   <!-- Home screen -->
   <div v-else class="mobile-home" @click.self="exitEditMode">
+    <div class="mobile-home-scroll">
 
     <!-- Profile card -->
     <div class="profile-card" @click="networkEditMode ? exitEditMode() : (profileSheetVisible = true)">
@@ -86,6 +87,8 @@
         >
           <span class="network-icon-wrap" :style="{ background: networkColors[item.id] ?? 'var(--surface-hover)' }">
             <ThreadsIcon v-if="item.route === '/threads'" size="1.35rem" color="#fff" />
+            <SnapchatIcon v-else-if="item.route === '/snapchat'" size="1.35rem" color="#fff" />
+            <NextdoorIcon v-else-if="item.route === '/nextdoor'" size="1.35rem" color="#fff" />
             <i v-else :class="item.icon" />
           </span>
           <span class="network-name">{{ item.label }}</span>
@@ -125,7 +128,9 @@
       </div>
     </div>
 
-    <!-- Settings button -->
+    </div><!-- /.mobile-home-scroll -->
+
+    <!-- Settings button (sticky bottom) -->
     <button class="settings-btn" @click="settingsVisible = true">
       <i class="pi pi-cog" />
       <span>Paramètres</span>
@@ -220,6 +225,8 @@
                 @click="clearNetworkCookies(nw.id)"
               >
                 <ThreadsIcon v-if="nw.id === 'threads'" size="0.9rem" class="clear-cookie-icon" />
+                <SnapchatIcon v-else-if="nw.id === 'snapchat'" size="0.9rem" class="clear-cookie-icon" />
+                <NextdoorIcon v-else-if="nw.id === 'nextdoor'" size="0.9rem" class="clear-cookie-icon" />
                 <i v-else :class="nw.icon" class="clear-cookie-icon" />
                 <span class="clear-cookie-label">{{ nw.label }}</span>
                 <span v-if="clearedNetworks.has(`${clearCookiesProfileId}:${nw.id}`)" class="clear-cookie-done">
@@ -363,6 +370,8 @@ import type { MenuItem } from '../types'
 import NetworkWebviewHost from './NetworkWebviewHost.vue'
 import BackupRestore from './BackupRestore.vue'
 import ThreadsIcon from './icons/ThreadsIcon.vue'
+import SnapchatIcon from './icons/SnapchatIcon.vue'
+import NextdoorIcon from './icons/NextdoorIcon.vue'
 
 const router = useRouter()
 const webviewStore = useWebviewStore()
@@ -702,9 +711,15 @@ function handleAvatarChange(event: Event) {
   display: flex;
   flex-direction: column;
   height: 100%;
-  overflow-y: auto;
+  overflow: hidden;
   background: var(--surface-ground);
   padding-top: env(safe-area-inset-top, 24px);
+}
+
+.mobile-home-scroll {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 /* ─── Profile card ───────────────────────────────────────────── */
@@ -1213,7 +1228,8 @@ function handleAvatarChange(event: Event) {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin: 0.5rem 1rem calc(1rem + env(safe-area-inset-bottom, 0px));
+  flex-shrink: 0;
+  margin: 0.5rem 1rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
   padding: 0.85rem 1rem;
   background: var(--surface-card);
   border: 1px solid var(--surface-border);
