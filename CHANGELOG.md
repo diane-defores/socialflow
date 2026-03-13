@@ -2,6 +2,13 @@
 
 All notable changes to SocialFlow are documented here.
 
+## [Unreleased] — 2026-03-13 (b)
+
+### Changed
+- Mobile dashboard layout — profile card, quick actions, and notifications are now sticky (top); settings button sticky (bottom); only the network grid scrolls
+
+---
+
 ## [Unreleased] — 2026-03-13
 
 ### Added

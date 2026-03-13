@@ -6,9 +6,8 @@
 
   <!-- Home screen -->
   <div v-else class="mobile-home" @click.self="exitEditMode">
-    <div class="mobile-home-scroll">
 
-    <!-- Profile card -->
+    <!-- Profile card (sticky top) -->
     <div class="profile-card" @click="networkEditMode ? exitEditMode() : (profileSheetVisible = true)">
       <div class="profile-avatar-wrap">
         <div class="profile-avatar">
@@ -30,7 +29,7 @@
       <i class="pi pi-chevron-down profile-chevron" />
     </div>
 
-    <!-- Quick actions bar -->
+    <!-- Quick actions bar (sticky top) -->
     <div class="quick-actions">
       <!-- Notifications -->
       <button class="quick-action-btn" @click="notificationsVisible = !notificationsVisible">
@@ -69,6 +68,9 @@
         <span>Aucune nouvelle notification</span>
       </div>
     </div>
+
+    <!-- Scrollable network grid -->
+    <div class="mobile-home-scroll">
 
     <!-- Network grid -->
     <div class="networks-section" @click.self="exitEditMode">
@@ -727,6 +729,7 @@ function handleAvatarChange(event: Event) {
 .profile-card {
   display: flex;
   align-items: center;
+  flex-shrink: 0;
   gap: 1rem;
   margin: 1rem;
   padding: 1rem 1.1rem;
@@ -821,6 +824,7 @@ function handleAvatarChange(event: Event) {
 /* ─── Quick actions ──────────────────────────────────────────── */
 
 .quick-actions {
+  flex-shrink: 0;
   margin: 0 1rem 0.5rem;
   background: var(--surface-card);
   border: 1px solid var(--surface-border);
@@ -957,6 +961,7 @@ function handleAvatarChange(event: Event) {
 /* ─── Notifications panel ────────────────────────────────────── */
 
 .notif-panel {
+  flex-shrink: 0;
   margin: 0 1rem 0.5rem;
   background: var(--surface-card);
   border: 1px solid var(--surface-border);
