@@ -439,13 +439,16 @@ fn delete_network_session(
 
 // ─── Backup / Restore ────────────────────────────────────────────────────────
 
+/// Create an encrypted backup blob (zip + AES-256-GCM), returned as base64.
+/// File dialog + write is handled on the JS side via @tauri-apps/plugin-fs
+/// so that content:// URIs on Android are handled transparently.
 #[tauri::command]
-fn export_backup(
+fn create_backup(
     app: AppHandle,
     store_data: String,
     password: String,
 ) -> Result<String, String> {
-    use tauri_plugin_dialog::DialogExt;
+    use base64::{engine::general_purpose::STANDARD, Engine as _};
 
     let sessions_dir = app
         .path()
@@ -453,66 +456,24 @@ fn export_backup(
         .map_err(|e| e.to_string())?
         .join("sessions");
 
-    // Create zip + encrypt
     let zip_bytes = backup::create_backup_archive(&sessions_dir, &store_data)?;
     let blob = backup::encrypt_archive(&zip_bytes, &password)?;
 
-    // Show native save dialog (blocking — safe because IPC commands run on thread pool)
-    let file_path = app
-        .dialog()
-        .file()
-        .set_file_name("socialflow-backup.sfbak")
-        .add_filter("SocialFlow Backup", &["sfbak"])
-        .blocking_save_file()
-        .ok_or_else(|| "No file selected".to_string())?;
-
-    // Handle both Path and file:// URL variants
-    let path = file_path
-        .as_path()
-        .map(|p| p.to_path_buf())
-        .unwrap_or_else(|| {
-            // Fallback: convert display string to PathBuf (handles file:// URLs on GTK)
-            let s = file_path.to_string();
-            if let Some(stripped) = s.strip_prefix("file://") {
-                std::path::PathBuf::from(stripped)
-            } else {
-                std::path::PathBuf::from(s)
-            }
-        });
-
-    // Ensure parent directory exists (GTK save dialog doesn't always create it)
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)
-            .map_err(|e| format!("Cannot create directory: {e}"))?;
-    }
-    std::fs::write(&path, &blob).map_err(|e| format!("Write failed: {e}"))?;
-    Ok(path.display().to_string())
+    Ok(STANDARD.encode(&blob))
 }
 
+/// Decrypt a base64-encoded backup blob, restore session files, return store data JSON.
 #[tauri::command]
-fn import_backup(app: AppHandle, password: String) -> Result<String, String> {
-    use tauri_plugin_dialog::DialogExt;
+fn restore_backup(
+    app: AppHandle,
+    encrypted_b64: String,
+    password: String,
+) -> Result<String, String> {
+    use base64::{engine::general_purpose::STANDARD, Engine as _};
 
-    // Show native open dialog (blocking — safe because IPC commands run on thread pool)
-    let file_path = app
-        .dialog()
-        .file()
-        .add_filter("SocialFlow Backup", &["sfbak"])
-        .blocking_pick_file()
-        .ok_or_else(|| "No file selected".to_string())?;
-
-    // Handle both Path and file:// URL variants
-    let path = file_path
-        .as_path()
-        .map(|p| p.to_path_buf())
-        .unwrap_or_else(|| {
-            let s = file_path.to_string();
-            if let Some(stripped) = s.strip_prefix("file://") {
-                std::path::PathBuf::from(stripped)
-            } else {
-                std::path::PathBuf::from(s)
-            }
-        });
+    let blob = STANDARD
+        .decode(&encrypted_b64)
+        .map_err(|e| format!("Invalid backup data: {e}"))?;
 
     let sessions_dir = app
         .path()
@@ -520,8 +481,6 @@ fn import_backup(app: AppHandle, password: String) -> Result<String, String> {
         .map_err(|e| e.to_string())?
         .join("sessions");
 
-    // Read + decrypt + extract
-    let blob = std::fs::read(&path).map_err(|e| format!("Read failed: {e}"))?;
     let zip_bytes = backup::decrypt_archive(&blob, &password)?;
     let store_data = backup::extract_backup_archive(&zip_bytes, &sessions_dir)?;
 
@@ -535,6 +494,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_android_webview::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_fs::init())
         .setup(|app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(
@@ -560,8 +520,8 @@ pub fn run() {
             inject_script,
             delete_profile_session,
             delete_network_session,
-            export_backup,
-            import_backup,
+            create_backup,
+            restore_backup,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

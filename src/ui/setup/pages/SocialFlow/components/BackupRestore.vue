@@ -1,5 +1,16 @@
 <template>
   <div class="backup-section">
+    <div class="backup-info">
+      <i class="pi pi-info-circle" />
+      <p>
+        Nous aimerions synchroniser vos donnees automatiquement via le cloud,
+        mais les cookies de session contiennent des jetons d'authentification
+        sensibles que les navigateurs interdisent de transmettre a des serveurs
+        tiers. L'export chiffre par mot de passe est donc le seul moyen sur
+        de transferer vos sessions entre appareils.
+      </p>
+    </div>
+
     <div class="backup-row">
       <div class="backup-label">
         <i class="pi pi-download mr-2"></i>
@@ -157,6 +168,32 @@ async function confirm() {
 <style scoped>
 .backup-section {
   width: 100%;
+}
+
+.backup-info {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  padding: 0.6rem 0.75rem;
+  margin-bottom: 0.75rem;
+  border-radius: 8px;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--text-color, #333);
+  opacity: 0.85;
+}
+
+.backup-info .pi-info-circle {
+  color: #3b82f6;
+  font-size: 1rem;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.backup-info p {
+  margin: 0;
 }
 
 .backup-row {
@@ -324,6 +361,11 @@ async function confirm() {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+:global(.dark) .backup-info {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.25);
 }
 
 :global(.dark) .backup-dialog {

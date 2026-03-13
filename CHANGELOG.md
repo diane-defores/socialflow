@@ -2,6 +2,19 @@
 
 All notable changes to SocialFlow are documented here.
 
+## [Unreleased] — 2026-03-13 (c)
+
+### Added
+- Info banner in backup settings explaining why cloud sync cannot handle cookies (browser security restriction) and why encrypted export/import is the only safe transfer method
+
+### Fixed
+- Backup export crash on Android — `Read-only file system (os error 30)` when saving to Downloads; root cause: Rust `std::fs::write` cannot handle `content://` URIs returned by Android's SAF file dialog; fix: moved file I/O from Rust to JS via `@tauri-apps/plugin-fs` which handles content URIs transparently; Rust now only does encryption (returns base64), JS handles dialog + write
+
+### Changed
+- Backup architecture refactored: `export_backup`/`import_backup` Rust commands replaced with `create_backup`/`restore_backup` (crypto-only); added `tauri-plugin-fs` + `base64` crates; `fs:default` + `fs:allow-write-file` capabilities
+
+---
+
 ## [Unreleased] — 2026-03-13 (b)
 
 ### Changed

@@ -116,6 +116,7 @@ version = "0.1.0"
 dependencies = [
  "aes-gcm",
  "argon2",
+ "base64 0.22.1",
  "chrono",
  "log",
  "rand 0.8.5",
@@ -125,6 +126,7 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-android-webview",
  "tauri-plugin-dialog",
+ "tauri-plugin-fs",
  "tauri-plugin-log",
  "url",
  "zip",

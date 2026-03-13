@@ -24,6 +24,8 @@ log = "0.4"
 tauri-plugin-log = "2"
 tauri-plugin-android-webview = { path = "plugins/android-webview" }
 tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+base64 = "0.22"
 url = "2"
 aes-gcm = "0.10"
 argon2 = "0.5"

@@ -3,6 +3,8 @@
     "@clerk/vue": "^1.17.17",
     "@primevue/themes": "^4.2.5",
     "@tauri-apps/api": "^2.10.1",
+    "@tauri-apps/plugin-dialog": "^2",
+    "@tauri-apps/plugin-fs": "^2",
     "@vueuse/core": "^10.11.1",
     "convex": "^1.32.0",
     "marked": "^15.0.6",

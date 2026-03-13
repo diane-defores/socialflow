@@ -81,18 +81,69 @@ function applyStoreData(json: string) {
   }
 }
 
+/** Convert a base64 string to Uint8Array. */
+function b64ToBytes(b64: string): Uint8Array {
+  const bin = atob(b64)
+  const bytes = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+  return bytes
+}
+
+/** Convert Uint8Array to base64 string. */
+function bytesToB64(bytes: Uint8Array): string {
+  let bin = ''
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i])
+  return btoa(bin)
+}
+
 export function useBackup() {
   async function exportBackup(password: string): Promise<string> {
     if (!isTauri) throw new Error('Export is only available in the desktop/mobile app')
+
     const { invoke } = await import('@tauri-apps/api/core')
+    const { save } = await import('@tauri-apps/plugin-dialog')
+    const { writeFile } = await import('@tauri-apps/plugin-fs')
+
+    // 1. Rust creates the encrypted blob, returns base64
     const storeData = collectStoreData()
-    return invoke<string>('export_backup', { storeData, password })
+    const b64: string = await invoke('create_backup', { storeData, password })
+
+    // 2. Native save dialog (handles content:// URIs on Android)
+    const filePath = await save({
+      defaultPath: 'socialflow-backup.sfbak',
+      filters: [{ name: 'SocialFlow Backup', extensions: ['sfbak'] }],
+    })
+    if (!filePath) throw new Error('No file selected')
+
+    // 3. Write via plugin-fs (handles content:// URIs transparently)
+    await writeFile(filePath, b64ToBytes(b64))
+
+    return typeof filePath === 'string' ? filePath : filePath.toString()
   }
 
   async function importBackup(password: string): Promise<void> {
     if (!isTauri) throw new Error('Import is only available in the desktop/mobile app')
+
     const { invoke } = await import('@tauri-apps/api/core')
-    const restoredData = await invoke<string>('import_backup', { password })
+    const { open } = await import('@tauri-apps/plugin-dialog')
+    const { readFile } = await import('@tauri-apps/plugin-fs')
+
+    // Native open dialog
+    const filePath = await open({
+      filters: [{ name: 'SocialFlow Backup', extensions: ['sfbak'] }],
+    })
+    if (!filePath) throw new Error('No file selected')
+
+    // Read via plugin-fs (handles content:// URIs transparently)
+    const bytes = await readFile(filePath)
+
+    // Send base64 to Rust for decryption + session restore
+    const encryptedB64 = bytesToB64(bytes)
+    const restoredData = await invoke<string>('restore_backup', {
+      encryptedB64,
+      password,
+    })
+
     applyStoreData(restoredData)
   }
 
