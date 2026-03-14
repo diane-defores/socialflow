@@ -1,15 +1,14 @@
 <template>
   <Dialog
     v-model:visible="visible"
-    :header="`Amis — ${networkLabel}`"
+    :header="$t('friends_filter.dialog_title', { network: networkLabel })"
     :modal="true"
     :closable="true"
     :draggable="false"
     style="width: 28rem; max-width: 95vw"
   >
     <p class="hint">
-      Entrez les noms ou pseudos tels qu'ils apparaissent sur {{ networkLabel }}.
-      Seuls leurs posts seront affichés quand le filtre est actif.
+      {{ $t('friends_filter.hint_text', { network: networkLabel }) }}
     </p>
 
     <!-- Add friend input -->
@@ -25,7 +24,7 @@
         icon="pi pi-plus"
         :disabled="!newFriend.trim()"
         @click="addFriend"
-        aria-label="Ajouter"
+        :aria-label="$t('common.add')"
       />
     </div>
 
@@ -45,21 +44,21 @@
           size="small"
           severity="danger"
           @click="removeFriend(friend)"
-          aria-label="Supprimer"
+          :aria-label="$t('common.delete')"
         />
       </div>
     </div>
 
     <div v-else class="empty-state">
       <i class="pi pi-users" style="font-size: 2rem; opacity: 0.3" />
-      <p>Aucun ami ajouté</p>
-      <p class="hint">Ajoutez des noms pour filtrer le fil</p>
+      <p>{{ $t('friends_filter.empty_state') }}</p>
+      <p class="hint">{{ $t('friends_filter.empty_hint') }}</p>
     </div>
 
     <template #footer>
       <div class="footer-note">
         <i class="pi pi-info-circle" />
-        La correspondance est insensible à la casse et partielle.
+        {{ $t('friends_filter.footer_note') }}
       </div>
     </template>
   </Dialog>

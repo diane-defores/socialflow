@@ -17,10 +17,10 @@
         <div class="profile-avatar-ring" />
       </div>
       <div class="profile-info">
-        <span class="profile-name">{{ profilesStore.activeProfile?.name ?? 'Profil' }}</span>
+        <span class="profile-name">{{ profilesStore.activeProfile?.name ?? $t('profile.default_name') }}</span>
         <span class="profile-sub">
           <i class="pi pi-th-large" style="font-size:0.65rem; margin-right:0.3rem;" />
-          {{ visibleMenuItems.length }} réseaux · Appuyer pour gérer
+          {{ visibleMenuItems.length }} {{ $t('profile.networks_count', { count: visibleMenuItems.length }) }} · {{ $t('profile.tap_to_manage') }}
         </span>
         <div class="profile-pills">
           <span v-for="item in visibleMenuItems.slice(0, 5)" :key="item.id" class="profile-pill" :style="{ background: pillColor(item.id) }" />
@@ -37,7 +37,7 @@
           <i class="pi pi-bell" />
           <span v-if="notificationCount > 0" class="notif-badge">{{ notificationCount }}</span>
         </span>
-        <span class="quick-action-label">Notifications</span>
+        <span class="quick-action-label">{{ $t('common.notifications') }}</span>
         <i class="pi pi-chevron-right quick-action-arrow" />
       </button>
 
@@ -45,7 +45,7 @@
       <div class="friends-filter-row">
         <span class="friends-filter-label">
           <i class="pi pi-users" />
-          Amis seulement
+          {{ $t('friends_filter.friends_only') }}
         </span>
         <button
           class="friends-toggle-pill"
@@ -60,12 +60,12 @@
     <!-- Notifications panel -->
     <div v-if="notificationsVisible" class="notif-panel">
       <div class="notif-header">
-        <span class="notif-title">Notifications</span>
-        <button class="notif-clear" @click="notificationCount = 0">Tout lire</button>
+        <span class="notif-title">{{ $t('common.notifications') }}</span>
+        <button class="notif-clear" @click="notificationCount = 0">{{ $t('notif.mark_all_read') }}</button>
       </div>
       <div class="notif-empty">
         <i class="pi pi-bell-slash" />
-        <span>Aucune nouvelle notification</span>
+        <span>{{ $t('notif.empty_state') }}</span>
       </div>
     </div>
 
@@ -74,7 +74,7 @@
 
     <!-- Network grid -->
     <div class="networks-section" @click.self="exitEditMode">
-      <p class="section-title">Réseaux sociaux</p>
+      <p class="section-title">{{ $t('sidebar.networks_section') }}</p>
       <div class="network-grid">
         <button
           v-for="item in visibleMenuItems"
@@ -111,20 +111,20 @@
           <span class="network-icon-wrap" style="background: var(--surface-hover)">
             <i class="pi pi-plus" />
           </span>
-          <span class="network-name">Ajouter</span>
+          <span class="network-name">{{ $t('common.add') }}</span>
         </button>
       </div>
-      <p v-if="networkEditMode" class="edit-hint">Appuyez à l'extérieur pour terminer</p>
+      <p v-if="networkEditMode" class="edit-hint">{{ $t('networks.edit_mode_hint') }}</p>
 
       <!-- Add custom link form -->
       <div v-if="showAddLinkForm" class="add-link-sheet" @click.self="showAddLinkForm = false">
         <div class="add-link-card">
-          <p class="add-link-title">Ajouter un lien</p>
+          <p class="add-link-title">{{ $t('links.add_dialog_title') }}</p>
           <input v-model="newLinkLabel" class="add-link-input" placeholder="Nom (ex: Mon site)" />
           <input v-model="newLinkUrl" class="add-link-input" placeholder="URL (ex: example.com)" @keydown.enter="submitCustomLink" />
           <div class="add-link-actions">
-            <button class="add-link-cancel" @click="showAddLinkForm = false">Annuler</button>
-            <button class="add-link-confirm" :disabled="!newLinkLabel.trim() || !newLinkUrl.trim()" @click="submitCustomLink">Ajouter</button>
+            <button class="add-link-cancel" @click="showAddLinkForm = false">{{ $t('common.cancel') }}</button>
+            <button class="add-link-confirm" :disabled="!newLinkLabel.trim() || !newLinkUrl.trim()" @click="submitCustomLink">{{ $t('common.add') }}</button>
           </div>
         </div>
       </div>
@@ -135,7 +135,7 @@
     <!-- Settings button (sticky bottom) -->
     <button class="settings-btn" @click="settingsVisible = true">
       <i class="pi pi-cog" />
-      <span>Paramètres</span>
+      <span>{{ $t('common.settings') }}</span>
       <i class="pi pi-chevron-right quick-action-arrow" />
     </button>
   </div>
@@ -150,7 +150,7 @@
 
           <!-- Header -->
           <div class="sheet-header">
-            <span class="sheet-title">Profils</span>
+            <span class="sheet-title">{{ $t('profiles.title') }}</span>
             <button class="sheet-close-btn" @click="closeSheet">
               <i class="pi pi-times" />
             </button>
@@ -184,24 +184,24 @@
                   @click.stop
                 />
                 <span v-else class="sheet-profile-name">{{ profile.name }}</span>
-                <span v-if="profile.id === profilesStore.activeProfileId" class="active-label">Actif</span>
+                <span v-if="profile.id === profilesStore.activeProfileId" class="active-label">{{ $t('profile.active_label') }}</span>
               </div>
 
               <!-- Actions -->
               <div class="sheet-profile-actions">
-                <button class="sheet-action" title="Renommer" @click.stop="startEdit(profile)">
+                <button class="sheet-action" :title="$t('profile.rename_action')" @click.stop="startEdit(profile)">
                   <i class="pi pi-pencil" />
                 </button>
-                <button class="sheet-action" title="Photo de profil" @click.stop="pickAvatar(profile.id)">
+                <button class="sheet-action" :title="$t('profile.avatar_action')" @click.stop="pickAvatar(profile.id)">
                   <i class="pi pi-camera" />
                 </button>
-                <button class="sheet-action" title="Effacer les cookies" @click.stop="clearCookiesProfileId = clearCookiesProfileId === profile.id ? null : profile.id">
+                <button class="sheet-action" :title="$t('profile.clear_cookies_action')" @click.stop="clearCookiesProfileId = clearCookiesProfileId === profile.id ? null : profile.id">
                   <i class="pi pi-eraser" />
                 </button>
                 <button
                   v-if="profilesStore.profiles.length > 1"
                   class="sheet-action sheet-action--danger"
-                  title="Supprimer"
+                  :title="$t('common.delete')"
                   @click.stop="deleteProfile(profile.id)"
                 >
                   <i class="pi pi-trash" />
@@ -214,7 +214,7 @@
           <div v-if="clearCookiesProfileId" class="clear-cookies-section">
             <div class="clear-cookies-header">
               <i class="pi pi-trash" />
-              <span>Effacer les cookies — {{ profilesStore.profiles.find(p => p.id === clearCookiesProfileId)?.name }}</span>
+              <span>{{ $t('profile.clear_cookies_header', { name: profilesStore.profiles.find(p => p.id === clearCookiesProfileId)?.name }) }}</span>
               <button class="sheet-close-btn" @click="clearCookiesProfileId = null" style="margin-left:auto;">
                 <i class="pi pi-times" />
               </button>
@@ -255,7 +255,7 @@
             </div>
             <button v-else class="add-profile-btn" @click="startAdd">
               <i class="pi pi-plus" />
-              <span>Nouveau profil</span>
+              <span>{{ $t('profile.add_new_button') }}</span>
             </button>
           </div>
         </div>
@@ -270,7 +270,7 @@
         <div class="profile-sheet settings-sheet">
           <div class="sheet-handle" />
           <div class="sheet-header">
-            <span class="sheet-title">Paramètres</span>
+            <span class="sheet-title">{{ $t('common.settings') }}</span>
             <button class="sheet-close-btn" @click="settingsVisible = false">
               <i class="pi pi-times" />
             </button>
@@ -283,7 +283,7 @@
             <div class="settings-field">
               <label class="settings-label" for="settings-username">
                 <i class="pi pi-user" />
-                Nom d'utilisateur
+                {{ $t('settings.username_label') }}
               </label>
               <input
                 id="settings-username"
@@ -297,7 +297,7 @@
             <div class="settings-field">
               <label class="settings-label" for="settings-email">
                 <i class="pi pi-envelope" />
-                E-mail
+                {{ $t('settings.email_label') }}
               </label>
               <input
                 id="settings-email"
@@ -310,12 +310,12 @@
             </div>
 
             <!-- Preferences section -->
-            <p class="settings-section-label">Préférences</p>
+            <p class="settings-section-label">{{ $t('settings.preferences') }}</p>
 
             <div class="settings-toggle-row">
               <span class="settings-toggle-label">
                 <i class="pi pi-moon" />
-                Mode sombre
+                {{ $t('theme.dark_mode') }}
               </span>
               <button
                 class="friends-toggle-pill"
@@ -329,7 +329,7 @@
             <div class="settings-toggle-row">
               <span class="settings-toggle-label">
                 <i class="pi pi-palette" />
-                Mode focus (niveaux de gris)
+                {{ $t('theme.focus_mode') }}
               </span>
               <button
                 class="friends-toggle-pill"
@@ -341,7 +341,7 @@
             </div>
 
             <!-- Backup / Restore -->
-            <p class="settings-section-label">Sauvegarde</p>
+            <p class="settings-section-label">{{ $t('backup.section_title') }}</p>
             <BackupRestore />
           </div>
         </div>
@@ -361,6 +361,7 @@
 
 <script setup lang="ts">
 import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useWebviewStore, WEBVIEW_URLS } from '@/stores/webviewState'
 import { useProfilesStore } from '@/stores/profiles'
@@ -375,6 +376,7 @@ import ThreadsIcon from './icons/ThreadsIcon.vue'
 import SnapchatIcon from './icons/SnapchatIcon.vue'
 import NextdoorIcon from './icons/NextdoorIcon.vue'
 
+const { t } = useI18n()
 const router = useRouter()
 const webviewStore = useWebviewStore()
 const profilesStore = useProfilesStore()

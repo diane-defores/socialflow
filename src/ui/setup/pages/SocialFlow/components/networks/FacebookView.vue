@@ -65,7 +65,7 @@
                 />
                 <InputText 
                   v-model="newComments[post.id]" 
-                  placeholder="Écrivez un commentaire..."
+                  :placeholder="$t('facebook.comment_placeholder')"
                   class="flex-1"
                   @keyup.enter="handleCommentSubmit(post.id)"
                 />
@@ -78,7 +78,7 @@
       <!-- Sidebar droite -->
       <div class="right-sidebar">
         <div class="online-friends">
-          <h4>Contacts</h4>
+          <h4>{{ $t('facebook.contacts') }}</h4>
           <div v-for="friend in store.onlineFriends" 
             :key="friend.id" 
             class="friend-item"

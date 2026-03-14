@@ -28,7 +28,7 @@
           <!-- Réseaux sociaux -->
           <div class="menu-section">
             <div class="section-header" v-if="!iconsOnly">
-              <h3>Réseaux sociaux</h3>
+              <h3>{{ $t('sidebar.networks_section') }}</h3>
             </div>
             <div class="menu-items">
               <div v-for="item in menuItems" :key="item.id" class="menu-item-group">
@@ -60,13 +60,13 @@
           <!-- Filtre Amis -->
           <div class="friends-section">
             <div class="section-header" v-if="!iconsOnly">
-              <h3>Amis</h3>
+              <h3>{{ $t('sidebar.friends_section') }}</h3>
               <Button
                 icon="pi pi-users"
                 text
                 size="small"
-                aria-label="Gérer les amis"
-                v-tooltip.right="'Gérer la liste d\'amis'"
+                :aria-label="$t('friends_filter.manage_button')"
+                v-tooltip.right="$t('friends_filter.manage_tooltip')"
                 @click="showFriendsPanel = true"
               />
             </div>
@@ -74,12 +74,12 @@
               <ToggleButton
                 :modelValue="filterEnabled"
                 @change="setFilterEnabled"
-                :onLabel="iconsOnly ? undefined : 'Amis seulement'"
-                :offLabel="iconsOnly ? undefined : 'Voir tout'"
+                :onLabel="iconsOnly ? undefined : $t('friends_filter.friends_only')"
+                :offLabel="iconsOnly ? undefined : $t('friends_filter.see_all')"
                 onIcon="pi pi-filter-fill"
                 offIcon="pi pi-filter"
                 :pt="{ root: { style: 'width: 100%; border-radius: 0; height: 2.5rem;' } }"
-                v-tooltip.right="iconsOnly ? (filterEnabled ? 'Filtre amis actif' : 'Filtre amis désactivé') : undefined"
+                v-tooltip.right="iconsOnly ? (filterEnabled ? $t('friends_filter.filter_active') : $t('friends_filter.filter_inactive')) : undefined"
               />
               <Button
                 v-if="iconsOnly"
@@ -87,8 +87,8 @@
                 text
                 size="small"
                 class="friends-manage-btn"
-                aria-label="Gérer les amis"
-                v-tooltip.right="'Gérer la liste d\'amis'"
+                :aria-label="$t('friends_filter.manage_button')"
+                v-tooltip.right="$t('friends_filter.manage_tooltip')"
                 @click="showFriendsPanel = true"
               />
             </div>
@@ -102,13 +102,13 @@
           <!-- Custom Links -->
           <div class="custom-links-section" v-if="customLinkItems.length || !iconsOnly">
             <div class="section-header" v-if="!iconsOnly">
-              <h3>Liens personnalisés</h3>
+              <h3>{{ $t('sidebar.custom_links_section') }}</h3>
               <Button
                 icon="pi pi-plus"
                 text
                 size="small"
-                aria-label="Ajouter un lien"
-                v-tooltip.right="'Ajouter un lien'"
+                :aria-label="$t('links.add_button')"
+                v-tooltip.right="$t('links.add_tooltip')"
                 @click="showAddLinkDialog = true"
               />
             </div>
@@ -137,7 +137,7 @@
                     severity="danger"
                     class="custom-link-delete"
                     @click="removeCustomLink(item.route.slice(1))"
-                    aria-label="Supprimer"
+                    :aria-label="$t('common.delete')"
                   />
                 </div>
               </div>
@@ -148,33 +148,33 @@
               text
               size="small"
               class="custom-link-add-icon"
-              aria-label="Ajouter un lien"
-              v-tooltip.right="'Ajouter un lien'"
+              :aria-label="$t('links.add_button')"
+              v-tooltip.right="$t('links.add_tooltip')"
               @click="showAddLinkDialog = true"
             />
           </div>
 
           <Dialog
             v-model:visible="showAddLinkDialog"
-            header="Ajouter un lien"
+            :header="$t('links.add_dialog_title')"
             :modal="true"
             style="width: 24rem; max-width: 95vw"
           >
             <div class="add-link-form">
               <InputText
                 v-model="newLinkLabel"
-                placeholder="Nom (ex: Mon site)"
+                :placeholder="$t('links.name_placeholder')"
                 class="add-link-input"
                 @keydown.enter="addCustomLink"
               />
               <InputText
                 v-model="newLinkUrl"
-                placeholder="URL (ex: example.com)"
+                :placeholder="$t('links.url_placeholder')"
                 class="add-link-input"
                 @keydown.enter="addCustomLink"
               />
               <Button
-                label="Ajouter"
+                :label="$t('common.add')"
                 icon="pi pi-plus"
                 :disabled="!newLinkLabel.trim() || !newLinkUrl.trim()"
                 @click="addCustomLink"

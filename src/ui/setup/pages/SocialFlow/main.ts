@@ -6,6 +6,7 @@ import { createPinia } from 'pinia'
 import Ripple from 'primevue/ripple'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import { clerkPlugin } from '@clerk/vue'
+import { i18n } from '@/utils/i18n'
 import ConfirmationService from 'primevue/confirmationservice'
 import ToastService from 'primevue/toastservice'
 
@@ -46,6 +47,7 @@ app.use(clerkPlugin, {
 app.use(PrimeVue, { ripple: true })
 app.use(ConfirmationService)
 app.use(ToastService)
+app.use(i18n)
 app.use(router)
 app.use(pinia)
 

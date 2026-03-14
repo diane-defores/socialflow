@@ -3,19 +3,19 @@
     <div class="login-buttons">
       <Button
         icon="pi pi-facebook"
-        label="Se connecter avec Facebook"
+        :label="$t('facebook.connect_button', 'Sign in with Facebook')"
         class="facebook-button"
         @click="connectWithFacebook"
       />
       <Button
         icon="pi pi-twitter"
-        label="Se connecter avec Twitter"
+        :label="$t('twitter.connect_button')"
         class="twitter-button"
         @click="connectWithTwitter"
       />
       <Button
         icon="pi pi-google"
-        label="Se connecter avec Google"
+        :label="$t('google.connect_button', 'Sign in with Google')"
         class="google-button"
         @click="connectWithGoogle"
       />

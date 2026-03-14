@@ -11,7 +11,7 @@
       </div>
       <div class="twitter-content">
         <div class="profile-sidebar">
-          <h3>Mon Profil</h3>
+          <h3>{{ $t('twitter.my_profile') }}</h3>
           <div class="profile-card">
             <Avatar :image="profileInfo.avatar" size="xlarge" shape="circle" />
             <h4>{{ profileInfo.name }}</h4>
@@ -19,21 +19,21 @@
             <div class="stats">
               <div class="stat-item">
                 <strong>{{ profileInfo.following }}</strong>
-                <span>Abonnements</span>
+                <span>{{ $t('twitter.following') }}</span>
               </div>
               <div class="stat-item">
                 <strong>{{ profileInfo.followers }}</strong>
-                <span>Abonnés</span>
+                <span>{{ $t('twitter.followers') }}</span>
               </div>
             </div>
           </div>
           
           <div class="trends">
-            <h3>Tendances</h3>
+            <h3>{{ $t('twitter.trends') }}</h3>
             <div v-for="trend in trends" :key="trend.id" class="trend-item">
               <span class="category">{{ trend.category }}</span>
               <h4>{{ trend.tag }}</h4>
-              <span class="tweets">{{ trend.tweets }} tweets</span>
+              <span class="tweets">{{ trend.tweets }} {{ $t('twitter.tweets_count') }}</span>
             </div>
           </div>
         </div>
@@ -44,7 +44,7 @@
             <div class="compose-input">
               <Textarea 
                 v-model="newTweet" 
-                placeholder="Quoi de neuf ?" 
+                :placeholder="$t('twitter.compose_placeholder')"
                 :autoResize="true"
                 rows="2"
               />
@@ -97,11 +97,11 @@
           size="large"
           class="mb-3"
         />
-        <h3>Connectez-vous à Twitter</h3>
-        <p>Pour voir votre feed Twitter et interagir avec vos abonnés, vous devez d'abord vous connecter.</p>
+        <h3>{{ $t('twitter.connect_title') }}</h3>
+        <p>{{ $t('twitter.connect_message') }}</p>
         <Button 
           icon="pi pi-twitter" 
-          label="Se connecter avec Twitter" 
+          :label="$t('twitter.connect_button')"
           @click="connectTwitter"
           class="p-button-twitter"
         />

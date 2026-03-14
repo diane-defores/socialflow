@@ -11,7 +11,7 @@
           text
           @click="showDialog = true"
         >
-          <span>{{ placeholder }}</span>
+          <span>{{ resolvedPlaceholder }}</span>
         </Button>
         <div class="post-types">
           <slot name="post-types">
@@ -30,7 +30,7 @@
 
     <Dialog 
       v-model:visible="showDialog" 
-      :header="dialogTitle" 
+      :header="resolvedDialogTitle"
       :modal="true"
       class="post-dialog"
       :style="{ width: '500px' }"
@@ -47,7 +47,7 @@
               v-model="privacy"
               :options="privacyOptions"
               optionLabel="label"
-              placeholder="Sélectionnez la confidentialité"
+              :placeholder="$t('post.privacy_placeholder')"
               class="privacy-dropdown"
             >
               <template #value="{ value }">
@@ -63,7 +63,7 @@
         <div class="post-editor">
           <InputTextarea
             v-model="postContent"
-            :placeholder="editorPlaceholder"
+            :placeholder="resolvedEditorPlaceholder"
             :autoResize="true"
             rows="5"
             class="w-full"
@@ -94,7 +94,7 @@
           </div>
 
           <div class="add-to-post">
-            <h5>Ajouter à votre publication</h5>
+            <h5>{{ $t('post.add_to_post_title') }}</h5>
             <div class="post-tools">
               <FileUpload
                 mode="basic"
@@ -120,7 +120,7 @@
 
         <div class="dialog-footer">
           <Button 
-            :label="submitLabel"
+            :label="resolvedSubmitLabel"
             :disabled="!canSubmit"
             :class="submitButtonClass"
             @click="submitPost"
@@ -133,12 +133,15 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import Textarea from 'primevue/textarea'
 import Dropdown from 'primevue/dropdown'
 import FileUpload from 'primevue/fileupload'
 import SocialAvatar from './SocialAvatar.vue'
+
+const { t } = useI18n()
 
 interface Props {
   currentUser: {
@@ -155,12 +158,17 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   network: 'facebook',
-  placeholder: 'Que voulez-vous partager ?',
-  editorPlaceholder: 'Écrivez quelque chose...',
-  dialogTitle: 'Créer une publication',
-  submitLabel: 'Publier',
+  placeholder: undefined,
+  editorPlaceholder: undefined,
+  dialogTitle: undefined,
+  submitLabel: undefined,
   maxFiles: 4
 })
+
+const resolvedPlaceholder = computed(() => props.placeholder ?? t('post.composer_placeholder'))
+const resolvedEditorPlaceholder = computed(() => props.editorPlaceholder ?? t('post.editor_placeholder'))
+const resolvedDialogTitle = computed(() => props.dialogTitle ?? t('post.dialog_title'))
+const resolvedSubmitLabel = computed(() => props.submitLabel ?? t('common.publish'))
 
 const emit = defineEmits<{
   'submit': [{
@@ -190,11 +198,11 @@ const canSubmit = computed(() => {
   return postContent.value.trim().length > 0 || selectedFiles.value.length > 0
 })
 
-const postTypes = [
-  { id: 'photo', icon: 'pi pi-image', label: 'Photo/Vidéo' },
+const postTypes = computed(() => [
+  { id: 'photo', icon: 'pi pi-image', label: t('post.photo_video_type') },
   { id: 'feeling', icon: 'pi pi-smile', label: 'Humeur/Activité' },
-  { id: 'event', icon: 'pi pi-calendar', label: 'Événement' }
-]
+  { id: 'event', icon: 'pi pi-calendar', label: t('common.event') }
+])
 
 const postTools = [
   { id: 'media', icon: 'pi pi-image', severity: 'success' },
@@ -204,13 +212,13 @@ const postTools = [
   { id: 'poll', icon: 'pi pi-chart-bar', severity: 'danger' }
 ]
 
-const privacyOptions = [
+const privacyOptions = computed(() => [
   { value: 'public', label: 'Public', icon: 'pi pi-globe' },
-  { value: 'friends', label: 'Amis', icon: 'pi pi-users' },
+  { value: 'friends', label: t('common.friends'), icon: 'pi pi-users' },
   { value: 'private', label: 'Moi uniquement', icon: 'pi pi-lock' }
-]
+])
 
-const handleTypeClick = (type: typeof postTypes[0]) => {
+const handleTypeClick = (type: typeof postTypes.value[0]) => {
   showDialog.value = true
   if (type.id === 'photo') {
     const input = document.querySelector('.hidden-upload input[type="file"]') as HTMLInputElement | null

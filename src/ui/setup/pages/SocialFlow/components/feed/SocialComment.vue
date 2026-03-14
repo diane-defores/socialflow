@@ -21,7 +21,7 @@
             @click="handleLike"
           />
           <Button 
-            label="Répondre" 
+            :label="$t('common.reply')"
             text 
             size="small"
             @click="handleReply"
@@ -48,7 +48,7 @@
     <div v-if="comment.replies?.length" class="replies-section">
       <div v-if="!showAllReplies && comment.replies.length > 2" class="show-replies">
         <Button 
-          :label="`Voir ${comment.replies.length - 2} réponses de plus`"
+          :label="$t('comment.show_more_replies', { count: comment.replies.length - 2 })"
           link
           @click="showAllReplies = true"
         />
@@ -72,8 +72,11 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Button from 'primevue/button'
 import SocialAvatar from './SocialAvatar.vue'
+
+const { t } = useI18n()
 
 interface Comment {
   id: string
@@ -121,7 +124,7 @@ const visibleReplies = computed(() => {
 })
 
 const likeLabel = computed(() => {
-  return props.comment.liked ? 'Je n\'aime plus' : 'J\'aime'
+  return props.comment.liked ? t('comment.unlike') : t('common.like')
 })
 
 const formatDate = (timestamp: string) => {

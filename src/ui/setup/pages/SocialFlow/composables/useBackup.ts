@@ -2,6 +2,8 @@ import { useProfilesStore } from '@/stores/profiles'
 import { useAccountsStore } from '@/stores/accounts'
 import { useFriendsFilterStore } from '@/stores/friendsFilter'
 import { useThemeStore } from '@/stores/theme'
+import { useCustomLinksStore } from '@/stores/customLinks'
+import { setLocale } from '@/utils/i18n'
 
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
 
@@ -11,6 +13,7 @@ function collectStoreData(): string {
   const accounts = useAccountsStore()
   const friends = useFriendsFilterStore()
   const theme = useThemeStore()
+  const customLinks = useCustomLinksStore()
 
   const data = {
     profiles: {
@@ -29,9 +32,15 @@ function collectStoreData(): string {
       isDarkMode: theme.isDarkMode,
       grayscaleEnabled: theme.grayscaleEnabled,
     },
+    customLinks: {
+      links: customLinks.links,
+    },
     localStorage: {
       sfz_username: localStorage.getItem('sfz_username') ?? '',
       sfz_email: localStorage.getItem('sfz_email') ?? '',
+      'user-locale': localStorage.getItem('user-locale') ?? 'fr',
+      theme: localStorage.getItem('theme') ?? 'light',
+      grayscale: localStorage.getItem('grayscale') ?? '0',
     },
   }
   return JSON.stringify(data)
@@ -73,11 +82,24 @@ function applyStoreData(json: string) {
     store.applyGrayscale()
   }
 
+  if (data.customLinks) {
+    const store = useCustomLinksStore()
+    store.links = data.customLinks.links ?? {}
+  }
+
   if (data.localStorage) {
     if (data.localStorage.sfz_username)
       localStorage.setItem('sfz_username', data.localStorage.sfz_username)
     if (data.localStorage.sfz_email)
       localStorage.setItem('sfz_email', data.localStorage.sfz_email)
+    if (data.localStorage['user-locale']) {
+      localStorage.setItem('user-locale', data.localStorage['user-locale'])
+      setLocale(data.localStorage['user-locale'])
+    }
+    if (data.localStorage.theme)
+      localStorage.setItem('theme', data.localStorage.theme)
+    if (data.localStorage.grayscale)
+      localStorage.setItem('grayscale', data.localStorage.grayscale)
   }
 }
 

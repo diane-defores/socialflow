@@ -70,9 +70,9 @@
           class="comments-count"
           @click="toggleComments"
         >
-          {{ post.stats.comments }} commentaires
+          {{ post.stats.comments }} {{ $t('common.comments_count') }}
         </span>
-        <span v-if="post.stats.shares">{{ post.stats.shares }} partages</span>
+        <span v-if="post.stats.shares">{{ post.stats.shares }} {{ $t('common.shares_count') }}</span>
       </div>
     </div>
 
@@ -80,21 +80,21 @@
       <slot name="actions">
         <Button 
           :icon="primaryActionIcon" 
-          :label="primaryActionLabel"
+          :label="resolvedPrimaryActionLabel"
           text
           class="flex-1"
           @click="$emit('primary-action')"
         />
         <Button 
           icon="pi pi-comment" 
-          label="Commenter"
+          :label="$t('common.comment')"
           text
           class="flex-1"
           @click="$emit('comment')"
         />
         <Button 
           icon="pi pi-share-alt" 
-          label="Partager"
+          :label="$t('common.share')"
           text
           class="flex-1"
           @click="$emit('share')"
@@ -110,8 +110,11 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Button from 'primevue/button'
 import SocialAvatar from './SocialAvatar.vue'
+
+const { t } = useI18n()
 
 interface Props {
   post: {
@@ -152,7 +155,7 @@ const props = withDefaults(defineProps<Props>(), {
   showComments: false,
   showReactions: true,
   primaryActionIcon: 'pi pi-thumbs-up',
-  primaryActionLabel: "J'aime"
+  primaryActionLabel: undefined
 })
 
 const emit = defineEmits<{
@@ -165,6 +168,8 @@ const emit = defineEmits<{
   'comment-reply': [commentId: string]
   'toggle-comments': []
 }>()
+
+const resolvedPrimaryActionLabel = computed(() => props.primaryActionLabel ?? t('common.like'))
 
 const networkClass = computed(() => `network-${props.network}`)
 

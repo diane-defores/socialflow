@@ -41,7 +41,7 @@
                 icon="pi pi-plus"
                 text
                 rounded
-                v-tooltip.left="'Ajouter au Kanban'"
+                v-tooltip.left="$t('gmail.add_to_kanban')"
                 @click.stop="addToKanban(email)"
               />
               <span class="date">{{ formatDate(email.date) }}</span>

@@ -37,12 +37,12 @@
 
           <!-- Menu principal -->
           <div class="menu-section">
-            <Button icon="pi pi-home" :label="iconsOnly ? undefined : 'Fil d\'actualité'" text :class="['w-full', iconsOnly ? 'justify-content-center' : 'justify-content-start']" />
-            <Button icon="pi pi-user" :label="iconsOnly ? undefined : 'Profil'" text :class="['w-full', iconsOnly ? 'justify-content-center' : 'justify-content-start']" />
-            <Button icon="pi pi-users" :label="iconsOnly ? undefined : 'Amis'" text :class="['w-full', iconsOnly ? 'justify-content-center' : 'justify-content-start']" />
-            <Button icon="pi pi-bell" :label="iconsOnly ? undefined : 'Notifications'" :badge="'3'" text :class="['w-full', iconsOnly ? 'justify-content-center' : 'justify-content-start']" />
-            <Button icon="pi pi-bookmark" :label="iconsOnly ? undefined : 'Enregistrements'" text :class="['w-full', iconsOnly ? 'justify-content-center' : 'justify-content-start']" />
-            <Button icon="pi pi-calendar" :label="iconsOnly ? undefined : 'Événements'" text :class="['w-full', iconsOnly ? 'justify-content-center' : 'justify-content-start']" />
+            <Button icon="pi pi-home" :label="iconsOnly ? undefined : $t('sidebar.feed_button')" text :class="['w-full', iconsOnly ? 'justify-content-center' : 'justify-content-start']" />
+            <Button icon="pi pi-user" :label="iconsOnly ? undefined : $t('sidebar.profile_button')" text :class="['w-full', iconsOnly ? 'justify-content-center' : 'justify-content-start']" />
+            <Button icon="pi pi-users" :label="iconsOnly ? undefined : $t('sidebar.friends_button')" text :class="['w-full', iconsOnly ? 'justify-content-center' : 'justify-content-start']" />
+            <Button icon="pi pi-bell" :label="iconsOnly ? undefined : $t('common.notifications')" :badge="'3'" text :class="['w-full', iconsOnly ? 'justify-content-center' : 'justify-content-start']" />
+            <Button icon="pi pi-bookmark" :label="iconsOnly ? undefined : $t('sidebar.saved_button')" text :class="['w-full', iconsOnly ? 'justify-content-center' : 'justify-content-start']" />
+            <Button icon="pi pi-calendar" :label="iconsOnly ? undefined : $t('sidebar.events_button')" text :class="['w-full', iconsOnly ? 'justify-content-center' : 'justify-content-start']" />
           </div>
         </div>
       </SplitterPanel>

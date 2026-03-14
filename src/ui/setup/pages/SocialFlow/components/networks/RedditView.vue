@@ -36,8 +36,8 @@
                 <Button icon="pi pi-comments" text>
                   {{ Math.floor(Math.random() * 100) }} Comments
                 </Button>
-                <Button icon="pi pi-share-alt" text>Partager</Button>
-                <Button icon="pi pi-bookmark" text>Sauvegarder</Button>
+                <Button icon="pi pi-share-alt" text>{{ $t('common.share') }}</Button>
+                <Button icon="pi pi-bookmark" text>{{ $t('reddit.save_button') }}</Button>
               </div>
             </div>
           </div>
@@ -51,11 +51,11 @@
           size="large"
           class="mb-3"
         />
-        <h3>Connectez-vous à Reddit</h3>
-        <p>Pour voir votre feed Reddit, vous devez d'abord vous connecter à votre compte.</p>
+        <h3>{{ $t('reddit.connect_title') }}</h3>
+        <p>{{ $t('reddit.connect_message') }}</p>
         <Button 
           icon="pi pi-reddit" 
-          label="Se connecter avec Reddit" 
+          :label="$t('reddit.connect_button')"
           @click="connectReddit"
           class="p-button-reddit"
         />

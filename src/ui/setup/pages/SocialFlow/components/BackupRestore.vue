@@ -2,81 +2,150 @@
   <div class="backup-section">
     <div class="backup-info">
       <i class="pi pi-info-circle" />
-      <p>
-        Nous aimerions synchroniser vos donnees automatiquement via le cloud,
-        mais les cookies de session contiennent des jetons d'authentification
-        sensibles que les navigateurs interdisent de transmettre a des serveurs
-        tiers. L'export chiffre par mot de passe est donc le seul moyen sur
-        de transferer vos sessions entre appareils.
-      </p>
+      <p>{{ $t('backup.info_text') }}</p>
     </div>
 
     <div class="backup-row">
       <div class="backup-label">
         <i class="pi pi-download mr-2"></i>
-        <span>Exporter mes donnees</span>
+        <span>{{ $t('backup.export_label') }}</span>
       </div>
       <button class="backup-btn" :disabled="busy" @click="startExport">
         <i class="pi pi-lock" />
-        Exporter
+        {{ $t('backup.export_button') }}
       </button>
     </div>
 
     <div class="backup-row">
       <div class="backup-label">
         <i class="pi pi-upload mr-2"></i>
-        <span>Restaurer une sauvegarde</span>
+        <span>{{ $t('backup.restore_label') }}</span>
       </div>
       <button class="backup-btn" :disabled="busy" @click="startImport">
         <i class="pi pi-lock-open" />
-        Importer
+        {{ $t('backup.import_button') }}
       </button>
     </div>
 
-    <!-- Password dialog -->
+    <!-- Dialog -->
     <Teleport to="body">
       <Transition name="fade">
-        <div v-if="dialogVisible" class="backup-dialog-overlay" @click.self="cancel">
+        <div v-if="dialogVisible" class="backup-dialog-overlay" @click.self="closeIfIdle">
           <div class="backup-dialog">
-            <h3>{{ dialogTitle }}</h3>
-            <p class="dialog-hint">{{ dialogHint }}</p>
 
-            <div class="dialog-field">
-              <label>Mot de passe</label>
-              <input
-                ref="passwordInput"
-                v-model="password"
-                :type="showPassword ? 'text' : 'password'"
-                placeholder="Minimum 8 caracteres"
-                autocomplete="off"
-                @keyup.enter="confirm"
-              />
-              <button class="toggle-password" @click="showPassword = !showPassword">
-                <i :class="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'" />
-              </button>
-            </div>
+            <!-- ───── Step 1: Password ───── -->
+            <template v-if="step === 'password'">
+              <h3>{{ dialogTitle }}</h3>
+              <p class="dialog-hint">{{ dialogHint }}</p>
 
-            <div v-if="mode === 'export'" class="dialog-field">
-              <label>Confirmer le mot de passe</label>
-              <input
-                v-model="passwordConfirm"
-                :type="showPassword ? 'text' : 'password'"
-                placeholder="Retapez le mot de passe"
-                autocomplete="off"
-                @keyup.enter="confirm"
-              />
-            </div>
+              <div class="dialog-field">
+                <label>{{ $t('backup.password_label') }}</label>
+                <input
+                  ref="passwordInput"
+                  v-model="password"
+                  :type="showPassword ? 'text' : 'password'"
+                  :placeholder="$t('backup.password_placeholder')"
+                  autocomplete="off"
+                  @keyup.enter="confirm"
+                />
+                <button class="toggle-password" @click="showPassword = !showPassword">
+                  <i :class="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'" />
+                </button>
+              </div>
 
-            <p v-if="error" class="dialog-error">{{ error }}</p>
-            <p v-if="success" class="dialog-success">{{ success }}</p>
+              <div v-if="mode === 'export'" class="dialog-field">
+                <label>{{ $t('backup.confirm_password_label') }}</label>
+                <input
+                  v-model="passwordConfirm"
+                  :type="showPassword ? 'text' : 'password'"
+                  :placeholder="$t('backup.confirm_password_placeholder')"
+                  autocomplete="off"
+                  @keyup.enter="confirm"
+                />
+              </div>
 
-            <div class="dialog-actions">
-              <button class="dialog-btn cancel" @click="cancel" :disabled="busy">Annuler</button>
-              <button class="dialog-btn primary" @click="confirm" :disabled="busy || !canConfirm">
-                <i v-if="busy" class="pi pi-spin pi-spinner" />
-                {{ busy ? 'En cours...' : (mode === 'export' ? 'Exporter' : 'Importer') }}
-              </button>
-            </div>
+              <div class="dialog-actions">
+                <button class="dialog-btn cancel" @click="close" :disabled="busy">{{ $t('common.cancel') }}</button>
+                <button class="dialog-btn primary" @click="confirm" :disabled="busy || !canConfirm">
+                  <i v-if="busy" class="pi pi-spin pi-spinner" />
+                  {{ busy ? $t('common.loading') : (mode === 'export' ? $t('backup.export_button') : $t('backup.import_button')) }}
+                </button>
+              </div>
+            </template>
+
+            <!-- ───── Step 2: Result — Success ───── -->
+            <template v-else-if="step === 'success'">
+              <div class="result-icon result-success">
+                <i class="pi pi-check-circle" />
+              </div>
+
+              <h3 class="result-title">
+                {{ mode === 'export' ? $t('backup.export_done_title') : $t('backup.import_done_title') }}
+              </h3>
+
+              <!-- Export success details -->
+              <template v-if="mode === 'export'">
+                <div class="result-detail">
+                  <i class="pi pi-file" />
+                  <span class="result-path">{{ resultPath }}</span>
+                </div>
+                <div class="result-instructions">
+                  <p class="result-instructions-title">{{ $t('backup.export_next_title') }}</p>
+                  <ol>
+                    <li>{{ $t('backup.export_step_1') }}</li>
+                    <li>{{ $t('backup.export_step_2') }}</li>
+                    <li>{{ $t('backup.export_step_3') }}</li>
+                  </ol>
+                </div>
+                <div class="result-tip">
+                  <i class="pi pi-shield" />
+                  <span>{{ $t('backup.export_tip') }}</span>
+                </div>
+              </template>
+
+              <!-- Import success details -->
+              <template v-else>
+                <p class="result-message">{{ $t('backup.import_done_message') }}</p>
+                <div class="result-countdown">
+                  <i class="pi pi-spin pi-spinner" />
+                  <span>{{ $t('backup.import_reloading', { seconds: countdown }) }}</span>
+                </div>
+              </template>
+
+              <div class="dialog-actions">
+                <button class="dialog-btn primary" @click="close">{{ $t('common.ok') }}</button>
+              </div>
+            </template>
+
+            <!-- ───── Step 2: Result — Error ───── -->
+            <template v-else-if="step === 'error'">
+              <div class="result-icon result-error">
+                <i class="pi pi-times-circle" />
+              </div>
+
+              <h3 class="result-title result-title-error">
+                {{ mode === 'export' ? $t('backup.export_error_title') : $t('backup.import_error_title') }}
+              </h3>
+
+              <div class="error-box">
+                <p>{{ friendlyError }}</p>
+              </div>
+
+              <div v-if="mode === 'import'" class="result-instructions">
+                <p class="result-instructions-title">{{ $t('backup.error_checklist_title') }}</p>
+                <ul>
+                  <li>{{ $t('backup.error_check_password') }}</li>
+                  <li>{{ $t('backup.error_check_file') }}</li>
+                  <li>{{ $t('backup.error_check_version') }}</li>
+                </ul>
+              </div>
+
+              <div class="dialog-actions">
+                <button class="dialog-btn cancel" @click="close">{{ $t('common.cancel') }}</button>
+                <button class="dialog-btn primary" @click="retry">{{ $t('backup.try_again') }}</button>
+              </div>
+            </template>
+
           </div>
         </div>
       </Transition>
@@ -86,27 +155,31 @@
 
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useBackup } from '../composables/useBackup'
 
+const { t } = useI18n()
 const { exportBackup, importBackup } = useBackup()
 
 const dialogVisible = ref(false)
 const mode = ref<'export' | 'import'>('export')
+const step = ref<'password' | 'success' | 'error'>('password')
 const password = ref('')
 const passwordConfirm = ref('')
 const showPassword = ref(false)
 const busy = ref(false)
-const error = ref('')
-const success = ref('')
+const rawError = ref('')
+const resultPath = ref('')
+const countdown = ref(3)
 const passwordInput = ref<HTMLInputElement | null>(null)
 
+let countdownTimer: ReturnType<typeof setInterval> | null = null
+
 const dialogTitle = computed(() =>
-  mode.value === 'export' ? 'Exporter mes donnees' : 'Restaurer une sauvegarde',
+  mode.value === 'export' ? t('backup.export_label') : t('backup.restore_label'),
 )
 const dialogHint = computed(() =>
-  mode.value === 'export'
-    ? 'Choisissez un mot de passe pour chiffrer vos cookies et profils.'
-    : 'Entrez le mot de passe utilise lors de l\'export.',
+  mode.value === 'export' ? t('backup.export_hint') : t('backup.import_hint'),
 )
 const canConfirm = computed(() => {
   if (password.value.length < 8) return false
@@ -114,13 +187,27 @@ const canConfirm = computed(() => {
   return true
 })
 
+const friendlyError = computed(() => {
+  const msg = rawError.value
+  if (msg.includes('Mot de passe incorrect') || msg.includes('incorrect') || msg.includes('corrupted'))
+    return t('backup.error_wrong_password')
+  if (msg.includes('No file selected'))
+    return t('backup.error_no_file')
+  if (msg.includes('missing stores'))
+    return t('backup.error_invalid_file')
+  return msg
+})
+
 function resetDialog() {
   password.value = ''
   passwordConfirm.value = ''
   showPassword.value = false
-  error.value = ''
-  success.value = ''
+  rawError.value = ''
+  resultPath.value = ''
   busy.value = false
+  step.value = 'password'
+  countdown.value = 3
+  if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null }
 }
 
 function startExport() {
@@ -137,28 +224,52 @@ function startImport() {
   nextTick(() => passwordInput.value?.focus())
 }
 
-function cancel() {
-  if (busy.value) return
+function close() {
+  if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null }
   dialogVisible.value = false
+}
+
+function closeIfIdle() {
+  if (!busy.value) close()
+}
+
+function retry() {
+  step.value = 'password'
+  rawError.value = ''
+  busy.value = false
+  password.value = ''
+  passwordConfirm.value = ''
+  nextTick(() => passwordInput.value?.focus())
+}
+
+function startCountdown() {
+  countdown.value = 3
+  countdownTimer = setInterval(() => {
+    countdown.value--
+    if (countdown.value <= 0) {
+      if (countdownTimer) clearInterval(countdownTimer)
+      window.location.reload()
+    }
+  }, 1000)
 }
 
 async function confirm() {
   if (!canConfirm.value || busy.value) return
-  error.value = ''
-  success.value = ''
+  rawError.value = ''
   busy.value = true
 
   try {
     if (mode.value === 'export') {
-      const path = await exportBackup(password.value)
-      success.value = `Sauvegarde exportee: ${path}`
+      resultPath.value = await exportBackup(password.value)
+      step.value = 'success'
     } else {
       await importBackup(password.value)
-      success.value = 'Restauration terminee! Rechargement...'
-      setTimeout(() => window.location.reload(), 1500)
+      step.value = 'success'
+      startCountdown()
     }
   } catch (e: unknown) {
-    error.value = e instanceof Error ? e.message : String(e)
+    rawError.value = e instanceof Error ? e.message : String(e)
+    step.value = 'error'
   } finally {
     busy.value = false
   }
@@ -251,7 +362,7 @@ async function confirm() {
   border-radius: 12px;
   padding: 1.5rem;
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
@@ -301,18 +412,122 @@ async function confirm() {
   color: var(--text-color, #333);
 }
 
-.dialog-error {
-  color: #e74c3c;
-  font-size: 0.85rem;
-  margin: 0.5rem 0;
+/* ─── Result screens ─── */
+.result-icon {
+  text-align: center;
+  margin-bottom: 0.75rem;
 }
 
-.dialog-success {
+.result-icon i {
+  font-size: 3rem;
+}
+
+.result-success i {
   color: #27ae60;
-  font-size: 0.85rem;
-  margin: 0.5rem 0;
 }
 
+.result-error i {
+  color: #e74c3c;
+}
+
+.result-title {
+  text-align: center;
+  margin: 0 0 1rem;
+  font-size: 1.15rem;
+}
+
+.result-title-error {
+  color: #e74c3c;
+}
+
+.result-detail {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  background: var(--surface-ground, #f5f5f5);
+  margin-bottom: 1rem;
+  font-size: 0.8rem;
+  word-break: break-all;
+}
+
+.result-detail .pi-file {
+  color: #3b82f6;
+  flex-shrink: 0;
+}
+
+.result-path {
+  opacity: 0.8;
+}
+
+.result-instructions {
+  margin-bottom: 1rem;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.result-instructions-title {
+  font-weight: 600;
+  margin: 0 0 0.4rem;
+  font-size: 0.85rem;
+}
+
+.result-instructions ol,
+.result-instructions ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.result-instructions li {
+  margin-bottom: 0.25rem;
+}
+
+.result-tip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(39, 174, 96, 0.08);
+  border: 1px solid rgba(39, 174, 96, 0.2);
+  font-size: 0.78rem;
+  margin-bottom: 1rem;
+  color: #27ae60;
+}
+
+.result-message {
+  text-align: center;
+  font-size: 0.9rem;
+  margin: 0 0 1rem;
+  opacity: 0.8;
+}
+
+.result-countdown {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.error-box {
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: rgba(231, 76, 60, 0.08);
+  border: 1px solid rgba(231, 76, 60, 0.2);
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+  color: #c0392b;
+}
+
+.error-box p {
+  margin: 0;
+}
+
+/* ─── Actions ─── */
 .dialog-actions {
   display: flex;
   gap: 0.5rem;
@@ -377,5 +592,17 @@ async function confirm() {
   background: #313244;
   border-color: #45475a;
   color: #cdd6f4;
+}
+
+:global(.dark) .result-detail {
+  background: #313244;
+}
+
+:global(.dark) .error-box {
+  background: rgba(231, 76, 60, 0.12);
+}
+
+:global(.dark) .result-tip {
+  background: rgba(39, 174, 96, 0.12);
 }
 </style>

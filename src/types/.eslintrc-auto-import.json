@@ -348,6 +348,7 @@
     "whenever": true,
     "useFriendsFilterStore": true,
     "CustomLink": true,
-    "useCustomLinksStore": true
+    "useCustomLinksStore": true,
+    "setLocale": true
   }
 }

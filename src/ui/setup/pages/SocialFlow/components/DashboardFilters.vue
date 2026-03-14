@@ -49,7 +49,7 @@
         text 
         severity="secondary"
         @click="resetFilters"
-        v-tooltip="'Réinitialiser les filtres'"
+        v-tooltip="$t('filters.reset_tooltip')"
         :disabled="!currentNetwork"
       />
     </div>

@@ -19,11 +19,11 @@
               <p class="headline">{{ profileInfo.headline }}</p>
               <div class="profile-stats">
                 <div class="stat-item">
-                  <span class="stat-label">Vues du profil</span>
+                  <span class="stat-label">{{ $t('linkedin.profile_views') }}</span>
                   <strong>{{ profileInfo.profileViews }}</strong>
                 </div>
                 <div class="stat-item">
-                  <span class="stat-label">Apparitions dans la recherche</span>
+                  <span class="stat-label">{{ $t('linkedin.search_appearances') }}</span>
                   <strong>{{ profileInfo.searchAppearances }}</strong>
                 </div>
               </div>
@@ -31,19 +31,19 @@
           </div>
 
           <div class="network-card">
-            <h3>Mon Réseau</h3>
+            <h3>{{ $t('linkedin.network_section') }}</h3>
             <div class="network-stats">
               <div class="network-stat">
                 <i class="pi pi-users"></i>
                 <div class="stat-content">
-                  <span>Connexions</span>
+                  <span>{{ $t('linkedin.connections') }}</span>
                   <strong>{{ profileInfo.connections }}</strong>
                 </div>
               </div>
               <div class="network-stat">
                 <i class="pi pi-building"></i>
                 <div class="stat-content">
-                  <span>Pages suivies</span>
+                  <span>{{ $t('linkedin.followed_pages') }}</span>
                   <strong>{{ profileInfo.followedPages }}</strong>
                 </div>
               </div>
@@ -60,13 +60,13 @@
                 text
                 @click="showPostDialog = true"
               >
-                Commencer un post
+                {{ $t('linkedin.start_post') }}
               </Button>
               <div class="post-types">
-                <Button icon="pi pi-image" label="Photo" text class="flex-1" />
-                <Button icon="pi pi-video" label="Vidéo" text class="flex-1" />
-                <Button icon="pi pi-calendar" label="Événement" text class="flex-1" />
-                <Button icon="pi pi-file" label="Article" text class="flex-1" />
+                <Button icon="pi pi-image" :label="$t('common.photo')" text class="flex-1" />
+                <Button icon="pi pi-video" :label="$t('common.video')" text class="flex-1" />
+                <Button icon="pi pi-calendar" :label="$t('common.event')" text class="flex-1" />
+                <Button icon="pi pi-file" :label="$t('common.article')" text class="flex-1" />
               </div>
             </div>
           </div>
@@ -89,15 +89,15 @@
 
             <div class="post-stats">
               <span><i class="pi pi-thumbs-up"></i> {{ post.likes }}</span>
-              <span>{{ post.comments }} commentaires</span>
-              <span>{{ post.shares }} partages</span>
+              <span>{{ post.comments }} {{ $t('common.comments_count') }}</span>
+              <span>{{ post.shares }} {{ $t('common.shares_count') }}</span>
             </div>
 
             <div class="post-actions">
-              <Button icon="pi pi-thumbs-up" label="J'aime" text />
-              <Button icon="pi pi-comment" label="Commenter" text />
-              <Button icon="pi pi-share-alt" label="Partager" text />
-              <Button icon="pi pi-send" label="Envoyer" text />
+              <Button icon="pi pi-thumbs-up" :label="$t('common.like')" text />
+              <Button icon="pi pi-comment" :label="$t('common.comment')" text />
+              <Button icon="pi pi-share-alt" :label="$t('common.share')" text />
+              <Button icon="pi pi-send" :label="$t('common.send')" text />
             </div>
           </div>
         </div>
@@ -110,11 +110,11 @@
           size="large"
           class="mb-3"
         />
-        <h3>Connectez-vous à LinkedIn</h3>
-        <p>Pour voir votre feed professionnel et interagir avec votre réseau, vous devez d'abord vous connecter.</p>
+        <h3>{{ $t('linkedin.connect_title') }}</h3>
+        <p>{{ $t('linkedin.connect_message') }}</p>
         <Button 
           icon="pi pi-linkedin" 
-          label="Se connecter avec LinkedIn" 
+          :label="$t('linkedin.connect_button')"
           @click="connectLinkedIn"
           class="p-button-linkedin"
         />
@@ -123,7 +123,7 @@
 
     <Dialog 
       v-model:visible="showPostDialog" 
-      header="Créer un post" 
+      :header="$t('linkedin.create_post_title')"
       :modal="true"
       class="post-dialog"
     >
@@ -134,7 +134,7 @@
             <h4>{{ profileInfo.name }}</h4>
             <Button 
               icon="pi pi-globe" 
-              label="Tout le monde" 
+              :label="$t('common.visibility_public')"
               text
               class="visibility-selector"
             />
@@ -143,7 +143,7 @@
         
         <Textarea
           v-model="newPost"
-          placeholder="De quoi souhaitez-vous parler ?"
+          :placeholder="$t('linkedin.post_placeholder')"
           :autoResize="true"
           rows="5"
         />
@@ -158,7 +158,7 @@
             <Button icon="pi pi-ellipsis-h" text rounded />
           </div>
           <Button 
-            label="Publier" 
+            :label="$t('common.publish')"
             :disabled="!newPost.length"
             class="p-button-linkedin"
           />

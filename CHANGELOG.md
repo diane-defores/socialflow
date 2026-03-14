@@ -2,6 +2,22 @@
 
 All notable changes to SocialFlow are documented here.
 
+## [Unreleased] — 2026-03-14
+
+### Added
+- Full i18n system — `vue-i18n` v11 with French and English locales (148 keys); language selector in Settings; all 15+ Vue components use `$t()` translation keys instead of hardcoded strings
+- Backup UX redesign — step-based dialog flow: password entry → success screen (file path, 3-step import guide, security tip) or error screen (friendly messages, troubleshooting checklist, try-again button); import success shows countdown before auto-reload
+- All user preferences now included in backup export/import: dark mode, grayscale, language (`user-locale`), custom links
+
+### Changed
+- `useBackup.ts` — `collectStoreData()` and `applyStoreData()` now handle `customLinks` store + 5 localStorage keys (`sfz_username`, `sfz_email`, `user-locale`, `theme`, `grayscale`)
+- `i18n.ts` refactored for Tauri — reads saved locale from localStorage (was Chrome extension storage); exposes `setLocale()` helper for runtime language switching
+
+### Removed
+- Deleted unused `zh.json` Chinese locale file
+
+---
+
 ## [Unreleased] — 2026-03-13 (c)
 
 ### Added

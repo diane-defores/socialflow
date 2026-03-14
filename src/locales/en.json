@@ -9,11 +9,186 @@
     "success": "Success!",
     "warning": "Warning!"
   },
+  "updated": "Updated",
+  "welcomeMessage": "Welcome to SocialFlow!",
+  "common": {
+    "settings": "Settings",
+    "notifications": "Notifications",
+    "cancel": "Cancel",
+    "add": "Add",
+    "delete": "Delete",
+    "save": "Save",
+    "publish": "Publish",
+    "share": "Share",
+    "like": "Like",
+    "comment": "Comment",
+    "reply": "Reply",
+    "send": "Send",
+    "photo": "Photo",
+    "video": "Video",
+    "event": "Event",
+    "article": "Article",
+    "friends": "Friends",
+    "loading": "Loading...",
+    "comments_count": "comments",
+    "shares_count": "shares",
+    "visibility_public": "Everyone",
+    "ok": "OK"
+  },
   "settings": {
+    "title": "Settings",
     "cancelButton": "Cancel",
     "saveButton": "Save",
-    "title": "Settings"
+    "username_label": "Username",
+    "email_label": "Email",
+    "preferences": "Preferences",
+    "language": "Language"
   },
-  "updated": "Updated",
-  "welcomeMessage": "Welcome to our Chrome extension!"
+  "theme": {
+    "dark_mode": "Dark mode",
+    "focus_mode": "Focus mode (grayscale)"
+  },
+  "backup": {
+    "section_title": "Backup",
+    "info_text": "We would love to sync your data automatically via the cloud, but session cookies contain sensitive authentication tokens that browsers forbid transmitting to third-party servers. Encrypted password-protected export is therefore the only safe way to transfer your sessions between devices.",
+    "export_label": "Export my data",
+    "export_button": "Export",
+    "restore_label": "Restore a backup",
+    "import_button": "Import",
+    "password_label": "Password",
+    "password_placeholder": "Minimum 8 characters",
+    "confirm_password_label": "Confirm password",
+    "confirm_password_placeholder": "Retype password",
+    "export_hint": "Choose a password to encrypt your cookies and profiles.",
+    "import_hint": "Enter the password used during export.",
+    "export_success": "Backup exported: {path}",
+    "import_success": "Restore complete! Reloading...",
+    "export_done_title": "Backup exported successfully!",
+    "import_done_title": "Restore complete!",
+    "export_next_title": "What to do next:",
+    "export_step_1": "Transfer the .sfbak file to your other device",
+    "export_step_2": "Install SocialFlow on the new device",
+    "export_step_3": "Use \"Restore a backup\" with the same password",
+    "export_tip": "Keep your password safe — it is required to restore your data.",
+    "import_done_message": "All your profiles, accounts, and preferences have been restored.",
+    "import_reloading": "Reloading in {seconds}s...",
+    "export_error_title": "Export failed",
+    "import_error_title": "Restore failed",
+    "error_checklist_title": "Please check:",
+    "error_check_password": "Is the password exactly the same as during export?",
+    "error_check_file": "Is the file a valid .sfbak backup?",
+    "error_check_version": "Was the backup created with a compatible version?",
+    "error_wrong_password": "Incorrect password. Please try again.",
+    "error_no_file": "No file selected.",
+    "error_invalid_file": "This file does not appear to be a valid SocialFlow backup.",
+    "try_again": "Try again"
+  },
+  "profile": {
+    "default_name": "Profile",
+    "networks_count": "{count} networks",
+    "tap_to_manage": "Tap to manage",
+    "active_label": "Active",
+    "rename_action": "Rename",
+    "avatar_action": "Profile picture",
+    "clear_cookies_action": "Clear cookies",
+    "clear_cookies_header": "Clear cookies — {name}",
+    "add_new_button": "New profile"
+  },
+  "profiles": {
+    "title": "Profiles"
+  },
+  "sidebar": {
+    "networks_section": "Social networks",
+    "friends_section": "Friends",
+    "custom_links_section": "Custom links",
+    "feed_button": "News feed",
+    "profile_button": "Profile",
+    "friends_button": "Friends",
+    "saved_button": "Saved",
+    "events_button": "Events"
+  },
+  "friends_filter": {
+    "friends_only": "Friends only",
+    "see_all": "See all",
+    "filter_active": "Friends filter active",
+    "filter_inactive": "Friends filter inactive",
+    "manage_button": "Manage friends",
+    "manage_tooltip": "Manage friends list",
+    "dialog_title": "Friends — {network}",
+    "hint_text": "Enter names or usernames as they appear on {network}. Only their posts will be shown when the filter is active.",
+    "empty_state": "No friends added",
+    "empty_hint": "Add names to filter the feed",
+    "footer_note": "Matching is case-insensitive and partial."
+  },
+  "links": {
+    "add_button": "Add a link",
+    "add_tooltip": "Add a link",
+    "add_dialog_title": "Add a link",
+    "name_placeholder": "Name (e.g. My site)",
+    "url_placeholder": "URL (e.g. example.com)"
+  },
+  "networks": {
+    "edit_mode_hint": "Tap outside to finish"
+  },
+  "notif": {
+    "mark_all_read": "Mark all read",
+    "empty_state": "No new notifications"
+  },
+  "filters": {
+    "reset_tooltip": "Reset filters"
+  },
+  "post": {
+    "privacy_placeholder": "Select privacy",
+    "add_to_post_title": "Add to your post",
+    "composer_placeholder": "What do you want to share?",
+    "editor_placeholder": "Write something...",
+    "dialog_title": "Create a post",
+    "photo_video_type": "Photo/Video"
+  },
+  "comment": {
+    "show_more_replies": "Show {count} more replies",
+    "unlike": "Unlike"
+  },
+  "twitter": {
+    "my_profile": "My Profile",
+    "following": "Following",
+    "followers": "Followers",
+    "trends": "Trends",
+    "tweets_count": "tweets",
+    "compose_placeholder": "What's happening?",
+    "connect_title": "Sign in to Twitter",
+    "connect_message": "To see your Twitter feed and interact with your followers, you need to sign in first.",
+    "connect_button": "Sign in with Twitter"
+  },
+  "linkedin": {
+    "profile_views": "Profile views",
+    "search_appearances": "Search appearances",
+    "network_section": "My Network",
+    "connections": "Connections",
+    "followed_pages": "Followed pages",
+    "start_post": "Start a post",
+    "connect_title": "Sign in to LinkedIn",
+    "connect_message": "To see your professional feed and interact with your network, you need to sign in first.",
+    "connect_button": "Sign in with LinkedIn",
+    "create_post_title": "Create a post",
+    "post_placeholder": "What do you want to talk about?"
+  },
+  "reddit": {
+    "save_button": "Save",
+    "connect_title": "Sign in to Reddit",
+    "connect_message": "To see your Reddit feed, you need to sign in to your account first.",
+    "connect_button": "Sign in with Reddit"
+  },
+  "facebook": {
+    "create_post": "Create a post",
+    "comment_placeholder": "Write a comment...",
+    "contacts": "Contacts",
+    "connect_button": "Sign in with Facebook"
+  },
+  "gmail": {
+    "add_to_kanban": "Add to Kanban"
+  },
+  "google": {
+    "connect_button": "Sign in with Google"
+  }
 }

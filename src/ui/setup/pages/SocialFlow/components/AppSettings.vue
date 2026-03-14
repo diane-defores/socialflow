@@ -1,17 +1,31 @@
 <template>
-  <Dialog 
-    v-model:visible="visible" 
-    modal 
-    header="Paramètres" 
+  <Dialog
+    v-model:visible="visible"
+    modal
+    :header="$t('common.settings')"
     :style="{ width: '50vw' }"
     :breakpoints="{ '960px': '75vw', '641px': '90vw' }"
   >
     <div class="settings-container">
+      <!-- Language -->
+      <div class="setting-item">
+        <div class="setting-label">
+          <i class="pi pi-globe mr-2"></i>
+          <span>{{ $t('settings.language') }}</span>
+        </div>
+        <select v-model="currentLocale" class="locale-select" @change="onLocaleChange">
+          <option value="fr">Francais</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+
+      <Divider />
+
       <!-- Theme Toggle -->
       <div class="setting-item">
         <div class="setting-label">
           <i class="pi pi-moon mr-2"></i>
-          <span>Mode sombre</span>
+          <span>{{ $t('theme.dark_mode') }}</span>
         </div>
         <InputSwitch v-model="isDarkMode" @change="toggleTheme" />
       </div>
@@ -22,7 +36,7 @@
       <div class="setting-item">
         <div class="setting-label">
           <i class="pi pi-palette mr-2"></i>
-          <span>Mode focus (niveaux de gris)</span>
+          <span>{{ $t('theme.focus_mode') }}</span>
         </div>
         <InputSwitch :modelValue="themeStore.grayscaleEnabled" @change="themeStore.setGrayscale(!themeStore.grayscaleEnabled)" />
       </div>
@@ -33,7 +47,7 @@
       <div class="setting-item">
         <div class="setting-label">
           <i class="pi pi-bell mr-2"></i>
-          <span>Notifications</span>
+          <span>{{ $t('common.notifications') }}</span>
         </div>
         <InputSwitch v-model="notifications" />
       </div>
@@ -44,7 +58,7 @@
       <div class="setting-item">
         <div class="setting-label">
           <i class="pi pi-database mr-2"></i>
-          <span>Sauvegarde</span>
+          <span>{{ $t('backup.section_title') }}</span>
         </div>
       </div>
       <BackupRestore />
@@ -54,20 +68,29 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { setLocale } from '@/utils/i18n'
 import { useThemeStore } from '@/stores/theme'
 import Dialog from 'primevue/dialog'
 import InputSwitch from 'primevue/inputswitch'
 import Divider from 'primevue/divider'
 import BackupRestore from './BackupRestore.vue'
 
+const { locale } = useI18n()
+
 const visible = ref(false)
 const notifications = ref(true)
+const currentLocale = ref(locale.value)
 
 const themeStore = useThemeStore()
 const isDarkMode = ref(themeStore.isDarkMode)
 
 const toggleTheme = () => {
   themeStore.toggleTheme()
+}
+
+function onLocaleChange() {
+  setLocale(currentLocale.value)
 }
 
 defineExpose({
@@ -96,4 +119,20 @@ defineExpose({
 .setting-label i {
   margin-right: 0.5rem;
 }
-</style> 
+
+.locale-select {
+  padding: 0.35rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid var(--surface-border, #ddd);
+  background: var(--surface-card, #fff);
+  color: var(--text-color, #333);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+:global(.dark) .locale-select {
+  background: #313244;
+  border-color: #45475a;
+  color: #cdd6f4;
+}
+</style>
