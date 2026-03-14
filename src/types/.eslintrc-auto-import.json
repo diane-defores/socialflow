@@ -346,6 +346,8 @@
     "watchTriggerable": true,
     "watchWithFilter": true,
     "whenever": true,
-    "useFriendsFilterStore": true
+    "useFriendsFilterStore": true,
+    "CustomLink": true,
+    "useCustomLinksStore": true
   }
 }
