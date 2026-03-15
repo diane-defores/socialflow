@@ -42,6 +42,12 @@ pub struct SetProfilesRequest {
     pub active_profile_id: String,
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SetLocaleRequest {
+    pub locale: String,
+}
+
 pub struct AndroidWebview<R: Runtime>(pub PluginHandle<R>);
 
 impl<R: Runtime> AndroidWebview<R> {
@@ -113,6 +119,12 @@ impl<R: Runtime> AndroidWebview<R> {
                     active_profile_id,
                 },
             )
+            .map_err(|e| Error::PluginInvoke(e.to_string()))
+    }
+
+    pub fn set_locale(&self, locale: String) -> Result<()> {
+        self.0
+            .run_mobile_plugin("setLocale", SetLocaleRequest { locale })
             .map_err(|e| Error::PluginInvoke(e.to_string()))
     }
 }

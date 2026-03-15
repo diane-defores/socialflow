@@ -23,7 +23,6 @@ import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import app.tauri.annotation.Command
 import app.tauri.annotation.InvokeArg
 import app.tauri.annotation.TauriPlugin
@@ -72,8 +71,42 @@ class SetProfilesArgs {
     var activeProfileId: String = ""
 }
 
+@InvokeArg
+class SetLocaleArgs {
+    var locale: String = "fr"
+}
+
 // Lightweight profile data for the popup menu
 private data class ProfileMenuItem(val id: String, val name: String, val emoji: String)
+
+// ── i18n ──────────────────────────────────────────────────────────────────────
+private object Strings {
+    private val translations = mapOf(
+        // Popup menu
+        "profiles" to mapOf("fr" to "Profils", "en" to "Profiles"),
+        "mute_on" to mapOf("fr" to "Son activé", "en" to "Sound on"),
+        "mute_off" to mapOf("fr" to "Couper le son", "en" to "Mute"),
+        "grayscale_on" to mapOf("fr" to "Désactiver niveaux de gris", "en" to "Disable grayscale"),
+        "grayscale_off" to mapOf("fr" to "Niveaux de gris", "en" to "Grayscale"),
+        "dark_mode_on" to mapOf("fr" to "Mode clair", "en" to "Light mode"),
+        "dark_mode_off" to mapOf("fr" to "Mode sombre", "en" to "Dark mode"),
+        // Blocked page
+        "blocked_title" to mapOf("fr" to "Accès bloqué par", "en" to "Access blocked by"),
+        "blocked_message" to mapOf(
+            "fr" to "Ce site bloque les navigateurs intégrés. Vous pouvez effacer les cookies et réessayer, ou ouvrir le site dans votre navigateur.",
+            "en" to "This site blocks embedded browsers. You can clear cookies and retry, or open the site in your browser."
+        ),
+        "blocked_clear_retry" to mapOf("fr" to "Effacer les cookies et réessayer", "en" to "Clear cookies and retry"),
+        "blocked_back" to mapOf("fr" to "← Retour", "en" to "← Back"),
+        "blocked_open_browser" to mapOf("fr" to "Ouvrir dans le navigateur", "en" to "Open in browser"),
+    )
+
+    var locale: String = "fr"
+
+    fun t(key: String): String {
+        return translations[key]?.get(locale) ?: translations[key]?.get("fr") ?: key
+    }
+}
 
 // Network metadata for the bottom bar switcher
 // iconChar: PrimeIcons codepoint (same font as the Vue app, loaded from assets/primeicons.ttf)
@@ -347,7 +380,6 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
     private var socialRoot: FrameLayout? = null
     private var socialWebView: WebView? = null
-    private var swipeRefresh: SwipeRefreshLayout? = null
     private var currentAccountId: String? = null
     private var currentNetworkId: String? = null
 
@@ -613,24 +645,15 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             // ── Root container ───────────────────────────────────────────────
             val root = FrameLayout(activity)
 
-            // ── WebView wrapped in SwipeRefreshLayout (pull-to-refresh) ────
+            // ── WebView (below status bar, above our bar + nav bar) ──────────
             val webView = createWebView()
-            val srl = SwipeRefreshLayout(activity)
-            srl.addView(webView, ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            ))
-            srl.setOnRefreshListener { webView.reload() }
-            srl.setColorSchemeColors(Color.parseColor("#2196F3"))
-            swipeRefresh = srl
-
             val wvParams = FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
             wvParams.topMargin = statusBarHeight
             wvParams.bottomMargin = navBarHeight + barHeight
-            srl.layoutParams = wvParams
+            webView.layoutParams = wvParams
 
             // ── Bottom overlay bar (above nav bar) ───────────────────────────
             val bottomBar = buildBottomBar(density, navBarHeight, args.networkId, sortedNetworks())
@@ -642,7 +665,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             bottomBarParams.gravity = Gravity.BOTTOM
             bottomBar.layoutParams = bottomBarParams
 
-            root.addView(srl)
+            root.addView(webView)
             root.addView(bottomBar)  // drawn on top of webview
 
             activity.addContentView(
@@ -739,6 +762,15 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             applyDarkModeToBottomBar(bottomBarView)
             applyStatusBarIconColor()
         }
+        invoke.resolve(JSObject())
+    }
+
+    // ── Set locale (called from Vue when language changes) ─────────────────
+
+    @Command
+    fun setLocale(invoke: Invoke) {
+        val args = invoke.parseArgs(SetLocaleArgs::class.java)
+        Strings.locale = args.locale
         invoke.resolve(JSObject())
     }
 
@@ -944,7 +976,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         if (menuProfiles.isNotEmpty()) {
             val sectionColor = if (isDarkMode) Color.parseColor("#9A9AB0") else Color.parseColor("#ADB5BD")
             val sectionLabel = TextView(activity)
-            sectionLabel.text = "Profils"
+            sectionLabel.text = Strings.t("profiles")
             sectionLabel.textSize = 11f
             sectionLabel.setTextColor(sectionColor)
             sectionLabel.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
@@ -973,7 +1005,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         }
 
         // 2. Mute toggle
-        val muteLabel = if (isMuted) "Son activé" else "Couper le son"
+        val muteLabel = if (isMuted) Strings.t("mute_on") else Strings.t("mute_off")
         val muteIcon = if (isMuted) "\ue978" else "\ue977"
         menu.addView(buildPopupMenuItem(density, muteIcon, muteLabel) {
             isMuted = !isMuted
@@ -982,7 +1014,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         })
 
         // 3. Grayscale toggle
-        val grayLabel = if (isGrayscale) "Désactiver niveaux de gris" else "Niveaux de gris"
+        val grayLabel = if (isGrayscale) Strings.t("grayscale_on") else Strings.t("grayscale_off")
         menu.addView(buildPopupMenuItem(density, "\ue9dd", grayLabel, dimmed = isGrayscale) {
             isGrayscale = !isGrayscale
             applyGrayscaleToWebView(socialWebView)
@@ -992,7 +1024,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         })
 
         // 4. Dark mode toggle
-        val darkLabel = if (isDarkMode) "Mode clair" else "Mode sombre"
+        val darkLabel = if (isDarkMode) Strings.t("dark_mode_on") else Strings.t("dark_mode_off")
         val darkIcon = if (isDarkMode) "\ue9c8" else "\ue9c7"  // pi-sun / pi-moon
         menu.addView(buildPopupMenuItem(density, darkIcon, darkLabel) {
             dismissPopupMenu()
@@ -1075,6 +1107,74 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         }
 
         return row
+    }
+
+    /**
+     * Show a user-friendly error page when a site blocks WebView access (Akamai, etc.).
+     * Replaces the blank/cryptic "Access Denied" page with an actionable message.
+     */
+    private fun showBlockedPage(view: WebView, blockedUrl: String) {
+        val siteName = try { android.net.Uri.parse(blockedUrl).host?.removePrefix("www.") ?: blockedUrl } catch (_: Exception) { blockedUrl }
+        val encodedUrl = android.net.Uri.encode(blockedUrl)
+        val html = """
+            <html>
+            <head>
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <style>
+                    * { margin: 0; padding: 0; box-sizing: border-box; }
+                    body { font-family: -apple-system, system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 2rem; background: #f8f9fa; color: #333; }
+                    .card { text-align: center; max-width: 360px; }
+                    .icon { font-size: 3.5rem; margin-bottom: 1rem; }
+                    h1 { font-size: 1.2rem; margin-bottom: 0.5rem; font-weight: 600; }
+                    p { font-size: 0.9rem; color: #666; line-height: 1.5; margin-bottom: 1.25rem; }
+                    .actions { display: flex; flex-direction: column; gap: 0.6rem; align-items: center; }
+                    .btn { display: inline-block; padding: 0.6rem 1.5rem; border-radius: 8px; background: #3b82f6; color: #fff; text-decoration: none; font-size: 0.9rem; font-weight: 500; }
+                    .btn.outline { background: none; border: 1px solid #3b82f6; color: #3b82f6; }
+                    .btn.ghost { background: none; color: #3b82f6; font-size: 0.8rem; padding: 0.4rem 1rem; }
+                    @media (prefers-color-scheme: dark) {
+                        body { background: #09090b; color: #e4e4e7; }
+                        p { color: #a1a1aa; }
+                        .btn.outline { border-color: #5BA8F5; color: #5BA8F5; }
+                        .btn.ghost { color: #5BA8F5; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="card">
+                    <div class="icon">🚫</div>
+                    <h1>${Strings.t("blocked_title")} $siteName</h1>
+                    <p>${Strings.t("blocked_message")}</p>
+                    <div class="actions">
+                        <a class="btn" href="sfz://clear-cookies?retry=$encodedUrl">${Strings.t("blocked_clear_retry")}</a>
+                        <a class="btn outline" href="javascript:history.back()">${Strings.t("blocked_back")}</a>
+                        <a class="btn ghost" href="$blockedUrl" target="_blank">${Strings.t("blocked_open_browser")}</a>
+                    </div>
+                </div>
+            </body>
+            </html>
+        """.trimIndent()
+        view.loadDataWithBaseURL(blockedUrl, html, "text/html", "UTF-8", blockedUrl)
+    }
+
+    /**
+     * Clear all cookies for the current session and reload the URL.
+     * Used from the blocked page to give the user a fresh start.
+     */
+    private fun clearCookiesAndRetry(view: WebView, retryUrl: String) {
+        val cm = CookieManager.getInstance()
+        // Wipe the saved cookie data for this session key so stale Akamai cookies don't persist
+        currentAccountId?.let { key ->
+            val editor = cookiePrefs.edit()
+            for (url in COOKIE_URLS) {
+                editor.remove("${key}_$url")
+            }
+            editor.apply()
+        }
+        // Clear all in-memory cookies and reload
+        cm.removeAllCookies {
+            view.post { view.loadUrl(retryUrl) }
+        }
+        cm.flush()
     }
 
     /** Destroy the social webview and return to the Vue dashboard. */
@@ -1401,8 +1501,10 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         settings.useWideViewPort = true
         settings.builtInZoomControls = true
         settings.displayZoomControls = false
-        // Full Chrome Mobile UA so social sites (TikTok, etc.) don't block us
-        settings.userAgentString = "Mozilla/5.0 (Linux; Android 14; SM-S928B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36"
+        // Use the real WebView UA but strip the "; wv" token that flags us as a WebView.
+        // This keeps the Chrome version in sync with the actual engine (no fingerprint mismatch).
+        val defaultUa = WebSettings.getDefaultUserAgent(activity)
+        settings.userAgentString = defaultUa.replace("; wv", "")
 
         val cookieManager = CookieManager.getInstance()
         cookieManager.setAcceptCookie(true)
@@ -1417,16 +1519,42 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                 if (url.startsWith("intent:") || url.startsWith("market:")) {
                     return true  // consume — don't navigate
                 }
+                // Handle "clear cookies and retry" action from the blocked page
+                if (url.startsWith("sfz://clear-cookies")) {
+                    val retryUrl = android.net.Uri.parse(url).getQueryParameter("retry") ?: return true
+                    clearCookiesAndRetry(view, retryUrl)
+                    return true
+                }
                 return false
+            }
+            override fun onReceivedHttpError(view: WebView, request: android.webkit.WebResourceRequest, errorResponse: android.webkit.WebResourceResponse) {
+                super.onReceivedHttpError(view, request, errorResponse)
+                // Only handle main frame navigation (not sub-resources like images/scripts)
+                if (request.isForMainFrame && errorResponse.statusCode == 403) {
+                    showBlockedPage(view, request.url.toString())
+                }
             }
             override fun onPageFinished(view: WebView, url: String) {
                 super.onPageFinished(view, url)
-                swipeRefresh?.isRefreshing = false
                 view.evaluateJavascript(STEALTH_SCRIPT, null)
                 view.evaluateJavascript(COOKIE_ACCEPT_SCRIPT, null)
                 view.evaluateJavascript(DISMISS_APP_BANNERS_SCRIPT, null)
                 if (isGrayscale) applyGrayscaleToWebView(view)
                 if (isMuted) applyMuteToWebView(view)
+                // Detect Akamai/CDN block pages that return 200 but show "Access Denied"
+                view.evaluateJavascript("""
+                    (function() {
+                        var body = document.body ? document.body.innerText : '';
+                        if (body.length < 500 && /access\s*denied/i.test(body) && /reference\s*#/i.test(body)) {
+                            return 'blocked';
+                        }
+                        return 'ok';
+                    })();
+                """.trimIndent()) { result ->
+                    if (result?.contains("blocked") == true) {
+                        showBlockedPage(view, url)
+                    }
+                }
                 // Record back-stack depth after the initial page+redirects settle.
                 // We only consider deeper entries as real user navigation.
                 if (initialBackIndex < 0) {
@@ -1458,7 +1586,6 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         socialWebView?.destroy()
         socialRoot?.let { (it.parent as? ViewGroup)?.removeView(it) }
         socialWebView = null
-        swipeRefresh = null
         socialRoot = null
         bottomBarView = null
         currentAccountId = null

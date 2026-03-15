@@ -23,6 +23,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useThemeStore } from '@/stores/theme'
 import { useWebviewStore } from '@/stores/webviewState'
 import { useProfilesStore } from '@/stores/profiles'
@@ -36,6 +37,7 @@ import MobileLayout from './components/MobileLayout.vue'
 const sidebarVisible = ref(true)
 const rightSidebarVisible = ref(true)
 
+const { locale } = useI18n()
 const themeStore = useThemeStore()
 const webviewStore = useWebviewStore()
 const profilesStore = useProfilesStore()
@@ -48,6 +50,13 @@ const handleResize = () => { isMobile.value = window.innerWidth <= 768 }
 let unlistenTray: (() => void) | undefined
 
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
+
+// Sync locale to Android plugin for native UI translations
+watch(locale, async (newLocale) => {
+  if (!isTauri) return
+  const { invoke } = await import('@tauri-apps/api/core')
+  invoke('set_locale', { locale: newLocale }).catch(() => {})
+}, { immediate: true })
 
 // When the settings toggle changes, sync the native webview on Android
 watch(() => themeStore.grayscaleEnabled, async (enabled) => {
