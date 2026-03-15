@@ -624,6 +624,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                 restoreCookiesForSession(args.accountId)
                 // Reuse existing webview — just navigate and update active highlight
                 initialBackIndex = -1  // Reset baseline for new network URL
+                applyUaForNetwork(args.networkId)
                 socialWebView?.loadUrl(args.url)
                 currentAccountId = args.accountId
                 currentNetworkId = args.networkId
@@ -691,6 +692,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             // Apply persisted mute state to the new webview via JS
             applyMuteToWebView(webView)
 
+            applyUaForNetwork(args.networkId)
             webView.loadUrl(args.url)
             invoke.resolve(JSObject())
         }
@@ -703,6 +705,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         val args = invoke.parseArgs(NavigateArgs::class.java)
         activity.runOnUiThread {
             initialBackIndex = -1  // Reset baseline for new network URL
+            applyUaForNetwork(args.networkId)
             socialWebView?.loadUrl(args.url)
             currentNetworkId = args.networkId
             updateBottomBarActiveNetwork(args.networkId)
@@ -1298,6 +1301,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                     currentAccountId = newKey
                 }
                 initialBackIndex = -1
+                applyUaForNetwork(net.id)
                 socialWebView?.loadUrl(net.url)
                 currentNetworkId = net.id
                 incrementUsage(net.id)
@@ -1460,6 +1464,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                     currentAccountId = newKey
                 }
                 initialBackIndex = -1
+                applyUaForNetwork(net.id)
                 socialWebView?.loadUrl(net.url)
                 currentNetworkId = net.id
                 incrementUsage(net.id)
@@ -1487,6 +1492,17 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         }
     }
 
+        // Networks that require a desktop UA (their web app blocks mobile browsers)
+    private val DESKTOP_UA_NETWORKS = setOf("whatsapp", "telegram", "discord")
+    private val DESKTOP_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+    private lateinit var mobileUa: String
+
+    /** Set the appropriate UA before loading a URL — desktop for WhatsApp/Telegram/Discord, mobile for everything else. */
+    private fun applyUaForNetwork(networkId: String?) {
+        val wv = socialWebView ?: return
+        wv.settings.userAgentString = if (networkId in DESKTOP_UA_NETWORKS) DESKTOP_UA else mobileUa
+    }
+
     // ── WebView factory ───────────────────────────────────────────────────────
 
     private fun createWebView(): WebView {
@@ -1504,7 +1520,8 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         // Use the real WebView UA but strip the "; wv" token that flags us as a WebView.
         // This keeps the Chrome version in sync with the actual engine (no fingerprint mismatch).
         val defaultUa = WebSettings.getDefaultUserAgent(activity)
-        settings.userAgentString = defaultUa.replace("; wv", "")
+        mobileUa = defaultUa.replace("; wv", "")
+        settings.userAgentString = mobileUa
 
         val cookieManager = CookieManager.getInstance()
         cookieManager.setAcceptCookie(true)
