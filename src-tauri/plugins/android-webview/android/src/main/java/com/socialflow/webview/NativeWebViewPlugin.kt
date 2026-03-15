@@ -23,6 +23,8 @@ import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
+import androidx.webkit.WebViewCompat
+import androidx.webkit.WebViewFeature
 import app.tauri.annotation.Command
 import app.tauri.annotation.InvokeArg
 import app.tauri.annotation.TauriPlugin
@@ -380,6 +382,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
     private var socialRoot: FrameLayout? = null
     private var socialWebView: WebView? = null
+    private var prewarmedWebView: WebView? = null
     private var currentAccountId: String? = null
     private var currentNetworkId: String? = null
 
@@ -498,7 +501,6 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         val cm = CookieManager.getInstance()
         // Clear everything first
         cm.removeAllCookies(null)
-        cm.flush()
 
         // Restore saved cookies for this session
         var restored = 0
@@ -521,6 +523,11 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     override fun load(webView: WebView) {
         mainWebView = webView
         Log.i(TAG, "load() called — mainWebView captured: ${webView.hashCode()}")
+        // Pre-warm a WebView so the first network open is instant (~200ms saved)
+        activity.runOnUiThread {
+            prewarmedWebView = createWebView()
+            Log.i(TAG, "WebView pre-warmed")
+        }
     }
 
     /**
@@ -647,7 +654,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             val root = FrameLayout(activity)
 
             // ── WebView (below status bar, above our bar + nav bar) ──────────
-            val webView = createWebView()
+            val webView = prewarmedWebView?.also { prewarmedWebView = null } ?: createWebView()
             val wvParams = FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
@@ -1527,7 +1534,15 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         cookieManager.setAcceptCookie(true)
         cookieManager.setAcceptThirdPartyCookies(webView, true)
 
-        // Auto-accept cookie dialogs + dismiss app-download prompts + restore grayscale
+        // Inject stealth/cookie/banner scripts at document start (before page JS runs).
+        // This is critical for anti-bot bypass — onPageFinished is too late.
+        val useDocStart = WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)
+        if (useDocStart) {
+            WebViewCompat.addDocumentStartJavaScript(webView, STEALTH_SCRIPT, setOf("*"))
+            WebViewCompat.addDocumentStartJavaScript(webView, COOKIE_ACCEPT_SCRIPT, setOf("*"))
+            WebViewCompat.addDocumentStartJavaScript(webView, DISMISS_APP_BANNERS_SCRIPT, setOf("*"))
+        }
+
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, request: android.webkit.WebResourceRequest): Boolean {
                 val url = request.url.toString()
@@ -1553,9 +1568,12 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             }
             override fun onPageFinished(view: WebView, url: String) {
                 super.onPageFinished(view, url)
-                view.evaluateJavascript(STEALTH_SCRIPT, null)
-                view.evaluateJavascript(COOKIE_ACCEPT_SCRIPT, null)
-                view.evaluateJavascript(DISMISS_APP_BANNERS_SCRIPT, null)
+                // Fallback: inject scripts here only if addDocumentStartJavaScript wasn't available
+                if (!useDocStart) {
+                    view.evaluateJavascript(STEALTH_SCRIPT, null)
+                    view.evaluateJavascript(COOKIE_ACCEPT_SCRIPT, null)
+                    view.evaluateJavascript(DISMISS_APP_BANNERS_SCRIPT, null)
+                }
                 if (isGrayscale) applyGrayscaleToWebView(view)
                 if (isMuted) applyMuteToWebView(view)
                 // Detect Akamai/CDN block pages that return 200 but show "Access Denied"

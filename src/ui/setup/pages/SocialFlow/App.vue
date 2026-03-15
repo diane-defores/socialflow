@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useThemeStore } from '@/stores/theme'
 import { useWebviewStore } from '@/stores/webviewState'
@@ -72,16 +72,20 @@ watch(() => themeStore.isDarkMode, async (enabled) => {
   invoke('set_dark_mode', { enabled }).catch(() => {})
 })
 
-// Sync profile list to Android popup menu whenever profiles or active profile changes
+// Sync profile list to Android popup menu whenever profiles or active profile changes.
+// Use a lightweight computed fingerprint instead of deep: true (avoids traversing base64 avatars).
+const profilesFingerprint = computed(() =>
+  profilesStore.profiles.map(p => `${p.id}:${p.name}:${p.emoji}`).join('|')
+)
 watch(
-  () => [profilesStore.profiles, profilesStore.activeProfileId] as const,
-  async ([profiles, activeId]) => {
+  [profilesFingerprint, () => profilesStore.activeProfileId],
+  async ([_, activeId]) => {
     if (!isTauri) return
     const { invoke } = await import('@tauri-apps/api/core')
-    const profilesJson = JSON.stringify(profiles.map(p => ({ id: p.id, name: p.name, emoji: p.emoji })))
+    const profilesJson = JSON.stringify(profilesStore.profiles.map(p => ({ id: p.id, name: p.name, emoji: p.emoji })))
     invoke('set_profiles', { profilesJson, activeProfileId: activeId }).catch(() => {})
   },
-  { immediate: true, deep: true },
+  { immediate: true },
 )
 
 onMounted(async () => {
