@@ -1493,7 +1493,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     }
 
         // Networks that require a desktop UA (their web app blocks mobile browsers)
-    private val DESKTOP_UA_NETWORKS = setOf("whatsapp", "telegram", "discord")
+    private val DESKTOP_UA_NETWORKS = setOf("whatsapp", "telegram", "discord", "messenger")
     private val DESKTOP_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
     private lateinit var mobileUa: String
 
