@@ -6,7 +6,7 @@
 ##
 ## -------------------------------------------------------------------
 # Flox manifest version managed by Flox CLI
-version = 1
+schema-version = "1.10.0"
 
 
 ## Install Packages --------------------------------------------------
@@ -16,12 +16,17 @@ version = 1
 ## -------------------------------------------------------------------
 [install]
 nodejs.pkg-path = "nodejs"
+nodejs.outputs = "all"
 pnpm.pkg-path = "pnpm"
 pkg-config.pkg-path = "pkg-config"
+pkg-config.outputs = "all"
 gtk3.pkg-path = "gtk3"
+gtk3.outputs = "all"
 librsvg.pkg-path = "librsvg"
+librsvg.outputs = "all"
 patchelf.pkg-path = "patchelf"
 webkitgtk_4_1.pkg-path = "webkitgtk_4_1"
+webkitgtk_4_1.outputs = "all"
 # gum.pkg-path = "gum"
 # gum.version = "^0.14.5"
 
@@ -99,10 +104,6 @@ webkitgtk_4_1.pkg-path = "webkitgtk_4_1"
 
 ## Other Environment Options -----------------------------------------
 [options]
-# Systems that environment is compatible with
-systems = [
-  "aarch64-linux",
-  "x86_64-linux",
-]
+systems = ["aarch64-linux", "x86_64-linux"]
 # Uncomment to disable CUDA detection.
 # cuda-detection = false

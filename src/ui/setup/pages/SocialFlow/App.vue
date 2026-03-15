@@ -143,6 +143,16 @@ onUnmounted(() => {
 </script>
 
 <style>
+* {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+input, textarea, [contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 .app-container {
   height: 100vh;
   overflow: hidden;

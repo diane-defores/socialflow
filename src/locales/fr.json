@@ -1,18 +1,18 @@
 {
   "menu": {
-    "about": "A propos",
+    "about": "À propos",
     "contact": "Contact",
     "home": "Accueil"
   },
   "notifications": {
     "error": "Une erreur est survenue.",
-    "success": "Succes !",
+    "success": "Succès !",
     "warning": "Attention !"
   },
-  "updated": "Mis a jour",
+  "updated": "Mis à jour",
   "welcomeMessage": "Bienvenue dans SocialFlow !",
   "common": {
-    "settings": "Parametres",
+    "settings": "Paramètres",
     "notifications": "Notifications",
     "cancel": "Annuler",
     "add": "Ajouter",
@@ -22,11 +22,11 @@
     "share": "Partager",
     "like": "J'aime",
     "comment": "Commenter",
-    "reply": "Repondre",
+    "reply": "Répondre",
     "send": "Envoyer",
     "photo": "Photo",
-    "video": "Video",
-    "event": "Evenement",
+    "video": "Vidéo",
+    "event": "Événement",
     "article": "Article",
     "friends": "Amis",
     "loading": "En cours...",
@@ -36,12 +36,12 @@
     "ok": "OK"
   },
   "settings": {
-    "title": "Parametres",
+    "title": "Paramètres",
     "cancelButton": "Annuler",
     "saveButton": "Enregistrer",
     "username_label": "Nom d'utilisateur",
     "email_label": "E-mail",
-    "preferences": "Preferences",
+    "preferences": "Préférences",
     "language": "Langue"
   },
   "theme": {
@@ -50,43 +50,44 @@
   },
   "backup": {
     "section_title": "Sauvegarde",
-    "info_text": "Nous aimerions synchroniser vos donnees automatiquement via le cloud, mais les cookies de session contiennent des jetons d'authentification sensibles que les navigateurs interdisent de transmettre a des serveurs tiers. L'export chiffre par mot de passe est donc le seul moyen sur de transferer vos sessions entre appareils.",
-    "export_label": "Exporter mes donnees",
+    "info_text": "Nous aimerions synchroniser vos données automatiquement via le cloud, mais les cookies de session contiennent des jetons d'authentification sensibles que les navigateurs interdisent de transmettre à des serveurs tiers. L'export chiffré par mot de passe est donc le seul moyen sûr de transférer vos sessions entre appareils.",
+    "export_label": "Exporter mes données",
     "export_button": "Exporter",
     "restore_label": "Restaurer une sauvegarde",
     "import_button": "Importer",
     "password_label": "Mot de passe",
-    "password_placeholder": "Minimum 8 caracteres",
+    "password_placeholder": "Minimum 8 caractères",
     "confirm_password_label": "Confirmer le mot de passe",
     "confirm_password_placeholder": "Retapez le mot de passe",
     "export_hint": "Choisissez un mot de passe pour chiffrer vos cookies et profils.",
-    "import_hint": "Entrez le mot de passe utilise lors de l'export.",
-    "export_success": "Sauvegarde exportee : {path}",
-    "import_success": "Restauration terminee ! Rechargement...",
-    "export_done_title": "Sauvegarde exportee avec succes !",
-    "import_done_title": "Restauration terminee !",
-    "export_next_title": "Prochaines etapes :",
-    "export_step_1": "Transferez le fichier .sfbak sur votre autre appareil",
+    "import_hint": "Entrez le mot de passe utilisé lors de l'export.",
+    "export_saved_to_downloads": "Fichier sauvegardé dans Téléchargements",
+    "export_success": "Sauvegarde exportée : {path}",
+    "import_success": "Restauration terminée ! Rechargement...",
+    "export_done_title": "Sauvegarde exportée avec succès !",
+    "import_done_title": "Restauration terminée !",
+    "export_next_title": "Prochaines étapes :",
+    "export_step_1": "Transférez le fichier .sfbak sur votre autre appareil",
     "export_step_2": "Installez SocialFlow sur le nouvel appareil",
-    "export_step_3": "Utilisez « Restaurer une sauvegarde » avec le meme mot de passe",
-    "export_tip": "Conservez votre mot de passe — il est indispensable pour restaurer vos donnees.",
-    "import_done_message": "Tous vos profils, comptes et preferences ont ete restaures.",
+    "export_step_3": "Utilisez « Restaurer une sauvegarde » avec le même mot de passe",
+    "export_tip": "Conservez votre mot de passe — il est indispensable pour restaurer vos données.",
+    "import_done_message": "Tous vos profils, comptes et préférences ont été restaurés.",
     "import_reloading": "Rechargement dans {seconds}s...",
-    "export_error_title": "Echec de l'export",
-    "import_error_title": "Echec de la restauration",
-    "error_checklist_title": "Verifiez les points suivants :",
-    "error_check_password": "Le mot de passe est-il exactement le meme que lors de l'export ?",
+    "export_error_title": "Échec de l'export",
+    "import_error_title": "Échec de la restauration",
+    "error_checklist_title": "Vérifiez les points suivants :",
+    "error_check_password": "Le mot de passe est-il exactement le même que lors de l'export ?",
     "error_check_file": "Le fichier est-il bien une sauvegarde .sfbak valide ?",
-    "error_check_version": "La sauvegarde a-t-elle ete creee avec une version compatible ?",
-    "error_wrong_password": "Mot de passe incorrect. Veuillez reessayer.",
-    "error_no_file": "Aucun fichier selectionne.",
-    "error_invalid_file": "Ce fichier ne semble pas etre une sauvegarde SocialFlow valide.",
-    "try_again": "Reessayer"
+    "error_check_version": "La sauvegarde a-t-elle été créée avec une version compatible ?",
+    "error_wrong_password": "Mot de passe incorrect. Veuillez réessayer.",
+    "error_no_file": "Aucun fichier sélectionné.",
+    "error_invalid_file": "Ce fichier ne semble pas être une sauvegarde SocialFlow valide.",
+    "try_again": "Réessayer"
   },
   "profile": {
     "default_name": "Profil",
-    "networks_count": "{count} reseaux",
-    "tap_to_manage": "Appuyer pour gerer",
+    "networks_count": "{count} réseaux",
+    "tap_to_manage": "Appuyer pour gérer",
     "active_label": "Actif",
     "rename_action": "Renommer",
     "avatar_action": "Photo de profil",
@@ -98,27 +99,27 @@
     "title": "Profils"
   },
   "sidebar": {
-    "networks_section": "Reseaux sociaux",
+    "networks_section": "Réseaux sociaux",
     "friends_section": "Amis",
-    "custom_links_section": "Liens personnalises",
-    "feed_button": "Fil d'actualite",
+    "custom_links_section": "Liens personnalisés",
+    "feed_button": "Fil d'actualité",
     "profile_button": "Profil",
     "friends_button": "Amis",
     "saved_button": "Enregistrements",
-    "events_button": "Evenements"
+    "events_button": "Événements"
   },
   "friends_filter": {
     "friends_only": "Amis seulement",
     "see_all": "Voir tout",
     "filter_active": "Filtre amis actif",
-    "filter_inactive": "Filtre amis desactive",
-    "manage_button": "Gerer les amis",
-    "manage_tooltip": "Gerer la liste d'amis",
+    "filter_inactive": "Filtre amis désactivé",
+    "manage_button": "Gérer les amis",
+    "manage_tooltip": "Gérer la liste d'amis",
     "dialog_title": "Amis — {network}",
-    "hint_text": "Entrez les noms ou pseudos tels qu'ils apparaissent sur {network}. Seuls leurs posts seront affiches quand le filtre est actif.",
-    "empty_state": "Aucun ami ajoute",
+    "hint_text": "Entrez les noms ou pseudos tels qu'ils apparaissent sur {network}. Seuls leurs posts seront affichés quand le filtre est actif.",
+    "empty_state": "Aucun ami ajouté",
     "empty_hint": "Ajoutez des noms pour filtrer le fil",
-    "footer_note": "La correspondance est insensible a la casse et partielle."
+    "footer_note": "La correspondance est insensible à la casse et partielle."
   },
   "links": {
     "add_button": "Ajouter un lien",
@@ -128,60 +129,60 @@
     "url_placeholder": "URL (ex: example.com)"
   },
   "networks": {
-    "edit_mode_hint": "Appuyez a l'exterieur pour terminer"
+    "edit_mode_hint": "Appuyez à l'extérieur pour terminer"
   },
   "notif": {
     "mark_all_read": "Tout lire",
     "empty_state": "Aucune nouvelle notification"
   },
   "filters": {
-    "reset_tooltip": "Reinitialiser les filtres"
+    "reset_tooltip": "Réinitialiser les filtres"
   },
   "post": {
-    "privacy_placeholder": "Selectionnez la confidentialite",
-    "add_to_post_title": "Ajouter a votre publication",
+    "privacy_placeholder": "Sélectionnez la confidentialité",
+    "add_to_post_title": "Ajouter à votre publication",
     "composer_placeholder": "Que voulez-vous partager ?",
-    "editor_placeholder": "Ecrivez quelque chose...",
-    "dialog_title": "Creer une publication",
-    "photo_video_type": "Photo/Video"
+    "editor_placeholder": "Écrivez quelque chose...",
+    "dialog_title": "Créer une publication",
+    "photo_video_type": "Photo/Vidéo"
   },
   "comment": {
-    "show_more_replies": "Voir {count} reponses de plus",
+    "show_more_replies": "Voir {count} réponses de plus",
     "unlike": "Je n'aime plus"
   },
   "twitter": {
     "my_profile": "Mon Profil",
     "following": "Abonnements",
-    "followers": "Abonnes",
+    "followers": "Abonnés",
     "trends": "Tendances",
     "tweets_count": "tweets",
     "compose_placeholder": "Quoi de neuf ?",
-    "connect_title": "Connectez-vous a Twitter",
-    "connect_message": "Pour voir votre feed Twitter et interagir avec vos abonnes, vous devez d'abord vous connecter.",
+    "connect_title": "Connectez-vous à Twitter",
+    "connect_message": "Pour voir votre feed Twitter et interagir avec vos abonnés, vous devez d'abord vous connecter.",
     "connect_button": "Se connecter avec Twitter"
   },
   "linkedin": {
     "profile_views": "Vues du profil",
     "search_appearances": "Apparitions dans la recherche",
-    "network_section": "Mon Reseau",
+    "network_section": "Mon Réseau",
     "connections": "Connexions",
     "followed_pages": "Pages suivies",
     "start_post": "Commencer un post",
-    "connect_title": "Connectez-vous a LinkedIn",
-    "connect_message": "Pour voir votre feed professionnel et interagir avec votre reseau, vous devez d'abord vous connecter.",
+    "connect_title": "Connectez-vous à LinkedIn",
+    "connect_message": "Pour voir votre feed professionnel et interagir avec votre réseau, vous devez d'abord vous connecter.",
     "connect_button": "Se connecter avec LinkedIn",
-    "create_post_title": "Creer un post",
+    "create_post_title": "Créer un post",
     "post_placeholder": "De quoi souhaitez-vous parler ?"
   },
   "reddit": {
     "save_button": "Sauvegarder",
-    "connect_title": "Connectez-vous a Reddit",
-    "connect_message": "Pour voir votre feed Reddit, vous devez d'abord vous connecter a votre compte.",
+    "connect_title": "Connectez-vous à Reddit",
+    "connect_message": "Pour voir votre feed Reddit, vous devez d'abord vous connecter à votre compte.",
     "connect_button": "Se connecter avec Reddit"
   },
   "facebook": {
-    "create_post": "Creer un post",
-    "comment_placeholder": "Ecrivez un commentaire...",
+    "create_post": "Créer un post",
+    "comment_placeholder": "Écrivez un commentaire...",
     "contacts": "Contacts",
     "connect_button": "Se connecter avec Facebook"
   },

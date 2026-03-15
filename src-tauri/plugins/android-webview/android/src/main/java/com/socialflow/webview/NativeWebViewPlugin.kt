@@ -23,6 +23,7 @@ import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import app.tauri.annotation.Command
 import app.tauri.annotation.InvokeArg
 import app.tauri.annotation.TauriPlugin
@@ -346,6 +347,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
     private var socialRoot: FrameLayout? = null
     private var socialWebView: WebView? = null
+    private var swipeRefresh: SwipeRefreshLayout? = null
     private var currentAccountId: String? = null
     private var currentNetworkId: String? = null
 
@@ -611,15 +613,24 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             // ── Root container ───────────────────────────────────────────────
             val root = FrameLayout(activity)
 
-            // ── WebView (below status bar, above our bar + nav bar) ──────────
+            // ── WebView wrapped in SwipeRefreshLayout (pull-to-refresh) ────
             val webView = createWebView()
+            val srl = SwipeRefreshLayout(activity)
+            srl.addView(webView, ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            ))
+            srl.setOnRefreshListener { webView.reload() }
+            srl.setColorSchemeColors(Color.parseColor("#2196F3"))
+            swipeRefresh = srl
+
             val wvParams = FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
             wvParams.topMargin = statusBarHeight
             wvParams.bottomMargin = navBarHeight + barHeight
-            webView.layoutParams = wvParams
+            srl.layoutParams = wvParams
 
             // ── Bottom overlay bar (above nav bar) ───────────────────────────
             val bottomBar = buildBottomBar(density, navBarHeight, args.networkId, sortedNetworks())
@@ -631,7 +642,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             bottomBarParams.gravity = Gravity.BOTTOM
             bottomBar.layoutParams = bottomBarParams
 
-            root.addView(webView)
+            root.addView(srl)
             root.addView(bottomBar)  // drawn on top of webview
 
             activity.addContentView(
@@ -1410,6 +1421,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             }
             override fun onPageFinished(view: WebView, url: String) {
                 super.onPageFinished(view, url)
+                swipeRefresh?.isRefreshing = false
                 view.evaluateJavascript(STEALTH_SCRIPT, null)
                 view.evaluateJavascript(COOKIE_ACCEPT_SCRIPT, null)
                 view.evaluateJavascript(DISMISS_APP_BANNERS_SCRIPT, null)
@@ -1446,6 +1458,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         socialWebView?.destroy()
         socialRoot?.let { (it.parent as? ViewGroup)?.removeView(it) }
         socialWebView = null
+        swipeRefresh = null
         socialRoot = null
         bottomBarView = null
         currentAccountId = null

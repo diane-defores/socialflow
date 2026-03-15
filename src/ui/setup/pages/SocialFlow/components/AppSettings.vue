@@ -14,7 +14,7 @@
           <span>{{ $t('settings.language') }}</span>
         </div>
         <select v-model="currentLocale" class="locale-select" @change="onLocaleChange">
-          <option value="fr">Francais</option>
+          <option value="fr">Français</option>
           <option value="en">English</option>
         </select>
       </div>

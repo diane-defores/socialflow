@@ -1,28 +1,33 @@
 {
   "lockfile-version": 1,
   "manifest": {
-    "version": 1,
+    "schema-version": "1.10.0",
     "install": {
       "gtk3": {
-        "pkg-path": "gtk3"
+        "pkg-path": "gtk3",
+        "outputs": "all"
       },
       "librsvg": {
-        "pkg-path": "librsvg"
+        "pkg-path": "librsvg",
+        "outputs": "all"
       },
       "nodejs": {
-        "pkg-path": "nodejs"
+        "pkg-path": "nodejs",
+        "outputs": "all"
       },
       "patchelf": {
         "pkg-path": "patchelf"
       },
       "pkg-config": {
-        "pkg-path": "pkg-config"
+        "pkg-path": "pkg-config",
+        "outputs": "all"
       },
       "pnpm": {
         "pkg-path": "pnpm"
       },
       "webkitgtk_4_1": {
-        "pkg-path": "webkitgtk_4_1"
+        "pkg-path": "webkitgtk_4_1",
+        "outputs": "all"
       }
     },
     "hook": {},

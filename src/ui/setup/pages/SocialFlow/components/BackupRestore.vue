@@ -87,7 +87,7 @@
               <template v-if="mode === 'export'">
                 <div class="result-detail">
                   <i class="pi pi-file" />
-                  <span class="result-path">{{ resultPath }}</span>
+                  <span class="result-path">{{ friendlyPath }}</span>
                 </div>
                 <div class="result-instructions">
                   <p class="result-instructions-title">{{ $t('backup.export_next_title') }}</p>
@@ -196,6 +196,12 @@ const friendlyError = computed(() => {
   if (msg.includes('missing stores'))
     return t('backup.error_invalid_file')
   return msg
+})
+
+const friendlyPath = computed(() => {
+  const p = resultPath.value
+  if (p.startsWith('content://')) return t('backup.export_saved_to_downloads')
+  return p
 })
 
 function resetDialog() {

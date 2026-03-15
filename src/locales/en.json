@@ -61,6 +61,7 @@
     "confirm_password_placeholder": "Retype password",
     "export_hint": "Choose a password to encrypt your cookies and profiles.",
     "import_hint": "Enter the password used during export.",
+    "export_saved_to_downloads": "File saved to Downloads",
     "export_success": "Backup exported: {path}",
     "import_success": "Restore complete! Reloading...",
     "export_done_title": "Backup exported successfully!",

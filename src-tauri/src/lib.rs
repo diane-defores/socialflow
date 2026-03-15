@@ -69,6 +69,68 @@ const STEALTH_SCRIPT: &str = r#"
 })();
 "#;
 
+/// Pull-to-refresh JS — detects touch/pointer pull-down at top of page, shows spinner, reloads.
+#[cfg(not(target_os = "android"))]
+const PULL_TO_REFRESH_SCRIPT: &str = r##"
+(function(){
+  if (window.__sfzPTR) return;
+  window.__sfzPTR = true;
+
+  var threshold = 100;
+  var startY = 0;
+  var pulling = false;
+  var indicator = null;
+
+  function getIndicator() {
+    if (indicator) return indicator;
+    var el = document.createElement('div');
+    el.id = '__sfz-ptr';
+    el.style.cssText = 'position:fixed;top:-50px;left:50%;transform:translateX(-50%);width:36px;height:36px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.2);z-index:2147483647;display:flex;align-items:center;justify-content:center;transition:top .2s ease;pointer-events:none;';
+    el.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2196F3" stroke-width="2.5" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>';
+    document.documentElement.appendChild(el);
+    indicator = el;
+    return el;
+  }
+
+  document.addEventListener('touchstart', function(e) {
+    if (window.scrollY < 5) {
+      startY = e.touches[0].clientY;
+      pulling = true;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchmove', function(e) {
+    if (!pulling) return;
+    var dy = e.touches[0].clientY - startY;
+    if (dy < 0) { pulling = false; return; }
+    var el = getIndicator();
+    var progress = Math.min(dy / threshold, 1);
+    el.style.top = (-50 + progress * 70) + 'px';
+    el.style.opacity = String(progress);
+    var rot = progress * 360;
+    el.querySelector('svg').style.transform = 'rotate(' + rot + 'deg)';
+  }, { passive: true });
+
+  document.addEventListener('touchend', function() {
+    if (!pulling) return;
+    pulling = false;
+    var el = getIndicator();
+    var top = parseFloat(el.style.top);
+    if (top >= 20) {
+      el.style.top = '16px';
+      el.querySelector('svg').style.animation = 'spin .6s linear infinite';
+      var style = document.createElement('style');
+      style.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+      document.head.appendChild(style);
+      setTimeout(function(){ location.reload(); }, 300);
+    } else {
+      el.style.top = '-50px';
+      el.style.opacity = '0';
+    }
+  }, { passive: true });
+})();
+"##;
+
 // ── Desktop-only imports ─────────────────────────────────────────────────────
 #[cfg(not(target_os = "android"))]
 use tauri::{
@@ -225,6 +287,7 @@ fn open_webview(
             WebviewBuilder::new(&label, WebviewUrl::External(parsed))
                 .user_agent(CHROME_UA)
                 .initialization_script(STEALTH_SCRIPT)
+                .initialization_script(PULL_TO_REFRESH_SCRIPT)
                 .data_directory(data_dir),
             tauri::LogicalPosition::new(x, y),
             tauri::LogicalSize::new(width, height),
