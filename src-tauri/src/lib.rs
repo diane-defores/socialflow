@@ -111,6 +111,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     let whatsapp = MenuItem::with_id(app, "tray:whatsapp", "WhatsApp", true, None::<&str>)?;
     let telegram = MenuItem::with_id(app, "tray:telegram", "Telegram", true, None::<&str>)?;
     let nextdoor = MenuItem::with_id(app, "tray:nextdoor", "Nextdoor", true, None::<&str>)?;
+    let googlemessages = MenuItem::with_id(app, "tray:googlemessages", "Google Messages", true, None::<&str>)?;
     let sep2 = MenuItem::with_id(app, "sep2", "──────────────", false, None::<&str>)?;
     let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
 
@@ -119,7 +120,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
         &[
             &show, &separator, &twitter, &instagram, &linkedin, &facebook, &tiktok, &threads,
             &discord, &reddit, &snapchat, &quora, &pinterest, &whatsapp, &telegram,
-            &nextdoor, &sep2, &quit,
+            &nextdoor, &googlemessages, &sep2, &quit,
         ],
     )?;
 

@@ -8,15 +8,20 @@ All notable changes to SocialFlow are documented here.
 - Kotlin i18n system — `Strings` object with FR/EN translations, `setLocale` IPC synced from Vue locale watcher; popup menu + blocked page fully translated
 - Blocked page detection — HTTP 403 + Akamai "Access Denied" content check → user-friendly error page with clear cookies & retry, back, open in browser
 - `clearCookiesAndRetry()` helper — wipes persisted Akamai tracking cookies and reloads
+- Per-network UA switching — desktop Chrome UA for WhatsApp, Telegram, Discord, Messenger (their web apps block mobile browsers)
+- WebView pre-warm — created during plugin `load()`, reused on first open (~200ms faster)
 
 ### Changed
 - WebView UA uses `WebSettings.getDefaultUserAgent(context)` minus `; wv` token (was hardcoded Chrome 131 — caused fingerprint mismatch)
 - Desktop UA bumped to Chrome 136
+- Stealth/cookie/banner scripts now injected via `addDocumentStartJavaScript()` (androidx.webkit) — runs before page JS instead of after (`onPageFinished` kept as fallback)
+- Profiles watcher uses lightweight fingerprint computed instead of `deep: true` (avoids traversing base64 avatars)
 
 ### Fixed
 - French accents — 60+ strings in `fr.json` corrected (è/é/ê/à/û), "Français" in settings dropdown
 - Text selection disabled app-wide via `user-select: none` in App.vue (was in never-imported `main.css`)
 - Backup export hides Android `content://` URI — shows "Fichier sauvegardé dans Téléchargements" instead
+- Redundant `flush()` removed in `restoreCookiesForSession` (was called twice, once after `removeAllCookies` and once after restore)
 
 ---
 

@@ -153,11 +153,23 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [x] Added Quora, Pinterest, WhatsApp, Telegram, Nextdoor as social networks (2026-03-12)
 - [x] Custom links per profile — `customLinks` store, add/remove on mobile + desktop sidebar (2026-03-12)
 - [x] Kotlin bottom bar synced with profile network visibility — `set_bar_networks` IPC + `rebuildBottomBar()` (2026-03-12)
+- [x] French accents — all 60+ strings in `fr.json` corrected (è/é/ê/à/û), "Français" in settings dropdown (2026-03-15)
+- [x] Text selection disabled app-wide — `user-select: none` in App.vue (was in never-imported main.css) (2026-03-15)
+- [x] Backup export path — hide Android `content://` URI, show friendly "Fichier sauvegardé dans Téléchargements" (2026-03-15)
+- [x] WebView UA — use real `getDefaultUserAgent()` minus `; wv` token instead of hardcoded Chrome 131 (prevents fingerprint mismatch) (2026-03-15)
+- [x] Per-network UA switching — desktop Chrome UA for WhatsApp/Telegram/Discord/Messenger (web apps that block mobile browsers) (2026-03-15)
+- [x] Blocked page detection — HTTP 403 + Akamai "Access Denied" → user-friendly error page with clear cookies & retry, back, open in browser (2026-03-15)
+- [x] Kotlin i18n system — `Strings` object with FR/EN translations, `setLocale` IPC synced from Vue watcher (2026-03-15)
+- [x] `addDocumentStartJavaScript()` — stealth/cookie/banner scripts injected before page JS runs (was `onPageFinished`, too late for anti-bot) (2026-03-15)
+- [x] WebView pre-warm — created during `load()`, reused on first open (~200ms faster) (2026-03-15)
+- [x] Cookie flush optimization — removed redundant `flush()` between `removeAllCookies` and restore loop (2026-03-15)
+- [x] Profiles watcher — lightweight fingerprint computed instead of `deep: true` (avoids traversing base64 avatars) (2026-03-15)
 - [ ] 🟡 Header search/filters hidden on mobile — add mobile-accessible alternative
 - [ ] 🟡 Android: verify edge-to-edge status bar color inversion (light icons on dark home screen)
 - [ ] 🟡 Android: test cookie isolation across profile switches on device
 - [ ] 🟡 Android: test friends filter end-to-end on device
 - [ ] 🟡 Desktop sidebar: custom links not yet tested visually
+- [ ] 🟡 i18n: pass locale to Kotlin blocked page HTML (currently hardcoded FR in template, `Strings.t()` used)
 
 ### To go live (⛔ blocked — needs accounts)
 
