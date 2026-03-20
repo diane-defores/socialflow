@@ -1517,7 +1517,20 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         }
     }
 
-        // Networks that require a desktop UA (their web app blocks mobile browsers)
+    // Web login URLs for networks that redirect to app stores instead of showing a login page.
+    // When we intercept a Play Store / App Store redirect, we send the user here instead.
+    private val NETWORK_LOGIN_URLS = mapOf(
+        "tiktok" to "https://www.tiktok.com/login",
+        "instagram" to "https://www.instagram.com/accounts/login/",
+        "twitter" to "https://x.com/i/flow/login",
+        "facebook" to "https://www.facebook.com/login",
+        "snapchat" to "https://accounts.snapchat.com/accounts/v2/login",
+        "discord" to "https://discord.com/login",
+        "reddit" to "https://www.reddit.com/login/",
+        "pinterest" to "https://www.pinterest.com/login/",
+    )
+
+    // Networks that require a desktop UA (their web app blocks mobile browsers)
     private val DESKTOP_UA_NETWORKS = setOf("whatsapp", "telegram", "discord", "messenger", "googlemessages")
     private val DESKTOP_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
     private lateinit var mobileUa: String
@@ -1565,18 +1578,49 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, request: android.webkit.WebResourceRequest): Boolean {
                 val url = request.url.toString()
-                // Block intent:// and market:// URLs — these crash the WebView
-                // (e.g. Instagram "Open in app" triggers intent://instagram.com/...)
-                if (url.startsWith("intent:") || url.startsWith("market:")) {
-                    return true  // consume — don't navigate
+                val scheme = request.url.scheme ?: ""
+
+                // Allow normal web navigation — but intercept app store redirects
+                if (scheme == "http" || scheme == "https") {
+                    val host = request.url.host ?: ""
+                    // Intercept Play Store / App Store redirects → send to web login instead
+                    if (host.contains("play.google.com") || host.contains("apps.apple.com") || host.contains("itunes.apple.com")) {
+                        val loginUrl = NETWORK_LOGIN_URLS[currentNetworkId]
+                        if (loginUrl != null) {
+                            Log.i(TAG, "App store redirect intercepted ($host) → $loginUrl")
+                            view.loadUrl(loginUrl)
+                            return true
+                        }
+                        return true  // block even if no login URL known
+                    }
+                    return false
                 }
-                // Handle "clear cookies and retry" action from the blocked page
+
+                // Handle our custom "clear cookies and retry" action from the blocked page
                 if (url.startsWith("sfz://clear-cookies")) {
                     val retryUrl = android.net.Uri.parse(url).getQueryParameter("retry") ?: return true
                     clearCookiesAndRetry(view, retryUrl)
                     return true
                 }
-                return false
+
+                // fb-messenger:// deep link → redirect to web Messenger instead
+                if (scheme == "fb-messenger") {
+                    view.loadUrl("https://www.facebook.com/messages")
+                    return true
+                }
+
+                // Block all other custom URL schemes (intent://, market://, fb://,
+                // instagram://, twitter://, whatsapp://, tg://, etc.)
+                // These would crash the WebView or try to open external apps.
+                // If the current network has a known login URL, redirect there instead.
+                val loginUrl = NETWORK_LOGIN_URLS[currentNetworkId]
+                if (loginUrl != null) {
+                    Log.i(TAG, "Blocked custom scheme ($scheme) → redirecting to $loginUrl")
+                    view.loadUrl(loginUrl)
+                } else {
+                    Log.i(TAG, "Blocked custom scheme: $url")
+                }
+                return true
             }
             override fun onReceivedHttpError(view: WebView, request: android.webkit.WebResourceRequest, errorResponse: android.webkit.WebResourceResponse) {
                 super.onReceivedHttpError(view, request, errorResponse)
