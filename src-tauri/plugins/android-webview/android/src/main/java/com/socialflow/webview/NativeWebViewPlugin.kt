@@ -237,8 +237,7 @@ private val DISMISS_APP_BANNERS_SCRIPT = """
       // Only click if the button lives inside an app-promotion container
       var parent = el.closest(
         '[id*="app" i], [class*="app" i], [id*="banner" i], [class*="banner" i],' +
-        '[id*="install" i], [class*="install" i], [id*="promo" i], [class*="promo" i],' +
-        '[role="dialog"], [role="alertdialog"]'
+        '[id*="install" i], [class*="install" i], [id*="promo" i], [class*="promo" i]'
       );
       if (parent) { el.click(); return; }
     }
@@ -270,7 +269,10 @@ private val DESKTOP_VIEWPORT_SCRIPT = """
     meta.name = 'viewport';
     (document.head || document.documentElement).appendChild(meta);
   }
-  meta.setAttribute('content', 'width=980, shrink-to-fit=yes');
+  // Narrower viewport for Messenger — 500px makes text readable on mobile
+  // instead of the default 980px which renders everything tiny
+  var w = /facebook\.com\/messages/.test(window.location.href) ? 500 : 980;
+  meta.setAttribute('content', 'width=' + w + ', shrink-to-fit=yes');
 })();
 """.trimIndent()
 
@@ -354,8 +356,7 @@ private val COOKIE_ACCEPT_SCRIPT = """
     // 2. Text-match buttons/links inside any cookie/consent/GDPR container
     var containers = document.querySelectorAll(
       '[id*="cookie" i], [id*="consent" i], [id*="gdpr" i], [id*="privacy" i], [id*="cmp" i],' +
-      '[class*="cookie" i], [class*="consent" i], [class*="gdpr" i], [class*="cmp" i],' +
-      '[role="dialog"], [role="alertdialog"]'
+      '[class*="cookie" i], [class*="consent" i], [class*="gdpr" i], [class*="cmp" i]'
     );
     for (var c = 0; c < containers.length; c++) {
       var btns = containers[c].querySelectorAll('button, a[role="button"], [role="button"]');
@@ -365,12 +366,17 @@ private val COOKIE_ACCEPT_SCRIPT = """
       }
     }
 
-    // 3. Fallback: scan ALL visible buttons on the page (catches Meta/Instagram dialogs
-    //    that use no cookie-related class names on their container)
-    var allBtns = document.querySelectorAll('button, [role="button"]');
-    for (var i = 0; i < allBtns.length; i++) {
-      var label = (allBtns[i].textContent || allBtns[i].getAttribute('aria-label') || '').trim();
-      if (ACCEPT_RE.test(label) && clickIfVisible(allBtns[i])) return;
+    // 3. Check role="dialog" containers, but ONLY if they contain cookie-related text.
+    // This avoids auto-clicking unrelated dialogs (e.g. Messenger "restore history" prompt).
+    var COOKIE_TEXT_RE = /cookie|consent|privacy.policy|politique.de.confidentialit|donn.es.personnelles|rgpd|gdpr|tracking|traceur/i;
+    var dialogs = document.querySelectorAll('[role="dialog"], [role="alertdialog"]');
+    for (var d = 0; d < dialogs.length; d++) {
+      if (!COOKIE_TEXT_RE.test(dialogs[d].textContent || '')) continue;
+      var dbtns = dialogs[d].querySelectorAll('button, a[role="button"], [role="button"]');
+      for (var b = 0; b < dbtns.length; b++) {
+        var label = (dbtns[b].textContent || dbtns[b].getAttribute('aria-label') || '').trim();
+        if (ACCEPT_RE.test(label) && clickIfVisible(dbtns[b])) return;
+      }
     }
   }
 
@@ -1530,6 +1536,27 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         "pinterest" to "https://www.pinterest.com/login/",
     )
 
+    /**
+     * Switch the current webview from Facebook to the Messenger tab.
+     * Handles cookie isolation, UA switch (desktop for Messenger), and bottom bar update.
+     */
+    private fun switchToMessenger(view: WebView) {
+        val messengerUrl = NETWORKS.find { it.id == "messenger" }?.url ?: "https://www.facebook.com/messages"
+        currentAccountId?.let { oldKey ->
+            saveCookiesForSession(oldKey)
+            val profilePrefix = oldKey.substringBeforeLast("-")
+            val newKey = "$profilePrefix-messenger"
+            restoreCookiesForSession(newKey)
+            currentAccountId = newKey
+        }
+        initialBackIndex = -1
+        applyUaForNetwork("messenger")
+        view.loadUrl(messengerUrl)
+        currentNetworkId = "messenger"
+        incrementUsage("messenger")
+        updateBottomBarActiveNetwork("messenger")
+    }
+
     // Networks that require a desktop UA (their web app blocks mobile browsers)
     private val DESKTOP_UA_NETWORKS = setOf("whatsapp", "telegram", "discord", "messenger", "googlemessages")
     private val DESKTOP_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
@@ -1593,6 +1620,16 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                         }
                         return true  // block even if no login URL known
                     }
+                    // Facebook tab → messages: switch to Messenger tab instead of loading
+                    // in-webview (mobile UA shows "Download Messenger" loop)
+                    if (currentNetworkId == "facebook") {
+                        val path = request.url.path ?: ""
+                        if ((host.contains("facebook.com") && path.startsWith("/messages")) || host.contains("messenger.com")) {
+                            Log.i(TAG, "Facebook→Messenger redirect intercepted → switching to Messenger tab")
+                            switchToMessenger(view)
+                            return true
+                        }
+                    }
                     return false
                 }
 
@@ -1603,9 +1640,9 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                     return true
                 }
 
-                // fb-messenger:// deep link → redirect to web Messenger instead
+                // fb-messenger:// deep link → switch to Messenger tab (desktop UA)
                 if (scheme == "fb-messenger") {
-                    view.loadUrl("https://www.facebook.com/messages")
+                    switchToMessenger(view)
                     return true
                 }
 
