@@ -500,7 +500,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         "https://www.instagram.com", "https://m.instagram.com",
         "https://www.threads.net", "https://mobile.twitter.com",
         "https://www.tiktok.com", "https://www.reddit.com",
-        "https://www.linkedin.com", "https://www.messenger.com",
+        "https://www.linkedin.com",
     )
 
     /** Save all cookies for the current profile session key. */
