@@ -81,6 +81,7 @@
           :key="item.id"
           class="network-tile"
           :class="{ active: isNetworkActive(item), 'edit-mode': networkEditMode }"
+          :style="{ background: tileBg(item.id) }"
           @click="networkEditMode ? handleEditClick(item) : navigateToNetwork(item)"
           @touchstart="startLongPress(item)"
           @touchend="cancelLongPress"
@@ -641,6 +642,13 @@ const pillColor = (id: number) => {
   return c.startsWith('linear') ? '#e6683c' : c
 }
 
+const tileBg = (id: number) => {
+  const c = networkColors[id]
+  if (!c) return undefined
+  const solid = c.startsWith('linear') ? '#e6683c' : c
+  return `color-mix(in srgb, ${solid} 7%, var(--surface-card))`
+}
+
 // ─── Navigation ───────────────────────────────────────────────
 const navigateToNetwork = (network: MenuItem) => {
   const networkId = network.route.slice(1)
@@ -1084,7 +1092,6 @@ function handleAvatarChange(event: Event) {
   align-items: center;
   gap: 0.65rem;
   padding: 0.7rem 0.75rem;
-  background: var(--surface-card);
   border: 1px solid var(--surface-border);
   border-radius: 16px;
   cursor: pointer;
@@ -1094,12 +1101,12 @@ function handleAvatarChange(event: Event) {
 
 .network-tile:active {
   transform: scale(0.96);
-  background: var(--surface-hover);
+  background: var(--surface-hover) !important;
 }
 
 .network-tile.active {
   border-color: var(--primary-color);
-  background: color-mix(in srgb, var(--primary-color) 6%, var(--surface-card));
+  background: color-mix(in srgb, var(--primary-color) 12%, var(--surface-card)) !important;
 }
 
 .network-icon-wrap {
