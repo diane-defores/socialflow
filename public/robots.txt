@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://socialflow-olive.vercel.app/sitemap.xml

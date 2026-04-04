@@ -124,14 +124,13 @@ private val NETWORKS = listOf(
     NetworkInfo("threads",   "\ue9d8", Color.parseColor("#000000"), "https://threads.net"),
     NetworkInfo("discord",   "\ue9c0", Color.parseColor("#5865F2"), "https://discord.com/app"),
     NetworkInfo("reddit",    "\ue9e8", Color.parseColor("#FF4500"), "https://reddit.com"),
-    NetworkInfo("messenger", "\ue97e", Color.parseColor("#0084FF"), "https://www.facebook.com/messages"),
+    NetworkInfo("messenger", "\ue97e", Color.parseColor("#0084FF"), "https://www.messenger.com"),
     NetworkInfo("snapchat",  "\ue96c", Color.parseColor("#FFFC00"), "https://web.snapchat.com"),
     NetworkInfo("quora",     "\ue959", Color.parseColor("#B92B27"), "https://www.quora.com"),
     NetworkInfo("pinterest", "\uea09", Color.parseColor("#E60023"), "https://www.pinterest.com"),
     NetworkInfo("whatsapp",  "\ue9d0", Color.parseColor("#25D366"), "https://web.whatsapp.com"),
     NetworkInfo("telegram",  "\ue9d3", Color.parseColor("#0088CC"), "https://web.telegram.org"),
     NetworkInfo("nextdoor",  "\ue968", Color.parseColor("#8ED500"), "https://nextdoor.com"),
-    NetworkInfo("googlemessages", "\ue9d0", Color.parseColor("#1A73E8"), "https://messages.google.com/web"),
 )
 
 // Anti-fingerprint JS — patches WebView detection vectors used by Akamai, PerimeterX, etc.
@@ -254,23 +253,6 @@ private val DISMISS_APP_BANNERS_SCRIPT = """
     }
   });
   observer.observe(document.documentElement, { childList: true, subtree: true });
-})();
-""".trimIndent()
-
-// For desktop-UA networks: force a wide viewport so the desktop layout fits on a mobile screen.
-// Without this, sites with <meta viewport width=device-width> render desktop CSS at phone width
-// (~360px), making everything appear 3-4x zoomed in. Setting width=980 lets loadWithOverviewMode
-// zoom out the page to fit.
-private val DESKTOP_VIEWPORT_SCRIPT = """
-(function(){
-  if (!/Windows NT 10\.0.*Chrome\/136/.test(navigator.userAgent)) return;
-  var meta = document.querySelector('meta[name="viewport"]');
-  if (!meta) {
-    meta = document.createElement('meta');
-    meta.name = 'viewport';
-    (document.head || document.documentElement).appendChild(meta);
-  }
-  meta.setAttribute('content', 'width=980, shrink-to-fit=yes');
 })();
 """.trimIndent()
 
@@ -1518,7 +1500,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     }
 
         // Networks that require a desktop UA (their web app blocks mobile browsers)
-    private val DESKTOP_UA_NETWORKS = setOf("whatsapp", "telegram", "discord", "messenger", "googlemessages")
+    private val DESKTOP_UA_NETWORKS = setOf("whatsapp", "telegram", "discord", "messenger")
     private val DESKTOP_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
     private lateinit var mobileUa: String
 
@@ -1557,7 +1539,6 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         val useDocStart = WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)
         if (useDocStart) {
             WebViewCompat.addDocumentStartJavaScript(webView, STEALTH_SCRIPT, setOf("*"))
-            WebViewCompat.addDocumentStartJavaScript(webView, DESKTOP_VIEWPORT_SCRIPT, setOf("*"))
             WebViewCompat.addDocumentStartJavaScript(webView, COOKIE_ACCEPT_SCRIPT, setOf("*"))
             WebViewCompat.addDocumentStartJavaScript(webView, DISMISS_APP_BANNERS_SCRIPT, setOf("*"))
         }
@@ -1592,11 +1573,6 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                     view.evaluateJavascript(STEALTH_SCRIPT, null)
                     view.evaluateJavascript(COOKIE_ACCEPT_SCRIPT, null)
                     view.evaluateJavascript(DISMISS_APP_BANNERS_SCRIPT, null)
-                }
-                // Always re-inject desktop viewport override in onPageFinished (backup —
-                // the page may have set its own viewport meta after our document-start script)
-                if (currentNetworkId in DESKTOP_UA_NETWORKS) {
-                    view.evaluateJavascript(DESKTOP_VIEWPORT_SCRIPT, null)
                 }
                 if (isGrayscale) applyGrayscaleToWebView(view)
                 if (isMuted) applyMuteToWebView(view)

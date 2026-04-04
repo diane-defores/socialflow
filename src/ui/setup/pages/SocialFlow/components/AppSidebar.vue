@@ -50,11 +50,6 @@
                       <ThreadsIcon v-if="item.route === '/threads'" size="1rem" />
                       <SnapchatIcon v-else-if="item.route === '/snapchat'" size="1rem" />
                       <NextdoorIcon v-else-if="item.route === '/nextdoor'" size="1rem" />
-                      <MessengerIcon v-else-if="item.route === '/messenger'" size="1rem" />
-                      <QuoraIcon v-else-if="item.route === '/quora'" size="1rem" />
-                      <GoogleMessagesIcon v-else-if="item.route === '/googlemessages'" size="1rem" />
-                      <PatreonIcon v-else-if="item.route === '/patreon'" size="1rem" />
-                      <CircleIcon v-else-if="item.route === '/circle'" size="1rem" />
                     </template>
                   </Button>
                 </div>
@@ -264,11 +259,6 @@ import FriendsPanel from './FriendsPanel.vue'
 import ThreadsIcon from './icons/ThreadsIcon.vue'
 import SnapchatIcon from './icons/SnapchatIcon.vue'
 import NextdoorIcon from './icons/NextdoorIcon.vue'
-import MessengerIcon from './icons/MessengerIcon.vue'
-import QuoraIcon from './icons/QuoraIcon.vue'
-import GoogleMessagesIcon from './icons/GoogleMessagesIcon.vue'
-import PatreonIcon from './icons/PatreonIcon.vue'
-import CircleIcon from './icons/CircleIcon.vue'
 
 const router = useRouter()
 const kanbanStore = useKanbanStore()
@@ -382,10 +372,7 @@ const menuItems = ref<MenuItem[]>([
   { id: 13, label: 'WhatsApp', icon: 'pi pi-whatsapp', route: '/whatsapp' },
   { id: 14, label: 'Telegram', icon: 'pi pi-telegram', route: '/telegram' },
   { id: 15, label: 'Nextdoor', icon: 'pi pi-map-marker', route: '/nextdoor' },
-  { id: 16, label: 'Google Messages', icon: 'pi pi-android', route: '/googlemessages' },
-  { id: 17, label: 'Patreon', icon: 'pi pi-heart', route: '/patreon' },
-  { id: 18, label: 'Circle', icon: 'pi pi-circle', route: '/circle' },
-  { id: 19, label: 'Kanban', icon: 'pi pi-th-large', route: '/kanban' }
+  { id: 16, label: 'Kanban', icon: 'pi pi-th-large', route: '/kanban' }
 ])
 
 const customLinkItems = computed<MenuItem[]>(() => {
@@ -398,7 +385,7 @@ const customLinkItems = computed<MenuItem[]>(() => {
   }))
 })
 
-const CUSTOM_ICON_ROUTES = ['/threads', '/snapchat', '/nextdoor', '/messenger', '/quora', '/googlemessages', '/patreon', '/circle']
+const CUSTOM_ICON_ROUTES = ['/threads', '/snapchat', '/nextdoor']
 const hasCustomIcon = (item: MenuItem) => CUSTOM_ICON_ROUTES.includes(item.route)
 
 const isNetworkActive = (item: MenuItem): boolean =>

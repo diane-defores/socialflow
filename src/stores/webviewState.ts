@@ -11,16 +11,13 @@ export const WEBVIEW_URLS: Record<string, string> = {
   threads: 'https://threads.net',
   discord: 'https://discord.com/app',
   reddit: 'https://reddit.com',
-  messenger: 'https://www.facebook.com/messages',
+  messenger: 'https://www.messenger.com',
   snapchat: 'https://web.snapchat.com',
   quora: 'https://www.quora.com',
   pinterest: 'https://www.pinterest.com',
   whatsapp: 'https://web.whatsapp.com',
   telegram: 'https://web.telegram.org',
   nextdoor: 'https://nextdoor.com',
-  googlemessages: 'https://messages.google.com/web',
-  patreon: 'https://www.patreon.com',
-  circle: 'https://app.circle.so',
 }
 
 export const useWebviewStore = defineStore('webview', {

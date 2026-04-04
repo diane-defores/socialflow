@@ -91,11 +91,6 @@
             <ThreadsIcon v-if="item.route === '/threads'" size="1.35rem" color="#fff" />
             <SnapchatIcon v-else-if="item.route === '/snapchat'" size="1.35rem" color="#fff" />
             <NextdoorIcon v-else-if="item.route === '/nextdoor'" size="1.35rem" color="#fff" />
-            <MessengerIcon v-else-if="item.route === '/messenger'" size="1.35rem" color="#fff" />
-            <QuoraIcon v-else-if="item.route === '/quora'" size="1.35rem" color="#fff" />
-            <GoogleMessagesIcon v-else-if="item.route === '/googlemessages'" size="1.35rem" color="#fff" />
-            <PatreonIcon v-else-if="item.route === '/patreon'" size="1.35rem" color="#fff" />
-            <CircleIcon v-else-if="item.route === '/circle'" size="1.35rem" color="#fff" />
             <i v-else :class="item.icon" />
           </span>
           <span class="network-name">{{ item.label }}</span>
@@ -234,11 +229,6 @@
                 <ThreadsIcon v-if="nw.id === 'threads'" size="0.9rem" class="clear-cookie-icon" />
                 <SnapchatIcon v-else-if="nw.id === 'snapchat'" size="0.9rem" class="clear-cookie-icon" />
                 <NextdoorIcon v-else-if="nw.id === 'nextdoor'" size="0.9rem" class="clear-cookie-icon" />
-                <MessengerIcon v-else-if="nw.id === 'messenger'" size="0.9rem" class="clear-cookie-icon" />
-                <QuoraIcon v-else-if="nw.id === 'quora'" size="0.9rem" class="clear-cookie-icon" />
-                <GoogleMessagesIcon v-else-if="nw.id === 'googlemessages'" size="0.9rem" class="clear-cookie-icon" />
-                <PatreonIcon v-else-if="nw.id === 'patreon'" size="0.9rem" class="clear-cookie-icon" />
-                <CircleIcon v-else-if="nw.id === 'circle'" size="0.9rem" class="clear-cookie-icon" />
                 <i v-else :class="nw.icon" class="clear-cookie-icon" />
                 <span class="clear-cookie-label">{{ nw.label }}</span>
                 <span v-if="clearedNetworks.has(`${clearCookiesProfileId}:${nw.id}`)" class="clear-cookie-done">
@@ -385,11 +375,6 @@ import BackupRestore from './BackupRestore.vue'
 import ThreadsIcon from './icons/ThreadsIcon.vue'
 import SnapchatIcon from './icons/SnapchatIcon.vue'
 import NextdoorIcon from './icons/NextdoorIcon.vue'
-import MessengerIcon from './icons/MessengerIcon.vue'
-import QuoraIcon from './icons/QuoraIcon.vue'
-import GoogleMessagesIcon from './icons/GoogleMessagesIcon.vue'
-import PatreonIcon from './icons/PatreonIcon.vue'
-import CircleIcon from './icons/CircleIcon.vue'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -446,7 +431,6 @@ const webviewNetworks = computed(() => {
     discord: 'pi pi-discord', reddit: 'pi pi-reddit', messenger: 'pi pi-comments',
     snapchat: 'pi pi-camera', quora: 'pi pi-question-circle', pinterest: 'pi pi-pinterest',
     whatsapp: 'pi pi-whatsapp', telegram: 'pi pi-telegram', nextdoor: 'pi pi-map-marker',
-    googlemessages: 'pi pi-android', patreon: 'pi pi-heart', circle: 'pi pi-circle',
   }
   const labelMap: Record<string, string> = {
     twitter: 'Twitter / X', facebook: 'Facebook', instagram: 'Instagram',
@@ -454,7 +438,6 @@ const webviewNetworks = computed(() => {
     discord: 'Discord', reddit: 'Reddit', messenger: 'Messenger',
     snapchat: 'Snapchat', quora: 'Quora', pinterest: 'Pinterest',
     whatsapp: 'WhatsApp', telegram: 'Telegram', nextdoor: 'Nextdoor',
-    googlemessages: 'Google Messages', patreon: 'Patreon', circle: 'Circle',
   }
   return Object.keys(WEBVIEW_URLS).map(id => ({
     id,
@@ -586,9 +569,7 @@ const menuItems = ref<MenuItem[]>([
   { id: 13, label: 'WhatsApp', icon: 'pi pi-whatsapp', route: '/whatsapp' },
   { id: 14, label: 'Telegram', icon: 'pi pi-telegram', route: '/telegram' },
   { id: 15, label: 'Nextdoor', icon: 'pi pi-map-marker', route: '/nextdoor' },
-  { id: 16, label: 'Patreon', icon: 'pi pi-heart', route: '/patreon' },
-  { id: 17, label: 'Circle', icon: 'pi pi-circle', route: '/circle' },
-  { id: 18, label: 'Kanban', icon: 'pi pi-th-large', route: '/kanban' },
+  { id: 16, label: 'Kanban', icon: 'pi pi-th-large', route: '/kanban' },
 ])
 
 const networkColors: Record<number, string> = {
@@ -607,9 +588,7 @@ const networkColors: Record<number, string> = {
   13: '#25D366',
   14: '#0088cc',
   15: '#8ED500',
-  16: '#FF424D',
-  17: '#6D28D9',
-  18: '#6366F1',
+  16: '#6366F1',
 }
 
 const isNetworkActive = (item: MenuItem) =>
