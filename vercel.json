@@ -2,6 +2,6 @@
   "buildCommand": "pnpm run build:web",
   "outputDirectory": "dist/web",
   "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
+    { "source": "/demo/:path*", "destination": "/demo.html" }
   ]
 }

@@ -1,5 +1,5 @@
+import { resolve, dirname } from 'node:path'
 import { fileURLToPath, URL } from 'node:url'
-import { dirname, resolve } from 'node:path'
 import vue from '@vitejs/plugin-vue'
 import AutoImport from 'unplugin-auto-import/vite'
 import IconsResolver from 'unplugin-icons/resolver'
@@ -9,9 +9,10 @@ import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 import { defineConfig } from 'vite'
 import 'dotenv/config'
 
+const __dirname = fileURLToPath(new URL('.', import.meta.url))
 const APP_ROOT = 'src/ui/setup/pages/SocialFlow'
 
-// Web build config — serves SocialFlow as a standalone SPA on Vercel
+// Web build — landing page + technology page + interactive demo
 export default defineConfig({
   resolve: {
     alias: {
@@ -72,5 +73,27 @@ export default defineConfig({
   build: {
     outDir: 'dist/web',
     emptyOutDir: true,
+    rollupOptions: {
+      input: [
+        resolve(__dirname, 'index.html'),
+        resolve(__dirname, 'demo.html'),
+        // FR
+        resolve(__dirname, 'fr/index.html'),
+        resolve(__dirname, 'fr/features.html'),
+        resolve(__dirname, 'fr/technology.html'),
+        resolve(__dirname, 'fr/use-cases.html'),
+        resolve(__dirname, 'fr/pricing.html'),
+        resolve(__dirname, 'fr/faq.html'),
+        resolve(__dirname, 'fr/download.html'),
+        // EN
+        resolve(__dirname, 'en/index.html'),
+        resolve(__dirname, 'en/features.html'),
+        resolve(__dirname, 'en/technology.html'),
+        resolve(__dirname, 'en/use-cases.html'),
+        resolve(__dirname, 'en/pricing.html'),
+        resolve(__dirname, 'en/faq.html'),
+        resolve(__dirname, 'en/download.html'),
+      ],
+    },
   },
 })
