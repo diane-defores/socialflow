@@ -1303,15 +1303,19 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     /** Apply dark mode to the social webview using AndroidX WebView dark mode APIs. */
     private fun applyDarkModeToWebView(webView: WebView?) {
         val wv = webView ?: return
-        if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
-            WebSettingsCompat.setAlgorithmicDarkeningAllowed(wv.settings, isDarkMode)
-        } else if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
-            @Suppress("DEPRECATION")
-            WebSettingsCompat.setForceDark(
-                wv.settings,
-                if (isDarkMode) WebSettingsCompat.FORCE_DARK_ON
-                else WebSettingsCompat.FORCE_DARK_OFF
-            )
+        try {
+            if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
+                WebSettingsCompat.setAlgorithmicDarkeningAllowed(wv.settings, isDarkMode)
+            } else if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
+                @Suppress("DEPRECATION")
+                WebSettingsCompat.setForceDark(
+                    wv.settings,
+                    if (isDarkMode) WebSettingsCompat.FORCE_DARK_ON
+                    else WebSettingsCompat.FORCE_DARK_OFF
+                )
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "WebView dark mode not supported: ${e.message}")
         }
     }
 

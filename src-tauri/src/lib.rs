@@ -387,6 +387,21 @@ fn set_locale(_app: AppHandle, _locale: String) -> Result<(), String> {
     Ok(())
 }
 
+/// Sync text zoom level to the Android WebView.
+#[tauri::command]
+#[cfg(target_os = "android")]
+fn set_text_zoom(app: AppHandle, zoom: i32) -> Result<(), String> {
+    app.android_webview()
+        .set_text_zoom(zoom)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+#[cfg(not(target_os = "android"))]
+fn set_text_zoom(_app: AppHandle, _zoom: i32) -> Result<(), String> {
+    Ok(()) // no-op on desktop
+}
+
 /// Injects a JavaScript string into a running social webview.
 /// Used by the friends filter to hide posts from non-friends.
 #[tauri::command]
@@ -533,6 +548,7 @@ pub fn run() {
             close_webview,
             set_grayscale,
             set_dark_mode,
+            set_text_zoom,
             set_bar_networks,
             set_profiles,
             set_locale,
