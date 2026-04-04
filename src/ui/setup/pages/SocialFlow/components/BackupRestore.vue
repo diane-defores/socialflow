@@ -201,6 +201,7 @@ const friendlyError = computed(() => {
 const friendlyPath = computed(() => {
   const p = resultPath.value
   if (p.startsWith('content://')) return t('backup.export_saved_to_downloads')
+  if (p.startsWith('backups/')) return t('backup.export_saved_to_downloads')
   return p
 })
 

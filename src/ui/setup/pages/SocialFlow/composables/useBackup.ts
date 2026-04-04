@@ -123,23 +123,31 @@ export function useBackup() {
     if (!isTauri) throw new Error('Export is only available in the desktop/mobile app')
 
     const { invoke } = await import('@tauri-apps/api/core')
-    const { save } = await import('@tauri-apps/plugin-dialog')
-    const { writeFile } = await import('@tauri-apps/plugin-fs')
+    const { writeFile, mkdir, BaseDirectory } = await import('@tauri-apps/plugin-fs')
 
     // 1. Rust creates the encrypted blob, returns base64
     const storeData = collectStoreData()
     const b64: string = await invoke('create_backup', { storeData, password })
 
-    // 2. Native save dialog (handles content:// URIs on Android)
+    const isAndroid = navigator.userAgent.includes('Android')
+    const fileName = `socialflow-backup-${Date.now()}.sfbak`
+
+    if (isAndroid) {
+      // Android: save directly to app data (no file picker needed)
+      await mkdir('backups', { baseDir: BaseDirectory.AppData, recursive: true })
+      const filePath = `backups/${fileName}`
+      await writeFile(filePath, b64ToBytes(b64), { baseDir: BaseDirectory.AppData })
+      return filePath
+    }
+
+    // Desktop: show native save dialog
+    const { save } = await import('@tauri-apps/plugin-dialog')
     const filePath = await save({
-      defaultPath: 'socialflow-backup.sfbak',
+      defaultPath: fileName,
       filters: [{ name: 'SocialFlow Backup', extensions: ['sfbak'] }],
     })
     if (!filePath) throw new Error('No file selected')
-
-    // 3. Write via plugin-fs (handles content:// URIs transparently)
     await writeFile(filePath, b64ToBytes(b64))
-
     return typeof filePath === 'string' ? filePath : filePath.toString()
   }
 
@@ -147,17 +155,26 @@ export function useBackup() {
     if (!isTauri) throw new Error('Import is only available in the desktop/mobile app')
 
     const { invoke } = await import('@tauri-apps/api/core')
-    const { open } = await import('@tauri-apps/plugin-dialog')
-    const { readFile } = await import('@tauri-apps/plugin-fs')
+    const { readFile, readDir, BaseDirectory } = await import('@tauri-apps/plugin-fs')
 
-    // Native open dialog
-    const filePath = await open({
-      filters: [{ name: 'SocialFlow Backup', extensions: ['sfbak'] }],
-    })
-    if (!filePath) throw new Error('No file selected')
+    const isAndroid = navigator.userAgent.includes('Android')
+    let bytes: Uint8Array
 
-    // Read via plugin-fs (handles content:// URIs transparently)
-    const bytes = await readFile(filePath)
+    if (isAndroid) {
+      // Android: find the most recent backup in app data
+      const entries = await readDir('backups', { baseDir: BaseDirectory.AppData })
+      const backups = entries.filter(e => e.name?.endsWith('.sfbak')).sort((a, b) => (b.name ?? '').localeCompare(a.name ?? ''))
+      if (backups.length === 0) throw new Error('No backup found')
+      bytes = await readFile(`backups/${backups[0].name}`, { baseDir: BaseDirectory.AppData })
+    } else {
+      // Desktop: native open dialog
+      const { open } = await import('@tauri-apps/plugin-dialog')
+      const filePath = await open({
+        filters: [{ name: 'SocialFlow Backup', extensions: ['sfbak'] }],
+      })
+      if (!filePath) throw new Error('No file selected')
+      bytes = await readFile(filePath)
+    }
 
     // Send base64 to Rust for decryption + session restore
     const encryptedB64 = bytesToB64(bytes)
