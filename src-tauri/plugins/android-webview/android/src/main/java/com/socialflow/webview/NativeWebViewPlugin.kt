@@ -23,7 +23,6 @@ import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
-import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
 import app.tauri.annotation.Command
@@ -77,16 +76,6 @@ class SetProfilesArgs {
 @InvokeArg
 class SetLocaleArgs {
     var locale: String = "fr"
-}
-
-@InvokeArg
-class TextZoomArgs {
-    var zoom: Int = 100
-}
-
-@InvokeArg
-class ExperimentalWebViewArgs {
-    var enabled: Boolean = false
 }
 
 // Lightweight profile data for the popup menu
@@ -248,7 +237,8 @@ private val DISMISS_APP_BANNERS_SCRIPT = """
       // Only click if the button lives inside an app-promotion container
       var parent = el.closest(
         '[id*="app" i], [class*="app" i], [id*="banner" i], [class*="banner" i],' +
-        '[id*="install" i], [class*="install" i], [id*="promo" i], [class*="promo" i]'
+        '[id*="install" i], [class*="install" i], [id*="promo" i], [class*="promo" i],' +
+        '[role="dialog"], [role="alertdialog"]'
       );
       if (parent) { el.click(); return; }
     }
@@ -280,10 +270,7 @@ private val DESKTOP_VIEWPORT_SCRIPT = """
     meta.name = 'viewport';
     (document.head || document.documentElement).appendChild(meta);
   }
-  // Narrower viewport for Messenger — 500px makes text readable on mobile
-  // instead of the default 980px which renders everything tiny
-  var w = /facebook\.com\/messages/.test(window.location.href) ? 500 : 980;
-  meta.setAttribute('content', 'width=' + w + ', shrink-to-fit=yes');
+  meta.setAttribute('content', 'width=980, shrink-to-fit=yes');
 })();
 """.trimIndent()
 
@@ -367,7 +354,8 @@ private val COOKIE_ACCEPT_SCRIPT = """
     // 2. Text-match buttons/links inside any cookie/consent/GDPR container
     var containers = document.querySelectorAll(
       '[id*="cookie" i], [id*="consent" i], [id*="gdpr" i], [id*="privacy" i], [id*="cmp" i],' +
-      '[class*="cookie" i], [class*="consent" i], [class*="gdpr" i], [class*="cmp" i]'
+      '[class*="cookie" i], [class*="consent" i], [class*="gdpr" i], [class*="cmp" i],' +
+      '[role="dialog"], [role="alertdialog"]'
     );
     for (var c = 0; c < containers.length; c++) {
       var btns = containers[c].querySelectorAll('button, a[role="button"], [role="button"]');
@@ -377,17 +365,12 @@ private val COOKIE_ACCEPT_SCRIPT = """
       }
     }
 
-    // 3. Check role="dialog" containers, but ONLY if they contain cookie-related text.
-    // This avoids auto-clicking unrelated dialogs (e.g. Messenger "restore history" prompt).
-    var COOKIE_TEXT_RE = /cookie|consent|privacy.policy|politique.de.confidentialit|donn.es.personnelles|rgpd|gdpr|tracking|traceur/i;
-    var dialogs = document.querySelectorAll('[role="dialog"], [role="alertdialog"]');
-    for (var d = 0; d < dialogs.length; d++) {
-      if (!COOKIE_TEXT_RE.test(dialogs[d].textContent || '')) continue;
-      var dbtns = dialogs[d].querySelectorAll('button, a[role="button"], [role="button"]');
-      for (var b = 0; b < dbtns.length; b++) {
-        var label = (dbtns[b].textContent || dbtns[b].getAttribute('aria-label') || '').trim();
-        if (ACCEPT_RE.test(label) && clickIfVisible(dbtns[b])) return;
-      }
+    // 3. Fallback: scan ALL visible buttons on the page (catches Meta/Instagram dialogs
+    //    that use no cookie-related class names on their container)
+    var allBtns = document.querySelectorAll('button, [role="button"]');
+    for (var i = 0; i < allBtns.length; i++) {
+      var label = (allBtns[i].textContent || allBtns[i].getAttribute('aria-label') || '').trim();
+      if (ACCEPT_RE.test(label) && clickIfVisible(allBtns[i])) return;
     }
   }
 
@@ -435,13 +418,6 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
     // Dark mode state — synced from Vue settings toggle
     private var isDarkMode = false
-
-    // Text zoom percentage — synced from Vue settings slider (default 100%)
-    private var textZoom = 100
-
-    // Experimental appearance tweaks added after the stable Android baseline.
-    // Disabled by default so Android boots on the last known good path.
-    private var experimentalWebViewAppearanceEnabled = false
 
     // Visible network IDs — synced from Vue profile visibility (null = show all)
     private var visibleNetworkIds: Set<String>? = null
@@ -812,37 +788,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         activity.runOnUiThread {
             isDarkMode = args.enabled
             applyDarkModeToBottomBar(bottomBarView)
-            if (experimentalWebViewAppearanceEnabled) {
-                applyDarkModeToWebView(socialWebView)
-            }
             applyStatusBarIconColor()
-        }
-        invoke.resolve(JSObject())
-    }
-
-    // ── Set text zoom (called from Vue settings slider) ──────────────────
-
-    @Command
-    fun setTextZoom(invoke: Invoke) {
-        val args = invoke.parseArgs(TextZoomArgs::class.java)
-        activity.runOnUiThread {
-            textZoom = args.zoom
-            if (experimentalWebViewAppearanceEnabled) {
-                socialWebView?.settings?.textZoom = textZoom
-            }
-        }
-        invoke.resolve(JSObject())
-    }
-
-    @Command
-    fun setExperimentalWebViewAppearance(invoke: Invoke) {
-        val args = invoke.parseArgs(ExperimentalWebViewArgs::class.java)
-        activity.runOnUiThread {
-            experimentalWebViewAppearanceEnabled = args.enabled
-            if (experimentalWebViewAppearanceEnabled) {
-                socialWebView?.settings?.textZoom = textZoom
-                applyDarkModeToWebView(socialWebView)
-            }
         }
         invoke.resolve(JSObject())
     }
@@ -1326,25 +1272,6 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         }
     }
 
-    /** Apply dark mode to the social webview using AndroidX WebView dark mode APIs. */
-    private fun applyDarkModeToWebView(webView: WebView?) {
-        val wv = webView ?: return
-        try {
-            if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
-                WebSettingsCompat.setAlgorithmicDarkeningAllowed(wv.settings, isDarkMode)
-            } else if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
-                @Suppress("DEPRECATION")
-                WebSettingsCompat.setForceDark(
-                    wv.settings,
-                    if (isDarkMode) WebSettingsCompat.FORCE_DARK_ON
-                    else WebSettingsCompat.FORCE_DARK_OFF
-                )
-            }
-        } catch (t: Throwable) {
-            Log.w(TAG, "WebView dark mode not supported: ${t.message}")
-        }
-    }
-
     /** Re-apply dark/light colors to an existing bottom bar without rebuilding it. */
     private fun applyDarkModeToBottomBar(bar: LinearLayout?) {
         bar ?: return
@@ -1590,41 +1517,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         }
     }
 
-    // Web login URLs for networks that redirect to app stores instead of showing a login page.
-    // When we intercept a Play Store / App Store redirect, we send the user here instead.
-    private val NETWORK_LOGIN_URLS = mapOf(
-        "tiktok" to "https://www.tiktok.com/login",
-        "instagram" to "https://www.instagram.com/accounts/login/",
-        "twitter" to "https://x.com/i/flow/login",
-        "facebook" to "https://www.facebook.com/login",
-        "snapchat" to "https://accounts.snapchat.com/accounts/v2/login",
-        "discord" to "https://discord.com/login",
-        "reddit" to "https://www.reddit.com/login/",
-        "pinterest" to "https://www.pinterest.com/login/",
-    )
-
-    /**
-     * Switch the current webview from Facebook to the Messenger tab.
-     * Handles cookie isolation, UA switch (desktop for Messenger), and bottom bar update.
-     */
-    private fun switchToMessenger(view: WebView) {
-        val messengerUrl = NETWORKS.find { it.id == "messenger" }?.url ?: "https://www.facebook.com/messages"
-        currentAccountId?.let { oldKey ->
-            saveCookiesForSession(oldKey)
-            val profilePrefix = oldKey.substringBeforeLast("-")
-            val newKey = "$profilePrefix-messenger"
-            restoreCookiesForSession(newKey)
-            currentAccountId = newKey
-        }
-        initialBackIndex = -1
-        applyUaForNetwork("messenger")
-        view.loadUrl(messengerUrl)
-        currentNetworkId = "messenger"
-        incrementUsage("messenger")
-        updateBottomBarActiveNetwork("messenger")
-    }
-
-    // Networks that require a desktop UA (their web app blocks mobile browsers)
+        // Networks that require a desktop UA (their web app blocks mobile browsers)
     private val DESKTOP_UA_NETWORKS = setOf("whatsapp", "telegram", "discord", "messenger", "googlemessages")
     private val DESKTOP_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
     private lateinit var mobileUa: String
@@ -1655,12 +1548,6 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         mobileUa = defaultUa.replace("; wv", "")
         settings.userAgentString = mobileUa
 
-        // Keep Android on the pre-2524379 baseline unless experiments are explicitly enabled.
-        if (experimentalWebViewAppearanceEnabled) {
-            settings.textZoom = textZoom
-            applyDarkModeToWebView(webView)
-        }
-
         val cookieManager = CookieManager.getInstance()
         cookieManager.setAcceptCookie(true)
         cookieManager.setAcceptThirdPartyCookies(webView, true)
@@ -1678,59 +1565,18 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, request: android.webkit.WebResourceRequest): Boolean {
                 val url = request.url.toString()
-                val scheme = request.url.scheme ?: ""
-
-                // Allow normal web navigation — but intercept app store redirects
-                if (scheme == "http" || scheme == "https") {
-                    val host = request.url.host ?: ""
-                    // Intercept Play Store / App Store redirects → send to web login instead
-                    if (host.contains("play.google.com") || host.contains("apps.apple.com") || host.contains("itunes.apple.com")) {
-                        val loginUrl = NETWORK_LOGIN_URLS[currentNetworkId]
-                        if (loginUrl != null) {
-                            Log.i(TAG, "App store redirect intercepted ($host) → $loginUrl")
-                            view.loadUrl(loginUrl)
-                            return true
-                        }
-                        return true  // block even if no login URL known
-                    }
-                    // Facebook tab → messages: switch to Messenger tab instead of loading
-                    // in-webview (mobile UA shows "Download Messenger" loop)
-                    if (currentNetworkId == "facebook") {
-                        val path = request.url.path ?: ""
-                        if ((host.contains("facebook.com") && path.startsWith("/messages")) || host.contains("messenger.com")) {
-                            Log.i(TAG, "Facebook→Messenger redirect intercepted → switching to Messenger tab")
-                            switchToMessenger(view)
-                            return true
-                        }
-                    }
-                    return false
+                // Block intent:// and market:// URLs — these crash the WebView
+                // (e.g. Instagram "Open in app" triggers intent://instagram.com/...)
+                if (url.startsWith("intent:") || url.startsWith("market:")) {
+                    return true  // consume — don't navigate
                 }
-
-                // Handle our custom "clear cookies and retry" action from the blocked page
+                // Handle "clear cookies and retry" action from the blocked page
                 if (url.startsWith("sfz://clear-cookies")) {
                     val retryUrl = android.net.Uri.parse(url).getQueryParameter("retry") ?: return true
                     clearCookiesAndRetry(view, retryUrl)
                     return true
                 }
-
-                // fb-messenger:// deep link → switch to Messenger tab (desktop UA)
-                if (scheme == "fb-messenger") {
-                    switchToMessenger(view)
-                    return true
-                }
-
-                // Block all other custom URL schemes (intent://, market://, fb://,
-                // instagram://, twitter://, whatsapp://, tg://, etc.)
-                // These would crash the WebView or try to open external apps.
-                // If the current network has a known login URL, redirect there instead.
-                val loginUrl = NETWORK_LOGIN_URLS[currentNetworkId]
-                if (loginUrl != null) {
-                    Log.i(TAG, "Blocked custom scheme ($scheme) → redirecting to $loginUrl")
-                    view.loadUrl(loginUrl)
-                } else {
-                    Log.i(TAG, "Blocked custom scheme: $url")
-                }
-                return true
+                return false
             }
             override fun onReceivedHttpError(view: WebView, request: android.webkit.WebResourceRequest, errorResponse: android.webkit.WebResourceResponse) {
                 super.onReceivedHttpError(view, request, errorResponse)

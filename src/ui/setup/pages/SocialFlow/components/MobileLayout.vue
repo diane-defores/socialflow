@@ -81,7 +81,6 @@
           :key="item.id"
           class="network-tile"
           :class="{ active: isNetworkActive(item), 'edit-mode': networkEditMode }"
-          :style="{ background: tileBg(item.id) }"
           @click="networkEditMode ? handleEditClick(item) : navigateToNetwork(item)"
           @touchstart="startLongPress(item)"
           @touchend="cancelLongPress"
@@ -351,44 +350,9 @@
               </button>
             </div>
 
-            <div v-if="androidWebviewExperimentsEnabled" class="settings-toggle-row text-zoom-row">
-              <span class="settings-toggle-label">
-                <i class="pi pi-search-plus" />
-                {{ $t('theme.text_zoom') }}
-              </span>
-              <span class="text-zoom-value">{{ themeStore.textZoom }}%</span>
-            </div>
-            <div v-if="androidWebviewExperimentsEnabled" class="text-zoom-slider-row">
-              <span class="text-zoom-bound">A</span>
-              <input
-                type="range"
-                min="75"
-                max="150"
-                step="5"
-                :value="themeStore.textZoom"
-                class="text-zoom-slider"
-                @input="onTextZoomInput"
-              />
-              <span class="text-zoom-bound text-zoom-bound-large">A</span>
-            </div>
-
             <!-- Backup / Restore -->
             <p class="settings-section-label">{{ $t('backup.section_title') }}</p>
             <BackupRestore />
-
-            <p class="settings-section-label">Diagnostic Android</p>
-            <div class="diagnostic-card">
-              <div class="diagnostic-row">
-                <span class="diagnostic-label">Mode WebView</span>
-                <span class="diagnostic-value">
-                  {{ androidWebviewExperimentsEnabled ? 'expérimental' : 'stable' }}
-                </span>
-              </div>
-              <button class="diagnostic-toggle" @click="toggleAndroidExperiments">
-                {{ androidWebviewExperimentsEnabled ? 'Revenir au mode stable' : 'Activer le mode expérimental' }}
-              </button>
-              <pre class="diagnostic-log">{{ bootLogsText }}</pre>
-            </div>
           </div>
         </div>
       </div>
@@ -434,22 +398,6 @@ const profilesStore = useProfilesStore()
 const themeStore = useThemeStore()
 const filterStore = useFriendsFilterStore()
 const customLinksStore = useCustomLinksStore()
-const androidWebviewExperimentsEnabled = ref(
-  typeof window !== 'undefined' && localStorage.getItem('sfz_android_webview_experiments') === '1'
-)
-const bootLogsText = computed(() => {
-  const logs = ((window as any).__SF_BOOT_LOGS__ as string[] | undefined) ?? []
-  return logs.length > 0 ? logs.join('\n') : 'Aucun log capturé.'
-})
-
-function toggleAndroidExperiments() {
-  androidWebviewExperimentsEnabled.value = !androidWebviewExperimentsEnabled.value
-  localStorage.setItem(
-    'sfz_android_webview_experiments',
-    androidWebviewExperimentsEnabled.value ? '1' : '0',
-  )
-  window.location.reload()
-}
 
 // ─── Sheet state ──────────────────────────────────────────────
 const profileSheetVisible = ref(false)
@@ -467,11 +415,6 @@ onUnmounted(() => {
 // ─── Settings state ──────────────────────────────────────────
 const settingsUsername = ref(localStorage.getItem('sfz_username') ?? '')
 const settingsEmail = ref(localStorage.getItem('sfz_email') ?? '')
-
-function onTextZoomInput(e: Event) {
-  const val = (e.target as HTMLInputElement).value
-  themeStore.setTextZoom(Number(val))
-}
 
 function saveSettings() {
   localStorage.setItem('sfz_username', settingsUsername.value.trim())
@@ -674,28 +617,7 @@ const isNetworkActive = (item: MenuItem) =>
 
 const pillColor = (id: number) => {
   const c = networkColors[id]
-  if (!c) return 'var(--surface-hover)'
   return c.startsWith('linear') ? '#e6683c' : c
-}
-
-const hexToRgba = (hex: string, alpha: number) => {
-  const normalized = hex.replace('#', '')
-  const value = normalized.length === 3
-    ? normalized.split('').map((char) => char + char).join('')
-    : normalized
-
-  const r = Number.parseInt(value.slice(0, 2), 16)
-  const g = Number.parseInt(value.slice(2, 4), 16)
-  const b = Number.parseInt(value.slice(4, 6), 16)
-
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`
-}
-
-const tileBg = (id: number) => {
-  const c = networkColors[id]
-  if (!c) return undefined
-  const solid = c.startsWith('linear') ? '#e6683c' : c
-  return hexToRgba(solid, 0.08)
 }
 
 // ─── Navigation ───────────────────────────────────────────────
@@ -813,8 +735,7 @@ function handleAvatarChange(event: Event) {
 .mobile-home {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  height: 100dvh;
+  height: 100%;
   overflow: hidden;
   background: var(--surface-ground);
   padding-top: env(safe-area-inset-top, 24px);
@@ -1141,6 +1062,7 @@ function handleAvatarChange(event: Event) {
   align-items: center;
   gap: 0.65rem;
   padding: 0.7rem 0.75rem;
+  background: var(--surface-card);
   border: 1px solid var(--surface-border);
   border-radius: 16px;
   cursor: pointer;
@@ -1150,13 +1072,12 @@ function handleAvatarChange(event: Event) {
 
 .network-tile:active {
   transform: scale(0.96);
-  background: var(--surface-hover) !important;
+  background: var(--surface-hover);
 }
 
 .network-tile.active {
   border-color: var(--primary-color);
-  background: rgba(33, 150, 243, 0.12) !important;
-  background: color-mix(in srgb, var(--primary-color) 12%, var(--surface-card)) !important;
+  background: color-mix(in srgb, var(--primary-color) 6%, var(--surface-card));
 }
 
 .network-icon-wrap {
@@ -1432,110 +1353,6 @@ function handleAvatarChange(event: Event) {
   border-bottom: none;
 }
 
-.text-zoom-row {
-  border-bottom: none;
-  padding-bottom: 0.2rem;
-}
-
-.text-zoom-value {
-  font-size: 0.85rem;
-  color: var(--text-color-secondary);
-  font-variant-numeric: tabular-nums;
-}
-
-.text-zoom-slider-row {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0 0 0.65rem;
-  border-bottom: 1px solid var(--surface-border);
-}
-
-.text-zoom-bound {
-  font-size: 0.75rem;
-  color: var(--text-color-secondary);
-  font-weight: 600;
-}
-
-.text-zoom-bound-large {
-  font-size: 1.15rem;
-}
-
-.text-zoom-slider {
-  flex: 1;
-  -webkit-appearance: none;
-  appearance: none;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--surface-border);
-  outline: none;
-}
-
-.text-zoom-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--primary-color);
-  cursor: pointer;
-}
-
-.diagnostic-card {
-  margin-top: 0.75rem;
-  border: 1px solid var(--surface-border);
-  border-radius: 14px;
-  background: var(--surface-card);
-  padding: 0.85rem;
-}
-
-.diagnostic-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.65rem;
-}
-
-.diagnostic-label {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-color);
-}
-
-.diagnostic-value {
-  font-size: 0.8rem;
-  color: var(--text-color-secondary);
-  text-transform: lowercase;
-}
-
-.diagnostic-toggle {
-  width: 100%;
-  margin-bottom: 0.75rem;
-  padding: 0.7rem 0.85rem;
-  border: 1px solid var(--surface-border);
-  border-radius: 12px;
-  background: var(--surface-ground);
-  color: var(--text-color);
-  font-size: 0.82rem;
-  font-weight: 600;
-  text-align: left;
-}
-
-.diagnostic-log {
-  margin: 0;
-  padding: 0.75rem;
-  border-radius: 12px;
-  background: var(--surface-ground);
-  color: var(--text-color);
-  font-size: 0.72rem;
-  line-height: 1.45;
-  white-space: pre-wrap;
-  word-break: break-word;
-  max-height: 12rem;
-  overflow: auto;
-}
-
 .settings-toggle-label {
   display: flex;
   align-items: center;
@@ -1637,7 +1454,6 @@ function handleAvatarChange(event: Event) {
 }
 
 .sheet-profile-row--active {
-  background: rgba(33, 150, 243, 0.08);
   background: color-mix(in srgb, var(--primary-color) 8%, transparent);
 }
 
@@ -1673,7 +1489,6 @@ function handleAvatarChange(event: Event) {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(33, 150, 243, 0.75);
   background: color-mix(in srgb, var(--primary-color) 75%, transparent);
   color: #fff;
   font-size: 0.9rem;

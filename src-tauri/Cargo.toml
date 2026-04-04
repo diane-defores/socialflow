@@ -40,11 +40,3 @@ tauri = { version = "2.10.0", features = ["unstable", "tray-icon", "image-png"] 
 # Android: minimal build without desktop-only features
 [target.'cfg(target_os = "android")'.dependencies]
 tauri = { version = "2.10.0", features = ["image-png"] }
-
-[profile.dev]
-opt-level = 0
-incremental = true
-
-[profile.release]
-lto = "thin"
-codegen-units = 16
