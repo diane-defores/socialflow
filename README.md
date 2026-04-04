@@ -1,248 +1,135 @@
+# SocialFlow
 
-# vite-vue3-browser-extension-v3
+Dashboard unifié pour gérer tous vos réseaux sociaux depuis une seule interface. Disponible en extension Chrome/Firefox, application desktop, application mobile et web app.
 
-[![build](https://github.com/mubaidr/vite-vue3-browser-extension-v3/actions/workflows/build.yml/badge.svg)](https://github.com/mubaidr/vite-vue3-browser-extension-v3/actions/workflows/build.yml)
+## Plateformes
 
-A [Vite](https://vitejs.dev/) powered WebExtension ([Chrome](https://developer.chrome.com/docs/extensions/reference/), [FireFox](https://addons.mozilla.org/en-US/developers/), etc.) starter template based on `manifest 3`, `vue3` and `vite` and alot more preconfigured.
+| Plateforme | Technologie | Build | Statut |
+|---|---|---|---|
+| Chrome Extension | CRXJS + Vite | `pnpm build:chrome` | Production |
+| Firefox Extension | CRXJS + Vite | `pnpm build:firefox` | Production |
+| Desktop (Win/Mac/Linux) | Tauri 2 | `pnpm tauri:bundle` | Production |
+| Android | Tauri 2 Mobile | CI GitHub Actions | Production |
+| iOS | Tauri 2 Mobile | CI GitHub Actions (macOS) | Planned |
+| Web (Vercel) | Vite SPA | `pnpm build:web` | Production |
 
-## Screenshots
+## Architecture
 
-<p align="center">
-    <img src="./screenshots/Screenshot_20241225_225109.png" width="auto" height="180" alt="Options" style="margin: 0 10px;" />
-    <img src="./screenshots/Screenshot_20241225_224440.png" width="auto" height="180" alt="Options" style="margin: 0 10px;" />
-    <img src="./screenshots/Screenshot_20241225_224236.png" width="auto" height="180" alt="Options (Dark Mode)" style="margin: 0 10px;" />
-</p>
+```
+Une seule codebase Vue.js → 6 plateformes
 
-<p align="center">
-    <img src="./screenshots/Screenshot_20241225_224300.png" width="auto" height="180" alt="Update Screen" />
-    <img src="./screenshots/Screenshot_20241227_000344.png" width="auto" height="180" alt="Update Screen" />
-</p>
-
-## Features
-
-- Boiler plate Pages for
-  - Background
-  - Action Popup
-  - Options
-  - Content Script
-  - Devtools panel
-  - Browser Side Panel
-  - Setup pages for Install and Update events
-  - Offscreen pages for audio, screen recording etc
-  - Sample pages for Contact, About, Pricing etc
-- Dynamic/ Directory based routing. Just add a file in `src/pages` or relevant ui directory and it will be automatically registered as a route
-- State & UI Components
-  - Header
-  - Footer
-  - Locale Switch (i18n)
-  - Theme Switch (dark/light)
-  - Loading Spinner
-  - Error Boundary
-  - Empty State
-  - Notifications using `notivue`
-- Store for options preconfigured etc
-- Composables for
-  - i18n
-  - Theme
-  - Notifications
-  - Loading
-  - Error handling
-  - `useBrowserStorage` for extension settings and user options management
-- Preconfigured Pinia Store (optional perisitent and non-persistent)
-  - System wide
-  - Easily extendable
-  - Type safe
-
-_Please create an issue if you feel some feature is missing or could be improved._
-
-## Directory Structure
-
-```bash
-.
-├── dist                     # Built extension files
-│   ├── chrome              # Chrome-specific build
-│   └── firefox             # Firefox-specific build
-├── public                  # Static assets
-│   └── icons              # Extension icons
-├── scripts                 # Build/dev scripts
-├── src                     # Source code
-│   ├── assets             # Global assets (images, styles)
-│   ├── background         # Extension background script
-│   ├── components         # Shared Vue components. Some prebuilt components are available like `Header`, `Footer`, `LocaleSwitch`, `ThemeSwitch`, `LoadingSpinner`, `ErrorBoundary`, `EmptyState` etc
-│   ├── composables        # Vue composables/hooks
-│   │   ├── useBrowserStorage  # Browser storage for both `sync` and `local`
-│   │   ├── useLocale  # Manage locale in your extension
-│   │   ├── useTheme  # Manage theme in your extension
-│   ├── content-script     # Content scripts injected into pages
-│   ├── devtools          # Chrome devtools panel
-│   ├── locales           # i18n translation files
-│   ├── offscreen         # Offscreen pages (audio, recording)
-│   ├── stores            # Pinia stores
-│   ├── types             # TypeScript type definitions
-│   ├── ui                # UI pages
-│   │   ├── action-popup  # Browser toolbar popup
-│   │   ├── common        # Shared pages
-│   │   ├── content-script-iframe        # Content script app injected into pages by content script
-│   │   ├── devtools-panel # Devtools panel UI
-│   │   ├── options-page  # Extension options
-│   │   ├── setup        # Install/update pages
-│   │   └── side-panel   # Browser side panel
-│   └── utils            # Shared utilities
-├── manifest.config.ts    # Base manifest configuration
-├── vite.chrome.config.ts       # Chrome specific Vite configuration overrides
-├── vite.config.ts       # Base Vite configuration
-├── vite.firefox.config.ts       # Firefox specific Vite configuration overrides
-├── tailwind.config.cjs  # Tailwind CSS configuration
-└── package.json         # Project dependencies and scripts
+src/ui/setup/pages/SocialFlow/    # App principale (Vue 3 + PrimeVue + Clerk)
+├── main.ts                        # Entry point standalone
+├── App.vue                        # Layout responsive (mobile/desktop)
+├── router/                        # Vue Router (createWebHistory)
+├── components/
+│   ├── networks/                  # Vues par réseau social
+│   ├── kanban/                    # Tableau Kanban
+│   └── feed/                      # Feed unifié
+├── stores/                        # Pinia stores
+├── composables/                   # Hooks Vue
+└── services/                      # Services API (Gmail, etc.)
 ```
 
-## Development tools
+### Configs Vite par plateforme
 
-### Vite Plugins
+| Fichier | Cible | Sortie |
+|---|---|---|
+| `vite.chrome.config.ts` | Extension Chrome | `dist/chrome/` |
+| `vite.firefox.config.ts` | Extension Firefox | `dist/firefox/` |
+| `vite.tauri.config.ts` | Desktop/Mobile Tauri | `dist/tauri/` |
+| `vite.web.config.ts` | Web SPA (Vercel) | `dist/web/` |
 
-- [`unplugin-vue-router`](https://github.com/posva/unplugin-vue-router) - File system based route generator for Vite
-- [`unplugin-auto-import`](https://github.com/antfu/unplugin-auto-import) - Directly use `browser` and Vue Composition API without importing
-- [`unplugin-vue-components`](https://github.com/antfu/vite-plugin-components) - components auto import
-- [`unplugin-icons`](https://github.com/antfu/unplugin-icons) - icons as components
-- [`unplugin-turbo-console`](https://github.com/unplugin/unplugin-turbo-console) - Improve the Developer Experience of console
-- [`@intlify/unplugin-vue-i18n`](https://github.com/intlify/bundle-tools/tree/main/packages/unplugin-vue-i18n) - unplugin for Vue I18n
+## Pourquoi Tauri et pas Flutter ou Expo
 
-### Vue Plugins
+> **ADR-001** — Choix du framework cross-platform (2025-01)
 
-- [Pinia](https://pinia.vuejs.org/) - Intuitive, type safe, light and flexible Store for Vue
-- [VueUse](https://github.com/antfu/vueuse) - collection of useful composition APIs
-- [Notivue](https://github.com/smastrom/notivue) - Powerful toast notification system for Vue and Nuxt.
-- [Vue-i18n](https://kazupon.github.io/vue-i18n/) - Internationalization plugin for Vue.js
+### Contexte
 
-### Plugins
+SocialFlow affiche des réseaux sociaux dans des WebViews natives et injecte des scripts dans ces WebViews (grayscale, protection copie, session par profil). L'UI est écrite en Vue.js car le projet a démarré comme une extension Chrome.
 
-- [Marked](https://github.com/markedjs/marked) - A markdown parser and compiler. Used for CHANGELOG.md to show in Update page
+### Décision : Tauri 2
 
-### UI Frameworks
+### Alternatives rejetées
 
-- [tailwindcss](https://tailwindcss.com) - A utility-first CSS framework
-- [daisyUI](https://daisyui.com/) - The most popular component library for Tailwind CSS
+**Flutter (Dart)**
+- Réécriture complète de l'UI en Dart — double codebase à maintenir
+- WebView support limité : pas d'injection de scripts JS, pas de contrôle cookie granulaire
+- Impossible de partager du code avec l'extension Chrome (Dart ≠ JS)
+- Pas de support extension navigateur
 
-_Tailwind css `forms` and `typography` plugins are enabled for default styling of form controls._
+**Expo / React Native (React)**
+- Réécriture complète en React — double codebase à maintenir
+- WebView : le package `react-native-webview` ne supporte pas l'injection `document_start`, ni le contrôle cookie natif
+- Pas de support desktop natif sans Electron (lourd, ~200 MB)
+- Pas de support extension navigateur
 
-### WebExtension Libraries
+**Electron**
+- Supporte le web mais embarque un Chromium complet (~200 MB par app)
+- Pas de support mobile
+- Mémoire excessive pour une app qui affiche déjà des WebViews
 
-- [`webext-bridge`](https://github.com/zikaari/webext-bridge) - effortlessly communication between contexts
-- [`webextension-polyfill`](https://github.com/mozilla/webextension-polyfill) - A lightweight polyfill library for Promise-based WebExtension APIs in Chrome
+### Pourquoi Tauri gagne
 
-### Coding Style
+| Critère | Tauri | Flutter | Expo/RN | Electron |
+|---|---|---|---|---|
+| Réutilise le code Vue.js existant | Oui | Non (Dart) | Non (React) | Oui |
+| Extension navigateur | Oui (même code) | Non | Non | Non |
+| WebView native + injection JS | Oui | Limité | Limité | Oui |
+| Taille binaire | ~5 MB | ~15 MB | ~30 MB | ~200 MB |
+| Support mobile | Tauri 2 | Natif | Natif | Non |
+| Support desktop | Natif | Natif | Limité | Natif |
+| Contrôle cookies WebView | Natif (Kotlin/Swift) | Non | Non | Oui |
 
-- [TypeScript](https://www.typescriptlang.org/) - Typed JavaScript at Any Scale
-- [ESLint](https://eslint.org/) - Linting utility for JavaScript and JSX
-- [Prettier](https://prettier.io/) - Code formatter
-- Use Composition API with [`<script setup>` SFC syntax](https://github.com/vuejs/rfcs/pull/227)
-- Use Composition API with [`setup` SFC syntax](https://pinia.vuejs.org/cookbook/composables.html#Setup-Stores) in Pinia stores
+**En résumé** : Tauri est le seul framework qui permet de garder une codebase Vue.js unique pour les 6 plateformes, avec un accès bas-niveau au WebView natif pour l'injection de scripts et la gestion des cookies — ce qui est le coeur fonctionnel de SocialFlow.
 
-## Use the Template
+## Stack technique
 
-### GitHub Template
+- **Frontend** : Vue 3, PrimeVue, Tailwind CSS, DaisyUI, Pinia
+- **Auth** : Clerk
+- **Backend** : Convex (serverless)
+- **i18n** : vue-i18n
+- **Build** : Vite 5, pnpm
+- **Desktop/Mobile** : Tauri 2 (Rust + Kotlin/Swift)
+- **Hosting web** : Vercel
 
-[Create a repo from this template on GitHub](https://github.com/mubaidr/vite-vue3-browser-extension-v3/generate).
+## Variables d'environnement
 
-### Clone to local
-
-If you prefer to do it manually with the cleaner git history
-
-> If you don't have pnpm installed, run: npm install -g pnpm
-
-```bash
-pnpx degit mubaidr/vite-vue3-browser-extension-v3 my-webext
-cd my-webext
-pnpm i
+```env
+VITE_CLERK_PUBLISHABLE_KEY=   # Auth Clerk
+VITE_SUPABASE_URL=            # Supabase (optionnel)
+VITE_SUPABASE_KEY=            # Supabase (optionnel)
+VITE_GMAIL_CLIENT_ID=         # Gmail API (optionnel)
+VITE_GMAIL_API_KEY=           # Gmail API (optionnel)
 ```
 
-### Browser Related Configurations
+## Scripts
 
-- `manifest.config.ts` - Base extension manifest with common configuration
-- `manifest.chrome.config.ts` - Chrome/ chromium based browsers specific manifest
-- `manifest.firefox.config.ts` - Firefox spefic manifest
-- `vite.config.ts` - Base vite configuration
-- `vite.chrome.config.ts` - Chrome/ chromium based browsers specific vite configuration
-- `vite.firefox.config.ts` - Firefox specific vite configuration
+```bash
+# Développement
+pnpm dev:chrome              # Dev extension Chrome
+pnpm dev:firefox             # Dev extension Firefox
+pnpm tauri:dev               # Dev desktop Tauri
 
-### Scripts
+# Build
+pnpm build:chrome            # Build extension Chrome
+pnpm build:firefox           # Build extension Firefox
+pnpm build:web               # Build web SPA (Vercel)
+pnpm tauri:bundle            # Build desktop
 
-- `pnpm dev` - Start development server
-- `pnpm build` - Build extension
-- `pnpm lint` - Lint files
+# Qualité
+pnpm lint                    # ESLint
+pnpm format                  # Prettier
+pnpm typecheck               # TypeScript
+```
 
-_You can also use pnpm dev:chrome, pnpm dev:firefox, pnpm build:chrome, pnpm build:firefox, pnpm lint:fix_
+## Déploiement
 
-_Then load extension in browser with the `dist/` folder_
+### Web (Vercel)
+Configuré via `vercel.json`. Push sur `master` déclenche un déploiement automatique.
 
-**Note**: Pack files under `dist/chrome` or `dist/firefox`, you can upload to appropriate extension store.
+### Mobile (CI)
+Voir [TAURI_MOBILE.md](./TAURI_MOBILE.md) pour le workflow GitHub Actions.
 
-## Support
-
-If you like this project, you can support me by donating [mubaidr](https://www.patreon.com/c/mubaidr) and starring ⭐ this repository.
-
-## Hire me
-
-I am a full stack developer. I am open to work. If you are looking for a developer or have a project you want to start, please visit my profile and website here: [mubaidr](https://mubaidr.js.org).
-
-## Contributors
-
-<!-- readme: collaborators,contributors -start -->
-<table>
-	<tbody>
-		<tr>
-            <td align="center">
-                <a href="https://github.com/mubaidr">
-                    <img src="https://avatars.githubusercontent.com/u/2222702?v=4" width="100;" alt="mubaidr"/>
-                    <br />
-                    <sub><b>Muhammad Ubaid Raza</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/Dreamlinerm">
-                    <img src="https://avatars.githubusercontent.com/u/90410608?v=4" width="100;" alt="Dreamlinerm"/>
-                    <br />
-                    <sub><b>Dreamliner</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/baramofme">
-                    <img src="https://avatars.githubusercontent.com/u/44565599?v=4" width="100;" alt="baramofme"/>
-                    <br />
-                    <sub><b>Jihoon Yi</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/poncianodiego">
-                    <img src="https://avatars.githubusercontent.com/u/20716004?v=4" width="100;" alt="poncianodiego"/>
-                    <br />
-                    <sub><b>Diego Ponciano</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/IgorFZ">
-                    <img src="https://avatars.githubusercontent.com/u/85708187?v=4" width="100;" alt="IgorFZ"/>
-                    <br />
-                    <sub><b>igorfz</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/hi2code">
-                    <img src="https://avatars.githubusercontent.com/u/51270649?v=4" width="100;" alt="hi2code"/>
-                    <br />
-                    <sub><b>hi2code</b></sub>
-                </a>
-            </td>
-		</tr>
-		<tr>
-            <td align="center">
-                <a href="https://github.com/justorez">
-                    <img src="https://avatars.githubusercontent.com/u/17308328?v=4" width="100;" alt="justorez"/>
-                    <br />
-                    <sub><b>Null</b></sub>
-                </a>
-            </td>
-		</tr>
-	<tbody>
-</table>
-<!-- readme: collaborators,contributors -end -->
+### Extensions
+Les fichiers `.zip` sont générés dans `dist/` pour upload sur le Chrome Web Store et Firefox Add-ons.

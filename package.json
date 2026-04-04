@@ -113,6 +113,7 @@
     "tauri:ios:build": "pnpm exec tauri ios build",
     "tauri": "pnpm exec tauri",
     "build": "pnpm run build:chrome && pnpm run build:firefox",
+    "build:web": "cross-env NODE_ENV=production vite build -c vite.web.config.ts",
     "build:chrome": "cross-env NODE_ENV=production vite build -c vite.chrome.config.ts",
     "build:firefox": "cross-env NODE_ENV=production vite build -c vite.firefox.config.ts",
     "dev": "concurrently \"pnpm run dev:chrome\" \"pnpm run dev:firefox\"",
