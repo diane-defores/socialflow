@@ -54,6 +54,12 @@ pub struct TextZoomRequest {
     pub zoom: i32,
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExperimentalWebViewRequest {
+    pub enabled: bool,
+}
+
 pub struct AndroidWebview<R: Runtime>(pub PluginHandle<R>);
 
 impl<R: Runtime> AndroidWebview<R> {
@@ -137,6 +143,15 @@ impl<R: Runtime> AndroidWebview<R> {
     pub fn set_text_zoom(&self, zoom: i32) -> Result<()> {
         self.0
             .run_mobile_plugin("setTextZoom", TextZoomRequest { zoom })
+            .map_err(|e| Error::PluginInvoke(e.to_string()))
+    }
+
+    pub fn set_experimental_webview_appearance(&self, enabled: bool) -> Result<()> {
+        self.0
+            .run_mobile_plugin(
+                "setExperimentalWebViewAppearance",
+                ExperimentalWebViewRequest { enabled },
+            )
             .map_err(|e| Error::PluginInvoke(e.to_string()))
     }
 }

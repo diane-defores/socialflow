@@ -44,14 +44,14 @@
       <Divider />
 
       <!-- Text zoom -->
-      <div class="setting-item">
+      <div v-if="androidWebviewExperimentsEnabled" class="setting-item">
         <div class="setting-label">
           <i class="pi pi-search-plus mr-2"></i>
           <span>{{ $t('theme.text_zoom') }}</span>
         </div>
         <span class="text-zoom-value">{{ themeStore.textZoom }}%</span>
       </div>
-      <div class="text-zoom-slider-row">
+      <div v-if="androidWebviewExperimentsEnabled" class="text-zoom-slider-row">
         <span class="text-zoom-bound">A</span>
         <input
           type="range"
@@ -108,6 +108,8 @@ const currentLocale = ref(locale.value)
 
 const themeStore = useThemeStore()
 const isDarkMode = ref(themeStore.isDarkMode)
+const androidWebviewExperimentsEnabled =
+  typeof window !== 'undefined' && localStorage.getItem('sfz_android_webview_experiments') === '1'
 
 const toggleTheme = () => {
   themeStore.toggleTheme()

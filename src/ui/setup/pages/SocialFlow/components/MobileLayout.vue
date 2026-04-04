@@ -351,14 +351,14 @@
               </button>
             </div>
 
-            <div class="settings-toggle-row text-zoom-row">
+            <div v-if="androidWebviewExperimentsEnabled" class="settings-toggle-row text-zoom-row">
               <span class="settings-toggle-label">
                 <i class="pi pi-search-plus" />
                 {{ $t('theme.text_zoom') }}
               </span>
               <span class="text-zoom-value">{{ themeStore.textZoom }}%</span>
             </div>
-            <div class="text-zoom-slider-row">
+            <div v-if="androidWebviewExperimentsEnabled" class="text-zoom-slider-row">
               <span class="text-zoom-bound">A</span>
               <input
                 type="range"
@@ -375,6 +375,20 @@
             <!-- Backup / Restore -->
             <p class="settings-section-label">{{ $t('backup.section_title') }}</p>
             <BackupRestore />
+
+            <p class="settings-section-label">Diagnostic Android</p>
+            <div class="diagnostic-card">
+              <div class="diagnostic-row">
+                <span class="diagnostic-label">Mode WebView</span>
+                <span class="diagnostic-value">
+                  {{ androidWebviewExperimentsEnabled ? 'expérimental' : 'stable' }}
+                </span>
+              </div>
+              <button class="diagnostic-toggle" @click="toggleAndroidExperiments">
+                {{ androidWebviewExperimentsEnabled ? 'Revenir au mode stable' : 'Activer le mode expérimental' }}
+              </button>
+              <pre class="diagnostic-log">{{ bootLogsText }}</pre>
+            </div>
           </div>
         </div>
       </div>
@@ -420,6 +434,22 @@ const profilesStore = useProfilesStore()
 const themeStore = useThemeStore()
 const filterStore = useFriendsFilterStore()
 const customLinksStore = useCustomLinksStore()
+const androidWebviewExperimentsEnabled = ref(
+  typeof window !== 'undefined' && localStorage.getItem('sfz_android_webview_experiments') === '1'
+)
+const bootLogsText = computed(() => {
+  const logs = ((window as any).__SF_BOOT_LOGS__ as string[] | undefined) ?? []
+  return logs.length > 0 ? logs.join('\n') : 'Aucun log capturé.'
+})
+
+function toggleAndroidExperiments() {
+  androidWebviewExperimentsEnabled.value = !androidWebviewExperimentsEnabled.value
+  localStorage.setItem(
+    'sfz_android_webview_experiments',
+    androidWebviewExperimentsEnabled.value ? '1' : '0',
+  )
+  window.location.reload()
+}
 
 // ─── Sheet state ──────────────────────────────────────────────
 const profileSheetVisible = ref(false)
@@ -644,6 +674,7 @@ const isNetworkActive = (item: MenuItem) =>
 
 const pillColor = (id: number) => {
   const c = networkColors[id]
+  if (!c) return 'var(--surface-hover)'
   return c.startsWith('linear') ? '#e6683c' : c
 }
 
@@ -1448,6 +1479,61 @@ function handleAvatarChange(event: Event) {
   border-radius: 50%;
   background: var(--primary-color);
   cursor: pointer;
+}
+
+.diagnostic-card {
+  margin-top: 0.75rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 14px;
+  background: var(--surface-card);
+  padding: 0.85rem;
+}
+
+.diagnostic-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+}
+
+.diagnostic-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.diagnostic-value {
+  font-size: 0.8rem;
+  color: var(--text-color-secondary);
+  text-transform: lowercase;
+}
+
+.diagnostic-toggle {
+  width: 100%;
+  margin-bottom: 0.75rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  background: var(--surface-ground);
+  color: var(--text-color);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+.diagnostic-log {
+  margin: 0;
+  padding: 0.75rem;
+  border-radius: 12px;
+  background: var(--surface-ground);
+  color: var(--text-color);
+  font-size: 0.72rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 12rem;
+  overflow: auto;
 }
 
 .settings-toggle-label {

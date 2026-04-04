@@ -43,6 +43,11 @@ const webviewStore = useWebviewStore()
 const profilesStore = useProfilesStore()
 useFriendsFilter() // Activates watchers: injects filter into webviews when settings change
 
+const bootLog = (message: string) => {
+  const push = (window as any).__SF_BOOT_LOG_PUSH__
+  if (typeof push === 'function') push(message)
+}
+
 // Mobile detection — reactive on window resize
 const isMobile = ref(window.innerWidth <= 768)
 const handleResize = () => { isMobile.value = window.innerWidth <= 768 }
@@ -50,33 +55,44 @@ const handleResize = () => { isMobile.value = window.innerWidth <= 768 }
 let unlistenTray: (() => void) | undefined
 
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
+const androidWebviewExperimentsEnabled =
+  typeof window !== 'undefined' && localStorage.getItem('sfz_android_webview_experiments') === '1'
 
 // Sync locale to Android plugin for native UI translations
 watch(locale, async (newLocale) => {
   if (!isTauri) return
   const { invoke } = await import('@tauri-apps/api/core')
-  invoke('set_locale', { locale: newLocale }).catch(() => {})
+  invoke('set_locale', { locale: newLocale }).catch((err) => {
+    bootLog(`set_locale failed: ${String(err)}`)
+  })
 }, { immediate: true })
 
 // When the settings toggle changes, sync the native webview on Android
 watch(() => themeStore.grayscaleEnabled, async (enabled) => {
   if (!isTauri) return
   const { invoke } = await import('@tauri-apps/api/core')
-  invoke('set_grayscale', { enabled }).catch(() => {})
+  invoke('set_grayscale', { enabled }).catch((err) => {
+    bootLog(`set_grayscale failed: ${String(err)}`)
+  })
 })
 
 // Sync dark mode state to native Android bottom bar + webview
 watch(() => themeStore.isDarkMode, async (enabled) => {
   if (!isTauri) return
   const { invoke } = await import('@tauri-apps/api/core')
-  invoke('set_dark_mode', { enabled }).catch(() => {})
+  invoke('set_dark_mode', { enabled }).catch((err) => {
+    bootLog(`set_dark_mode failed: ${String(err)}`)
+  })
 })
 
 // Sync text zoom to native Android webview
 watch(() => themeStore.textZoom, async (zoom) => {
-  if (!isTauri) return
+  if (!isTauri || !androidWebviewExperimentsEnabled) return
   const { invoke } = await import('@tauri-apps/api/core')
-  invoke('set_text_zoom', { zoom }).catch(() => {})
+  bootLog(`invoke set_text_zoom(${zoom})`)
+  invoke('set_text_zoom', { zoom }).catch((err) => {
+    bootLog(`set_text_zoom failed: ${String(err)}`)
+  })
 }, { immediate: true })
 
 // Sync profile list to Android popup menu whenever profiles or active profile changes.
@@ -90,12 +106,15 @@ watch(
     if (!isTauri) return
     const { invoke } = await import('@tauri-apps/api/core')
     const profilesJson = JSON.stringify(profilesStore.profiles.map(p => ({ id: p.id, name: p.name, emoji: p.emoji })))
-    invoke('set_profiles', { profilesJson, activeProfileId: activeId }).catch(() => {})
+    invoke('set_profiles', { profilesJson, activeProfileId: activeId }).catch((err) => {
+      bootLog(`set_profiles failed: ${String(err)}`)
+    })
   },
   { immediate: true },
 )
 
 onMounted(async () => {
+  bootLog(`App mounted; tauri=${String(isTauri)} experiments=${String(androidWebviewExperimentsEnabled)}`)
   themeStore.initTheme()
   profilesStore.ensureDefault()
 
@@ -103,10 +122,20 @@ onMounted(async () => {
 
   if (isTauri) {
     const { invoke } = await import('@tauri-apps/api/core')
+    bootLog('invoke setup_display')
     // Edge-to-edge: transparent status bar, content extends to top of screen
-    invoke('setup_display').catch(() => {})
+    invoke('setup_display').catch((err) => {
+      bootLog(`setup_display failed: ${String(err)}`)
+    })
+    bootLog(`invoke set_experimental_webview_appearance(${String(androidWebviewExperimentsEnabled)})`)
+    invoke('set_experimental_webview_appearance', { enabled: androidWebviewExperimentsEnabled }).catch((err) => {
+      bootLog(`set_experimental_webview_appearance failed: ${String(err)}`)
+    })
     // Sync initial dark mode state to native bar
-    invoke('set_dark_mode', { enabled: themeStore.isDarkMode }).catch(() => {})
+    bootLog(`invoke set_dark_mode(${String(themeStore.isDarkMode)})`)
+    invoke('set_dark_mode', { enabled: themeStore.isDarkMode }).catch((err) => {
+      bootLog(`initial set_dark_mode failed: ${String(err)}`)
+    })
 
     // Tray events use Rust Emitter.emit() → listen() from @tauri-apps/api/event
     const { listen } = await import('@tauri-apps/api/event')

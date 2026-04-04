@@ -84,6 +84,11 @@ class TextZoomArgs {
     var zoom: Int = 100
 }
 
+@InvokeArg
+class ExperimentalWebViewArgs {
+    var enabled: Boolean = false
+}
+
 // Lightweight profile data for the popup menu
 private data class ProfileMenuItem(val id: String, val name: String, val emoji: String)
 
@@ -433,6 +438,10 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
     // Text zoom percentage — synced from Vue settings slider (default 100%)
     private var textZoom = 100
+
+    // Experimental appearance tweaks added after the stable Android baseline.
+    // Disabled by default so Android boots on the last known good path.
+    private var experimentalWebViewAppearanceEnabled = false
 
     // Visible network IDs — synced from Vue profile visibility (null = show all)
     private var visibleNetworkIds: Set<String>? = null
@@ -803,7 +812,9 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         activity.runOnUiThread {
             isDarkMode = args.enabled
             applyDarkModeToBottomBar(bottomBarView)
-            applyDarkModeToWebView(socialWebView)
+            if (experimentalWebViewAppearanceEnabled) {
+                applyDarkModeToWebView(socialWebView)
+            }
             applyStatusBarIconColor()
         }
         invoke.resolve(JSObject())
@@ -816,7 +827,22 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         val args = invoke.parseArgs(TextZoomArgs::class.java)
         activity.runOnUiThread {
             textZoom = args.zoom
-            socialWebView?.settings?.textZoom = textZoom
+            if (experimentalWebViewAppearanceEnabled) {
+                socialWebView?.settings?.textZoom = textZoom
+            }
+        }
+        invoke.resolve(JSObject())
+    }
+
+    @Command
+    fun setExperimentalWebViewAppearance(invoke: Invoke) {
+        val args = invoke.parseArgs(ExperimentalWebViewArgs::class.java)
+        activity.runOnUiThread {
+            experimentalWebViewAppearanceEnabled = args.enabled
+            if (experimentalWebViewAppearanceEnabled) {
+                socialWebView?.settings?.textZoom = textZoom
+                applyDarkModeToWebView(socialWebView)
+            }
         }
         invoke.resolve(JSObject())
     }
@@ -1629,9 +1655,11 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         mobileUa = defaultUa.replace("; wv", "")
         settings.userAgentString = mobileUa
 
-        // Apply persisted text zoom and dark mode to new webview
-        settings.textZoom = textZoom
-        applyDarkModeToWebView(webView)
+        // Keep Android on the pre-2524379 baseline unless experiments are explicitly enabled.
+        if (experimentalWebViewAppearanceEnabled) {
+            settings.textZoom = textZoom
+            applyDarkModeToWebView(webView)
+        }
 
         val cookieManager = CookieManager.getInstance()
         cookieManager.setAcceptCookie(true)
