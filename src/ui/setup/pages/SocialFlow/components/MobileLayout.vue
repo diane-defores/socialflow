@@ -81,6 +81,7 @@
           :key="item.id"
           class="network-tile"
           :class="{ active: isNetworkActive(item), 'edit-mode': networkEditMode }"
+          :style="{ background: tileBg(item.id) }"
           @click="networkEditMode ? handleEditClick(item) : navigateToNetwork(item)"
           @touchstart="startLongPress(item)"
           @touchend="cancelLongPress"
@@ -597,6 +598,13 @@ const isNetworkActive = (item: MenuItem) =>
 const pillColor = (id: number) => {
   const c = networkColors[id]
   return c.startsWith('linear') ? '#e6683c' : c
+}
+
+const tileBg = (id: number) => {
+  const c = networkColors[id]
+  if (!c) return undefined
+  const solid = c.startsWith('linear') ? '#e6683c' : c
+  return `color-mix(in srgb, ${solid} 7%, var(--surface-card))`
 }
 
 // ─── Navigation ───────────────────────────────────────────────
