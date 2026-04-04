@@ -1314,8 +1314,8 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                     else WebSettingsCompat.FORCE_DARK_OFF
                 )
             }
-        } catch (e: Exception) {
-            Log.w(TAG, "WebView dark mode not supported: ${e.message}")
+        } catch (t: Throwable) {
+            Log.w(TAG, "WebView dark mode not supported: ${t.message}")
         }
     }
 

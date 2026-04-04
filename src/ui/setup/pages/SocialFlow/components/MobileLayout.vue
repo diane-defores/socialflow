@@ -647,11 +647,24 @@ const pillColor = (id: number) => {
   return c.startsWith('linear') ? '#e6683c' : c
 }
 
+const hexToRgba = (hex: string, alpha: number) => {
+  const normalized = hex.replace('#', '')
+  const value = normalized.length === 3
+    ? normalized.split('').map((char) => char + char).join('')
+    : normalized
+
+  const r = Number.parseInt(value.slice(0, 2), 16)
+  const g = Number.parseInt(value.slice(2, 4), 16)
+  const b = Number.parseInt(value.slice(4, 6), 16)
+
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
+
 const tileBg = (id: number) => {
   const c = networkColors[id]
   if (!c) return undefined
   const solid = c.startsWith('linear') ? '#e6683c' : c
-  return `color-mix(in srgb, ${solid} 7%, var(--surface-card))`
+  return hexToRgba(solid, 0.08)
 }
 
 // ─── Navigation ───────────────────────────────────────────────
@@ -1111,6 +1124,7 @@ function handleAvatarChange(event: Event) {
 
 .network-tile.active {
   border-color: var(--primary-color);
+  background: rgba(33, 150, 243, 0.12) !important;
   background: color-mix(in srgb, var(--primary-color) 12%, var(--surface-card)) !important;
 }
 
@@ -1537,6 +1551,7 @@ function handleAvatarChange(event: Event) {
 }
 
 .sheet-profile-row--active {
+  background: rgba(33, 150, 243, 0.08);
   background: color-mix(in srgb, var(--primary-color) 8%, transparent);
 }
 
@@ -1572,6 +1587,7 @@ function handleAvatarChange(event: Event) {
   display: flex;
   align-items: center;
   justify-content: center;
+  background: rgba(33, 150, 243, 0.75);
   background: color-mix(in srgb, var(--primary-color) 75%, transparent);
   color: #fff;
   font-size: 0.9rem;
