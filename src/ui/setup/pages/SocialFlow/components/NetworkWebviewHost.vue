@@ -1,16 +1,13 @@
 <template>
   <!-- Transparent host div — the native Tauri webview floats on top -->
   <div ref="hostEl" class="webview-host">
-    <!-- Placeholder when running outside Tauri (web demo, dev mode) -->
+    <!-- Dev-mode placeholder (running in browser, not Tauri) -->
     <div v-if="!isTauri" class="dev-placeholder">
       <div class="placeholder-content">
-        <i class="pi pi-globe" style="font-size: 3rem; opacity: 0.3" />
-        <p class="network-name"><strong>{{ webviewStore.activeNetworkId }}</strong></p>
+        <i class="pi pi-desktop" style="font-size: 3rem; opacity: 0.3" />
+        <p><strong>{{ webviewStore.activeNetworkId }}</strong></p>
         <p>{{ profilesStore.activeProfile?.emoji }} {{ profilesStore.activeProfile?.name ?? 'No profile' }}</p>
-        <p class="hint">Dans l'application, {{ webviewStore.activeNetworkId }} s'affiche ici dans une WebView native avec ses propres cookies et sa session isolée.</p>
-        <a :href="webviewStore.activeUrl ?? '#'" target="_blank" rel="noopener" class="open-link">
-          Ouvrir {{ webviewStore.activeNetworkId }} dans un nouvel onglet &rarr;
-        </a>
+        <p class="hint">Native webview renders here in the Tauri desktop app.</p>
       </div>
     </div>
   </div>
@@ -102,32 +99,8 @@ watch(
   margin: 0.5rem 0;
 }
 
-.network-name {
-  font-size: 1.2rem;
-  text-transform: capitalize;
-}
-
 .hint {
   font-size: 0.85rem;
   opacity: 0.6;
-  max-width: 360px;
-  line-height: 1.5;
-}
-
-.open-link {
-  display: inline-block;
-  margin-top: 1rem;
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--primary-color, #2196F3);
-  border-radius: 0.5rem;
-  color: var(--primary-color, #2196F3);
-  text-decoration: none;
-  font-size: 0.85rem;
-  transition: background 0.2s, color 0.2s;
-}
-
-.open-link:hover {
-  background: var(--primary-color, #2196F3);
-  color: #fff;
 }
 </style>

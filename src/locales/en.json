@@ -46,8 +46,7 @@
   },
   "theme": {
     "dark_mode": "Dark mode",
-    "focus_mode": "Focus mode (grayscale)",
-    "text_zoom": "Text size"
+    "focus_mode": "Focus mode (grayscale)"
   },
   "backup": {
     "section_title": "Backup",
