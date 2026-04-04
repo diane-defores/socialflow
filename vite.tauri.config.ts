@@ -9,15 +9,10 @@ import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 import { defineConfig } from 'vite'
 import 'dotenv/config'
 
-const PROJECT_ROOT = dirname(fileURLToPath(import.meta.url))
 const APP_ROOT = 'src/ui/setup/pages/SocialFlow'
-const APP_ROOT_ABS = resolve(PROJECT_ROOT, APP_ROOT)
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  root: APP_ROOT_ABS,
-  envDir: PROJECT_ROOT,
-  publicDir: resolve(PROJECT_ROOT, 'public'),
   // Tauri expects a fixed port and no browser auto-open
   clearScreen: false,
   server: {
@@ -48,7 +43,10 @@ export default defineConfig({
     vue(),
 
     VueI18nPlugin({
-      include: resolve(PROJECT_ROOT, './src/locales/**'),
+      include: resolve(
+        dirname(fileURLToPath(import.meta.url)),
+        './src/locales/**',
+      ),
       globalSFCScope: true,
       compositionOnly: true,
     }),
@@ -63,19 +61,16 @@ export default defineConfig({
           'vue-i18n': ['useI18n'],
         },
       ],
-      dts: resolve(APP_ROOT_ABS, 'types/auto-imports.d.ts'),
-      dirs: [
-        resolve(PROJECT_ROOT, 'src/composables'),
-        resolve(PROJECT_ROOT, 'src/stores'),
-        resolve(PROJECT_ROOT, 'src/utils'),
-      ],
+      dts: `${APP_ROOT}/types/auto-imports.d.ts`,
+      // Only scan root src/ — SocialFlow subfolder stores are duplicates
+      dirs: ['src/composables/**', 'src/stores/**', 'src/utils/**'],
       vueTemplate: true,
     }),
 
     Components({
       // Prefer SocialFlow-local component variants when names overlap.
-      dirs: [resolve(PROJECT_ROOT, 'src/components'), resolve(APP_ROOT_ABS, 'components')],
-      dts: resolve(APP_ROOT_ABS, 'types/components.d.ts'),
+      dirs: ['src/components', `${APP_ROOT}/components`],
+      dts: `${APP_ROOT}/types/components.d.ts`,
       resolvers: [IconsResolver()],
       allowOverrides: true,
     }),
@@ -92,6 +87,6 @@ export default defineConfig({
     target: ['es2021', 'chrome100', 'safari13'],
     minify: !process.env.TAURI_DEBUG ? 'esbuild' : false,
     sourcemap: !!process.env.TAURI_DEBUG,
-    outDir: resolve(PROJECT_ROOT, 'dist/tauri'),
+    outDir: 'dist/tauri',
   },
 })
