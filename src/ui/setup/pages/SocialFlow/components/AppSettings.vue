@@ -60,7 +60,7 @@
           step="5"
           :value="themeStore.textZoom"
           class="text-zoom-slider"
-          @input="themeStore.setTextZoom(Number(($event.target as HTMLInputElement).value))"
+          @input="(e: Event) => themeStore.setTextZoom(Number((e.target as HTMLInputElement).value))"
         />
         <span class="text-zoom-bound text-zoom-bound-large">A</span>
       </div>
