@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="fr" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/src/assets/logo.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nos choix techniques — SocialFlow</title>
+    <meta name="description" content="SocialFlow explique ses choix techniques : pourquoi Tauri et pas Flutter, Expo, une extension Chrome ou une version web." />
+    <link rel="stylesheet" href="/src/landing/main.css" />
+  </head>
+  <body class="bg-base-100 text-base-content">
+
+    <!-- Header -->
+    <header class="py-6 px-6 border-b border-base-300">
+      <div class="max-w-3xl mx-auto flex items-center gap-3">
+        <a href="/" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+          <img src="/src/assets/logo.png" alt="SocialFlow" class="w-8 h-8 rounded-lg" />
+          <span class="font-bold text-lg">SocialFlow</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <main class="py-16 px-6">
+      <article class="max-w-3xl mx-auto prose prose-invert prose-lg">
+
+        <h1 class="text-4xl font-bold mb-2">Les choix techniques derrière SocialFlow</h1>
+        <p class="text-base-content/60 text-base mt-0 mb-12">Pas d'extension Chrome, pas de version web, pas de Flutter ni d'Expo. La transparence technique fait partie de nos valeurs — voici les vraies raisons.</p>
+
+        <!-- ─── Section 1: Le problème ─── -->
+        <h2>Ce que SocialFlow fait de fondamentalement différent</h2>
+
+        <p>La promesse de SocialFlow est simple : vous connecter simultanément à plusieurs comptes sur chaque réseau social, dans des sessions complètement isolées les unes des autres. Profil perso, profil pro, profil client — chacun avec ses propres connexions, ses propres cookies, ses propres sessions.</p>
+
+        <p>Ce n'est pas juste un dashboard qui affiche vos réseaux dans des onglets. C'est une isolation réelle : quand vous êtes sur votre profil "Pro" et que vous ouvrez Facebook, c'est votre compte Facebook professionnel qui apparaît. Quand vous basculez sur le profil "Perso", c'est votre compte personnel, sans avoir à vous déconnecter et reconnecter.</p>
+
+        <p>Cette isolation repose sur un mécanisme technique précis : <strong>chaque profil dispose de son propre espace de stockage de cookies</strong>, totalement séparé des autres. C'est ce qu'on appelle un "cookie jar" isolé.</p>
+
+        <p>Et c'est exactement là que les choses se compliquent avec Chrome et le web.</p>
+
+        <!-- ─── Section 2: Chrome ─── -->
+        <h2>Pourquoi pas d'extension Chrome ?</h2>
+
+        <h3>Le problème fondamental : Chrome partage les cookies entre tous les onglets</h3>
+
+        <p>Dans Chrome, tous les onglets partagent le même espace de cookies. Si vous vous connectez à Facebook dans un onglet, vous êtes connecté au même compte Facebook dans tous les autres onglets. C'est un choix de conception de Google, et aucune extension ne peut changer ce comportement.</p>
+
+        <p>Une extension Chrome peut lire et modifier des cookies individuels via l'API officielle de Chrome. Mais elle ne peut pas créer des espaces de cookies séparés par onglet ou par profil. Le cookie que vous modifiez dans un onglet est immédiatement visible dans tous les autres.</p>
+
+        <h3>L'approche "interception réseau" : théoriquement possible, pratiquement fragile</h3>
+
+        <p>Il existe une approche théorique : intercepter chaque requête réseau sortante pour remplacer les cookies envoyés, et intercepter chaque réponse pour capturer les cookies reçus et les stocker dans un espace virtuel géré par l'extension. C'est ce que font certaines extensions payantes comme SessionBox.</p>
+
+        <p>Le problème, c'est que Google a profondément modifié les règles du jeu avec Manifest V3, la nouvelle norme pour les extensions Chrome :</p>
+
+        <ul>
+          <li><strong>Les extensions ne peuvent plus modifier les requêtes réseau en temps réel.</strong> L'ancienne API qui le permettait a été remplacée par un système de règles déclaratives, beaucoup moins flexible.</li>
+          <li><strong>Les règles déclaratives ne sont pas conçues pour du cookie-swapping dynamique.</strong> Elles fonctionnent avec des règles statiques ou semi-statiques, pas avec de la logique qui change à chaque requête en fonction de l'onglet actif.</li>
+          <li><strong>Les cookies définis par les sites dans les réponses HTTP arrivent quand même dans l'espace partagé du navigateur</strong>, ce qui crée des conflits constants entre les profils.</li>
+        </ul>
+
+        <p>Le résultat : même les extensions qui tentent cette approche rencontrent des déconnexions aléatoires, des sessions qui se mélangent, et des incompatibilités avec les sites qui utilisent des mécanismes de sécurité avancés (ce que font tous les réseaux sociaux majeurs).</p>
+
+        <h3>Et Firefox ?</h3>
+
+        <p>Firefox est le seul navigateur qui propose un vrai mécanisme d'isolation : les <strong>Containers</strong> (Multi-Account Containers). Chaque container a son propre espace de cookies, complètement séparé. Et les extensions Firefox ont accès à une API officielle pour créer et gérer ces containers.</p>
+
+        <p>C'est exactement ce dont SocialFlow aurait besoin. Mais cette API n'existe que sur Firefox — Chrome n'a jamais implémenté d'équivalent, et Google n'a montré aucune intention de le faire.</p>
+
+        <p>Nous pourrions proposer une extension Firefox avec les Containers, mais cela ne couvrirait qu'une fraction de nos utilisateurs. Nous avons préféré concentrer nos efforts sur une solution qui fonctionne partout.</p>
+
+        <h3>Ce qu'une extension Chrome pourrait quand même faire</h3>
+
+        <p>Une extension Chrome pourrait offrir certaines fonctionnalités de SocialFlow : la sidebar avec tous les réseaux, le mode niveaux de gris pour réduire les distractions, l'injection de scripts personnalisés dans les pages. Mais sans l'isolation des profils, ce serait SocialFlow amputé de sa fonctionnalité principale. Nous avons estimé que proposer un produit incomplet ne rendrait service à personne.</p>
+
+        <!-- ─── Section 3: Web ─── -->
+        <h2>Pourquoi pas de version web ?</h2>
+
+        <h3>Les navigateurs web sont conçus pour empêcher exactement ce que SocialFlow fait</h3>
+
+        <p>Sur le web, un site ne peut pas afficher un autre site à l'intérieur de lui-même. C'est une règle de sécurité fondamentale du web, et elle existe pour de bonnes raisons : elle empêche un site malveillant de se faire passer pour votre banque ou votre réseau social en l'embarquant dans une fausse interface.</p>
+
+        <p>Concrètement, quasiment tous les réseaux sociaux (Facebook, Twitter, Instagram, LinkedIn, etc.) envoient un en-tête HTTP qui interdit à tout autre site de les afficher dans un cadre intégré. C'est une protection standard contre les attaques de type "clickjacking".</p>
+
+        <p>Même si un réseau social n'avait pas cette protection, le navigateur empêcherait le site SocialFlow d'accéder aux cookies de Facebook ou Twitter. C'est le principe de la "Same-Origin Policy" : chaque site est isolé des autres. Ironiquement, c'est exactement le type d'isolation que nous voudrions contrôler — mais elle est imposée par le navigateur, pas par nous.</p>
+
+        <h3>Une version web serait un simple tableau de liens</h3>
+
+        <p>Si nous proposions une version web, la seule chose qu'elle pourrait faire serait d'afficher des liens vers les réseaux sociaux, qui s'ouvriraient dans de nouveaux onglets. Pas d'isolation de profil, pas d'interface unifiée, pas d'injection de scripts. Autant mettre des favoris dans votre navigateur.</p>
+
+        <p>C'est pour cette raison que ce site est une page de présentation et non l'application elle-même.</p>
+
+        <!-- ─── Section 4: La solution ─── -->
+        <h2>Pourquoi l'application native (Tauri) résout tout ça</h2>
+
+        <p>SocialFlow est construit avec Tauri, un framework qui crée des applications natives à partir de technologies web. Voici ce que ça change :</p>
+
+        <ul>
+          <li><strong>Chaque réseau social s'affiche dans un composant WebView natif</strong>, directement intégré dans l'application. Ce n'est pas un onglet de navigateur : c'est un mini-navigateur contrôlé par l'application, avec son propre espace de cookies.</li>
+          <li><strong>L'application contrôle les cookies de chaque WebView.</strong> Quand vous changez de profil, SocialFlow sauvegarde les cookies du profil actuel et charge ceux du nouveau profil. Chaque réseau, dans chaque profil, a ses propres cookies.</li>
+          <li><strong>L'application peut injecter des scripts dans les WebViews</strong> dès le tout premier instant du chargement de la page (avant même que le site ne commence à s'afficher). C'est ce qui permet le mode niveaux de gris, le filtre "amis uniquement", et d'autres personnalisations.</li>
+          <li><strong>Aucune restriction d'affichage.</strong> Les en-têtes de sécurité qui empêchent l'intégration dans un site web ne s'appliquent pas aux WebViews natives. Facebook, Twitter, Instagram s'affichent normalement dans SocialFlow.</li>
+        </ul>
+
+        <p>En résumé, l'application native a accès à des mécanismes que ni les extensions Chrome ni les sites web ne peuvent utiliser. Ce n'est pas un choix marketing — c'est une contrainte technique incontournable.</p>
+
+        <!-- ─── Section 5: Flutter / Expo ─── -->
+        <h2>Pourquoi pas Flutter ou React Native (Expo) ?</h2>
+
+        <p>Si SocialFlow a besoin d'une application native, pourquoi ne pas utiliser Flutter ou React Native, les deux frameworks cross-platform les plus populaires ? La réponse tient en un mot : les WebViews.</p>
+
+        <h3>Le coeur de SocialFlow, c'est d'afficher des sites web</h3>
+
+        <p>SocialFlow n'est pas une application classique avec ses propres écrans et ses propres données. Son rôle principal est d'afficher de vrais sites web (Facebook, Twitter, Instagram...) à l'intérieur de l'application, tout en contrôlant finement ce qui se passe dans ces pages : cookies, scripts injectés, sessions isolées.</p>
+
+        <p>Cela signifie que le composant le plus critique de l'application est la WebView — le mini-navigateur intégré qui affiche ces sites. Et c'est là que Flutter et React Native posent problème.</p>
+
+        <h3>Flutter : un moteur de rendu qui tourne le dos au web</h3>
+
+        <p>Flutter dessine chaque pixel de l'interface avec son propre moteur de rendu graphique (Skia, puis Impeller). C'est ce qui lui donne des animations fluides et un rendu identique sur toutes les plateformes. Mais cette approche a un coût : Flutter ne partage rien avec le navigateur web du système.</p>
+
+        <p>Quand une application Flutter a besoin d'afficher une page web, elle doit intégrer un composant WebView séparé, qui fonctionne comme un corps étranger dans l'application. Les interactions entre Flutter et cette WebView sont limitées :</p>
+
+        <ul>
+          <li><strong>Pas d'injection de scripts au démarrage de la page.</strong> Flutter peut envoyer du JavaScript à la WebView, mais seulement après que la page a commencé à se charger. Pour SocialFlow, c'est trop tard — le mode niveaux de gris et le filtre d'amis doivent être actifs avant que le premier élément ne s'affiche, sinon l'utilisateur voit un flash de contenu non filtré.</li>
+          <li><strong>Contrôle limité des cookies.</strong> Le plugin WebView de Flutter offre des fonctions basiques de gestion des cookies, mais pas le niveau de contrôle granulaire nécessaire pour sauvegarder et restaurer l'intégralité d'une session par profil, par réseau, de manière fiable.</li>
+          <li><strong>Réécriture complète de l'interface.</strong> Flutter utilise Dart, un langage complètement différent. Toute l'interface de SocialFlow (écrite en Vue.js) devrait être réécrite de zéro. Cela signifie maintenir deux versions de l'interface en parallèle, avec le risque constant que les fonctionnalités divergent.</li>
+        </ul>
+
+        <h3>React Native (Expo) : plus proche du web, mais pas assez</h3>
+
+        <p>React Native est plus proche du monde web que Flutter — il utilise JavaScript et React. Mais les similitudes s'arrêtent là.</p>
+
+        <ul>
+          <li><strong>Le composant WebView de React Native a les mêmes limitations.</strong> Le package react-native-webview ne supporte pas l'injection de scripts au tout début du chargement (avant le premier rendu). Il ne permet pas non plus de contrôler les cookies avec la granularité nécessaire.</li>
+          <li><strong>Réécriture nécessaire.</strong> Même si React Native utilise JavaScript, il utilise React — pas Vue.js. L'interface de SocialFlow devrait être entièrement réécrite avec des composants React Native, qui n'ont rien en commun avec les composants Vue. Boutons, listes, animations, navigation : tout est différent.</li>
+          <li><strong>Pas de version desktop convenable.</strong> React Native est conçu pour le mobile. Pour le desktop, il existe des solutions expérimentales, mais aucune n'est aussi mature que ce que propose Tauri nativement.</li>
+        </ul>
+
+        <h3>Ce que Tauri fait différemment</h3>
+
+        <p>Tauri prend l'approche inverse : au lieu d'embarquer un moteur de rendu séparé, il utilise la WebView native du système d'exploitation. Sur Android, c'est la même WebView que Chrome. Sur Windows, c'est celle d'Edge. Sur macOS, celle de Safari.</p>
+
+        <p>Cette approche a trois conséquences majeures pour SocialFlow :</p>
+
+        <ul>
+          <li><strong>L'interface Vue.js fonctionne telle quelle.</strong> Pas de réécriture, pas de double maintenance. Le même code qui fait tourner l'interface est celui qui s'exécute dans l'application.</li>
+          <li><strong>Les WebViews des réseaux sociaux sont natives.</strong> Tauri donne un accès direct aux API de la WebView du système, ce qui permet l'injection de scripts avant le premier rendu, le contrôle total des cookies, et la gestion des sessions isolées par profil.</li>
+          <li><strong>L'application est légère.</strong> Tauri n'embarque pas de moteur de rendu — il utilise celui qui est déjà installé sur votre appareil. Résultat : l'application pèse environ 5 Mo, contre 15 Mo pour Flutter et 30 Mo ou plus pour React Native.</li>
+        </ul>
+
+        <!-- ─── Section 6: Résumé ─── -->
+        <h2>En résumé</h2>
+
+        <div class="overflow-x-auto not-prose my-8">
+          <table class="table table-zebra w-full">
+            <thead>
+              <tr>
+                <th>Fonctionnalité</th>
+                <th class="text-center">Site web</th>
+                <th class="text-center">Ext. Chrome</th>
+                <th class="text-center">Flutter</th>
+                <th class="text-center">Expo / RN</th>
+                <th class="text-center">Tauri</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Afficher les réseaux dans l'app</td>
+                <td class="text-center text-error">Non</td>
+                <td class="text-center text-warning">Partiel</td>
+                <td class="text-center text-success">Oui</td>
+                <td class="text-center text-success">Oui</td>
+                <td class="text-center text-success">Oui</td>
+              </tr>
+              <tr>
+                <td>Isolation cookies par profil</td>
+                <td class="text-center text-error">Non</td>
+                <td class="text-center text-error">Non</td>
+                <td class="text-center text-warning">Limité</td>
+                <td class="text-center text-warning">Limité</td>
+                <td class="text-center text-success">Oui</td>
+              </tr>
+              <tr>
+                <td>Injection de scripts au 1er rendu</td>
+                <td class="text-center text-error">Non</td>
+                <td class="text-center text-success">Oui</td>
+                <td class="text-center text-error">Non</td>
+                <td class="text-center text-error">Non</td>
+                <td class="text-center text-success">Oui</td>
+              </tr>
+              <tr>
+                <td>Multi-comptes simultanés</td>
+                <td class="text-center text-error">Non</td>
+                <td class="text-center text-error">Non</td>
+                <td class="text-center text-warning">Fragile</td>
+                <td class="text-center text-warning">Fragile</td>
+                <td class="text-center text-success">Oui</td>
+              </tr>
+              <tr>
+                <td>Réutilise le code existant</td>
+                <td class="text-center text-warning">HTML seul</td>
+                <td class="text-center text-success">Oui</td>
+                <td class="text-center text-error">Non (Dart)</td>
+                <td class="text-center text-error">Non (React)</td>
+                <td class="text-center text-success">Oui (Vue.js)</td>
+              </tr>
+              <tr>
+                <td>Desktop</td>
+                <td class="text-center text-warning">Lecture seule</td>
+                <td class="text-center text-success">Oui</td>
+                <td class="text-center text-success">Oui</td>
+                <td class="text-center text-warning">Expérimental</td>
+                <td class="text-center text-success">Oui</td>
+              </tr>
+              <tr>
+                <td>Mobile</td>
+                <td class="text-center text-warning">Lecture seule</td>
+                <td class="text-center text-error">Non</td>
+                <td class="text-center text-success">Oui</td>
+                <td class="text-center text-success">Oui</td>
+                <td class="text-center text-success">Oui</td>
+              </tr>
+              <tr>
+                <td>Taille de l'application</td>
+                <td class="text-center text-base-content/50">—</td>
+                <td class="text-center text-base-content/50">—</td>
+                <td class="text-center text-warning">~15 Mo</td>
+                <td class="text-center text-error">~30 Mo</td>
+                <td class="text-center text-success">~5 Mo</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>Tauri est la seule solution qui coche toutes les cases. C'est pour cette raison que SocialFlow est une application native desktop et mobile — pas une extension Chrome, pas un site web, pas une app Flutter ou React Native.</p>
+
+        <div class="not-prose mt-16 text-center">
+          <a href="/" class="btn btn-primary btn-lg">Retour à l'accueil</a>
+        </div>
+
+      </article>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-12 px-6 text-center text-base-content/50 text-sm border-t border-base-300">
+      <p>SocialFlow &mdash; Open source, gratuit, respectueux de votre vie privée.</p>
+      <p class="mt-2">
+        <a href="https://github.com/dianedef/SocialFlow" class="link link-hover">GitHub</a>
+      </p>
+    </footer>
+
+  </body>
+</html>

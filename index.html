@@ -2,14 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/src/assets/logo.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>SocialFlow</title>
+    <title>SocialFlow — Redirecting...</title>
+    <script>
+      var lang = (navigator.language || '').slice(0, 2);
+      window.location.replace(lang === 'fr' ? '/fr/' : '/en/');
+    </script>
+    <meta http-equiv="refresh" content="0;url=/en/" />
   </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/ui/setup/pages/SocialFlow/main.ts"></script>
-    <!-- buildflowz-inspector -->
-  <script src="/buildflowz-inspector.js" defer></script>
-</body>
+  <body></body>
 </html>

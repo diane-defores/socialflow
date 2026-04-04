@@ -43,6 +43,30 @@
 
       <Divider />
 
+      <!-- Text zoom -->
+      <div class="setting-item">
+        <div class="setting-label">
+          <i class="pi pi-search-plus mr-2"></i>
+          <span>{{ $t('theme.text_zoom') }}</span>
+        </div>
+        <span class="text-zoom-value">{{ themeStore.textZoom }}%</span>
+      </div>
+      <div class="text-zoom-slider-row">
+        <span class="text-zoom-bound">A</span>
+        <input
+          type="range"
+          min="75"
+          max="150"
+          step="5"
+          :value="themeStore.textZoom"
+          class="text-zoom-slider"
+          @input="onTextZoomInput"
+        />
+        <span class="text-zoom-bound text-zoom-bound-large">A</span>
+      </div>
+
+      <Divider />
+
       <!-- Other settings -->
       <div class="setting-item">
         <div class="setting-label">
@@ -87,6 +111,11 @@ const isDarkMode = ref(themeStore.isDarkMode)
 
 const toggleTheme = () => {
   themeStore.toggleTheme()
+}
+
+function onTextZoomInput(e: Event) {
+  const val = (e.target as HTMLInputElement).value
+  themeStore.setTextZoom(Number(val))
 }
 
 function onLocaleChange() {
@@ -134,5 +163,48 @@ defineExpose({
   background: #313244;
   border-color: #45475a;
   color: #cdd6f4;
+}
+
+.text-zoom-value {
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.text-zoom-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.text-zoom-bound {
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+  font-weight: 600;
+}
+
+.text-zoom-bound-large {
+  font-size: 1.15rem;
+}
+
+.text-zoom-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--surface-border);
+  outline: none;
+}
+
+.text-zoom-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  cursor: pointer;
 }
 </style>

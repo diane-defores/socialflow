@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="fr" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/src/assets/logo.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SocialFlow vs SessionBox — Comparatif complet</title>
+    <meta name="description" content="Comparatif détaillé SocialFlow vs SessionBox : isolation des profils, prix, fonctionnalités, plateformes. Quelle solution choisir pour gérer plusieurs comptes ?" />
+    <link rel="stylesheet" href="/src/landing/main.css" />
+  </head>
+  <body class="bg-base-100 text-base-content">
+
+    <!-- Nav -->
+    <nav class="navbar bg-base-100/80 backdrop-blur-sm sticky top-0 z-50 border-b border-base-300">
+      <div class="max-w-6xl mx-auto w-full px-4 flex items-center justify-between">
+        <a href="/fr/" class="flex items-center gap-2 font-bold text-lg">
+          <img src="/src/assets/logo.png" alt="SocialFlow" class="w-8 h-8 rounded-lg" />
+          SocialFlow
+        </a>
+        <div class="flex items-center gap-1 text-sm flex-wrap">
+          <a href="/fr/features.html" class="btn btn-ghost btn-sm">Fonctionnalités</a>
+          <a href="/fr/use-cases.html" class="btn btn-ghost btn-sm hidden sm:inline-flex">Cas d'usage</a>
+          <a href="/fr/pricing.html" class="btn btn-ghost btn-sm">Tarifs</a>
+          <a href="/fr/faq.html" class="btn btn-ghost btn-sm hidden sm:inline-flex">FAQ</a>
+          <a href="/demo.html" class="btn btn-primary btn-sm">Demo</a>
+          <a href="/en/vs-sessionbox.html" class="btn btn-ghost btn-sm" title="English">EN</a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="py-24 px-6 text-center">
+      <div class="max-w-3xl mx-auto">
+        <h1 class="text-4xl font-bold sm:text-5xl">SocialFlow vs SessionBox</h1>
+        <p class="mt-6 text-xl text-base-content/70">Application native avec isolation complète vs extension Chrome avec sessions virtuelles. Deux approches fondamentalement différentes.</p>
+      </div>
+    </section>
+
+    <!-- En bref -->
+    <section class="py-12 px-6">
+      <div class="max-w-4xl mx-auto">
+        <div class="card bg-base-200">
+          <div class="card-body">
+            <h2 class="card-title text-2xl mb-4">En bref</h2>
+            <ul class="space-y-3 text-base-content/80">
+              <li class="flex gap-3"><span class="text-primary font-bold text-lg">1.</span> <strong>SessionBox</strong> est une extension Chrome qui crée des sessions virtuelles par onglet via interception réseau. <strong>SocialFlow</strong> est une app native avec isolation complète des cookies par profil.</li>
+              <li class="flex gap-3"><span class="text-primary font-bold text-lg">2.</span> SessionBox dépend de Chrome et des contraintes de Manifest V3, ce qui limite sa fiabilité à long terme. SocialFlow fonctionne de manière autonome.</li>
+              <li class="flex gap-3"><span class="text-primary font-bold text-lg">3.</span> SocialFlow inclut des fonctionnalités absentes de SessionBox : outils anti-distraction, Kanban intégré et support mobile.</li>
+              <li class="flex gap-3"><span class="text-primary font-bold text-lg">4.</span> SocialFlow Pro est moins cher que SessionBox Pro tout en offrant davantage de fonctionnalités.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Comparison Table -->
+    <section class="py-16 px-6 bg-base-200">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="text-3xl font-bold mb-8 text-center">Comparatif détaillé</h2>
+        <div class="overflow-x-auto">
+          <table class="table table-zebra w-full">
+            <thead>
+              <tr>
+                <th class="text-base">Critère</th>
+                <th class="text-base">SocialFlow</th>
+                <th class="text-base">SessionBox</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="font-medium">Type</td>
+                <td>Application native (Tauri)</td>
+                <td>Extension Chrome</td>
+              </tr>
+              <tr>
+                <td class="font-medium">Isolation</td>
+                <td><span class="badge badge-success">Cookies natifs par profil</span></td>
+                <td><span class="badge badge-warning">Interception réseau</span></td>
+              </tr>
+              <tr>
+                <td class="font-medium">Plateformes</td>
+                <td>Windows, macOS, Linux, Android</td>
+                <td>Chrome uniquement</td>
+              </tr>
+              <tr>
+                <td class="font-medium">Mobile</td>
+                <td><span class="badge badge-success">Oui (Android)</span></td>
+                <td><span class="badge badge-error">Non</span></td>
+              </tr>
+              <tr>
+                <td class="font-medium">Anti-distraction</td>
+                <td><span class="badge badge-success">Niveaux de gris, filtre amis</span></td>
+                <td><span class="badge badge-error">Non</span></td>
+              </tr>
+              <tr>
+                <td class="font-medium">Kanban</td>
+                <td><span class="badge badge-success">Intégré</span></td>
+                <td><span class="badge badge-error">Non</span></td>
+              </tr>
+              <tr>
+                <td class="font-medium">Réseaux sociaux</td>
+                <td>18+ réseaux intégrés</td>
+                <td>Tout site via Chrome</td>
+              </tr>
+              <tr>
+                <td class="font-medium">Manifest V3</td>
+                <td>Non concerné (app native)</td>
+                <td><span class="badge badge-warning">Impact sur les capacités</span></td>
+              </tr>
+              <tr>
+                <td class="font-medium">Taille</td>
+                <td>~5 Mo</td>
+                <td>Extension Chrome (requiert Chrome)</td>
+              </tr>
+              <tr>
+                <td class="font-medium">Scripts personnalisés</td>
+                <td><span class="badge badge-success">Injection par réseau</span></td>
+                <td><span class="badge badge-error">Non</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quand choisir SessionBox -->
+    <section class="py-16 px-6">
+      <div class="max-w-4xl mx-auto">
+        <div class="flex flex-col md:flex-row gap-12">
+          <div class="flex-1">
+            <h2 class="text-3xl font-bold mb-6">Quand choisir SessionBox</h2>
+            <p class="text-base-content/70 text-lg mb-4">SessionBox reste un bon choix dans certains cas d'usage :</p>
+            <ul class="space-y-3 text-base-content/70">
+              <li class="flex gap-2"><span class="text-success">&#10003;</span> Vous avez besoin de sessions isolées sur <strong>n'importe quel site web</strong>, pas uniquement les réseaux sociaux</li>
+              <li class="flex gap-2"><span class="text-success">&#10003;</span> Vous préférez rester dans votre navigateur Chrome sans installer d'application</li>
+              <li class="flex gap-2"><span class="text-success">&#10003;</span> La mise en place est rapide : une extension à installer et c'est parti</li>
+              <li class="flex gap-2"><span class="text-success">&#10003;</span> Vous avez un besoin ponctuel et le plan gratuit suffit</li>
+            </ul>
+          </div>
+          <div class="flex-1">
+            <h2 class="text-3xl font-bold mb-6">Quand choisir SocialFlow</h2>
+            <p class="text-base-content/70 text-lg mb-4">SocialFlow est le meilleur choix si :</p>
+            <ul class="space-y-3 text-base-content/70">
+              <li class="flex gap-2"><span class="text-success">&#10003;</span> Vous gérez plusieurs comptes sur les <strong>réseaux sociaux</strong> au quotidien</li>
+              <li class="flex gap-2"><span class="text-success">&#10003;</span> Vous voulez une <strong>isolation native fiable</strong>, pas de l'interception réseau fragile</li>
+              <li class="flex gap-2"><span class="text-success">&#10003;</span> Vous avez besoin d'outils <strong>anti-distraction</strong> pour rester productif</li>
+              <li class="flex gap-2"><span class="text-success">&#10003;</span> Vous travaillez sur <strong>mobile</strong> en plus du desktop</li>
+              <li class="flex gap-2"><span class="text-success">&#10003;</span> Vous voulez un <strong>Kanban intégré</strong> pour organiser vos publications</li>
+              <li class="flex gap-2"><span class="text-success">&#10003;</span> Vous cherchez une solution <strong>indépendante de Chrome</strong> et de ses limitations</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing Comparison -->
+    <section class="py-16 px-6 bg-base-200">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="text-3xl font-bold mb-8 text-center">Comparatif des tarifs</h2>
+        <div class="overflow-x-auto">
+          <table class="table w-full">
+            <thead>
+              <tr>
+                <th class="text-base">Plan</th>
+                <th class="text-base">SocialFlow</th>
+                <th class="text-base">SessionBox</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="font-medium">Gratuit</td>
+                <td>Fonctionnalités de base</td>
+                <td>Limité</td>
+              </tr>
+              <tr>
+                <td class="font-medium">Intermédiaire</td>
+                <td>Pro : tarif compétitif</td>
+                <td>Hobby : 12,99 &euro;/mois (6,50 &euro;/mois en annuel)</td>
+              </tr>
+              <tr>
+                <td class="font-medium">Avancé</td>
+                <td>Inclus dans le Pro</td>
+                <td>Pro : 59,99 &euro;/mois (21,99 &euro;/mois en annuel)</td>
+              </tr>
+              <tr>
+                <td class="font-medium">Équipe</td>
+                <td>--</td>
+                <td>Teams : 99,99 &euro;/mois</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="text-center mt-6 text-base-content/60">SessionBox peut coûter jusqu'à 99,99 &euro;/mois pour les équipes, tandis que SocialFlow Pro offre davantage de fonctionnalités à un prix bien inférieur.</p>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="py-24 px-6">
+      <div class="max-w-2xl mx-auto text-center">
+        <h2 class="text-3xl font-bold mb-4">Prêt à passer à l'isolation native ?</h2>
+        <p class="text-base-content/70 mb-8">Essayez SocialFlow gratuitement et découvrez une meilleure façon de gérer vos comptes.</p>
+        <div class="flex flex-wrap gap-4 justify-center">
+          <a href="/fr/download.html" class="btn btn-primary btn-lg">Télécharger</a>
+          <a href="/demo.html" class="btn btn-outline btn-lg">Voir la demo</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12 px-6 border-t border-base-300">
+      <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-base-content/50">
+        <div class="flex items-center gap-4">
+          <a href="/fr/">SocialFlow</a>
+          <a href="/fr/features.html" class="link link-hover">Fonctionnalités</a>
+          <a href="/fr/technology.html" class="link link-hover">Technologie</a>
+          <a href="/fr/pricing.html" class="link link-hover">Tarifs</a>
+          <a href="/fr/faq.html" class="link link-hover">FAQ</a>
+        </div>
+        <div class="flex items-center gap-4">
+          <a href="https://github.com/dianedef/SocialFlow" class="link link-hover">GitHub</a>
+          <a href="/en/vs-sessionbox.html" class="link link-hover">English</a>
+        </div>
+      </div>
+    </footer>
+
+  </body>
+</html>

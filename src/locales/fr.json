@@ -46,7 +46,8 @@
   },
   "theme": {
     "dark_mode": "Mode sombre",
-    "focus_mode": "Mode focus (niveaux de gris)"
+    "focus_mode": "Mode focus (niveaux de gris)",
+    "text_zoom": "Taille du texte"
   },
   "backup": {
     "section_title": "Sauvegarde",
