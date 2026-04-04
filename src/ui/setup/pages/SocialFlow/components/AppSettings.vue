@@ -60,7 +60,7 @@
           step="5"
           :value="themeStore.textZoom"
           class="text-zoom-slider"
-          @input="(e: Event) => themeStore.setTextZoom(Number((e.target as HTMLInputElement).value))"
+          @input="onTextZoomInput"
         />
         <span class="text-zoom-bound text-zoom-bound-large">A</span>
       </div>
@@ -111,6 +111,11 @@ const isDarkMode = ref(themeStore.isDarkMode)
 
 const toggleTheme = () => {
   themeStore.toggleTheme()
+}
+
+function onTextZoomInput(e: Event) {
+  const val = (e.target as HTMLInputElement).value
+  themeStore.setTextZoom(Number(val))
 }
 
 function onLocaleChange() {

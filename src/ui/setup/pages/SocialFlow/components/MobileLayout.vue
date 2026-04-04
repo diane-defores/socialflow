@@ -367,7 +367,7 @@
                 step="5"
                 :value="themeStore.textZoom"
                 class="text-zoom-slider"
-                @input="(e: Event) => themeStore.setTextZoom(Number((e.target as HTMLInputElement).value))"
+                @input="onTextZoomInput"
               />
               <span class="text-zoom-bound text-zoom-bound-large">A</span>
             </div>
@@ -437,6 +437,11 @@ onUnmounted(() => {
 // ─── Settings state ──────────────────────────────────────────
 const settingsUsername = ref(localStorage.getItem('sfz_username') ?? '')
 const settingsEmail = ref(localStorage.getItem('sfz_email') ?? '')
+
+function onTextZoomInput(e: Event) {
+  const val = (e.target as HTMLInputElement).value
+  themeStore.setTextZoom(Number(val))
+}
 
 function saveSettings() {
   localStorage.setItem('sfz_username', settingsUsername.value.trim())
