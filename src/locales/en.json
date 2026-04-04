@@ -33,7 +33,9 @@
     "comments_count": "comments",
     "shares_count": "shares",
     "visibility_public": "Everyone",
-    "ok": "OK"
+    "ok": "OK",
+    "copy": "Copy",
+    "copied": "Copied!"
   },
   "settings": {
     "title": "Settings",

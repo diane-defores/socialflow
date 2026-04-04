@@ -33,7 +33,9 @@
     "comments_count": "commentaires",
     "shares_count": "partages",
     "visibility_public": "Tout le monde",
-    "ok": "OK"
+    "ok": "OK",
+    "copy": "Copier",
+    "copied": "Copié !"
   },
   "settings": {
     "title": "Paramètres",

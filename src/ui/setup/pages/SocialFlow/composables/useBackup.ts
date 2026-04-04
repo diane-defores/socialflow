@@ -148,7 +148,7 @@ export function useBackup() {
     })
     if (!filePath) throw new Error('No file selected')
     await writeFile(filePath, b64ToBytes(b64))
-    return typeof filePath === 'string' ? filePath : filePath.toString()
+    return String(filePath)
   }
 
   async function importBackup(password: string): Promise<void> {

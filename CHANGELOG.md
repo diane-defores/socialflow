@@ -2,6 +2,18 @@
 
 All notable changes to SocialFlow are documented here.
 
+## [Unreleased] — 2026-04-05
+
+### Added
+- Backup error copy button — "Copier" button in error dialogs copies raw error text to clipboard (fallback `execCommand` for WebView)
+- FS capabilities — `allow-read-file`, `allow-mkdir`, `allow-read-dir`, `scope-appdata-recursive` for backup operations
+
+### Fixed
+- Backup export on Android — bypasses native SAF file picker (was blocking behind settings overlay); saves directly to `AppData/backups/` with timestamped filename
+- Backup import on Android — reads most recent `.sfbak` from `AppData/backups/` without file picker
+
+---
+
 ## [Unreleased] — 2026-03-15
 
 ### Added

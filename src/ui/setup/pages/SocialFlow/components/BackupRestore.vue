@@ -129,6 +129,10 @@
 
               <div class="error-box">
                 <p>{{ friendlyError }}</p>
+                <button class="copy-error-btn" @click="copyError">
+                  <i :class="copied ? 'pi pi-check' : 'pi pi-copy'" />
+                  {{ copied ? $t('common.copied') : $t('common.copy') }}
+                </button>
               </div>
 
               <div v-if="mode === 'import'" class="result-instructions">
@@ -168,6 +172,7 @@ const password = ref('')
 const passwordConfirm = ref('')
 const showPassword = ref(false)
 const busy = ref(false)
+const copied = ref(false)
 const rawError = ref('')
 const resultPath = ref('')
 const countdown = ref(3)
@@ -247,6 +252,23 @@ function retry() {
   password.value = ''
   passwordConfirm.value = ''
   nextTick(() => passwordInput.value?.focus())
+}
+
+async function copyError() {
+  try {
+    await navigator.clipboard.writeText(rawError.value)
+    copied.value = true
+    setTimeout(() => { copied.value = false }, 2000)
+  } catch {
+    const ta = document.createElement('textarea')
+    ta.value = rawError.value
+    document.body.appendChild(ta)
+    ta.select()
+    document.execCommand('copy')
+    document.body.removeChild(ta)
+    copied.value = true
+    setTimeout(() => { copied.value = false }, 2000)
+  }
 }
 
 function startCountdown() {
@@ -532,6 +554,25 @@ async function confirm() {
 
 .error-box p {
   margin: 0;
+}
+
+.copy-error-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.5rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid rgba(231, 76, 60, 0.3);
+  background: transparent;
+  color: #c0392b;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.copy-error-btn:hover {
+  background: rgba(231, 76, 60, 0.08);
 }
 
 /* ─── Actions ─── */
