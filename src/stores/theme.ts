@@ -7,7 +7,6 @@ export const useThemeStore = defineStore('theme', {
   state: () => ({
     isDarkMode: false,
     grayscaleEnabled: false,
-    textZoom: 100,
   }),
 
   actions: {
@@ -32,11 +31,6 @@ export const useThemeStore = defineStore('theme', {
       document.documentElement.style.filter = this.grayscaleEnabled ? 'grayscale(1)' : ''
     },
 
-    setTextZoom(zoom: number) {
-      this.textZoom = zoom
-      localStorage.setItem('textZoom', String(zoom))
-    },
-
     initTheme() {
       const savedTheme = localStorage.getItem('theme')
       if (savedTheme) {
@@ -47,8 +41,6 @@ export const useThemeStore = defineStore('theme', {
       this.applyTheme()
       this.grayscaleEnabled = localStorage.getItem('grayscale') === '1'
       this.applyGrayscale()
-      const savedZoom = localStorage.getItem('textZoom')
-      if (savedZoom) this.textZoom = Number(savedZoom)
     },
 
     async syncThemeToCloud(theme: 'light' | 'dark') {
