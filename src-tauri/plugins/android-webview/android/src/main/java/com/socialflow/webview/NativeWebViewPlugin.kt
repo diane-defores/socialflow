@@ -78,6 +78,11 @@ class SetLocaleArgs {
     var locale: String = "fr"
 }
 
+@InvokeArg
+class TextZoomArgs {
+    var zoom: Int = 100
+}
+
 // Lightweight profile data for the popup menu
 private data class ProfileMenuItem(val id: String, val name: String, val emoji: String)
 
@@ -424,6 +429,9 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
     // Dark mode state — synced from Vue settings toggle
     private var isDarkMode = false
+
+    // Text zoom percentage — synced from Vue settings slider (default 100%)
+    private var textZoom = 100
 
     // Visible network IDs — synced from Vue profile visibility (null = show all)
     private var visibleNetworkIds: Set<String>? = null
@@ -794,7 +802,20 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         activity.runOnUiThread {
             isDarkMode = args.enabled
             applyDarkModeToBottomBar(bottomBarView)
+            applyDarkModeToWebView(socialWebView)
             applyStatusBarIconColor()
+        }
+        invoke.resolve(JSObject())
+    }
+
+    // ── Set text zoom (called from Vue settings slider) ──────────────────
+
+    @Command
+    fun setTextZoom(invoke: Invoke) {
+        val args = invoke.parseArgs(TextZoomArgs::class.java)
+        activity.runOnUiThread {
+            textZoom = args.zoom
+            socialWebView?.settings?.textZoom = textZoom
         }
         invoke.resolve(JSObject())
     }
@@ -1278,6 +1299,21 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         }
     }
 
+    /** Apply dark mode to the social webview using AndroidX WebView dark mode APIs. */
+    private fun applyDarkModeToWebView(webView: WebView?) {
+        val wv = webView ?: return
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
+            WebSettingsCompat.setAlgorithmicDarkeningAllowed(wv.settings, isDarkMode)
+        } else if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
+            @Suppress("DEPRECATION")
+            WebSettingsCompat.setForceDark(
+                wv.settings,
+                if (isDarkMode) WebSettingsCompat.FORCE_DARK_ON
+                else WebSettingsCompat.FORCE_DARK_OFF
+            )
+        }
+    }
+
     /** Re-apply dark/light colors to an existing bottom bar without rebuilding it. */
     private fun applyDarkModeToBottomBar(bar: LinearLayout?) {
         bar ?: return
@@ -1587,6 +1623,10 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         val defaultUa = WebSettings.getDefaultUserAgent(activity)
         mobileUa = defaultUa.replace("; wv", "")
         settings.userAgentString = mobileUa
+
+        // Apply persisted text zoom and dark mode to new webview
+        settings.textZoom = textZoom
+        applyDarkModeToWebView(webView)
 
         val cookieManager = CookieManager.getInstance()
         cookieManager.setAcceptCookie(true)

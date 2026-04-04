@@ -65,12 +65,19 @@ watch(() => themeStore.grayscaleEnabled, async (enabled) => {
   invoke('set_grayscale', { enabled }).catch(() => {})
 })
 
-// Sync dark mode state to native Android bottom bar
+// Sync dark mode state to native Android bottom bar + webview
 watch(() => themeStore.isDarkMode, async (enabled) => {
   if (!isTauri) return
   const { invoke } = await import('@tauri-apps/api/core')
   invoke('set_dark_mode', { enabled }).catch(() => {})
 })
+
+// Sync text zoom to native Android webview
+watch(() => themeStore.textZoom, async (zoom) => {
+  if (!isTauri) return
+  const { invoke } = await import('@tauri-apps/api/core')
+  invoke('set_text_zoom', { zoom }).catch(() => {})
+}, { immediate: true })
 
 // Sync profile list to Android popup menu whenever profiles or active profile changes.
 // Use a lightweight computed fingerprint instead of deep: true (avoids traversing base64 avatars).

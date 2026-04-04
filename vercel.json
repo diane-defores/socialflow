@@ -1,7 +1,29 @@
 {
   "buildCommand": "pnpm run build:web",
   "outputDirectory": "dist/web",
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    }
+  ],
   "rewrites": [
     { "source": "/demo/:path*", "destination": "/demo.html" }
+  ],
+  "redirects": [
+    { "source": "/technology.html", "destination": "/en/technology.html", "statusCode": 301 },
+    { "source": "/pourquoi.html", "destination": "/fr/technology.html", "statusCode": 301 },
+    { "source": "/fr", "destination": "/fr/", "statusCode": 308 },
+    { "source": "/en", "destination": "/en/", "statusCode": 308 }
   ]
 }

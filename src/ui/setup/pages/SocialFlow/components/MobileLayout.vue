@@ -350,6 +350,27 @@
               </button>
             </div>
 
+            <div class="settings-toggle-row text-zoom-row">
+              <span class="settings-toggle-label">
+                <i class="pi pi-search-plus" />
+                {{ $t('theme.text_zoom') }}
+              </span>
+              <span class="text-zoom-value">{{ themeStore.textZoom }}%</span>
+            </div>
+            <div class="text-zoom-slider-row">
+              <span class="text-zoom-bound">A</span>
+              <input
+                type="range"
+                min="75"
+                max="150"
+                step="5"
+                :value="themeStore.textZoom"
+                class="text-zoom-slider"
+                @input="themeStore.setTextZoom(Number(($event.target as HTMLInputElement).value))"
+              />
+              <span class="text-zoom-bound text-zoom-bound-large">A</span>
+            </div>
+
             <!-- Backup / Restore -->
             <p class="settings-section-label">{{ $t('backup.section_title') }}</p>
             <BackupRestore />
@@ -735,7 +756,8 @@ function handleAvatarChange(event: Event) {
 .mobile-home {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   background: var(--surface-ground);
   padding-top: env(safe-area-inset-top, 24px);
@@ -1351,6 +1373,55 @@ function handleAvatarChange(event: Event) {
 
 .settings-toggle-row:last-child {
   border-bottom: none;
+}
+
+.text-zoom-row {
+  border-bottom: none;
+  padding-bottom: 0.2rem;
+}
+
+.text-zoom-value {
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.text-zoom-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0 0 0.65rem;
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.text-zoom-bound {
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+  font-weight: 600;
+}
+
+.text-zoom-bound-large {
+  font-size: 1.15rem;
+}
+
+.text-zoom-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--surface-border);
+  outline: none;
+}
+
+.text-zoom-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  cursor: pointer;
 }
 
 .settings-toggle-label {

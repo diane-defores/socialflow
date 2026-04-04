@@ -77,6 +77,7 @@ export default defineConfig({
       input: [
         resolve(__dirname, 'index.html'),
         resolve(__dirname, 'demo.html'),
+        resolve(__dirname, '404.html'),
         // FR
         resolve(__dirname, 'fr/index.html'),
         resolve(__dirname, 'fr/features.html'),
