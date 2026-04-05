@@ -3,6 +3,7 @@ import { URL, fileURLToPath } from "node:url"
 import vue from "@vitejs/plugin-vue"
 import AutoImport from "unplugin-auto-import/vite"
 import IconsResolver from "unplugin-icons/resolver"
+import { PrimeVueResolver } from "unplugin-vue-components/resolvers"
 import Icons from "unplugin-icons/vite"
 import Components from "unplugin-vue-components/vite"
 import { createHtmlPlugin } from "vite-plugin-html"
@@ -127,6 +128,7 @@ export default defineConfig({
       resolvers: [
         // auto import icons
         IconsResolver(),
+        PrimeVueResolver(),
       ],
       directoryAsNamespace: true,
       globalNamespaces: ["account", "state"],

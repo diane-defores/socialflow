@@ -28,6 +28,7 @@ import { useThemeStore } from '@/stores/theme'
 import { useWebviewStore } from '@/stores/webviewState'
 import { useProfilesStore } from '@/stores/profiles'
 import { useFriendsFilter } from './composables/useFriendsFilter'
+import { preloadWebviews } from './composables/useWebviewPreload'
 import AppHeader from './components/AppHeader.vue'
 import AppSidebar from './components/AppSidebar.vue'
 import AppRightSidebar from './components/AppRightSidebar.vue'
@@ -92,6 +93,9 @@ watch(
 onMounted(async () => {
   themeStore.initTheme()
   profilesStore.ensureDefault()
+
+  // Preload top networks off-screen so first click is instant (non-blocking)
+  preloadWebviews()
 
   window.addEventListener('resize', handleResize)
 

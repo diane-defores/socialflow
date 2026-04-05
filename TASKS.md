@@ -172,7 +172,12 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [x] Webview pooling — hide/show au lieu de destroy/recreate pour switch instantané
 - [x] Convex subscriptions temps-réel via WebSocket (remplace polling 30s)
 - [x] logoCache persist — `persist: true` ajouté au store
-- [ ] Service Worker — precaching app shell + offline mode
+- [x] Routes lazy-loaded — dynamic imports, code splitting (764KB → 586KB)
+- [x] PrimeVue tree-shaking — auto-import resolver, supprimé 15 enregistrements globaux
+- [x] Webview preloading — top 3 réseaux préchargés off-screen au démarrage
+- [x] DNS prefetch — résolution DNS des réseaux sociaux au chargement HTML
+- [x] Vendor chunk splitting — vue/primevue séparés (app code 586KB → 163KB)
+- [x] Service Worker — precache 73 assets + runtime cache logos (web build only)
 
 ### Post-launch
 

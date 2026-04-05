@@ -133,7 +133,7 @@ private val NETWORKS = listOf(
     NetworkInfo("discord",   "\ue9c0", Color.parseColor("#5865F2"), "https://discord.com/app"),
     NetworkInfo("reddit",    "\ue9e8", Color.parseColor("#FF4500"), "https://reddit.com"),
     NetworkInfo("messenger", "\ue97e", Color.parseColor("#0099FF"), "https://www.facebook.com/messages"),
-    NetworkInfo("snapchat",  "\ue96c", Color.parseColor("#FFFC00"), "https://web.snapchat.com"),
+    NetworkInfo("snapchat",  "\ue96c", Color.parseColor("#FFFC00"), "https://www.snapchat.com/web/"),
     NetworkInfo("quora",     "\ue959", Color.parseColor("#A82400"), "https://www.quora.com"),
     NetworkInfo("pinterest", "\uea09", Color.parseColor("#E60023"), "https://www.pinterest.com"),
     NetworkInfo("whatsapp",  "\ue9d0", Color.parseColor("#25D366"), "https://web.whatsapp.com"),
@@ -605,6 +605,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         "https://www.threads.net", "https://mobile.twitter.com",
         "https://www.tiktok.com", "https://www.reddit.com",
         "https://www.linkedin.com",
+        "https://www.snapchat.com",
         "https://accounts.snapchat.com",
     )
 
@@ -1073,28 +1074,35 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
         scrollView.addView(networkRow)
 
-        // Touch/scroll interaction: reveal all icons at full opacity while interacting,
-        // then restore dimming on inactive icons when touch ends.
+        // Touch/scroll interaction: fade all icons to full opacity while interacting,
+        // then smoothly fade inactive icons back when touch ends.
+        var isTouching = false
         scrollView.setOnTouchListener { _, event ->
             when (event.action) {
-                MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
+                MotionEvent.ACTION_DOWN -> {
+                    isTouching = true
                     for (i in 0 until networkRow.childCount) {
                         val child = networkRow.getChildAt(i)
-                        child.animate().alpha(1f).setDuration(120).start()
+                        child.animate().cancel()
+                        child.animate().alpha(1f).setDuration(250).start()
                     }
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    // Short delay so the user can see all icons before dimming back
+                    isTouching = false
+                    // Delay before fading back so user can see all icons
                     networkRow.postDelayed({
-                        for (i in 0 until networkRow.childCount) {
-                            val child = networkRow.getChildAt(i)
-                            val netId = child.tag as? String
-                            if (netId != null) {
-                                val targetAlpha = if (netId == currentNetworkId) 1f else 0.45f
-                                child.animate().alpha(targetAlpha).setDuration(200).start()
+                        if (!isTouching) {
+                            for (i in 0 until networkRow.childCount) {
+                                val child = networkRow.getChildAt(i)
+                                val netId = child.tag as? String
+                                if (netId != null) {
+                                    val targetAlpha = if (netId == currentNetworkId) 1f else 0.45f
+                                    child.animate().cancel()
+                                    child.animate().alpha(targetAlpha).setDuration(400).start()
+                                }
                             }
                         }
-                    }, 300)
+                    }, 500)
                 }
             }
             false // don't consume — let scroll still work
@@ -1558,16 +1566,16 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             child.invalidate()
         }
 
-        // Active icon: full opacity + slight scale-up; inactive: dimmed
-        if (isActive) {
-            btn.alpha = 1f
-            btn.scaleX = 1.12f
-            btn.scaleY = 1.12f
-        } else {
-            btn.alpha = 0.45f
-            btn.scaleX = 1f
-            btn.scaleY = 1f
-        }
+        // Active icon: full opacity + slight scale-up; inactive: dimmed — smooth transition
+        val targetAlpha = if (isActive) 1f else 0.45f
+        val targetScale = if (isActive) 1.12f else 1f
+        btn.animate().cancel()
+        btn.animate()
+            .alpha(targetAlpha)
+            .scaleX(targetScale)
+            .scaleY(targetScale)
+            .setDuration(300)
+            .start()
     }
 
     /** Build a button using official SVG path data (from Simple Icons, 24x24 viewBox). */
@@ -1579,9 +1587,16 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     ): View {
         val size = (36 * density).toInt()
         val margin = (2 * density).toInt()
+        val hasStroke = net.id == "snapchat"
 
         val iconView = object : View(activity) {
-            private val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
+            private val fillPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
+            private val strokePaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                style = android.graphics.Paint.Style.STROKE
+                color = Color.BLACK
+                strokeWidth = 0.8f * density
+                strokeJoin = android.graphics.Paint.Join.ROUND
+            }
             override fun onDraw(canvas: android.graphics.Canvas) {
                 super.onDraw(canvas)
                 val w = (width - paddingLeft - paddingRight).toFloat()
@@ -1594,12 +1609,13 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                 srcPath.transform(m, scaled)
 
                 val color = (tag as? Int) ?: if (isDarkMode) Color.WHITE else Color.parseColor("#495057")
-                paint.color = color
-                paint.style = android.graphics.Paint.Style.FILL
+                fillPaint.color = color
+                fillPaint.style = android.graphics.Paint.Style.FILL
 
                 canvas.save()
                 canvas.translate(paddingLeft.toFloat(), paddingTop.toFloat())
-                canvas.drawPath(scaled, paint)
+                if (hasStroke) canvas.drawPath(scaled, strokePaint)
+                canvas.drawPath(scaled, fillPaint)
                 canvas.restore()
             }
         }

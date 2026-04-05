@@ -1,15 +1,5 @@
 import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router'
 import { authGuard, networkAccessGuard } from './guards'
-import TwitterView from '../components/networks/TwitterView.vue'
-import FacebookView from '../components/networks/FacebookView.vue'
-import InstagramView from '../components/networks/InstagramView.vue'
-import LinkedInView from '../components/networks/LinkedInView.vue'
-import TikTokView from '../components/networks/TikTokView.vue'
-import ThreadsView from '../components/networks/ThreadsView.vue'
-import DiscordView from '../components/networks/DiscordView.vue'
-import RedditView from '../components/networks/RedditView.vue'
-import GmailView from '../components/networks/GmailView.vue'
-import SnapchatView from '../components/networks/SnapchatView.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -26,7 +16,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/twitter',
     name: 'Twitter',
-    component: TwitterView,
+    component: () => import('../components/networks/TwitterView.vue'),
     meta: {
       auth: true,
       requiresAuth: true,
@@ -37,7 +27,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/facebook',
     name: 'Facebook',
-    component: FacebookView,
+    component: () => import('../components/networks/FacebookView.vue'),
     meta: {
       auth: true,
       requiresAuth: true,
@@ -48,7 +38,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/instagram',
     name: 'Instagram',
-    component: InstagramView,
+    component: () => import('../components/networks/InstagramView.vue'),
     meta: {
       auth: true,
       requiresAuth: true,
@@ -59,7 +49,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/linkedin',
     name: 'LinkedIn',
-    component: LinkedInView,
+    component: () => import('../components/networks/LinkedInView.vue'),
     meta: {
       auth: true,
       requiresAuth: true,
@@ -70,7 +60,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/tiktok',
     name: 'TikTok',
-    component: TikTokView,
+    component: () => import('../components/networks/TikTokView.vue'),
     meta: {
       auth: true,
       requiresAuth: true,
@@ -81,7 +71,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/threads',
     name: 'Threads',
-    component: ThreadsView,
+    component: () => import('../components/networks/ThreadsView.vue'),
     meta: {
       auth: true,
       requiresAuth: true,
@@ -92,7 +82,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/discord',
     name: 'Discord',
-    component: DiscordView,
+    component: () => import('../components/networks/DiscordView.vue'),
     meta: {
       auth: true,
       requiresAuth: true,
@@ -103,7 +93,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/reddit',
     name: 'Reddit',
-    component: RedditView,
+    component: () => import('../components/networks/RedditView.vue'),
     meta: {
       auth: true,
       requiresAuth: true,
@@ -114,7 +104,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/snapchat',
     name: 'Snapchat',
-    component: SnapchatView,
+    component: () => import('../components/networks/SnapchatView.vue'),
     meta: {
       auth: true,
       requiresAuth: true,
@@ -125,7 +115,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/gmail',
     name: 'Gmail',
-    component: GmailView,
+    component: () => import('../components/networks/GmailView.vue'),
     meta: {
       auth: true,
       requiresAuth: true,
@@ -144,4 +134,4 @@ const router = createRouter({
 router.beforeEach(authGuard)
 router.beforeEach(networkAccessGuard)
 
-export { router } 
+export { router }

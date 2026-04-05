@@ -2,6 +2,23 @@
 
 All notable changes to SocialFlow are documented here.
 
+## [Unreleased] — 2026-04-06
+
+### Added
+- Webview pooling — `hide_webview`/`show_webview` Rust IPC commands; switching networks hides the old webview off-screen instead of destroying it, preserving page state, scroll position, and cookies for instant re-show
+- Webview preloading — top 3 visible networks preloaded off-screen at app startup so even the first click is instant
+- DNS prefetch — `<link rel="dns-prefetch">` for 12 social network domains in `index.html`
+- Service Worker (web build) — `vite-plugin-pwa` precaches 73 static assets + runtime cache for Microlink logos; instant reload on repeat visits
+
+### Changed
+- Convex client upgraded from `ConvexHttpClient` (REST polling every 30s) to `ConvexClient` (WebSocket real-time subscriptions); auth wired globally via `initConvexAuth()` — stores no longer need per-call token setup
+- Routes lazy-loaded — all 10 network views use dynamic `() => import()` instead of static imports; enables Vite code splitting
+- PrimeVue tree-shaking — 15 global `app.component()` registrations replaced by `PrimeVueResolver` auto-import; components loaded on demand
+- Vendor chunk splitting — `manualChunks` separates vue/pinia (107KB) and primevue (373KB) into stable cached chunks; app code reduced from 764KB → 163KB
+- `logoCache` store now persists to localStorage (`persist: true`)
+
+---
+
 ## [Unreleased] — 2026-04-05
 
 ### Added
