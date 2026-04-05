@@ -78,6 +78,12 @@ class SetLocaleArgs {
     var locale: String = "fr"
 }
 
+@InvokeArg
+class DeleteSessionArgs {
+    var profileId: String = ""
+    var networkId: String = ""
+}
+
 // Lightweight profile data for the popup menu
 private data class ProfileMenuItem(val id: String, val name: String, val emoji: String)
 
@@ -313,7 +319,7 @@ private val COOKIE_ACCEPT_SCRIPT = """
   ];
 
   // Text patterns matched case-insensitively against button innerText / aria-label
-  var ACCEPT_RE = /^(accept( all( cookies?)?)?|accept cookies on this browser|accepter( tout(es)?( les cookies?)?)?|tout accepter|tout autoriser|autoriser( tous?( les cookies?)?)?|allow( all( cookies?)?)?|i agree|j'accepte|ok|got it|i accept|confirm all|agree)$/i;
+  var ACCEPT_RE = /^(accept( all( cookies?)?)?|accept cookies on this browser|accepter( tout(es)?( les cookies?)?)?|tout accepter|tout autoriser|autoriser( tous?( les cookies?)?)?|autoriser les cookies.*|allow( all( cookies?)?)?|allow.*cookies|i agree|j'accepte|ok|got it|i accept|confirm all|agree)$/i;
 
   function clickIfVisible(el) {
     if (!el) return false;
@@ -352,30 +358,12 @@ private val COOKIE_ACCEPT_SCRIPT = """
       } catch(e) {}
     }
 
-    // 2. Text-match buttons/links inside any cookie/consent/GDPR container
-    var containers = document.querySelectorAll(
-      '[id*="cookie" i], [id*="consent" i], [id*="gdpr" i], [id*="privacy" i], [id*="cmp" i],' +
-      '[class*="cookie" i], [class*="consent" i], [class*="gdpr" i], [class*="cmp" i]'
-    );
-    for (var c = 0; c < containers.length; c++) {
-      var btns = containers[c].querySelectorAll('button, a[role="button"], [role="button"]');
-      for (var b = 0; b < btns.length; b++) {
-        var label = (btns[b].textContent || btns[b].getAttribute('aria-label') || '').trim();
-        if (ACCEPT_RE.test(label) && clickIfVisible(btns[b])) return;
-      }
-    }
-
-    // 3. Check role="dialog" containers, but ONLY if they contain cookie-related text.
-    // This avoids auto-clicking unrelated dialogs (e.g. Messenger "restore history" prompt).
-    var COOKIE_TEXT_RE = /cookie|consent|privacy.policy|politique.de.confidentialit|donn.es.personnelles|rgpd|gdpr|tracking|traceur/i;
-    var dialogs = document.querySelectorAll('[role="dialog"], [role="alertdialog"]');
-    for (var d = 0; d < dialogs.length; d++) {
-      if (!COOKIE_TEXT_RE.test(dialogs[d].textContent || '')) continue;
-      var dbtns = dialogs[d].querySelectorAll('button, a[role="button"], [role="button"]');
-      for (var b = 0; b < dbtns.length; b++) {
-        var label = (dbtns[b].textContent || dbtns[b].getAttribute('aria-label') || '').trim();
-        if (ACCEPT_RE.test(label) && clickIfVisible(dbtns[b])) return;
-      }
+    // 2. Scan ALL buttons on the page — safe because this script only runs
+    //    on fresh sessions (no saved cookies / first open).
+    var allBtns = document.querySelectorAll('button, a[role="button"], [role="button"]');
+    for (var b = 0; b < allBtns.length; b++) {
+      var label = (allBtns[b].textContent || allBtns[b].getAttribute('aria-label') || '').trim();
+      if (ACCEPT_RE.test(label) && clickIfVisible(allBtns[b])) return;
     }
   }
 
@@ -392,6 +380,9 @@ private val COOKIE_ACCEPT_SCRIPT = """
     }
   });
   observer.observe(document.documentElement, { childList: true, subtree: true });
+
+  // Auto-disconnect after 30s — consent dialogs appear quickly on fresh sessions
+  setTimeout(function() { observer.disconnect(); }, 30000);
 })();
 """.trimIndent()
 
@@ -423,6 +414,9 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
     // Dark mode state — synced from Vue settings toggle
     private var isDarkMode = false
+
+    // Cookie consent auto-accept — only active on fresh sessions (no saved cookies)
+    private var needsCookieAccept = false
 
     // Visible network IDs — synced from Vue profile visibility (null = show all)
     private var visibleNetworkIds: Set<String>? = null
@@ -539,7 +533,8 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             restored++
         }
         cm.flush()
-        Log.i(TAG, "Cookies restored for session: $sessionKey ($restored URLs)")
+        needsCookieAccept = (restored == 0)
+        Log.i(TAG, "Cookies restored for session: $sessionKey ($restored URLs, cookieAccept=$needsCookieAccept)")
     }
 
     /** Capture the main Tauri WebView on plugin load — this is the Vue app webview. */
@@ -685,6 +680,19 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             wvParams.topMargin = statusBarHeight
             wvParams.bottomMargin = navBarHeight + barHeight
             webView.layoutParams = wvParams
+
+            // Consume window insets so the web content doesn't see safe-area-inset-bottom.
+            // Without this, sites like Instagram/Threads double-account the nav bar height:
+            // once via our bottomMargin, once via CSS env(safe-area-inset-bottom).
+            webView.setOnApplyWindowInsetsListener { v, insets ->
+                // Return zero insets — the WebView is already positioned correctly via margins
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    android.view.WindowInsets.CONSUMED
+                } else {
+                    @Suppress("DEPRECATION")
+                    insets.replaceSystemWindowInsets(0, 0, 0, 0)
+                }
+            }
 
             // ── Bottom overlay bar (above nav bar) ───────────────────────────
             val bottomBar = buildBottomBar(density, navBarHeight, args.networkId, sortedNetworks())
@@ -839,6 +847,37 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         } catch (e: Exception) {
             Log.e(TAG, "setProfiles parse error: ${e.message}")
         }
+        invoke.resolve(JSObject())
+    }
+
+    // ── Delete session cookies (called from Vue profile management) ─────────
+
+    @Command
+    fun deleteNetworkSession(invoke: Invoke) {
+        val args = invoke.parseArgs(DeleteSessionArgs::class.java)
+        val sessionKey = "${args.profileId}-${args.networkId}"
+        val editor = cookiePrefs.edit()
+        for (url in COOKIE_URLS) {
+            editor.remove("$sessionKey|$url")
+        }
+        editor.apply()
+        Log.i(TAG, "Cookies deleted for session: $sessionKey")
+        invoke.resolve(JSObject())
+    }
+
+    @Command
+    fun deleteProfileSession(invoke: Invoke) {
+        val args = invoke.parseArgs(DeleteSessionArgs::class.java)
+        val editor = cookiePrefs.edit()
+        // Remove cookies for all networks under this profile
+        val allPrefs = cookiePrefs.all
+        for (key in allPrefs.keys) {
+            if (key.startsWith("${args.profileId}-")) {
+                editor.remove(key)
+            }
+        }
+        editor.apply()
+        Log.i(TAG, "All cookies deleted for profile: ${args.profileId}")
         invoke.resolve(JSObject())
     }
 
@@ -1199,11 +1238,12 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         currentAccountId?.let { key ->
             val editor = cookiePrefs.edit()
             for (url in COOKIE_URLS) {
-                editor.remove("${key}_$url")
+                editor.remove("${key}|$url")
             }
             editor.apply()
         }
         // Clear all in-memory cookies and reload
+        needsCookieAccept = true
         cm.removeAllCookies {
             view.post { view.loadUrl(retryUrl) }
         }
@@ -1556,7 +1596,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     }
 
     // Networks that require a desktop UA (their web app blocks mobile browsers)
-    private val DESKTOP_UA_NETWORKS = setOf("whatsapp", "telegram", "discord", "messenger")
+    private val DESKTOP_UA_NETWORKS = setOf("whatsapp", "telegram", "discord", "messenger", "snapchat")
     private val DESKTOP_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
     private lateinit var mobileUa: String
 
@@ -1596,7 +1636,8 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         if (useDocStart) {
             WebViewCompat.addDocumentStartJavaScript(webView, STEALTH_SCRIPT, setOf("*"))
             WebViewCompat.addDocumentStartJavaScript(webView, DESKTOP_VIEWPORT_SCRIPT, setOf("*"))
-            WebViewCompat.addDocumentStartJavaScript(webView, COOKIE_ACCEPT_SCRIPT, setOf("*"))
+            // COOKIE_ACCEPT_SCRIPT is NOT injected here — it's injected conditionally
+            // in onPageFinished only for fresh sessions (needsCookieAccept flag).
             WebViewCompat.addDocumentStartJavaScript(webView, DISMISS_APP_BANNERS_SCRIPT, setOf("*"))
         }
 
@@ -1667,8 +1708,11 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                 // Fallback: inject scripts here only if addDocumentStartJavaScript wasn't available
                 if (!useDocStart) {
                     view.evaluateJavascript(STEALTH_SCRIPT, null)
-                    view.evaluateJavascript(COOKIE_ACCEPT_SCRIPT, null)
                     view.evaluateJavascript(DISMISS_APP_BANNERS_SCRIPT, null)
+                }
+                // Cookie consent: only inject on fresh sessions (no saved cookies)
+                if (needsCookieAccept) {
+                    view.evaluateJavascript(COOKIE_ACCEPT_SCRIPT, null)
                 }
                 // Always re-inject desktop viewport override in onPageFinished (backup —
                 // the page may have set its own viewport meta after our document-start script)

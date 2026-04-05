@@ -162,9 +162,14 @@ export function useBackup() {
 
     if (isAndroid) {
       // Android: find the most recent backup in app data
-      const entries = await readDir('backups', { baseDir: BaseDirectory.AppData })
+      let entries: Awaited<ReturnType<typeof readDir>> = []
+      try {
+        entries = await readDir('backups', { baseDir: BaseDirectory.AppData })
+      } catch {
+        // Directory doesn't exist yet — no backup has been exported
+      }
       const backups = entries.filter(e => e.name?.endsWith('.sfbak')).sort((a, b) => (b.name ?? '').localeCompare(a.name ?? ''))
-      if (backups.length === 0) throw new Error('No backup found')
+      if (backups.length === 0) throw new Error('Aucune sauvegarde trouvée. Exportez d\'abord vos données.')
       bytes = await readFile(`backups/${backups[0].name}`, { baseDir: BaseDirectory.AppData })
     } else {
       // Desktop: native open dialog

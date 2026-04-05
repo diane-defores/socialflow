@@ -415,10 +415,12 @@ fn inject_script(
     Ok(())
 }
 
-// ── Cross-platform ───────────────────────────────────────────────────────────
+// ── Session deletion ─────────────────────────────────────────────────────────
 
 /// Wipe all session data for a profile (all networks).
+/// Desktop: delete the filesystem data directory.
 #[tauri::command]
+#[cfg(not(target_os = "android"))]
 fn delete_profile_session(app: AppHandle, profile_id: String) -> Result<(), String> {
     let data_dir = app
         .path()
@@ -433,8 +435,19 @@ fn delete_profile_session(app: AppHandle, profile_id: String) -> Result<(), Stri
     Ok(())
 }
 
-/// Wipe session data for a single (profile, network) pair.
+/// Android: delegate to Kotlin plugin to clear SharedPreferences cookies.
 #[tauri::command]
+#[cfg(target_os = "android")]
+fn delete_profile_session(app: AppHandle, profile_id: String) -> Result<(), String> {
+    app.android_webview()
+        .delete_profile_session(&profile_id)
+        .map_err(|e| e.to_string())
+}
+
+/// Wipe session data for a single (profile, network) pair.
+/// Desktop: delete the filesystem data directory.
+#[tauri::command]
+#[cfg(not(target_os = "android"))]
 fn delete_network_session(
     app: AppHandle,
     profile_id: String,
@@ -452,6 +465,19 @@ fn delete_network_session(
         std::fs::remove_dir_all(&data_dir).map_err(|e| e.to_string())?;
     }
     Ok(())
+}
+
+/// Android: delegate to Kotlin plugin to clear SharedPreferences cookies.
+#[tauri::command]
+#[cfg(target_os = "android")]
+fn delete_network_session(
+    app: AppHandle,
+    profile_id: String,
+    network_id: String,
+) -> Result<(), String> {
+    app.android_webview()
+        .delete_network_session(&profile_id, &network_id)
+        .map_err(|e| e.to_string())
 }
 
 // ─── Backup / Restore ────────────────────────────────────────────────────────
