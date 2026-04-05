@@ -415,9 +415,38 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     // Dark mode state — synced from Vue settings toggle
     private var isDarkMode = false
 
-    // Cookie consent: inject script only on the first few page loads after opening a network.
-    // Consent dialogs always appear on the 1st or 2nd page. After that, stop injecting.
-    private var cookieAcceptPagesLeft = 0
+    // Cookie consent: only inject when not logged in.
+    // Detected by checking for auth cookies specific to each network.
+    private var isLoggedIn = false
+
+    // Auth cookie names per network — these cookies only exist when logged in.
+    private val AUTH_COOKIES = mapOf(
+        "instagram" to listOf("sessionid", "ds_user_id"),
+        "facebook"  to listOf("c_user"),
+        "messenger" to listOf("c_user"),
+        "twitter"   to listOf("auth_token", "ct0"),
+        "tiktok"    to listOf("sessionid", "sid_tt"),
+        "pinterest"  to listOf("_auth", "_pinterest_sess"),
+        "linkedin"  to listOf("li_at"),
+        "reddit"    to listOf("reddit_session", "token_v2"),
+        "threads"   to listOf("sessionid", "ds_user_id"),
+        "discord"   to listOf("__dcfduid", "__sdcfduid"),
+        "snapchat"  to listOf("sc-a-session"),
+        "quora"     to listOf("m-b"),
+        "whatsapp"  to listOf("wa_lang_pref"),  // minimal signal — WhatsApp Web is auth-gated
+        "telegram"  to listOf("stel_ssid"),
+        "nextdoor"  to listOf("ndsid"),
+    )
+
+    /** Check if the current network has auth cookies → user is logged in. */
+    private fun checkLoggedIn(): Boolean {
+        val networkId = currentNetworkId ?: return false
+        val authNames = AUTH_COOKIES[networkId] ?: return false
+        val cm = CookieManager.getInstance()
+        val net = NETWORKS.find { it.id == networkId } ?: return false
+        val cookies = cm.getCookie(net.url) ?: return false
+        return authNames.any { name -> cookies.contains("$name=") }
+    }
 
 
     // Visible network IDs — synced from Vue profile visibility (null = show all)
@@ -650,7 +679,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                 restoreCookiesForSession(args.accountId)
                 // Reuse existing webview — just navigate and update active highlight
                 initialBackIndex = -1  // Reset baseline for new network URL
-                cookieAcceptPagesLeft = 3  // Re-arm cookie consent for new network
+                isLoggedIn = false  // Re-check auth on new network
                 applyUaForNetwork(args.networkId)
                 socialWebView?.loadUrl(args.url)
                 currentAccountId = args.accountId
@@ -728,7 +757,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
             // Restore cookies for this profile session before loading
             restoreCookiesForSession(args.accountId)
-            cookieAcceptPagesLeft = 3  // Arm cookie consent for first pages
+            isLoggedIn = false  // Re-check auth on new network
 
             // Apply persisted mute state to the new webview via JS
             applyMuteToWebView(webView)
@@ -746,7 +775,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         val args = invoke.parseArgs(NavigateArgs::class.java)
         activity.runOnUiThread {
             initialBackIndex = -1  // Reset baseline for new network URL
-            cookieAcceptPagesLeft = 3
+            isLoggedIn = false
             applyUaForNetwork(args.networkId)
             socialWebView?.loadUrl(args.url)
             currentNetworkId = args.networkId
@@ -1247,7 +1276,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             editor.apply()
         }
         // Clear all in-memory cookies and reload
-        cookieAcceptPagesLeft = 3
+        isLoggedIn = false
         cm.removeAllCookies {
             view.post { view.loadUrl(retryUrl) }
         }
@@ -1375,7 +1404,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                     currentAccountId = newKey
                 }
                 initialBackIndex = -1
-                cookieAcceptPagesLeft = 3
+                isLoggedIn = false
                 applyUaForNetwork(net.id)
                 socialWebView?.loadUrl(net.url)
                 currentNetworkId = net.id
@@ -1539,7 +1568,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                     currentAccountId = newKey
                 }
                 initialBackIndex = -1
-                cookieAcceptPagesLeft = 3
+                isLoggedIn = false
                 applyUaForNetwork(net.id)
                 socialWebView?.loadUrl(net.url)
                 currentNetworkId = net.id
@@ -1594,7 +1623,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             currentAccountId = newKey
         }
         initialBackIndex = -1
-        cookieAcceptPagesLeft = 3
+        isLoggedIn = false
         applyUaForNetwork("messenger")
         view.loadUrl(messengerUrl)
         currentNetworkId = "messenger"
@@ -1623,6 +1652,8 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         settings.databaseEnabled = true
         settings.mediaPlaybackRequiresUserGesture = false
         settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+        settings.javaScriptCanOpenWindowsAutomatically = true
+        settings.setSupportMultipleWindows(true)
         settings.loadWithOverviewMode = true
         settings.useWideViewPort = true
         settings.builtInZoomControls = true
@@ -1717,11 +1748,15 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                     view.evaluateJavascript(STEALTH_SCRIPT, null)
                     view.evaluateJavascript(DISMISS_APP_BANNERS_SCRIPT, null)
                 }
-                // Cookie consent: only inject on the first few pages after opening a network.
-                // Consent dialogs appear on the 1st/2nd page, never later.
-                if (cookieAcceptPagesLeft > 0) {
-                    cookieAcceptPagesLeft--
-                    view.evaluateJavascript(COOKIE_ACCEPT_SCRIPT, null)
+                // Cookie consent: only inject when not logged in.
+                // Once auth cookies are detected, stop injecting.
+                if (!isLoggedIn) {
+                    if (checkLoggedIn()) {
+                        isLoggedIn = true
+                        Log.i(TAG, "Auth cookies detected for $currentNetworkId — cookie consent script disabled")
+                    } else {
+                        view.evaluateJavascript(COOKIE_ACCEPT_SCRIPT, null)
+                    }
                 }
                 // Always re-inject desktop viewport override in onPageFinished (backup —
                 // the page may have set its own viewport meta after our document-start script)
@@ -1751,7 +1786,41 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                 }
             }
         }
-        webView.webChromeClient = WebChromeClient()
+        webView.webChromeClient = object : WebChromeClient() {
+            // reCAPTCHA (and other verification services) open a hidden child window
+            // to communicate with Google's servers. Without this, reCAPTCHA fails with
+            // "impossible d'établir une connexion avec le service Recaptcha".
+            override fun onCreateWindow(view: WebView, isDialog: Boolean, isUserGesture: Boolean, resultMsg: android.os.Message): Boolean {
+                val childWebView = WebView(activity)
+                childWebView.settings.javaScriptEnabled = true
+                childWebView.settings.domStorageEnabled = true
+                childWebView.settings.userAgentString = view.settings.userAgentString
+                CookieManager.getInstance().setAcceptThirdPartyCookies(childWebView, true)
+                childWebView.webViewClient = object : WebViewClient() {
+                    override fun shouldOverrideUrlLoading(v: WebView, request: android.webkit.WebResourceRequest): Boolean {
+                        // reCAPTCHA callback — load result in the parent WebView
+                        val url = request.url.toString()
+                        view.loadUrl(url)
+                        return true
+                    }
+                }
+                childWebView.webChromeClient = object : WebChromeClient() {
+                    override fun onCloseWindow(window: WebView) {
+                        (window.parent as? ViewGroup)?.removeView(window)
+                        window.destroy()
+                    }
+                }
+                val transport = resultMsg.obj as android.webkit.WebView.WebViewTransport
+                transport.webView = childWebView
+                resultMsg.sendToTarget()
+                return true
+            }
+
+            override fun onCloseWindow(window: WebView) {
+                (window.parent as? ViewGroup)?.removeView(window)
+                window.destroy()
+            }
+        }
         return webView
     }
 

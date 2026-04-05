@@ -96,6 +96,7 @@ jobs:
           retention-days: 14
 
   windows-test:
+    if: false  # Paused — no Windows PC to test
     name: Windows test installer
     runs-on: windows-latest
     timeout-minutes: 60
