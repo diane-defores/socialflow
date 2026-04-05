@@ -22,6 +22,7 @@ import android.widget.HorizontalScrollView
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.view.MotionEvent
 import androidx.activity.OnBackPressedCallback
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
@@ -185,16 +186,29 @@ private val STEALTH_SCRIPT = """
 private val DESKTOP_VIEWPORT_SCRIPT = """
 (function(){
   if (!/Windows NT 10\.0.*Chrome\/136/.test(navigator.userAgent)) return;
-  var meta = document.querySelector('meta[name="viewport"]');
-  if (!meta) {
-    meta = document.createElement('meta');
-    meta.name = 'viewport';
-    (document.head || document.documentElement).appendChild(meta);
+  var w = /facebook\.com\/messages|snapchat\.com/.test(window.location.href) ? 500 : 980;
+
+  function enforceViewport() {
+    var meta = document.querySelector('meta[name="viewport"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = 'viewport';
+      (document.head || document.documentElement).appendChild(meta);
+    }
+    var want = 'width=' + w + ', shrink-to-fit=yes';
+    if (meta.getAttribute('content') !== want) {
+      meta.setAttribute('content', want);
+    }
   }
-  // Narrower viewport for Messenger — 500px makes text readable on mobile
-  // instead of the default 980px which renders everything tiny
-  var w = /facebook\.com\/messages/.test(window.location.href) ? 500 : 980;
-  meta.setAttribute('content', 'width=' + w + ', shrink-to-fit=yes');
+  enforceViewport();
+
+  // Snapchat's SPA JS overrides viewport after ~3s — persist our setting
+  if (/snapchat\.com/.test(window.location.hostname)) {
+    var mo = new MutationObserver(function() { enforceViewport(); });
+    mo.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['content'] });
+    // Also re-enforce periodically in case Snapchat uses timers instead of DOM changes
+    setInterval(enforceViewport, 2000);
+  }
 })();
 """.trimIndent()
 
@@ -205,6 +219,12 @@ private val DISMISS_APP_BANNERS_SCRIPT = """
   'use strict';
   if (window.__sfzAppBannerWatcher) return;
   window.__sfzAppBannerWatcher = true;
+
+  // Skip aggressive dismiss logic on Snapchat — its web app has "app" in class names
+  // everywhere, so our [class*="app"] selector matches real UI elements and clicks
+  // "Log in" buttons that break the session.
+  var isSC = /snapchat\.com/.test(window.location.hostname);
+
 
   // Persistent CSS — hides known app-banner elements even if re-inserted into the DOM
   var style = document.createElement('style');
@@ -252,6 +272,7 @@ private val DISMISS_APP_BANNERS_SCRIPT = """
   function dismissAppPrompts() {
     removeSmartBannerMeta();
     hideDownloadBanners();
+    if (isSC) return; // Snapchat: CSS hiding is enough, skip button clicking
 
     var btns = document.querySelectorAll('button, a[role="button"], [role="button"], a');
     for (var i = 0; i < btns.length; i++) {
@@ -526,6 +547,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         "https://www.threads.net", "https://mobile.twitter.com",
         "https://www.tiktok.com", "https://www.reddit.com",
         "https://www.linkedin.com",
+        "https://accounts.snapchat.com",
     )
 
     /** Save all cookies for the current profile session key. */
@@ -894,6 +916,8 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             editor.remove("$sessionKey|$url")
         }
         editor.apply()
+        // Re-arm cookie consent if deleting the currently active session
+        if (currentAccountId == sessionKey) isLoggedIn = false
         Log.i(TAG, "Cookies deleted for session: $sessionKey")
         invoke.resolve(JSObject())
     }
@@ -910,6 +934,8 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             }
         }
         editor.apply()
+        // Re-arm cookie consent if deleting the currently active profile
+        if (currentAccountId?.startsWith("${args.profileId}-") == true) isLoggedIn = false
         Log.i(TAG, "All cookies deleted for profile: ${args.profileId}")
         invoke.resolve(JSObject())
     }
@@ -988,6 +1014,34 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         }
 
         scrollView.addView(networkRow)
+
+        // Touch/scroll interaction: reveal all icons at full opacity while interacting,
+        // then restore dimming on inactive icons when touch ends.
+        scrollView.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
+                    for (i in 0 until networkRow.childCount) {
+                        val child = networkRow.getChildAt(i)
+                        child.animate().alpha(1f).setDuration(120).start()
+                    }
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    // Short delay so the user can see all icons before dimming back
+                    networkRow.postDelayed({
+                        for (i in 0 until networkRow.childCount) {
+                            val child = networkRow.getChildAt(i)
+                            val netId = child.tag as? String
+                            if (netId != null) {
+                                val targetAlpha = if (netId == currentNetworkId) 1f else 0.45f
+                                child.animate().alpha(targetAlpha).setDuration(200).start()
+                            }
+                        }
+                    }, 300)
+                }
+            }
+            false // don't consume — let scroll still work
+        }
+
         innerRow.addView(scrollView)
 
         // (mute + grayscale are now in the home button popup menu)
@@ -1445,6 +1499,17 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             child.tag = iconColor
             child.invalidate()
         }
+
+        // Active icon: full opacity + slight scale-up; inactive: dimmed
+        if (isActive) {
+            btn.alpha = 1f
+            btn.scaleX = 1.12f
+            btn.scaleY = 1.12f
+        } else {
+            btn.alpha = 0.45f
+            btn.scaleX = 1f
+            btn.scaleY = 1f
+        }
     }
 
     /** Build a button with the real Threads logo (SVG path drawn on Canvas). */
@@ -1631,6 +1696,28 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         updateBottomBarActiveNetwork("messenger")
     }
 
+    /**
+     * Switch the current webview from Messenger back to the Facebook tab.
+     * Mirror of switchToMessenger — handles cookies, UA, and bottom bar.
+     */
+    private fun switchToFacebook(view: WebView) {
+        val facebookUrl = NETWORKS.find { it.id == "facebook" }?.url ?: "https://facebook.com"
+        currentAccountId?.let { oldKey ->
+            saveCookiesForSession(oldKey)
+            val profilePrefix = oldKey.substringBeforeLast("-")
+            val newKey = "$profilePrefix-facebook"
+            restoreCookiesForSession(newKey)
+            currentAccountId = newKey
+        }
+        initialBackIndex = -1
+        isLoggedIn = false
+        applyUaForNetwork("facebook")
+        view.loadUrl(facebookUrl)
+        currentNetworkId = "facebook"
+        incrementUsage("facebook")
+        updateBottomBarActiveNetwork("facebook")
+    }
+
     // Networks that require a desktop UA (their web app blocks mobile browsers)
     private val DESKTOP_UA_NETWORKS = setOf("whatsapp", "telegram", "discord", "messenger", "snapchat")
     private val DESKTOP_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
@@ -1704,6 +1791,15 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                         if ((host.contains("facebook.com") && path.startsWith("/messages")) || host.contains("messenger.com")) {
                             Log.i(TAG, "Facebook→Messenger redirect intercepted → switching to Messenger tab")
                             switchToMessenger(view)
+                            return true
+                        }
+                    }
+                    // Messenger tab → Facebook feed: switch to Facebook tab
+                    if (currentNetworkId == "messenger" && host.contains("facebook.com")) {
+                        val path = request.url.path ?: ""
+                        if (!path.startsWith("/messages")) {
+                            Log.i(TAG, "Messenger→Facebook redirect intercepted → switching to Facebook tab")
+                            switchToFacebook(view)
                             return true
                         }
                     }
