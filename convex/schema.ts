@@ -1,19 +1,22 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { authTables } from "@convex-dev/auth/server";
 
 export default defineSchema({
+  ...authTables,
+
   users: defineTable({
-    clerkId: v.string(),
-    email: v.string(),
+    email: v.optional(v.string()),
     name: v.optional(v.string()),
     avatarUrl: v.optional(v.string()),
+    isAnonymous: v.optional(v.boolean()),
     createdAt: v.number(),
-  }).index("by_clerkId", ["clerkId"]),
+  }).index("by_email", ["email"]),
 
   socialAccounts: defineTable({
     userId: v.id("users"),
-    accountId: v.string(), // client-side UUID (crypto.randomUUID())
-    networkId: v.string(), // 'twitter' | 'instagram' | etc.
+    accountId: v.string(),
+    networkId: v.string(),
     label: v.string(),
     addedAt: v.number(),
   })
@@ -24,7 +27,7 @@ export default defineSchema({
   activeAccounts: defineTable({
     userId: v.id("users"),
     networkId: v.string(),
-    accountId: v.string(), // client-side UUID of the active account
+    accountId: v.string(),
   })
     .index("by_userId", ["userId"])
     .index("by_user_network", ["userId", "networkId"]),
@@ -39,7 +42,11 @@ export default defineSchema({
   subscriptions: defineTable({
     userId: v.id("users"),
     plan: v.union(v.literal("free"), v.literal("pro"), v.literal("team")),
-    status: v.union(v.literal("active"), v.literal("canceled"), v.literal("past_due")),
+    status: v.union(
+      v.literal("active"),
+      v.literal("canceled"),
+      v.literal("past_due"),
+    ),
     expiresAt: v.optional(v.number()),
   }).index("by_userId", ["userId"]),
 });

@@ -61,7 +61,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useUser } from '@clerk/vue'
+import { useUser } from '@/composables/useAuth'
 import Button from 'primevue/button'
 import Textarea from 'primevue/textarea'
 import FileUpload from 'primevue/fileupload'
@@ -77,8 +77,8 @@ const emit = defineEmits<{
 
 const { user } = useUser()
 const currentUser = computed(() => ({
-  username: user.value?.username ?? user.value?.firstName ?? 'User',
-  avatar: user.value?.imageUrl ?? 'https://api.dicebear.com/7.x/avataaars/svg?seed=default',
+  username: user.value?.name ?? 'User',
+  avatar: user.value?.avatarUrl ?? 'https://api.dicebear.com/7.x/avataaars/svg?seed=default',
 }))
 
 const content = ref('')

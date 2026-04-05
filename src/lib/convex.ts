@@ -12,21 +12,3 @@ export function getConvexClient(): ConvexClient {
   }
   return client;
 }
-
-/**
- * Wire Clerk auth into the Convex WebSocket client.
- * Call once after Clerk is ready (e.g. in App.vue setup).
- * The client will automatically refresh tokens as needed.
- */
-export function initConvexAuth(
-  getToken: (opts?: { template: string }) => Promise<string | null>,
-) {
-  const c = getConvexClient();
-  c.setAuth(async () => {
-    try {
-      return await getToken({ template: "convex" });
-    } catch {
-      return null;
-    }
-  });
-}

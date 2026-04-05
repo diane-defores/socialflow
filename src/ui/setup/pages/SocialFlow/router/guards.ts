@@ -1,27 +1,23 @@
 import type { NavigationGuard } from "vue-router";
-import { useAuth } from "@clerk/vue";
+import { isAuthenticated, isAuthLoading } from "@/lib/convexAuth";
 
 export const authGuard: NavigationGuard = async (to, _from, next) => {
   // Public routes — always allow
   if (to.path === "/login" || to.path === "/sign-up") {
-    const { isSignedIn } = useAuth();
     // If already signed in, skip the login page
-    if (isSignedIn.value) {
+    if (isAuthenticated.value) {
       return next("/twitter");
     }
     return next();
   }
 
   if (to.meta.requiresAuth) {
-    const { isLoaded, isSignedIn } = useAuth();
-
-    // Wait for Clerk to initialise (SSR or cold start)
-    if (!isLoaded.value) {
-      // Clerk not ready yet — allow through; the component will handle it
+    // Still loading auth state — allow through, component will handle it
+    if (isAuthLoading.value) {
       return next();
     }
 
-    if (!isSignedIn.value) {
+    if (!isAuthenticated.value) {
       return next("/login");
     }
   }

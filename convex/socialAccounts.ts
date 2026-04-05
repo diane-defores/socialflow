@@ -1,26 +1,20 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { auth } from "./auth";
 
-async function getAuthUser(ctx: any) {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) throw new Error("Not authenticated");
-
-  const user = await ctx.db
-    .query("users")
-    .withIndex("by_clerkId", (q: any) => q.eq("clerkId", identity.subject))
-    .unique();
-
-  if (!user) throw new Error("User not found");
-  return user;
+async function getAuthUserId(ctx: any) {
+  const userId = await auth.getUserId(ctx);
+  if (!userId) throw new Error("Not authenticated");
+  return userId;
 }
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const user = await getAuthUser(ctx);
+    const userId = await getAuthUserId(ctx);
     return await ctx.db
       .query("socialAccounts")
-      .withIndex("by_userId", (q) => q.eq("userId", user._id))
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
       .collect();
   },
 });
@@ -33,7 +27,7 @@ export const upsert = mutation({
     addedAt: v.number(),
   },
   handler: async (ctx, args) => {
-    const user = await getAuthUser(ctx);
+    const userId = await getAuthUserId(ctx);
 
     const existing = await ctx.db
       .query("socialAccounts")
@@ -46,7 +40,7 @@ export const upsert = mutation({
     }
 
     return await ctx.db.insert("socialAccounts", {
-      userId: user._id,
+      userId,
       accountId: args.accountId,
       networkId: args.networkId,
       label: args.label,
@@ -58,21 +52,20 @@ export const upsert = mutation({
 export const remove = mutation({
   args: { accountId: v.string() },
   handler: async (ctx, { accountId }) => {
-    const user = await getAuthUser(ctx);
+    const userId = await getAuthUserId(ctx);
 
     const account = await ctx.db
       .query("socialAccounts")
       .withIndex("by_accountId", (q) => q.eq("accountId", accountId))
       .unique();
 
-    if (!account || account.userId !== user._id) return;
+    if (!account || account.userId !== userId) return;
     await ctx.db.delete(account._id);
 
-    // Also remove from active if set
     const active = await ctx.db
       .query("activeAccounts")
       .withIndex("by_user_network", (q) =>
-        q.eq("userId", user._id).eq("networkId", account.networkId)
+        q.eq("userId", userId).eq("networkId", account.networkId),
       )
       .unique();
 
@@ -85,12 +78,12 @@ export const remove = mutation({
 export const setActive = mutation({
   args: { networkId: v.string(), accountId: v.string() },
   handler: async (ctx, { networkId, accountId }) => {
-    const user = await getAuthUser(ctx);
+    const userId = await getAuthUserId(ctx);
 
     const existing = await ctx.db
       .query("activeAccounts")
       .withIndex("by_user_network", (q) =>
-        q.eq("userId", user._id).eq("networkId", networkId)
+        q.eq("userId", userId).eq("networkId", networkId),
       )
       .unique();
 
@@ -98,7 +91,7 @@ export const setActive = mutation({
       await ctx.db.patch(existing._id, { accountId });
     } else {
       await ctx.db.insert("activeAccounts", {
-        userId: user._id,
+        userId,
         networkId,
         accountId,
       });
@@ -109,10 +102,10 @@ export const setActive = mutation({
 export const listActive = query({
   args: {},
   handler: async (ctx) => {
-    const user = await getAuthUser(ctx);
+    const userId = await getAuthUserId(ctx);
     return await ctx.db
       .query("activeAccounts")
-      .withIndex("by_userId", (q) => q.eq("userId", user._id))
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
       .collect();
   },
 });

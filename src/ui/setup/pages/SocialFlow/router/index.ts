@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
+import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router'
 import { authGuard, networkAccessGuard } from './guards'
 import TwitterView from '../components/networks/TwitterView.vue'
 import FacebookView from '../components/networks/FacebookView.vue'
@@ -136,7 +136,7 @@ const routes: RouteRecordRaw[] = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
   routes
 })
 
