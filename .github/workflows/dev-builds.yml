@@ -85,7 +85,7 @@ jobs:
         run: pnpm exec tauri android init --ci
 
       - name: Fetch secrets from Doppler
-        uses: dopplerhq/secrets-fetch-action@v2
+        uses: dopplerhq/secrets-fetch-action@v2.0.0
         with:
           doppler-token: ${{ secrets.DOPPLER_TOKEN }}
 
