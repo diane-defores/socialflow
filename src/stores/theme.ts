@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { getConvexClient } from '@/lib/convex'
 import { api } from '../../convex/_generated/api'
-import { useAuth } from '@clerk/vue'
 
 export const useThemeStore = defineStore('theme', {
   state: () => ({
@@ -45,13 +44,7 @@ export const useThemeStore = defineStore('theme', {
 
     async syncThemeToCloud(theme: 'light' | 'dark') {
       try {
-        const { getToken } = useAuth()
         const client = getConvexClient()
-        const tokenFn = getToken.value
-        if (typeof tokenFn !== 'function') return
-        const token = await tokenFn({ template: 'convex' })
-        if (!token) return
-        client.setAuth(token)
         await client.mutation(api.settings.upsert, { theme })
       } catch {
         // Offline — ignore

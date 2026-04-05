@@ -21,5 +21,7 @@ export const useLogoCacheStore = defineStore('logoCache', {
     clearCache() {
       this.logos = {}
     }
-  }
+  },
+
+  persist: true,
 }) 

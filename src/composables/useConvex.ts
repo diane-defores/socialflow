@@ -1,21 +1,12 @@
-import { ref, onMounted, onUnmounted, unref, type Ref } from "vue";
+import { ref, onMounted, onUnmounted, type Ref } from "vue";
 import { getConvexClient } from "@/lib/convex";
-import { useAuth } from "@clerk/vue";
 import type { FunctionReference, FunctionArgs, FunctionReturnType } from "convex/server";
 
-async function withAuth(getToken: ReturnType<typeof useAuth>["getToken"]) {
-  const client = getConvexClient();
-  try {
-    const tokenFn = unref(getToken);
-    if (typeof tokenFn !== "function") return client;
-    const token = await tokenFn({ template: "convex" });
-    if (token) client.setAuth(token);
-  } catch {
-    // Not signed in or token unavailable — proceed unauthenticated
-  }
-  return client;
-}
-
+/**
+ * Subscribe to a Convex query with real-time updates via WebSocket.
+ * Data is pushed instantly when it changes on the server — no polling.
+ * Auth is handled globally by initConvexAuth() called in App.vue.
+ */
 export function useConvexQuery<Query extends FunctionReference<"query">>(
   query: Query,
   args: FunctionArgs<Query>
@@ -25,35 +16,38 @@ export function useConvexQuery<Query extends FunctionReference<"query">>(
   error: Ref<string | null>;
   refresh: () => Promise<void>;
 } {
-  const { getToken } = useAuth();
   const data = ref(null) as Ref<FunctionReturnType<Query> | null>;
   const isLoading = ref(true);
   const error = ref<string | null>(null);
-  let intervalId: ReturnType<typeof setInterval> | undefined;
+  let unsubscribe: (() => void) | undefined;
 
-  const fetchData = async () => {
+  onMounted(() => {
+    const client = getConvexClient();
+    unsubscribe = client.onUpdate(query, args, (result) => {
+      data.value = result;
+      isLoading.value = false;
+      error.value = null;
+    });
+  });
+
+  onUnmounted(() => {
+    unsubscribe?.();
+  });
+
+  // Manual refresh — with subscriptions data auto-updates,
+  // but kept for API compatibility with existing callers.
+  const refresh = async () => {
     try {
-      const client = await withAuth(getToken);
+      const client = getConvexClient();
       const result = await client.query(query, args);
       data.value = result;
       error.value = null;
     } catch (e) {
       error.value = e instanceof Error ? e.message : "Query failed";
-    } finally {
-      isLoading.value = false;
     }
   };
 
-  onMounted(() => {
-    fetchData();
-    intervalId = setInterval(fetchData, 30_000);
-  });
-
-  onUnmounted(() => {
-    if (intervalId) clearInterval(intervalId);
-  });
-
-  return { data, isLoading, error, refresh: fetchData };
+  return { data, isLoading, error, refresh };
 }
 
 export function useConvexMutation<Mutation extends FunctionReference<"mutation">>(
@@ -63,7 +57,6 @@ export function useConvexMutation<Mutation extends FunctionReference<"mutation">
   isLoading: Ref<boolean>;
   error: Ref<string | null>;
 } {
-  const { getToken } = useAuth();
   const isLoading = ref(false);
   const error = ref<string | null>(null);
 
@@ -71,9 +64,8 @@ export function useConvexMutation<Mutation extends FunctionReference<"mutation">
     isLoading.value = true;
     error.value = null;
     try {
-      const client = await withAuth(getToken);
-      const result = await client.mutation(mutation, args);
-      return result;
+      const client = getConvexClient();
+      return await client.mutation(mutation, args);
     } catch (e) {
       error.value = e instanceof Error ? e.message : "Mutation failed";
       throw e;

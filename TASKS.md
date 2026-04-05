@@ -169,10 +169,10 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 
 ### Performance & Cache
 
-- [🔄] Webview pooling — hide/show au lieu de destroy/recreate pour switch instantané
-- [🔄] Convex subscriptions temps-réel au lieu de polling 30s
-- [🔄] logoCache persist — ajouter `persist: true` au store
-- [🔄] Service Worker — precaching app shell + offline mode
+- [x] Webview pooling — hide/show au lieu de destroy/recreate pour switch instantané
+- [x] Convex subscriptions temps-réel via WebSocket (remplace polling 30s)
+- [x] logoCache persist — `persist: true` ajouté au store
+- [ ] Service Worker — precaching app shell + offline mode
 
 ### Post-launch
 

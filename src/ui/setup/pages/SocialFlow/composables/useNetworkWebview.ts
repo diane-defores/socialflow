@@ -53,23 +53,49 @@ export function useNetworkWebview(hostEl: Ref<HTMLElement | null>) {
   }
 
   /**
-   * Switch to a different profile or network — always close old then open new.
-   * Each network is a different site so a fresh load is appropriate either way.
+   * Switch to a different profile or network — hide the old webview (keep it
+   * alive in the pool) and show/create the new one. Preserves page state,
+   * scroll position, and cookies across switches.
    */
   async function switchTo(url: string, profileId: string, networkId: string) {
+    // Hide the currently visible webview (stays alive off-screen)
     if (isOpen.value && activeKey.value) {
       const [oldProfileId, oldNetworkId] = activeKey.value.split(':')
-      await invoke('close_webview', { profileId: oldProfileId, networkId: oldNetworkId })
-      activeKey.value = null
-      isOpen.value = false
+      await invoke('hide_webview', { profileId: oldProfileId, networkId: oldNetworkId })
     }
-    await open(url, profileId, networkId)
+
+    // Try to show an existing pooled webview (instant — no page reload)
+    const shown = await invoke('show_webview', {
+      profileId,
+      networkId,
+      x: x.value,
+      y: y.value,
+      width: width.value,
+      height: height.value,
+    })
+
+    if (!shown) {
+      // First time opening this network — create a fresh webview
+      await invoke('open_webview', {
+        url,
+        profileId,
+        networkId,
+        x: x.value,
+        y: y.value,
+        width: width.value,
+        height: height.value,
+      })
+    }
+
+    activeKey.value = `${profileId}:${networkId}`
+    isOpen.value = true
   }
 
+  /** Hide the active webview (pooled — stays alive for instant re-show). */
   async function close() {
     if (isOpen.value && activeKey.value) {
       const [profileId, networkId] = activeKey.value.split(':')
-      await invoke('close_webview', { profileId, networkId })
+      await invoke('hide_webview', { profileId, networkId })
       activeKey.value = null
       isOpen.value = false
     }

@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { getConvexClient } from '@/lib/convex'
 import { api } from '../../convex/_generated/api'
-import { useAuth } from '@clerk/vue'
 
 export interface Account {
   id: string        // crypto.randomUUID()
@@ -94,13 +93,7 @@ export const useAccountsStore = defineStore('accounts', {
     /** Sync a single account upsert to Convex (fire-and-forget). */
     async syncAccountToCloud(account: Account) {
       try {
-        const { getToken } = useAuth()
         const client = getConvexClient()
-        const tokenFn = getToken.value
-        if (typeof tokenFn !== 'function') return
-        const token = await tokenFn({ template: 'convex' })
-        if (!token) return
-        client.setAuth(token)
         await client.mutation(api.socialAccounts.upsert, {
           accountId: account.id,
           networkId: account.networkId,
@@ -115,13 +108,7 @@ export const useAccountsStore = defineStore('accounts', {
     /** Sync active account pointer to Convex. */
     async syncActiveToCloud(networkId: string, accountId: string) {
       try {
-        const { getToken } = useAuth()
         const client = getConvexClient()
-        const tokenFn = getToken.value
-        if (typeof tokenFn !== 'function') return
-        const token = await tokenFn({ template: 'convex' })
-        if (!token) return
-        client.setAuth(token)
         await client.mutation(api.socialAccounts.setActive, { networkId, accountId })
       } catch {
         // Offline — ignore
@@ -131,13 +118,7 @@ export const useAccountsStore = defineStore('accounts', {
     /** Remove an account from Convex. */
     async removeAccountFromCloud(accountId: string) {
       try {
-        const { getToken } = useAuth()
         const client = getConvexClient()
-        const tokenFn = getToken.value
-        if (typeof tokenFn !== 'function') return
-        const token = await tokenFn({ template: 'convex' })
-        if (!token) return
-        client.setAuth(token)
         await client.mutation(api.socialAccounts.remove, { accountId })
       } catch {
         // Offline — ignore
@@ -151,14 +132,7 @@ export const useAccountsStore = defineStore('accounts', {
      */
     async loadFromCloud() {
       try {
-        const { getToken } = useAuth()
         const client = getConvexClient()
-        const tokenFn = getToken.value
-        if (typeof tokenFn !== 'function') return
-        const token = await tokenFn({ template: 'convex' })
-        if (!token) return
-        client.setAuth(token)
-
         const [cloudAccounts, cloudActive] = await Promise.all([
           client.query(api.socialAccounts.list, {}),
           client.query(api.socialAccounts.listActive, {}),

@@ -268,6 +268,48 @@ fn close_webview(app: AppHandle, profile_id: String, network_id: String) -> Resu
     Ok(())
 }
 
+/// Hide a webview without destroying it (webview pooling).
+/// Moves it off-screen so it stays alive with full page state.
+#[tauri::command]
+#[cfg(not(target_os = "android"))]
+fn hide_webview(app: AppHandle, profile_id: String, network_id: String) -> Result<(), String> {
+    let label = webview_label(&profile_id, &network_id);
+    if let Some(wv) = app.get_webview(&label) {
+        wv.set_bounds(tauri::Rect {
+            position: tauri::Position::Logical(tauri::LogicalPosition::new(-10000.0, -10000.0)),
+            size: tauri::Size::Logical(tauri::LogicalSize::new(0.0, 0.0)),
+        })
+        .map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+/// Show a previously hidden pooled webview. Returns true if the webview
+/// existed (and was repositioned), false if it needs to be created.
+#[tauri::command]
+#[cfg(not(target_os = "android"))]
+fn show_webview(
+    app: AppHandle,
+    profile_id: String,
+    network_id: String,
+    x: f64,
+    y: f64,
+    width: f64,
+    height: f64,
+) -> Result<bool, String> {
+    let label = webview_label(&profile_id, &network_id);
+    if let Some(wv) = app.get_webview(&label) {
+        wv.set_bounds(tauri::Rect {
+            position: tauri::Position::Logical(tauri::LogicalPosition::new(x, y)),
+            size: tauri::Size::Logical(tauri::LogicalSize::new(width, height)),
+        })
+        .map_err(|e| e.to_string())?;
+        Ok(true)
+    } else {
+        Ok(false)
+    }
+}
+
 // ── Android: delegate to Kotlin plugin ───────────────────────────────────────
 
 #[tauri::command]
@@ -311,6 +353,28 @@ fn close_webview(app: AppHandle, profile_id: String, network_id: String) -> Resu
     app.android_webview()
         .close(&session_key)
         .map_err(|e| e.to_string())
+}
+
+// Android: pooling not yet implemented — hide/show fall back to close/open behavior
+#[tauri::command]
+#[cfg(target_os = "android")]
+fn hide_webview(app: AppHandle, profile_id: String, network_id: String) -> Result<(), String> {
+    close_webview(app, profile_id, network_id)
+}
+
+#[tauri::command]
+#[cfg(target_os = "android")]
+fn show_webview(
+    _app: AppHandle,
+    _profile_id: String,
+    _network_id: String,
+    _x: f64,
+    _y: f64,
+    _width: f64,
+    _height: f64,
+) -> Result<bool, String> {
+    // Always return false on Android — caller will fall through to open_webview
+    Ok(false)
 }
 
 #[tauri::command]
@@ -556,6 +620,8 @@ pub fn run() {
             open_webview,
             resize_webview,
             close_webview,
+            hide_webview,
+            show_webview,
             set_grayscale,
             set_dark_mode,
             set_bar_networks,

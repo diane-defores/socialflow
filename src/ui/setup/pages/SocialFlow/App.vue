@@ -24,6 +24,8 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useAuth } from '@clerk/vue'
+import { initConvexAuth } from '@/lib/convex'
 import { useThemeStore } from '@/stores/theme'
 import { useWebviewStore } from '@/stores/webviewState'
 import { useProfilesStore } from '@/stores/profiles'
@@ -38,6 +40,16 @@ const sidebarVisible = ref(true)
 const rightSidebarVisible = ref(true)
 
 const { locale } = useI18n()
+const { getToken } = useAuth()
+
+// Wire Clerk auth into Convex WebSocket client (once, globally).
+// All subsequent queries/mutations/subscriptions are automatically authenticated.
+initConvexAuth(async (opts) => {
+  const tokenFn = getToken.value
+  if (typeof tokenFn !== 'function') return null
+  return tokenFn(opts)
+})
+
 const themeStore = useThemeStore()
 const webviewStore = useWebviewStore()
 const profilesStore = useProfilesStore()
