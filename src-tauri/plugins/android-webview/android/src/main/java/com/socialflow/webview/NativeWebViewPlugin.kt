@@ -415,6 +415,10 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     // Dark mode state — synced from Vue settings toggle
     private var isDarkMode = false
 
+    // Cookie consent: inject script only on the first few page loads after opening a network.
+    // Consent dialogs always appear on the 1st or 2nd page. After that, stop injecting.
+    private var cookieAcceptPagesLeft = 0
+
 
     // Visible network IDs — synced from Vue profile visibility (null = show all)
     private var visibleNetworkIds: Set<String>? = null
@@ -646,6 +650,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                 restoreCookiesForSession(args.accountId)
                 // Reuse existing webview — just navigate and update active highlight
                 initialBackIndex = -1  // Reset baseline for new network URL
+                cookieAcceptPagesLeft = 3  // Re-arm cookie consent for new network
                 applyUaForNetwork(args.networkId)
                 socialWebView?.loadUrl(args.url)
                 currentAccountId = args.accountId
@@ -723,6 +728,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
             // Restore cookies for this profile session before loading
             restoreCookiesForSession(args.accountId)
+            cookieAcceptPagesLeft = 3  // Arm cookie consent for first pages
 
             // Apply persisted mute state to the new webview via JS
             applyMuteToWebView(webView)
@@ -740,6 +746,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         val args = invoke.parseArgs(NavigateArgs::class.java)
         activity.runOnUiThread {
             initialBackIndex = -1  // Reset baseline for new network URL
+            cookieAcceptPagesLeft = 3
             applyUaForNetwork(args.networkId)
             socialWebView?.loadUrl(args.url)
             currentNetworkId = args.networkId
@@ -1240,6 +1247,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             editor.apply()
         }
         // Clear all in-memory cookies and reload
+        cookieAcceptPagesLeft = 3
         cm.removeAllCookies {
             view.post { view.loadUrl(retryUrl) }
         }
@@ -1367,6 +1375,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                     currentAccountId = newKey
                 }
                 initialBackIndex = -1
+                cookieAcceptPagesLeft = 3
                 applyUaForNetwork(net.id)
                 socialWebView?.loadUrl(net.url)
                 currentNetworkId = net.id
@@ -1530,6 +1539,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                     currentAccountId = newKey
                 }
                 initialBackIndex = -1
+                cookieAcceptPagesLeft = 3
                 applyUaForNetwork(net.id)
                 socialWebView?.loadUrl(net.url)
                 currentNetworkId = net.id
@@ -1584,6 +1594,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             currentAccountId = newKey
         }
         initialBackIndex = -1
+        cookieAcceptPagesLeft = 3
         applyUaForNetwork("messenger")
         view.loadUrl(messengerUrl)
         currentNetworkId = "messenger"
@@ -1706,9 +1717,12 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                     view.evaluateJavascript(STEALTH_SCRIPT, null)
                     view.evaluateJavascript(DISMISS_APP_BANNERS_SCRIPT, null)
                 }
-                // Cookie consent: always inject — the script is self-limiting (30s observer
-                // timeout + specific ACCEPT_RE regex). If no consent dialog, it finds nothing.
-                view.evaluateJavascript(COOKIE_ACCEPT_SCRIPT, null)
+                // Cookie consent: only inject on the first few pages after opening a network.
+                // Consent dialogs appear on the 1st/2nd page, never later.
+                if (cookieAcceptPagesLeft > 0) {
+                    cookieAcceptPagesLeft--
+                    view.evaluateJavascript(COOKIE_ACCEPT_SCRIPT, null)
+                }
                 // Always re-inject desktop viewport override in onPageFinished (backup —
                 // the page may have set its own viewport meta after our document-start script)
                 if (currentNetworkId in DESKTOP_UA_NETWORKS) {
