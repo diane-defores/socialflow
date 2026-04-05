@@ -220,12 +220,6 @@ private val DISMISS_APP_BANNERS_SCRIPT = """
   if (window.__sfzAppBannerWatcher) return;
   window.__sfzAppBannerWatcher = true;
 
-  // Skip aggressive dismiss logic on Snapchat — its web app has "app" in class names
-  // everywhere, so our [class*="app"] selector matches real UI elements and clicks
-  // "Log in" buttons that break the session.
-  var isSC = /snapchat\.com/.test(window.location.hostname);
-
-
   // Persistent CSS — hides known app-banner elements even if re-inserted into the DOM
   var style = document.createElement('style');
   style.textContent =
@@ -272,7 +266,6 @@ private val DISMISS_APP_BANNERS_SCRIPT = """
   function dismissAppPrompts() {
     removeSmartBannerMeta();
     hideDownloadBanners();
-    if (isSC) return; // Snapchat: CSS hiding is enough, skip button clicking
 
     var btns = document.querySelectorAll('button, a[role="button"], [role="button"], a');
     for (var i = 0; i < btns.length; i++) {

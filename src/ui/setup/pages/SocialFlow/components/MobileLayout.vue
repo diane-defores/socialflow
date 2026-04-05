@@ -452,8 +452,10 @@ async function clearNetworkCookies(networkId: string) {
   if (!profileId) return
   try {
     const { invoke } = await import('@tauri-apps/api/core')
-    // Close webview if it's currently open for this profile+network
-    await invoke('close_webview', { profileId, networkId }).catch(() => {})
+    // Close webview only if currently active (avoids hanging IPC when no webview is open)
+    if (webviewStore.activeUrl) {
+      await invoke('close_webview', { profileId, networkId }).catch(() => {})
+    }
     // Wipe session data (cookies, localStorage, IndexedDB)
     await invoke('delete_network_session', { profileId, networkId })
     clearedNetworks.value.add(`${profileId}:${networkId}`)
