@@ -167,6 +167,13 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [ ] Clerk dashboard: add JWT template `"convex"` with Convex issuer URL
 - [ ] Clerk dashboard: add webhook → `https://your-deployment.convex.site/clerk-webhook`
 
+### Performance & Cache
+
+- [🔄] Webview pooling — hide/show au lieu de destroy/recreate pour switch instantané
+- [🔄] Convex subscriptions temps-réel au lieu de polling 30s
+- [🔄] logoCache persist — ajouter `persist: true` au store
+- [🔄] Service Worker — precaching app shell + offline mode
+
 ### Post-launch
 
 - [ ] Subscription gating (Polar.sh / Stripe) — `subscriptions` table already in schema
