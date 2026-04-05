@@ -24,6 +24,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.view.MotionEvent
 import androidx.activity.OnBackPressedCallback
+import androidx.core.graphics.PathParser
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
 import app.tauri.annotation.Command
@@ -131,13 +132,21 @@ private val NETWORKS = listOf(
     NetworkInfo("threads",   "\ue9d8", Color.parseColor("#000000"), "https://threads.net"),
     NetworkInfo("discord",   "\ue9c0", Color.parseColor("#5865F2"), "https://discord.com/app"),
     NetworkInfo("reddit",    "\ue9e8", Color.parseColor("#FF4500"), "https://reddit.com"),
-    NetworkInfo("messenger", "\ue97e", Color.parseColor("#0084FF"), "https://www.facebook.com/messages"),
+    NetworkInfo("messenger", "\ue97e", Color.parseColor("#0099FF"), "https://www.facebook.com/messages"),
     NetworkInfo("snapchat",  "\ue96c", Color.parseColor("#FFFC00"), "https://web.snapchat.com"),
-    NetworkInfo("quora",     "\ue959", Color.parseColor("#B92B27"), "https://www.quora.com"),
+    NetworkInfo("quora",     "\ue959", Color.parseColor("#A82400"), "https://www.quora.com"),
     NetworkInfo("pinterest", "\uea09", Color.parseColor("#E60023"), "https://www.pinterest.com"),
     NetworkInfo("whatsapp",  "\ue9d0", Color.parseColor("#25D366"), "https://web.whatsapp.com"),
     NetworkInfo("telegram",  "\ue9d3", Color.parseColor("#0088CC"), "https://web.telegram.org"),
     NetworkInfo("nextdoor",  "\ue968", Color.parseColor("#8ED500"), "https://nextdoor.com"),
+)
+
+// Official SVG path data from Simple Icons (24x24 viewBox) for networks without PrimeIcons glyphs
+private val SVG_ICONS = mapOf(
+    "threads" to "M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.472 12.01v-.017c.03-3.579.879-6.43 2.525-8.482C5.845 1.205 8.6.024 12.18 0h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-1.104-3.96-3.898-5.984-8.304-6.015-2.91.022-5.11.936-6.54 2.717C4.307 6.504 3.616 8.914 3.589 12c.027 3.086.718 5.496 2.057 7.164 1.43 1.783 3.631 2.698 6.54 2.717 2.623-.02 4.358-.631 5.8-2.045 1.647-1.613 1.618-3.593 1.09-4.798-.31-.71-.873-1.3-1.634-1.75-.192 1.352-.622 2.446-1.284 3.272-.886 1.102-2.14 1.704-3.73 1.79-1.202.065-2.361-.218-3.259-.801-1.063-.689-1.685-1.74-1.752-2.964-.065-1.19.408-2.285 1.33-3.082.88-.76 2.119-1.207 3.583-1.291a13.853 13.853 0 0 1 3.02.142c-.126-.742-.375-1.332-.75-1.757-.513-.586-1.308-.883-2.359-.89h-.029c-.844 0-1.992.232-2.721 1.32L7.734 7.847c.98-1.454 2.568-2.256 4.478-2.256h.044c3.194.02 5.097 1.975 5.287 5.388.108.046.216.094.321.142 1.49.7 2.58 1.761 3.154 3.07.797 1.82.871 4.79-1.548 7.158-1.85 1.81-4.094 2.628-7.277 2.65Zm1.003-11.69c-.242 0-.487.007-.739.021-1.836.103-2.98.946-2.916 2.143.067 1.256 1.452 1.839 2.784 1.767 1.224-.065 2.818-.543 3.086-3.71a10.5 10.5 0 0 0-2.215-.221z",
+    "snapchat" to "M12.206.793c.99 0 4.347.276 5.93 3.821.529 1.193.403 3.219.299 4.847l-.003.06c-.012.18-.022.345-.03.51.075.045.203.09.401.09.3-.016.659-.12 1.033-.301.165-.088.344-.104.464-.104.182 0 .359.029.509.09.45.149.734.479.734.838.015.449-.39.839-1.213 1.168-.089.029-.209.075-.344.119-.45.135-1.139.36-1.333.81-.09.224-.061.524.12.868l.015.015c.06.136 1.526 3.475 4.791 4.014.255.044.435.27.42.509 0 .075-.015.149-.045.225-.24.569-1.273.988-3.146 1.271-.059.091-.12.375-.164.57-.029.179-.074.36-.134.553-.076.271-.27.405-.555.405h-.03c-.135 0-.313-.031-.538-.074-.36-.075-.765-.135-1.273-.135-.3 0-.599.015-.913.074-.6.104-1.123.464-1.723.884-.853.599-1.826 1.288-3.294 1.288-.06 0-.119-.015-.18-.015h-.149c-1.468 0-2.427-.675-3.279-1.288-.599-.42-1.107-.779-1.707-.884-.314-.045-.629-.074-.928-.074-.54 0-.958.089-1.272.149-.211.043-.391.074-.54.074-.374 0-.523-.224-.583-.42-.061-.192-.09-.389-.135-.567-.046-.181-.105-.494-.166-.57-1.918-.222-2.95-.642-3.189-1.226-.031-.063-.052-.15-.055-.225-.015-.243.165-.465.42-.509 3.264-.54 4.73-3.879 4.791-4.02l.016-.029c.18-.345.224-.645.119-.869-.195-.434-.884-.658-1.332-.809-.121-.029-.24-.074-.346-.119-1.107-.435-1.257-.93-1.197-1.273.09-.479.674-.793 1.168-.793.146 0 .27.029.383.074.42.194.789.3 1.104.3.234 0 .384-.06.465-.105l-.046-.569c-.098-1.626-.225-3.651.307-4.837C7.392 1.077 10.739.807 11.727.807l.419-.015h.06z",
+    "messenger" to "M12 0C5.24 0 0 4.952 0 11.64c0 3.499 1.434 6.521 3.769 8.61a.96.96 0 0 1 .323.683l.065 2.135a.96.96 0 0 0 1.347.85l2.381-1.053a.96.96 0 0 1 .641-.046A13 13 0 0 0 12 23.28c6.76 0 12-4.952 12-11.64S18.76 0 12 0m6.806 7.44c.522-.03.971.567.63 1.094l-4.178 6.457a.707.707 0 0 1-.977.208l-3.87-2.504a.44.44 0 0 0-.49.007l-4.363 3.01c-.637.438-1.415-.317-.995-.966l4.179-6.457a.706.706 0 0 1 .977-.21l3.87 2.505c.15.097.344.094.491-.007l4.362-3.008a.7.7 0 0 1 .364-.13",
+    "quora" to "M7.3799.9483A11.9628 11.9628 0 0 1 21.248 19.5397l2.4096 2.4225c.7322.7362.21 1.9905-.8272 1.9905l-10.7105.01a12.52 12.52 0 0 1-.304 0h-.02A11.9628 11.9628 0 0 1 7.3818.9503Zm7.3217 4.428a7.1717 7.1717 0 1 0-5.4873 13.2512 7.1717 7.1717 0 0 0 5.4883-13.2511Z",
 )
 
 // Anti-fingerprint JS — patches WebView detection vectors used by Akamai, PerimeterX, etc.
@@ -176,6 +185,57 @@ private val STEALTH_SCRIPT = """
         : origQuery.call(this, params);
     };
   }
+
+  // ── Desktop device spoofing (Snapchat, etc.) ──────────────────────────────
+  // Sites like Snapchat Web check multiple JS signals beyond UA to detect mobile.
+  // Only spoof when we're already sending a desktop UA (DESKTOP_UA_NETWORKS).
+  if (/Windows NT 10\.0.*Chrome\/136/.test(navigator.userAgent)) {
+    // Touch — desktop has no touchscreen
+    Object.defineProperty(navigator, 'maxTouchPoints', { get: () => 0 });
+    delete window.ontouchstart;
+    // Platform
+    Object.defineProperty(navigator, 'platform', { get: () => 'Win32' });
+    // Screen dimensions — report standard desktop
+    Object.defineProperty(window.screen, 'width', { get: () => 1920 });
+    Object.defineProperty(window.screen, 'height', { get: () => 1080 });
+    Object.defineProperty(window.screen, 'availWidth', { get: () => 1920 });
+    Object.defineProperty(window.screen, 'availHeight', { get: () => 1040 });
+    // User-Agent Client Hints JS API
+    if (navigator.userAgentData) {
+      Object.defineProperty(navigator, 'userAgentData', {
+        get: () => ({
+          brands: [
+            { brand: 'Chromium', version: '136' },
+            { brand: 'Google Chrome', version: '136' },
+            { brand: 'Not-A.Brand', version: '99' }
+          ],
+          mobile: false,
+          platform: 'Windows',
+          getHighEntropyValues: function() {
+            return Promise.resolve({
+              architecture: 'x86', bitness: '64', mobile: false,
+              model: '', platform: 'Windows', platformVersion: '15.0.0',
+              uaFullVersion: '136.0.0.0',
+              brands: [{ brand: 'Chromium', version: '136.0.0.0' }, { brand: 'Google Chrome', version: '136.0.0.0' }],
+              fullVersionList: [{ brand: 'Chromium', version: '136.0.0.0' }, { brand: 'Google Chrome', version: '136.0.0.0' }]
+            });
+          },
+          toJSON: function() {
+            return { brands: this.brands, mobile: false, platform: 'Windows' };
+          }
+        })
+      });
+    }
+    // Media queries — pointer: fine (mouse), hover: hover
+    var origMatchMedia = window.matchMedia;
+    window.matchMedia = function(q) {
+      if (q === '(pointer: coarse)') return Object.assign(origMatchMedia.call(this, q), { matches: false });
+      if (q === '(pointer: fine)') return Object.assign(origMatchMedia.call(this, q), { matches: true });
+      if (q === '(hover: hover)') return Object.assign(origMatchMedia.call(this, q), { matches: true });
+      if (q === '(hover: none)') return Object.assign(origMatchMedia.call(this, q), { matches: false });
+      return origMatchMedia.call(this, q);
+    };
+  }
 })();
 """.trimIndent()
 
@@ -186,29 +246,16 @@ private val STEALTH_SCRIPT = """
 private val DESKTOP_VIEWPORT_SCRIPT = """
 (function(){
   if (!/Windows NT 10\.0.*Chrome\/136/.test(navigator.userAgent)) return;
-  var w = /facebook\.com\/messages|snapchat\.com/.test(window.location.href) ? 500 : 980;
-
-  function enforceViewport() {
-    var meta = document.querySelector('meta[name="viewport"]');
-    if (!meta) {
-      meta = document.createElement('meta');
-      meta.name = 'viewport';
-      (document.head || document.documentElement).appendChild(meta);
-    }
-    var want = 'width=' + w + ', shrink-to-fit=yes';
-    if (meta.getAttribute('content') !== want) {
-      meta.setAttribute('content', want);
-    }
+  var meta = document.querySelector('meta[name="viewport"]');
+  if (!meta) {
+    meta = document.createElement('meta');
+    meta.name = 'viewport';
+    (document.head || document.documentElement).appendChild(meta);
   }
-  enforceViewport();
-
-  // Snapchat's SPA JS overrides viewport after ~3s — persist our setting
-  if (/snapchat\.com/.test(window.location.hostname)) {
-    var mo = new MutationObserver(function() { enforceViewport(); });
-    mo.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['content'] });
-    // Also re-enforce periodically in case Snapchat uses timers instead of DOM changes
-    setInterval(enforceViewport, 2000);
-  }
+  // Narrower viewport for Messenger — 500px makes text readable on mobile
+  // instead of the default 980px which renders everything tiny
+  var w = /facebook\.com\/messages/.test(window.location.href) ? 500 : 980;
+  meta.setAttribute('content', 'width=' + w + ', shrink-to-fit=yes');
 })();
 """.trimIndent()
 
@@ -314,7 +361,8 @@ private val COOKIE_ACCEPT_SCRIPT = """
     '#didomi-notice-learn-more-button ~ button',
     '[data-consent="accept"]',
     '[id="axeptio_btn_acceptAll"]',
-    '.qc-cmp2-summary-buttons button:last-child',
+    '.qc-cmp2-summary-buttons button[mode="primary"]',
+    '.qc-cmp2-summary-buttons button:first-child',
     '.sp_choice_type_11',
     '[data-testid="GDPR-accept"]',
     '[data-testid="cookie-policy-manage-dialog-accept-button"]',
@@ -372,12 +420,29 @@ private val COOKIE_ACCEPT_SCRIPT = """
       } catch(e) {}
     }
 
-    // 2. Scan ALL buttons on the page — safe because this script only runs
-    //    on fresh sessions (no saved cookies / first open).
-    var allBtns = document.querySelectorAll('button, a[role="button"], [role="button"]');
+    // 2. Scan ALL clickable elements on the page (buttons, role=button, and CMP-styled divs)
+    var allBtns = document.querySelectorAll(
+      'button, a[role="button"], [role="button"], [class*="qc-cmp2-button"], [class*="cmp-button"]'
+    );
     for (var b = 0; b < allBtns.length; b++) {
       var label = (allBtns[b].textContent || allBtns[b].getAttribute('aria-label') || '').trim();
       if (ACCEPT_RE.test(label) && clickIfVisible(allBtns[b])) return;
+    }
+
+    // 3. Scan same-origin iframes (some CMPs like Quantcast render in an iframe)
+    var iframes = document.querySelectorAll('iframe');
+    for (var f = 0; f < iframes.length; f++) {
+      try {
+        var doc = iframes[f].contentDocument;
+        if (!doc) continue;
+        var iBtns = doc.querySelectorAll(
+          'button, a[role="button"], [role="button"], [class*="qc-cmp2-button"], [class*="cmp-button"]'
+        );
+        for (var b = 0; b < iBtns.length; b++) {
+          var label = (iBtns[b].textContent || iBtns[b].getAttribute('aria-label') || '').trim();
+          if (ACCEPT_RE.test(label)) { iBtns[b].click(); return; }
+        }
+      } catch(e) {} // cross-origin — skip
     }
   }
 
@@ -1418,7 +1483,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     }
 
     private fun buildNetworkButton(density: Float, net: NetworkInfo, isActive: Boolean): View {
-        if (net.id == "threads") return buildThreadsButton(density, net, isActive)
+        SVG_ICONS[net.id]?.let { return buildSvgButton(density, net, isActive, it) }
 
         val btn = TextView(activity)
         btn.text = net.iconChar
@@ -1505,94 +1570,37 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         }
     }
 
-    /** Build a button with the real Threads logo (SVG path drawn on Canvas). */
-    private fun buildThreadsButton(density: Float, net: NetworkInfo, isActive: Boolean): View {
+    /** Build a button using official SVG path data (from Simple Icons, 24x24 viewBox). */
+    private fun buildSvgButton(
+        density: Float,
+        net: NetworkInfo,
+        isActive: Boolean,
+        svgPathData: String,
+    ): View {
         val size = (36 * density).toInt()
         val margin = (2 * density).toInt()
 
         val iconView = object : View(activity) {
             private val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
-            private val path = android.graphics.Path()
             override fun onDraw(canvas: android.graphics.Canvas) {
                 super.onDraw(canvas)
-                initPath(
-                    (width - paddingLeft - paddingRight).toFloat(),
-                    (height - paddingTop - paddingBottom).toFloat()
-                )
+                val w = (width - paddingLeft - paddingRight).toFloat()
+                val h = (height - paddingTop - paddingBottom).toFloat()
 
-                // Color can be updated via tag from applyNetworkButtonBackground
+                val srcPath = PathParser.createPathFromPathData(svgPathData)
+                val scaled = android.graphics.Path()
+                val m = android.graphics.Matrix()
+                m.setScale(w / 24f, h / 24f)
+                srcPath.transform(m, scaled)
+
                 val color = (tag as? Int) ?: if (isDarkMode) Color.WHITE else Color.parseColor("#495057")
                 paint.color = color
                 paint.style = android.graphics.Paint.Style.FILL
 
                 canvas.save()
                 canvas.translate(paddingLeft.toFloat(), paddingTop.toFloat())
-                canvas.drawPath(path, paint)
+                canvas.drawPath(scaled, paint)
                 canvas.restore()
-            }
-
-            private fun initPath(w: Float, h: Float) {
-                path.reset()
-                // Threads logo path, scaled from 192x192 viewBox to actual view size
-                val sx = w / 192f
-                val sy = h / 192f
-                val m = android.graphics.Matrix()
-                m.setScale(sx, sy)
-
-                val original = android.graphics.Path()
-                // Outer shape
-                original.moveTo(141.537f, 88.988f)
-                original.cubicTo(141.537f, 88.988f, 140.148f, 88.36f, 139.019f, 87.845f)
-                original.cubicTo(137.537f, 60.538f, 122.616f, 44.905f, 97.562f, 44.745f)
-                original.lineTo(97.164f, 44.745f)
-                original.cubicTo(82.194f, 44.825f, 69.998f, 50.945f, 62.827f, 61.988f)
-                original.lineTo(76.071f, 71.076f)
-                original.cubicTo(81.418f, 62.969f, 89.763f, 58.873f, 100.993f, 58.873f)
-                original.lineTo(101.215f, 58.873f)
-                original.cubicTo(110.853f, 58.933f, 118.115f, 61.731f, 122.799f, 67.19f)
-                original.cubicTo(126.215f, 71.172f, 128.492f, 76.671f, 129.642f, 83.662f)
-                original.cubicTo(125.142f, 82.955f, 120.442f, 82.355f, 115.445f, 82.155f) // approximate
-                original.cubicTo(109.945f, 81.905f, 104.745f, 81.905f, 99.945f, 81.905f)
-                original.cubicTo(79.811f, 81.93f, 66.862f, 90.61f, 64.498f, 105.66f)
-                original.cubicTo(63.281f, 113.402f, 65.248f, 120.69f, 70.038f, 126.176f)
-                original.cubicTo(75.103f, 131.978f, 82.393f, 135.03f, 91.154f, 135.03f)
-                original.cubicTo(102.699f, 135.03f, 111.766f, 130.1f, 118.1f, 120.37f)
-                original.cubicTo(122.922f, 112.97f, 125.876f, 103.287f, 126.997f, 91.152f)
-                original.cubicTo(132.321f, 94.352f, 136.287f, 98.631f, 138.597f, 103.78f)
-                original.cubicTo(142.527f, 112.548f, 142.757f, 126.934f, 135.132f, 134.56f)
-                original.cubicTo(128.399f, 141.293f, 120.307f, 144.197f, 104.459f, 144.309f)
-                original.cubicTo(86.905f, 144.185f, 73.621f, 138.547f, 64.981f, 127.554f)
-                original.cubicTo(56.842f, 118.79f, 52.267f, 104.12f, 52.143f, 86.2f) // approximate midpoint
-                original.cubicTo(52.267f, 68.28f, 56.843f, 53.61f, 65.743f, 42.645f)
-                original.cubicTo(76.093f, 29.902f, 91.437f, 23.353f, 111.347f, 23.175f)
-                original.lineTo(111.569f, 23.175f)
-                original.cubicTo(131.501f, 23.353f, 147.039f, 29.995f, 157.769f, 42.923f)
-                original.cubicTo(162.933f, 49.135f, 166.904f, 56.753f, 169.625f, 65.508f)
-                original.lineTo(184.765f, 61.438f)
-                original.cubicTo(181.585f, 51.034f, 176.825f, 41.978f, 170.535f, 34.408f)
-                original.cubicTo(157.012f, 18.676f, 138.419f, 10.4f, 115.787f, 10.2f)
-                original.lineTo(115.519f, 10.2f)
-                original.cubicTo(92.957f, 10.4f, 74.629f, 18.838f, 61.647f, 35.2f)
-                original.cubicTo(50.185f, 49.552f, 44.209f, 68.734f, 44.057f, 92f)
-                original.lineTo(44.055f, 92.6f)
-                original.lineTo(44.057f, 93.2f)
-                original.cubicTo(44.209f, 116.466f, 50.185f, 135.648f, 61.647f, 150f)
-                original.cubicTo(74.629f, 166.244f, 92.957f, 174.704f, 116.147f, 174.9f)
-                original.lineTo(116.415f, 174.9f)
-                original.cubicTo(135.467f, 174.768f, 146.589f, 170.502f, 155.993f, 161.098f)
-                original.cubicTo(168.635f, 148.456f, 168.095f, 127.356f, 162.585f, 115.074f)
-                original.cubicTo(158.627f, 106.248f, 151.399f, 99.279f, 141.373f, 94.496f)
-                original.close()
-                // Inner cutout (the hole in the @ shape)
-                original.moveTo(110.85f, 126.12f)
-                original.cubicTo(106.632f, 126.072f, 103.27f, 124.75f, 101.148f, 122.318f)
-                original.cubicTo(98.316f, 119.072f, 98.14f, 114.346f, 98.658f, 111.051f)
-                original.cubicTo(100.056f, 102.156f, 108.796f, 96.589f, 122.758f, 96.589f)
-                original.cubicTo(128.438f, 96.589f, 133.793f, 97.129f, 138.73f, 98.189f)
-                original.cubicTo(137.93f, 115.971f, 128.078f, 126.119f, 110.85f, 126.119f)
-                original.close()
-
-                path.addPath(original, m)
             }
         }
 
@@ -1601,7 +1609,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         wrapperParams.setMargins(margin, margin, margin, margin)
         wrapper.layoutParams = wrapperParams
 
-        val iconPad = (size * 0.22f).toInt() // padding so logo doesn't fill the entire button
+        val iconPad = (size * 0.22f).toInt()
         val iconParams = FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT

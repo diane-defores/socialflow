@@ -232,7 +232,7 @@
                 <NextdoorIcon v-else-if="nw.id === 'nextdoor'" size="0.9rem" class="clear-cookie-icon" />
                 <i v-else :class="nw.icon" class="clear-cookie-icon" />
                 <span class="clear-cookie-label">{{ nw.label }}</span>
-                <span v-if="clearedNetworks.has(`${clearCookiesProfileId}:${nw.id}`)" class="clear-cookie-done">
+                <span v-if="clearedNetworks[`${clearCookiesProfileId}:${nw.id}`]" class="clear-cookie-done">
                   <i class="pi pi-check" />
                 </span>
                 <i v-else class="pi pi-eraser clear-cookie-action" />
@@ -423,7 +423,7 @@ const pendingAvatarProfileId = ref<string | null>(null)
 
 // ─── Clear cookies per network ────────────────────────────────
 const clearCookiesProfileId = ref<string | null>(null)
-const clearedNetworks = ref<Set<string>>(new Set())
+const clearedNetworks = ref<Record<string, boolean>>({})
 
 const webviewNetworks = computed(() => {
   const iconMap: Record<string, string> = {
@@ -447,21 +447,21 @@ const webviewNetworks = computed(() => {
   }))
 })
 
-async function clearNetworkCookies(networkId: string) {
+function clearNetworkCookies(networkId: string) {
   const profileId = clearCookiesProfileId.value
   if (!profileId) return
-  try {
-    const { invoke } = await import('@tauri-apps/api/core')
-    // Close webview only if currently active (avoids hanging IPC when no webview is open)
-    if (webviewStore.activeUrl) {
-      await invoke('close_webview', { profileId, networkId }).catch(() => {})
-    }
-    // Wipe session data (cookies, localStorage, IndexedDB)
-    await invoke('delete_network_session', { profileId, networkId })
-    clearedNetworks.value.add(`${profileId}:${networkId}`)
-  } catch (e) {
+  const key = `${profileId}:${networkId}`
+  // Optimistic update — show checkmark immediately
+  clearedNetworks.value[key] = true
+  // Then wipe session data in background
+  import('@tauri-apps/api/core').then(({ invoke }) => {
+    const p = webviewStore.activeUrl
+      ? invoke('close_webview', { profileId, networkId }).catch(() => {})
+      : Promise.resolve()
+    return p.then(() => invoke('delete_network_session', { profileId, networkId }))
+  }).catch(e => {
     console.error('Failed to clear cookies:', e)
-  }
+  })
 }
 
 // ─── Notifications ────────────────────────────────────────────
@@ -633,7 +633,7 @@ const navigateToNetwork = (network: MenuItem) => {
 function closeSheet() {
   profileSheetVisible.value = false
   clearCookiesProfileId.value = null
-  clearedNetworks.value.clear()
+  clearedNetworks.value = {}
   cancelEdit()
   cancelAdd()
 }
