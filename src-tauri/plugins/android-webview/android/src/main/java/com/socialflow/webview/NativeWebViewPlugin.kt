@@ -415,8 +415,6 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     // Dark mode state — synced from Vue settings toggle
     private var isDarkMode = false
 
-    // Cookie consent auto-accept — only active on fresh sessions (no saved cookies)
-    private var needsCookieAccept = false
 
     // Visible network IDs — synced from Vue profile visibility (null = show all)
     private var visibleNetworkIds: Set<String>? = null
@@ -533,8 +531,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             restored++
         }
         cm.flush()
-        needsCookieAccept = (restored == 0)
-        Log.i(TAG, "Cookies restored for session: $sessionKey ($restored URLs, cookieAccept=$needsCookieAccept)")
+        Log.i(TAG, "Cookies restored for session: $sessionKey ($restored URLs)")
     }
 
     /** Capture the main Tauri WebView on plugin load — this is the Vue app webview. */
@@ -1243,7 +1240,6 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             editor.apply()
         }
         // Clear all in-memory cookies and reload
-        needsCookieAccept = true
         cm.removeAllCookies {
             view.post { view.loadUrl(retryUrl) }
         }
@@ -1710,10 +1706,9 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                     view.evaluateJavascript(STEALTH_SCRIPT, null)
                     view.evaluateJavascript(DISMISS_APP_BANNERS_SCRIPT, null)
                 }
-                // Cookie consent: only inject on fresh sessions (no saved cookies)
-                if (needsCookieAccept) {
-                    view.evaluateJavascript(COOKIE_ACCEPT_SCRIPT, null)
-                }
+                // Cookie consent: always inject — the script is self-limiting (30s observer
+                // timeout + specific ACCEPT_RE regex). If no consent dialog, it finds nothing.
+                view.evaluateJavascript(COOKIE_ACCEPT_SCRIPT, null)
                 // Always re-inject desktop viewport override in onPageFinished (backup —
                 // the page may have set its own viewport meta after our document-start script)
                 if (currentNetworkId in DESKTOP_UA_NETWORKS) {
