@@ -84,6 +84,11 @@ jobs:
       - name: Initialize Android target
         run: pnpm exec tauri android init --ci
 
+      - name: Fetch secrets from Doppler
+        uses: dopplerhq/secrets-fetch-action@v2
+        with:
+          doppler-token: ${{ secrets.DOPPLER_TOKEN }}
+
       - name: Build debug APK
         run: pnpm exec tauri android build --ci --debug --apk -t aarch64
 

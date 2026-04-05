@@ -346,6 +346,9 @@ declare global {
   export type { KanbanItem, KanbanColumnId } from '../../../../../stores/kanban'
   import('../../../../../stores/kanban')
   // @ts-ignore
+  export type { FacebookPost } from '../../../../../stores/mockData/facebookMock'
+  import('../../../../../stores/mockData/facebookMock')
+  // @ts-ignore
   export type { Profile } from '../../../../../stores/profiles'
   import('../../../../../stores/profiles')
 }
@@ -358,6 +361,7 @@ declare module 'vue' {
     readonly EffectScope: UnwrapRef<typeof import('vue')['EffectScope']>
     readonly WEBVIEW_URLS: UnwrapRef<typeof import('../../../../../stores/webviewState')['WEBVIEW_URLS']>
     readonly acceptHMRUpdate: UnwrapRef<typeof import('pinia')['acceptHMRUpdate']>
+    readonly appRouter: UnwrapRef<typeof import('../../../../../utils/router/index')['appRouter']>
     readonly applyDisableCopyProtection: UnwrapRef<typeof import('../../../../../utils/disableCopyProtection')['applyDisableCopyProtection']>
     readonly asyncComputed: UnwrapRef<typeof import('@vueuse/core')['asyncComputed']>
     readonly autoResetRef: UnwrapRef<typeof import('@vueuse/core')['autoResetRef']>
@@ -408,6 +412,7 @@ declare module 'vue' {
     readonly mapStores: UnwrapRef<typeof import('pinia')['mapStores']>
     readonly mapWritableState: UnwrapRef<typeof import('pinia')['mapWritableState']>
     readonly markRaw: UnwrapRef<typeof import('vue')['markRaw']>
+    readonly mockPosts: UnwrapRef<typeof import('../../../../../stores/mockData/facebookMock')['mockPosts']>
     readonly nextTick: UnwrapRef<typeof import('vue')['nextTick']>
     readonly notivue: UnwrapRef<typeof import('../../../../../utils/notifications')['notivue']>
     readonly onActivated: UnwrapRef<typeof import('vue')['onActivated']>
@@ -540,6 +545,7 @@ declare module 'vue' {
     readonly useEventListener: UnwrapRef<typeof import('@vueuse/core')['useEventListener']>
     readonly useEventSource: UnwrapRef<typeof import('@vueuse/core')['useEventSource']>
     readonly useEyeDropper: UnwrapRef<typeof import('@vueuse/core')['useEyeDropper']>
+    readonly useFacebookMockStore: UnwrapRef<typeof import('../../../../../stores/mockData/facebookMock')['useFacebookMockStore']>
     readonly useFavicon: UnwrapRef<typeof import('@vueuse/core')['useFavicon']>
     readonly useFetch: UnwrapRef<typeof import('@vueuse/core')['useFetch']>
     readonly useFileDialog: UnwrapRef<typeof import('@vueuse/core')['useFileDialog']>

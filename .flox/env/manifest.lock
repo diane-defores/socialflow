@@ -1,33 +1,28 @@
 {
   "lockfile-version": 1,
   "manifest": {
-    "schema-version": "1.10.0",
+    "version": 1,
     "install": {
       "gtk3": {
-        "pkg-path": "gtk3",
-        "outputs": "all"
+        "pkg-path": "gtk3"
       },
       "librsvg": {
-        "pkg-path": "librsvg",
-        "outputs": "all"
+        "pkg-path": "librsvg"
       },
       "nodejs": {
-        "pkg-path": "nodejs",
-        "outputs": "all"
+        "pkg-path": "nodejs"
       },
       "patchelf": {
         "pkg-path": "patchelf"
       },
       "pkg-config": {
-        "pkg-path": "pkg-config",
-        "outputs": "all"
+        "pkg-path": "pkg-config"
       },
       "pnpm": {
         "pkg-path": "pnpm"
       },
       "webkitgtk_4_1": {
-        "pkg-path": "webkitgtk_4_1",
-        "outputs": "all"
+        "pkg-path": "webkitgtk_4_1"
       }
     },
     "hook": {},
@@ -43,34 +38,32 @@
     {
       "attr_path": "gtk3",
       "broken": false,
-      "derivation": "/nix/store/9mjsg8gmvsv4fxlqz8h2jwrl6csqmwrn-gtk+3-3.24.51.drv",
+      "derivation": "/nix/store/09razr4zfkdsdbyg3gps6bnnzdrcch0p-gtk+3-3.24.51.drv",
       "description": "Multi-platform toolkit for creating graphical user interfaces",
       "install_id": "gtk3",
       "license": "LGPL-2.0-or-later",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=0182a361324364ae3f436a63005877674cf45efb",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6201e203d09599479a3b3450ed24fa81537ebc4e",
       "name": "gtk+3-3.24.51",
       "pname": "gtk3",
-      "rev": "0182a361324364ae3f436a63005877674cf45efb",
-      "rev_count": 948083,
-      "rev_date": "2026-02-17T23:04:30Z",
-      "scrape_date": "2026-02-19T05:12:56.331398Z",
+      "rev": "6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "rev_count": 972949,
+      "rev_date": "2026-04-01T09:47:46Z",
+      "scrape_date": "2026-04-02T18:32:37.904162Z",
       "stabilities": [
-        "unstable",
-        "staging"
+        "staging",
+        "unstable"
       ],
       "unfree": false,
       "version": "gtk+3-3.24.51",
       "outputs_to_install": [
         "out",
-        "out",
-        "out",
         "out"
       ],
       "outputs": {
-        "debug": "/nix/store/nd748rbas14hmixn5nzzxh72xcqxj27k-gtk+3-3.24.51-debug",
-        "dev": "/nix/store/brxiqm3rm7lg6is429v5fq2j4ps12f4d-gtk+3-3.24.51-dev",
-        "devdoc": "/nix/store/7103v7ip3cqdqm354c1pz4438xblj8ir-gtk+3-3.24.51-devdoc",
-        "out": "/nix/store/s7wfhgk2kn469a3cr9dvrkfdzlnc7nkh-gtk+3-3.24.51"
+        "debug": "/nix/store/0ckm1c2h23dckvs2a6br4skh1bwvvmfd-gtk+3-3.24.51-debug",
+        "dev": "/nix/store/zhyrmb8002gi07db1vl05kvgwy06x03x-gtk+3-3.24.51-dev",
+        "devdoc": "/nix/store/zcwvik1nbsv1lbd40v6gjjjn5sk3n9l1-gtk+3-3.24.51-devdoc",
+        "out": "/nix/store/97mi1c7yknkdan2h08f5gi7accb1nn2q-gtk+3-3.24.51"
       },
       "system": "aarch64-linux",
       "group": "toplevel",
@@ -79,35 +72,32 @@
     {
       "attr_path": "gtk3",
       "broken": false,
-      "derivation": "/nix/store/6ww0lz0d4idy41qd9skrfkzgsqndpms4-gtk+3-3.24.51.drv",
+      "derivation": "/nix/store/dk2vzxnyv9j9dn0lp3aavgg4jr9n41rc-gtk+3-3.24.51.drv",
       "description": "Multi-platform toolkit for creating graphical user interfaces",
       "install_id": "gtk3",
       "license": "LGPL-2.0-or-later",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=0182a361324364ae3f436a63005877674cf45efb",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6201e203d09599479a3b3450ed24fa81537ebc4e",
       "name": "gtk+3-3.24.51",
       "pname": "gtk3",
-      "rev": "0182a361324364ae3f436a63005877674cf45efb",
-      "rev_count": 948083,
-      "rev_date": "2026-02-17T23:04:30Z",
-      "scrape_date": "2026-02-19T06:23:25.602238Z",
+      "rev": "6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "rev_count": 972949,
+      "rev_date": "2026-04-01T09:47:46Z",
+      "scrape_date": "2026-04-02T19:36:34.259390Z",
       "stabilities": [
-        "unstable",
-        "staging"
+        "staging",
+        "unstable"
       ],
       "unfree": false,
       "version": "gtk+3-3.24.51",
       "outputs_to_install": [
         "out",
-        "out",
-        "out",
-        "out",
         "out"
       ],
       "outputs": {
-        "debug": "/nix/store/l2hygzilb7nbyqp4xa1gglh8v1n16ybf-gtk+3-3.24.51-debug",
-        "dev": "/nix/store/k490s4vkdj7azhkdpamdljhj8rb4p8lw-gtk+3-3.24.51-dev",
-        "devdoc": "/nix/store/7qb8i4b9jifnxxi9i54yjq4m5rwivhcn-gtk+3-3.24.51-devdoc",
-        "out": "/nix/store/cg89xd93ldyjwxjw05zzpgs1yr3nzj9c-gtk+3-3.24.51"
+        "debug": "/nix/store/4q5whgmgixy5arrrdi915syjw4fyxc22-gtk+3-3.24.51-debug",
+        "dev": "/nix/store/x4yjfzaslrwhk26qp242mnwdzidap7c8-gtk+3-3.24.51-dev",
+        "devdoc": "/nix/store/5pp58sfnfxq1rq8icjd3jxx520dgj9ni-gtk+3-3.24.51-devdoc",
+        "out": "/nix/store/yl5yl395iqx88kd1m7lx7p7b65n0jfx9-gtk+3-3.24.51"
       },
       "system": "x86_64-linux",
       "group": "toplevel",
@@ -116,32 +106,31 @@
     {
       "attr_path": "librsvg",
       "broken": false,
-      "derivation": "/nix/store/qil9mkiw6by0zw7gzvy2ldnag39ln4i4-librsvg-2.61.3.drv",
+      "derivation": "/nix/store/svp31c2df5rdb8s1p591vfdsyl6xx1n4-librsvg-2.61.4.drv",
       "description": "Small library to render SVG images to Cairo surfaces",
       "install_id": "librsvg",
       "license": "LGPL-2.0-or-later",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=0182a361324364ae3f436a63005877674cf45efb",
-      "name": "librsvg-2.61.3",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "name": "librsvg-2.61.4",
       "pname": "librsvg",
-      "rev": "0182a361324364ae3f436a63005877674cf45efb",
-      "rev_count": 948083,
-      "rev_date": "2026-02-17T23:04:30Z",
-      "scrape_date": "2026-02-19T05:13:18.639186Z",
+      "rev": "6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "rev_count": 972949,
+      "rev_date": "2026-04-01T09:47:46Z",
+      "scrape_date": "2026-04-02T18:32:59.913043Z",
       "stabilities": [
-        "unstable",
-        "staging"
+        "staging",
+        "unstable"
       ],
       "unfree": false,
-      "version": "2.61.3",
+      "version": "2.61.4",
       "outputs_to_install": [
-        "out",
         "out",
         "out"
       ],
       "outputs": {
-        "dev": "/nix/store/wjixbprh2dj2g1inzkjm4hf68c7b0jw2-librsvg-2.61.3-dev",
-        "devdoc": "/nix/store/b51ky52j9zbv39yk9s3w4krm6h1jfcbz-librsvg-2.61.3-devdoc",
-        "out": "/nix/store/plnpb2v0mmz9szrimzbsz9zcxf7hl90h-librsvg-2.61.3"
+        "dev": "/nix/store/j1p4cq0q0n2k8j3lcj7kqhlsif5m6qli-librsvg-2.61.4-dev",
+        "devdoc": "/nix/store/iv9jvwks7fiaisz834bpzr4gja9fgiz9-librsvg-2.61.4-devdoc",
+        "out": "/nix/store/a58kgik2yaf026sw63vcggmwd7s5kksg-librsvg-2.61.4"
       },
       "system": "aarch64-linux",
       "group": "toplevel",
@@ -150,34 +139,31 @@
     {
       "attr_path": "librsvg",
       "broken": false,
-      "derivation": "/nix/store/2p5icfwdzkn6i108lmzccxn0k4lar0nc-librsvg-2.61.3.drv",
+      "derivation": "/nix/store/gw24b3hl242qaxk5v9h1m939hyp9iv9c-librsvg-2.61.4.drv",
       "description": "Small library to render SVG images to Cairo surfaces",
       "install_id": "librsvg",
       "license": "LGPL-2.0-or-later",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=0182a361324364ae3f436a63005877674cf45efb",
-      "name": "librsvg-2.61.3",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "name": "librsvg-2.61.4",
       "pname": "librsvg",
-      "rev": "0182a361324364ae3f436a63005877674cf45efb",
-      "rev_count": 948083,
-      "rev_date": "2026-02-17T23:04:30Z",
-      "scrape_date": "2026-02-19T06:23:48.912089Z",
+      "rev": "6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "rev_count": 972949,
+      "rev_date": "2026-04-01T09:47:46Z",
+      "scrape_date": "2026-04-02T19:36:57.447022Z",
       "stabilities": [
-        "unstable",
-        "staging"
+        "staging",
+        "unstable"
       ],
       "unfree": false,
-      "version": "2.61.3",
+      "version": "2.61.4",
       "outputs_to_install": [
-        "out",
-        "out",
-        "out",
         "out",
         "out"
       ],
       "outputs": {
-        "dev": "/nix/store/z8gxqy6izr08gxjv8x9v8j9vk8f0pbj7-librsvg-2.61.3-dev",
-        "devdoc": "/nix/store/alw2bf9kxwz154cxm7zwfzxpdci6jpfi-librsvg-2.61.3-devdoc",
-        "out": "/nix/store/cpfmyd7q4v4vz3b02x1c8ym2303xw6ll-librsvg-2.61.3"
+        "dev": "/nix/store/d9bd603nwqq1jx39iagyabz4vwm5bp99-librsvg-2.61.4-dev",
+        "devdoc": "/nix/store/cqm36s06pj0cpzalb83ik2f63wqf40v8-librsvg-2.61.4-devdoc",
+        "out": "/nix/store/kn9lwgvdaa94nl9nsxx5p198gry21n03-librsvg-2.61.4"
       },
       "system": "x86_64-linux",
       "group": "toplevel",
@@ -186,30 +172,28 @@
     {
       "attr_path": "nodejs",
       "broken": false,
-      "derivation": "/nix/store/l64r4vxgdpi0jxp27mvr9sj2c2mq2cys-nodejs-24.13.0.drv",
+      "derivation": "/nix/store/jj8rw2gnisil7dw10xi2qdinad9jqp7s-nodejs-24.14.0.drv",
       "description": "Event-driven I/O framework for the V8 JavaScript engine",
       "install_id": "nodejs",
       "license": "MIT",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=0182a361324364ae3f436a63005877674cf45efb",
-      "name": "nodejs-24.13.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "name": "nodejs-24.14.0",
       "pname": "nodejs",
-      "rev": "0182a361324364ae3f436a63005877674cf45efb",
-      "rev_count": 948083,
-      "rev_date": "2026-02-17T23:04:30Z",
-      "scrape_date": "2026-02-19T05:13:32.346309Z",
+      "rev": "6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "rev_count": 972949,
+      "rev_date": "2026-04-01T09:47:46Z",
+      "scrape_date": "2026-04-02T18:33:12.000533Z",
       "stabilities": [
-        "unstable",
-        "staging"
+        "staging",
+        "unstable"
       ],
       "unfree": false,
-      "version": "24.13.0",
+      "version": "24.14.0",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "dev": "/nix/store/qk4n3r5bvqzvpaq1qbpwwf47zg51wrhq-nodejs-24.13.0-dev",
-        "libv8": "/nix/store/rh9dg0mdq0hnp4cbdy4zdbmy6hnhxcfh-nodejs-24.13.0-libv8",
-        "out": "/nix/store/rpyb0275h916mxx8a0cm7yavm4qbr4j9-nodejs-24.13.0"
+        "out": "/nix/store/vs8zaq8fvbbjqfg4bzn424kn55sj7s7y-nodejs-24.14.0"
       },
       "system": "aarch64-linux",
       "group": "toplevel",
@@ -218,30 +202,28 @@
     {
       "attr_path": "nodejs",
       "broken": false,
-      "derivation": "/nix/store/qk40027pvikybl0lvr1wmia9n8ljf99c-nodejs-24.13.0.drv",
+      "derivation": "/nix/store/15s1kk2n6vg180wg04wj2wgnl19f03v7-nodejs-24.14.0.drv",
       "description": "Event-driven I/O framework for the V8 JavaScript engine",
       "install_id": "nodejs",
       "license": "MIT",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=0182a361324364ae3f436a63005877674cf45efb",
-      "name": "nodejs-24.13.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "name": "nodejs-24.14.0",
       "pname": "nodejs",
-      "rev": "0182a361324364ae3f436a63005877674cf45efb",
-      "rev_count": 948083,
-      "rev_date": "2026-02-17T23:04:30Z",
-      "scrape_date": "2026-02-19T06:24:05.313886Z",
+      "rev": "6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "rev_count": 972949,
+      "rev_date": "2026-04-01T09:47:46Z",
+      "scrape_date": "2026-04-02T19:37:11.708778Z",
       "stabilities": [
-        "unstable",
-        "staging"
+        "staging",
+        "unstable"
       ],
       "unfree": false,
-      "version": "24.13.0",
+      "version": "24.14.0",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "dev": "/nix/store/hc7fav9y6ai53nqbbpjxprwnkakl1w2d-nodejs-24.13.0-dev",
-        "libv8": "/nix/store/z7m56hl4rzdrfhnnkwig0ibzs1qz1x5d-nodejs-24.13.0-libv8",
-        "out": "/nix/store/9cyx2v23dip6p9q98384k9v06c96qskb-nodejs-24.13.0"
+        "out": "/nix/store/v2210ar51jddnrcx46m53ivv9palc26m-nodejs-24.14.0"
       },
       "system": "x86_64-linux",
       "group": "toplevel",
@@ -250,20 +232,20 @@
     {
       "attr_path": "patchelf",
       "broken": false,
-      "derivation": "/nix/store/ghp2f749zwqg5hxnf8wnl7diplsz4sf8-patchelf-0.15.2.drv",
+      "derivation": "/nix/store/f8w2azw0lfh7ch8pb2ppy34cv3fk1qwg-patchelf-0.15.2.drv",
       "description": "Small utility to modify the dynamic linker and RPATH of ELF executables",
       "install_id": "patchelf",
       "license": "GPL-3.0-or-later",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=0182a361324364ae3f436a63005877674cf45efb",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6201e203d09599479a3b3450ed24fa81537ebc4e",
       "name": "patchelf-0.15.2",
       "pname": "patchelf",
-      "rev": "0182a361324364ae3f436a63005877674cf45efb",
-      "rev_count": 948083,
-      "rev_date": "2026-02-17T23:04:30Z",
-      "scrape_date": "2026-02-19T05:13:40.703635Z",
+      "rev": "6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "rev_count": 972949,
+      "rev_date": "2026-04-01T09:47:46Z",
+      "scrape_date": "2026-04-02T18:33:19.799187Z",
       "stabilities": [
-        "unstable",
-        "staging"
+        "staging",
+        "unstable"
       ],
       "unfree": false,
       "version": "0.15.2",
@@ -272,7 +254,7 @@
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/y8zqyma7cklikqv6idi3f88323x52d5s-patchelf-0.15.2"
+        "out": "/nix/store/56dima09js5zsyxi3dhnkrhkffm3padq-patchelf-0.15.2"
       },
       "system": "aarch64-linux",
       "group": "toplevel",
@@ -281,30 +263,29 @@
     {
       "attr_path": "patchelf",
       "broken": false,
-      "derivation": "/nix/store/yqz8a0v7a6xi8hmb30xh34ipnzkrm3nx-patchelf-0.15.2.drv",
+      "derivation": "/nix/store/2di3qbz7daa5bv3ksm5d9gk0mxk7xxri-patchelf-0.15.2.drv",
       "description": "Small utility to modify the dynamic linker and RPATH of ELF executables",
       "install_id": "patchelf",
       "license": "GPL-3.0-or-later",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=0182a361324364ae3f436a63005877674cf45efb",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6201e203d09599479a3b3450ed24fa81537ebc4e",
       "name": "patchelf-0.15.2",
       "pname": "patchelf",
-      "rev": "0182a361324364ae3f436a63005877674cf45efb",
-      "rev_count": 948083,
-      "rev_date": "2026-02-17T23:04:30Z",
-      "scrape_date": "2026-02-19T06:24:14.585539Z",
+      "rev": "6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "rev_count": 972949,
+      "rev_date": "2026-04-01T09:47:46Z",
+      "scrape_date": "2026-04-02T19:37:20.187924Z",
       "stabilities": [
-        "unstable",
-        "staging"
+        "staging",
+        "unstable"
       ],
       "unfree": false,
       "version": "0.15.2",
       "outputs_to_install": [
         "out",
-        "out",
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/c2p7haf4zzkbrir9zs662r68c5dmylbq-patchelf-0.15.2"
+        "out": "/nix/store/sj3f6y3j8m1831l0gqm1bsk1f46jzkfd-patchelf-0.15.2"
       },
       "system": "x86_64-linux",
       "group": "toplevel",
@@ -313,33 +294,32 @@
     {
       "attr_path": "pkg-config",
       "broken": false,
-      "derivation": "/nix/store/i927l7fcarg683k87bgj1vd4nf98hws1-pkg-config-wrapper-0.29.2.drv",
+      "derivation": "/nix/store/r0ibplv3qh6rzbsdjlrx56dxzijjrrjy-pkg-config-wrapper-0.29.2.drv",
       "description": "Tool that allows packages to find out information about other packages (wrapper script)",
       "install_id": "pkg-config",
       "license": "GPL-2.0-or-later",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=0182a361324364ae3f436a63005877674cf45efb",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6201e203d09599479a3b3450ed24fa81537ebc4e",
       "name": "pkg-config-wrapper-0.29.2",
       "pname": "pkg-config",
-      "rev": "0182a361324364ae3f436a63005877674cf45efb",
-      "rev_count": 948083,
-      "rev_date": "2026-02-17T23:04:30Z",
-      "scrape_date": "2026-02-19T05:13:51.428431Z",
+      "rev": "6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "rev_count": 972949,
+      "rev_date": "2026-04-01T09:47:46Z",
+      "scrape_date": "2026-04-02T18:33:29.726865Z",
       "stabilities": [
-        "unstable",
-        "staging"
+        "staging",
+        "unstable"
       ],
       "unfree": false,
       "version": "0.29.2",
       "outputs_to_install": [
         "man",
         "out",
-        "out",
         "out"
       ],
       "outputs": {
-        "doc": "/nix/store/nd285jjxkxhsb19d5asrlxy0b8zzgd1i-pkg-config-wrapper-0.29.2-doc",
-        "man": "/nix/store/p3hqvabkkwxm4qdyib2avgx9i0l1snag-pkg-config-wrapper-0.29.2-man",
-        "out": "/nix/store/acidxar7778cz6rb9xa9plhjpqsxap2k-pkg-config-wrapper-0.29.2"
+        "doc": "/nix/store/2lq06wb2lylkzp62iy6cdxf82mc6wyr3-pkg-config-wrapper-0.29.2-doc",
+        "man": "/nix/store/akl65aihn0wi606lhp2mhwcv15cdirkm-pkg-config-wrapper-0.29.2-man",
+        "out": "/nix/store/fs0gwnv2clqgf23rrlmy7hpdxxi8dipv-pkg-config-wrapper-0.29.2"
       },
       "system": "aarch64-linux",
       "group": "toplevel",
@@ -348,34 +328,32 @@
     {
       "attr_path": "pkg-config",
       "broken": false,
-      "derivation": "/nix/store/34y7xczwns3fcf35pjj6irgkjrm6kyx6-pkg-config-wrapper-0.29.2.drv",
+      "derivation": "/nix/store/41c5s0jfm2ymy6zygf41mvww7lspjs59-pkg-config-wrapper-0.29.2.drv",
       "description": "Tool that allows packages to find out information about other packages (wrapper script)",
       "install_id": "pkg-config",
       "license": "GPL-2.0-or-later",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=0182a361324364ae3f436a63005877674cf45efb",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6201e203d09599479a3b3450ed24fa81537ebc4e",
       "name": "pkg-config-wrapper-0.29.2",
       "pname": "pkg-config",
-      "rev": "0182a361324364ae3f436a63005877674cf45efb",
-      "rev_count": 948083,
-      "rev_date": "2026-02-17T23:04:30Z",
-      "scrape_date": "2026-02-19T06:24:26.115078Z",
+      "rev": "6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "rev_count": 972949,
+      "rev_date": "2026-04-01T09:47:46Z",
+      "scrape_date": "2026-04-02T19:37:30.854389Z",
       "stabilities": [
-        "unstable",
-        "staging"
+        "staging",
+        "unstable"
       ],
       "unfree": false,
       "version": "0.29.2",
       "outputs_to_install": [
         "man",
         "out",
-        "out",
-        "out",
         "out"
       ],
       "outputs": {
-        "doc": "/nix/store/a29fiybw29zbd9awm6jdifpw9l5mrg1x-pkg-config-wrapper-0.29.2-doc",
-        "man": "/nix/store/0dslh0d5kbgh40208jlf03n0zkjyc7cl-pkg-config-wrapper-0.29.2-man",
-        "out": "/nix/store/rvp7qlpf5jqvdckjy1afjb6aha6j8dxg-pkg-config-wrapper-0.29.2"
+        "doc": "/nix/store/ipyf6xmsjhs0nrl5vpmgwrxl94sp31b1-pkg-config-wrapper-0.29.2-doc",
+        "man": "/nix/store/mqbmjcz3vv9gzaffi1bcpmwci9nkhq87-pkg-config-wrapper-0.29.2-man",
+        "out": "/nix/store/d0immrndpxnhx32vcfbxngmnf7hmqyc3-pkg-config-wrapper-0.29.2"
       },
       "system": "x86_64-linux",
       "group": "toplevel",
@@ -384,28 +362,28 @@
     {
       "attr_path": "pnpm",
       "broken": false,
-      "derivation": "/nix/store/aialkmfhg9b8czkyms67fr75lar1qs7c-pnpm-10.28.0.drv",
+      "derivation": "/nix/store/jqc69fv43sjsjv67a3xqrdpz9zjw5bhm-pnpm-10.33.0.drv",
       "description": "Fast, disk space efficient package manager for JavaScript",
       "install_id": "pnpm",
       "license": "MIT",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=0182a361324364ae3f436a63005877674cf45efb",
-      "name": "pnpm-10.28.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "name": "pnpm-10.33.0",
       "pname": "pnpm",
-      "rev": "0182a361324364ae3f436a63005877674cf45efb",
-      "rev_count": 948083,
-      "rev_date": "2026-02-17T23:04:30Z",
-      "scrape_date": "2026-02-19T05:13:52.207930Z",
+      "rev": "6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "rev_count": 972949,
+      "rev_date": "2026-04-01T09:47:46Z",
+      "scrape_date": "2026-04-02T18:33:30.462824Z",
       "stabilities": [
-        "unstable",
-        "staging"
+        "staging",
+        "unstable"
       ],
       "unfree": false,
-      "version": "10.28.0",
+      "version": "10.33.0",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/xgw9y80p9y0m5dq0qrnwwxi7fs69gm54-pnpm-10.28.0"
+        "out": "/nix/store/5gj7nis9afj3qib78y8vwp5vh5rdr5wn-pnpm-10.33.0"
       },
       "system": "aarch64-linux",
       "group": "toplevel",
@@ -414,28 +392,28 @@
     {
       "attr_path": "pnpm",
       "broken": false,
-      "derivation": "/nix/store/8i2pn12vwqy5pfy8dgfcv9fi5gz4faal-pnpm-10.28.0.drv",
+      "derivation": "/nix/store/rrmdv7a9p91v5x4qnmm0qq013995rg2j-pnpm-10.33.0.drv",
       "description": "Fast, disk space efficient package manager for JavaScript",
       "install_id": "pnpm",
       "license": "MIT",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=0182a361324364ae3f436a63005877674cf45efb",
-      "name": "pnpm-10.28.0",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "name": "pnpm-10.33.0",
       "pname": "pnpm",
-      "rev": "0182a361324364ae3f436a63005877674cf45efb",
-      "rev_count": 948083,
-      "rev_date": "2026-02-17T23:04:30Z",
-      "scrape_date": "2026-02-19T06:24:26.961217Z",
+      "rev": "6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "rev_count": 972949,
+      "rev_date": "2026-04-01T09:47:46Z",
+      "scrape_date": "2026-04-02T19:37:31.642973Z",
       "stabilities": [
-        "unstable",
-        "staging"
+        "staging",
+        "unstable"
       ],
       "unfree": false,
-      "version": "10.28.0",
+      "version": "10.33.0",
       "outputs_to_install": [
         "out"
       ],
       "outputs": {
-        "out": "/nix/store/q182xhmnqzff17cdg90hcp44ljgvqqr7-pnpm-10.28.0"
+        "out": "/nix/store/qlbqwsia8a9rk3cp6v58y1x58c0j2wyk-pnpm-10.33.0"
       },
       "system": "x86_64-linux",
       "group": "toplevel",
@@ -444,32 +422,32 @@
     {
       "attr_path": "webkitgtk_4_1",
       "broken": false,
-      "derivation": "/nix/store/7xh9gaz4pvi5bhmqhk81vzmb4qm193lh-webkitgtk-2.50.5+abi=4.1.drv",
+      "derivation": "/nix/store/7ix3fizm1464z8j2qifihfpf8mwnd71l-webkitgtk-2.52.1+abi=4.1.drv",
       "description": "Web content rendering engine, GTK port",
       "install_id": "webkitgtk_4_1",
       "license": "BSD-2-Clause",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=0182a361324364ae3f436a63005877674cf45efb",
-      "name": "webkitgtk-2.50.5+abi=4.1",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "name": "webkitgtk-2.52.1+abi=4.1",
       "pname": "webkitgtk_4_1",
-      "rev": "0182a361324364ae3f436a63005877674cf45efb",
-      "rev_count": 948083,
-      "rev_date": "2026-02-17T23:04:30Z",
-      "scrape_date": "2026-02-19T05:16:31.410906Z",
+      "rev": "6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "rev_count": 972949,
+      "rev_date": "2026-04-01T09:47:46Z",
+      "scrape_date": "2026-04-02T18:36:00.940052Z",
       "stabilities": [
-        "unstable",
-        "staging"
+        "staging",
+        "unstable"
       ],
       "unfree": false,
-      "version": "2.50.5+abi=4.1",
+      "version": "2.52.1+abi=4.1",
       "outputs_to_install": [
         "out",
         "out"
       ],
       "outputs": {
-        "debug": "/nix/store/bfxw7ll22755ywb64f16wqgxwrvfi0hp-webkitgtk-2.50.5+abi=4.1-debug",
-        "dev": "/nix/store/7gmpncs7fxxw6j249n00x1zgv1pzfhh2-webkitgtk-2.50.5+abi=4.1-dev",
-        "devdoc": "/nix/store/si7j32hyxvgh3hc4d91w5zclxrdc7g8v-webkitgtk-2.50.5+abi=4.1-devdoc",
-        "out": "/nix/store/qd88zaiymsfvb3hjg23258yq749r0pf2-webkitgtk-2.50.5+abi=4.1"
+        "debug": "/nix/store/2s8m96ivyyzns6azqqxm9vskdiwy032a-webkitgtk-2.52.1+abi=4.1-debug",
+        "dev": "/nix/store/k3pai1p78969fcl9xcgplrd87inr2kcs-webkitgtk-2.52.1+abi=4.1-dev",
+        "devdoc": "/nix/store/nq1hdnsiavldc1ya2v9iizfmihwm8dnd-webkitgtk-2.52.1+abi=4.1-devdoc",
+        "out": "/nix/store/y03in5cd7cqhbk1i97xq8i39lp76l28k-webkitgtk-2.52.1+abi=4.1"
       },
       "system": "aarch64-linux",
       "group": "toplevel",
@@ -478,32 +456,32 @@
     {
       "attr_path": "webkitgtk_4_1",
       "broken": false,
-      "derivation": "/nix/store/vsv6gj4h3h977jaxn3i21d0xld91j948-webkitgtk-2.50.5+abi=4.1.drv",
+      "derivation": "/nix/store/vl9cqnhvs0a72h5zx39yn1wmx4agdzn4-webkitgtk-2.52.1+abi=4.1.drv",
       "description": "Web content rendering engine, GTK port",
       "install_id": "webkitgtk_4_1",
       "license": "BSD-2-Clause",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=0182a361324364ae3f436a63005877674cf45efb",
-      "name": "webkitgtk-2.50.5+abi=4.1",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "name": "webkitgtk-2.52.1+abi=4.1",
       "pname": "webkitgtk_4_1",
-      "rev": "0182a361324364ae3f436a63005877674cf45efb",
-      "rev_count": 948083,
-      "rev_date": "2026-02-17T23:04:30Z",
-      "scrape_date": "2026-02-19T06:27:17.018858Z",
+      "rev": "6201e203d09599479a3b3450ed24fa81537ebc4e",
+      "rev_count": 972949,
+      "rev_date": "2026-04-01T09:47:46Z",
+      "scrape_date": "2026-04-02T19:40:13.306313Z",
       "stabilities": [
-        "unstable",
-        "staging"
+        "staging",
+        "unstable"
       ],
       "unfree": false,
-      "version": "2.50.5+abi=4.1",
+      "version": "2.52.1+abi=4.1",
       "outputs_to_install": [
         "out",
         "out"
       ],
       "outputs": {
-        "debug": "/nix/store/19kqvw64dwimsrjpnhf3af5zp5k65fq4-webkitgtk-2.50.5+abi=4.1-debug",
-        "dev": "/nix/store/fcgc1x5kp0n8fs34dvci7rdk9xvqa6sj-webkitgtk-2.50.5+abi=4.1-dev",
-        "devdoc": "/nix/store/jibj6asy48jw34jkzmd30f5n3x238ajx-webkitgtk-2.50.5+abi=4.1-devdoc",
-        "out": "/nix/store/11v7hmsxgjfwdzyxn4fyvhriyq4z6xav-webkitgtk-2.50.5+abi=4.1"
+        "debug": "/nix/store/daqmnrm7ahvp5bsyb09lw88rp0bmpb7x-webkitgtk-2.52.1+abi=4.1-debug",
+        "dev": "/nix/store/667m8qpqck2qpd6psbl31l43bh9n0jw8-webkitgtk-2.52.1+abi=4.1-dev",
+        "devdoc": "/nix/store/fbb08fwvqhb1j1y1p30y25aqd97z5555-webkitgtk-2.52.1+abi=4.1-devdoc",
+        "out": "/nix/store/j7p0f75r22zcvvpvqz6c1gaiipfvjk3q-webkitgtk-2.52.1+abi=4.1"
       },
       "system": "x86_64-linux",
       "group": "toplevel",

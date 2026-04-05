@@ -37,10 +37,18 @@ import Toast from 'primevue/toast'
 import ProgressSpinner from 'primevue/progressspinner'
 import Message from 'primevue/message'
 
-// Bootstrap Convex Auth (anonymous auto-login) before mounting
-const convexUrl = import.meta.env.VITE_CONVEX_URL as string
-const client = getConvexClient()
-setupConvexAuth(client, convexUrl).then(() => {
+// Bootstrap Convex Auth (anonymous auto-login) before mounting — skip if not configured
+async function bootstrap() {
+  const convexUrl = import.meta.env.VITE_CONVEX_URL as string
+  if (convexUrl) {
+    try {
+      const client = getConvexClient()
+      await setupConvexAuth(client, convexUrl)
+    } catch {
+      // Convex unavailable — app works offline
+    }
+  }
+
   const app = createApp(App)
   const pinia = createPinia()
 
@@ -76,4 +84,6 @@ setupConvexAuth(client, convexUrl).then(() => {
   app.component('Message', Message)
 
   app.mount('#app')
-})
+}
+
+bootstrap()
