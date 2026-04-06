@@ -456,9 +456,13 @@ private val COOKIE_ACCEPT_SCRIPT = """
     return false;
   }
 
+  // Diagnostic log — collected and sent to Kotlin debug logs after 6s
+  var log = [];
+  function L(msg) { log.push(msg); }
+
   function tryAccept() {
     // 0. TikTok shadow DOM banner (must be checked before normal selectors)
-    if (tryTikTokShadowBanner()) return;
+    if (tryTikTokShadowBanner()) { L('CLICKED via TikTok shadow DOM'); return true; }
 
     // 1. Try known CMP selectors — only click interactive elements
     //    (aria-label selectors can match container divs, not buttons)
@@ -467,8 +471,11 @@ private val COOKIE_ACCEPT_SCRIPT = """
         var el = document.querySelector(SELECTORS[i]);
         if (!el) continue;
         var tag = el.tagName;
-        if (tag !== 'BUTTON' && tag !== 'A' && !el.getAttribute('role')) continue;
-        if (robustClick(el)) return;
+        if (tag !== 'BUTTON' && tag !== 'A' && !el.getAttribute('role')) {
+          L('CMP skip non-interactive: ' + SELECTORS[i] + ' → <' + tag + '> "' + (el.textContent||'').trim().substring(0,40) + '"');
+          continue;
+        }
+        if (robustClick(el)) { L('CLICKED via CMP selector: ' + SELECTORS[i]); return true; }
       } catch(e) {}
     }
 
@@ -478,29 +485,39 @@ private val COOKIE_ACCEPT_SCRIPT = """
       var els = doc.querySelectorAll('button, div, span, a, p, [role="button"]');
       for (var b = 0; b < els.length; b++) {
         var label = (els[b].textContent || els[b].getAttribute('aria-label') || '').trim();
-        if (ACCEPT_RE.test(label) && robustClick(els[b])) return true;
+        if (ACCEPT_RE.test(label) && robustClick(els[b])) {
+          L('CLICKED via text scan: <' + els[b].tagName + '> "' + label + '"');
+          return true;
+        }
       }
       return false;
     }
-    if (scanDoc(document)) return;
+    if (scanDoc(document)) return true;
 
     // 3. Scan same-origin iframes (some CMPs like Quantcast render in an iframe)
     var iframes = document.querySelectorAll('iframe');
     for (var f = 0; f < iframes.length; f++) {
       try {
         var doc = iframes[f].contentDocument;
-        if (doc && scanDoc(doc)) return;
-      } catch(e) {} // cross-origin — skip
+        if (doc && scanDoc(doc)) { L('CLICKED via iframe #' + f); return true; }
+      } catch(e) { L('iframe #' + f + ' cross-origin (skipped)'); }
     }
+    return false;
   }
 
   // Retry every 100ms for 5 seconds, then stop.
+  var clicked = false;
   var attempts = 0;
   var interval = setInterval(function() {
-    tryAccept();
-    if (++attempts >= 50) clearInterval(interval); // 50 × 100ms = 5s
+    if (!clicked) clicked = tryAccept();
+    if (clicked || ++attempts >= 50) clearInterval(interval);
   }, 100);
-  tryAccept(); // also run immediately
+  clicked = tryAccept();
+
+  // After 6s, expose diagnostic log for Kotlin to retrieve
+  setTimeout(function() {
+    window.__sfzCookieLog = (clicked ? 'OK' : 'FAIL') + ' (' + attempts + ' attempts)\\n' + log.join('\\n');
+  }, 6000);
 })();
 """.trimIndent()
 
@@ -720,13 +737,17 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                 for (cookie in parts) {
                     val trimmed = cookie.trim()
                     if (trimmed.isNotEmpty()) {
-                        // Restore as domain-wide cookie so all subdomains see it
-                        val cookieWithDomain = if (domain != null) {
+                        // __Host- cookies MUST NOT have a Domain attribute (RFC 6265bis).
+                        // Setting Domain= on them causes silent rejection by the browser.
+                        val name = trimmed.substringBefore("=")
+                        val cookieWithAttrs = if (name.startsWith("__Host-")) {
+                            "$trimmed; Path=/; Secure"
+                        } else if (domain != null) {
                             "$trimmed; Domain=$domain; Path=/; Secure"
                         } else {
                             trimmed
                         }
-                        cm.setCookie(url, cookieWithDomain)
+                        cm.setCookie(url, cookieWithAttrs)
                         restoredCookies++
                     }
                 }
@@ -1985,9 +2006,21 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                 if (!isLoggedIn) {
                     pagesSinceOpen++
                     view.evaluateJavascript(COOKIE_ACCEPT_SCRIPT, null)
+                    // Retrieve cookie consent diagnostic log after 7s
+                    val netId = currentNetworkId ?: "?"
+                    view.postDelayed({
+                        view.evaluateJavascript("window.__sfzCookieLog || ''") { result ->
+                            val log = result?.trim('"') ?: ""
+                            if (log.isNotEmpty()) {
+                                for (line in log.split("\\n")) {
+                                    dbg("[cookie:$netId] $line")
+                                }
+                            }
+                        }
+                    }, 7000)
                     if (pagesSinceOpen > 3 && checkLoggedIn()) {
                         isLoggedIn = true
-                        Log.i(TAG, "Auth cookies detected for $currentNetworkId — cookie consent script disabled")
+                        dbg("[cookie:$netId] Auth cookies detected — disabled")
                     }
                 }
                 // Always re-inject desktop viewport override in onPageFinished (backup —
