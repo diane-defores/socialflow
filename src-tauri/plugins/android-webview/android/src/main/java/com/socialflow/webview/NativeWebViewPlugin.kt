@@ -420,28 +420,26 @@ private val COOKIE_ACCEPT_SCRIPT = """
       } catch(e) {}
     }
 
-    // 2. Scan ALL clickable elements on the page (buttons, role=button, and CMP-styled divs)
-    var allBtns = document.querySelectorAll(
-      'button, a[role="button"], [role="button"], [class*="qc-cmp2-button"], [class*="cmp-button"]'
-    );
-    for (var b = 0; b < allBtns.length; b++) {
-      var label = (allBtns[b].textContent || allBtns[b].getAttribute('aria-label') || '').trim();
-      if (ACCEPT_RE.test(label) && clickIfVisible(allBtns[b])) return;
+    // 2. Scan ALL elements — button, div, span, a, anything.
+    //    ACCEPT_RE is strict (anchored ^...$) so false positives are minimal.
+    //    Skip containers with multiple children to avoid matching parent wrappers.
+    function scanDoc(doc) {
+      var els = doc.querySelectorAll('button, div, span, a, p, [role="button"]');
+      for (var b = 0; b < els.length; b++) {
+        if (els[b].children.length > 1) continue;
+        var label = (els[b].textContent || els[b].getAttribute('aria-label') || '').trim();
+        if (ACCEPT_RE.test(label) && clickIfVisible(els[b])) return true;
+      }
+      return false;
     }
+    if (scanDoc(document)) return;
 
     // 3. Scan same-origin iframes (some CMPs like Quantcast render in an iframe)
     var iframes = document.querySelectorAll('iframe');
     for (var f = 0; f < iframes.length; f++) {
       try {
         var doc = iframes[f].contentDocument;
-        if (!doc) continue;
-        var iBtns = doc.querySelectorAll(
-          'button, a[role="button"], [role="button"], [class*="qc-cmp2-button"], [class*="cmp-button"]'
-        );
-        for (var b = 0; b < iBtns.length; b++) {
-          var label = (iBtns[b].textContent || iBtns[b].getAttribute('aria-label') || '').trim();
-          if (ACCEPT_RE.test(label)) { iBtns[b].click(); return; }
-        }
+        if (doc && scanDoc(doc)) return;
       } catch(e) {} // cross-origin — skip
     }
   }
@@ -626,26 +624,43 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     }
 
     /** Clear all cookies, then restore saved cookies for the target session. */
+    /** Extract base domain from URL host (e.g. www.snapchat.com → .snapchat.com).
+     *  Restored cookies are set as domain-wide so all subdomains can access them.
+     *  Without this, cookies originally set on .snapchat.com get restored only for
+     *  www.snapchat.com, and API subdomains lose the session. */
+    private fun baseDomainOf(url: String): String? {
+        val host = android.net.Uri.parse(url).host ?: return null
+        val parts = host.split(".")
+        return if (parts.size >= 2) ".${parts.takeLast(2).joinToString(".")}" else null
+    }
+
     private fun restoreCookiesForSession(sessionKey: String) {
         val cm = CookieManager.getInstance()
-        // Clear everything first
-        cm.removeAllCookies(null)
-
-        // Restore saved cookies for this session
-        var restored = 0
-        for (url in COOKIE_URLS) {
-            val cookies = cookiePrefs.getString("$sessionKey|$url", null) ?: continue
-            // setCookie expects one cookie at a time; the stored string may have multiple
-            for (cookie in cookies.split(";")) {
-                val trimmed = cookie.trim()
-                if (trimmed.isNotEmpty()) {
-                    cm.setCookie(url, trimmed)
+        // removeAllCookies is ASYNC — restore only after it completes,
+        // otherwise the pending removal can wipe freshly-restored cookies.
+        cm.removeAllCookies {
+            var restored = 0
+            for (url in COOKIE_URLS) {
+                val cookies = cookiePrefs.getString("$sessionKey|$url", null) ?: continue
+                val domain = baseDomainOf(url)
+                // setCookie expects one cookie at a time; the stored string may have multiple
+                for (cookie in cookies.split(";")) {
+                    val trimmed = cookie.trim()
+                    if (trimmed.isNotEmpty()) {
+                        // Restore as domain-wide cookie so all subdomains see it
+                        val cookieWithDomain = if (domain != null) {
+                            "$trimmed; Domain=$domain; Path=/; Secure"
+                        } else {
+                            trimmed
+                        }
+                        cm.setCookie(url, cookieWithDomain)
+                    }
                 }
+                restored++
             }
-            restored++
+            cm.flush()
+            Log.i(TAG, "Cookies restored for session: $sessionKey ($restored URLs)")
         }
-        cm.flush()
-        Log.i(TAG, "Cookies restored for session: $sessionKey ($restored URLs)")
     }
 
     /** Capture the main Tauri WebView on plugin load — this is the Vue app webview. */
@@ -1057,7 +1072,41 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         innerRow.addView(buildDivider(density))
 
         // Scrollable network switcher (takes all remaining space)
-        val scrollView = HorizontalScrollView(activity)
+        // Override dispatchTouchEvent to see ALL touch events, even those going to child buttons.
+        var isTouching = false
+        val scrollView = object : HorizontalScrollView(activity) {
+            override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+                when (ev.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        isTouching = true
+                        val row = getChildAt(0) as? LinearLayout ?: return super.dispatchTouchEvent(ev)
+                        for (i in 0 until row.childCount) {
+                            val child = row.getChildAt(i)
+                            child.animate().cancel()
+                            child.animate().alpha(1f).setDuration(250).start()
+                        }
+                    }
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                        isTouching = false
+                        val row = getChildAt(0) as? LinearLayout ?: return super.dispatchTouchEvent(ev)
+                        row.postDelayed({
+                            if (!isTouching) {
+                                for (i in 0 until row.childCount) {
+                                    val child = row.getChildAt(i)
+                                    val netId = child.tag as? String
+                                    if (netId != null) {
+                                        val targetAlpha = if (netId == currentNetworkId) 1f else 0.45f
+                                        child.animate().cancel()
+                                        child.animate().alpha(targetAlpha).setDuration(400).start()
+                                    }
+                                }
+                            }
+                        }, 500)
+                    }
+                }
+                return super.dispatchTouchEvent(ev)
+            }
+        }
         scrollView.isHorizontalScrollBarEnabled = false
         scrollView.isSmoothScrollingEnabled = true
         scrollView.layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
@@ -1073,40 +1122,6 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         }
 
         scrollView.addView(networkRow)
-
-        // Touch/scroll interaction: fade all icons to full opacity while interacting,
-        // then smoothly fade inactive icons back when touch ends.
-        var isTouching = false
-        scrollView.setOnTouchListener { _, event ->
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    isTouching = true
-                    for (i in 0 until networkRow.childCount) {
-                        val child = networkRow.getChildAt(i)
-                        child.animate().cancel()
-                        child.animate().alpha(1f).setDuration(250).start()
-                    }
-                }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    isTouching = false
-                    // Delay before fading back so user can see all icons
-                    networkRow.postDelayed({
-                        if (!isTouching) {
-                            for (i in 0 until networkRow.childCount) {
-                                val child = networkRow.getChildAt(i)
-                                val netId = child.tag as? String
-                                if (netId != null) {
-                                    val targetAlpha = if (netId == currentNetworkId) 1f else 0.45f
-                                    child.animate().cancel()
-                                    child.animate().alpha(targetAlpha).setDuration(400).start()
-                                }
-                            }
-                        }
-                    }, 500)
-                }
-            }
-            false // don't consume — let scroll still work
-        }
 
         innerRow.addView(scrollView)
 
@@ -1594,7 +1609,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             private val strokePaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
                 style = android.graphics.Paint.Style.STROKE
                 color = Color.BLACK
-                strokeWidth = 0.8f * density
+                strokeWidth = 2.5f * density
                 strokeJoin = android.graphics.Paint.Join.ROUND
             }
             override fun onDraw(canvas: android.graphics.Canvas) {
@@ -1861,14 +1876,14 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                     view.evaluateJavascript(STEALTH_SCRIPT, null)
                     view.evaluateJavascript(DISMISS_APP_BANNERS_SCRIPT, null)
                 }
-                // Cookie consent: only inject when not logged in.
-                // Once auth cookies are detected, stop injecting.
+                // Cookie consent: inject first, then check auth.
+                // Consent dialogs appear on the first page — inject before checking,
+                // so stale auth cookies don't block injection.
                 if (!isLoggedIn) {
+                    view.evaluateJavascript(COOKIE_ACCEPT_SCRIPT, null)
                     if (checkLoggedIn()) {
                         isLoggedIn = true
-                        Log.i(TAG, "Auth cookies detected for $currentNetworkId — cookie consent script disabled")
-                    } else {
-                        view.evaluateJavascript(COOKIE_ACCEPT_SCRIPT, null)
+                        Log.i(TAG, "Auth cookies detected for $currentNetworkId — cookie consent script disabled for next pages")
                     }
                 }
                 // Always re-inject desktop viewport override in onPageFinished (backup —

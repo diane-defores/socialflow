@@ -153,6 +153,13 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [x] Added Quora, Pinterest, WhatsApp, Telegram, Nextdoor as social networks (2026-03-12)
 - [x] Custom links per profile — `customLinks` store, add/remove on mobile + desktop sidebar (2026-03-12)
 - [x] Kotlin bottom bar synced with profile network visibility — `set_bar_networks` IPC + `rebuildBottomBar()` (2026-03-12)
+- [x] Android: Snapchat Web support — desktop UA + full device spoofing (touch, screen, platform, userAgentData, matchMedia) bypasses multi-layer mobile detection (2026-04-06)
+- [x] Android: reCAPTCHA in WebView — `onCreateWindow` + `setSupportMultipleWindows` + `javaScriptCanOpenWindowsAutomatically` enables reCAPTCHA verification popups (2026-04-06)
+- [x] Android: cookie restore as domain cookies — `baseDomainOf()` extracts `.example.com` from URLs, restores with `Domain=` attribute so all subdomains see session cookies (2026-04-06)
+- [x] Android: async cookie race fix — `removeAllCookies` callback ensures clear completes before restore begins (2026-04-06)
+- [x] Android: Snapchat URL fixed — `www.snapchat.com/web/` (direct) instead of `web.snapchat.com` (301 redirect that lost cookies) (2026-04-06)
+- [x] Android: Snapchat cookie domains — `www.snapchat.com` + `accounts.snapchat.com` added to COOKIE_URLS (2026-04-06)
+- [x] Android: cookie consent auto-accept rewrite — auth-cookie detection (`isLoggedIn`), universal element scan (button/div/span/a), iframe support, Quantcast selector fix, 30s observer timeout (2026-04-06)
 - [ ] 🟡 Header search/filters hidden on mobile — add mobile-accessible alternative
 - [ ] 🟡 Android: verify edge-to-edge status bar color inversion (light icons on dark home screen)
 - [ ] 🟡 Android: test cookie isolation across profile switches on device
@@ -178,6 +185,19 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [x] DNS prefetch — résolution DNS des réseaux sociaux au chargement HTML
 - [x] Vendor chunk splitting — vue/primevue séparés (app code 586KB → 163KB)
 - [x] Service Worker — precache 73 assets + runtime cache logos (web build only)
+
+### UX — Anti-popups
+
+- [ ] Script suppression pop-ups "Installer l'app" — détecter et masquer automatiquement les bannières d'installation d'app native sur tous les réseaux (Facebook, Instagram, Reddit, etc.)
+
+### UX — Onboarding
+
+- [ ] Onboarding première installation — guide pas-à-pas au premier lancement (présentation des fonctionnalités, configuration du profil, choix des réseaux)
+- [ ] Onboarding relançable depuis les paramètres — bouton "Revoir le tutoriel" dans Settings, même contenu que le premier lancement + explications complètes de toutes les fonctionnalités
+
+### UX — Auto-login
+
+- [ ] Sauvegarde identifiants par réseau social — stocker login/mot de passe chiffrés dans Convex (AES côté client, clé dérivée du master password), auto-remplir les formulaires de connexion dans les webviews. Alternative au transfert de cookies : l'utilisateur se reconnecte automatiquement sans ressaisir ses identifiants. (Légalement OK — même modèle que les gestionnaires de mots de passe, consentement explicite requis)
 
 ### Post-launch
 

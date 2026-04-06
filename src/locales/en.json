@@ -52,7 +52,7 @@
   },
   "backup": {
     "section_title": "Backup",
-    "info_text": "We would love to sync your data automatically via the cloud, but session cookies contain sensitive authentication tokens that browsers forbid transmitting to third-party servers. Encrypted password-protected export is therefore the only safe way to transfer your sessions between devices.",
+    "info_text": "Your profiles, settings, and accounts are automatically synced via the cloud — they follow you across all your devices. Only session cookies (which keep you logged into social networks) cannot be synced: browsers forbid transferring them to third-party servers. To transfer your logged-in sessions to a new device, use the encrypted export below.",
     "export_label": "Export my data",
     "export_button": "Export",
     "restore_label": "Restore a backup",

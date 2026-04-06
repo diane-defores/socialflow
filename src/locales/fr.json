@@ -52,7 +52,7 @@
   },
   "backup": {
     "section_title": "Sauvegarde",
-    "info_text": "Nous aimerions synchroniser vos données automatiquement via le cloud, mais les cookies de session contiennent des jetons d'authentification sensibles que les navigateurs interdisent de transmettre à des serveurs tiers. L'export chiffré par mot de passe est donc le seul moyen sûr de transférer vos sessions entre appareils.",
+    "info_text": "Vos profils, paramètres et comptes sont synchronisés automatiquement via le cloud — ils vous suivent sur tous vos appareils. Seuls les cookies de session (qui maintiennent vos connexions aux réseaux sociaux) ne peuvent pas être synchronisés : les navigateurs interdisent leur transfert vers des serveurs tiers. Pour transférer vos sessions connectées sur un nouvel appareil, utilisez l'export chiffré ci-dessous.",
     "export_label": "Exporter mes données",
     "export_button": "Exporter",
     "restore_label": "Restaurer une sauvegarde",

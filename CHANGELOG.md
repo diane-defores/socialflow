@@ -5,12 +5,23 @@ All notable changes to SocialFlow are documented here.
 ## [Unreleased] — 2026-04-06
 
 ### Added
+- Snapchat Web support — desktop UA + full device spoofing (maxTouchPoints, screen dimensions, navigator.platform, userAgentData, matchMedia pointer/hover) bypasses Snapchat's multi-layer mobile detection
+- reCAPTCHA support in WebView — `WebChromeClient.onCreateWindow` + `setSupportMultipleWindows` + `javaScriptCanOpenWindowsAutomatically` enable reCAPTCHA verification popups that require child windows
 - Webview pooling — `hide_webview`/`show_webview` Rust IPC commands; switching networks hides the old webview off-screen instead of destroying it, preserving page state, scroll position, and cookies for instant re-show
 - Webview preloading — top 3 visible networks preloaded off-screen at app startup so even the first click is instant
 - DNS prefetch — `<link rel="dns-prefetch">` for 12 social network domains in `index.html`
 - Service Worker (web build) — `vite-plugin-pwa` precaches 73 static assets + runtime cache for Microlink logos; instant reload on repeat visits
 
+### Fixed
+- Cookie consent auto-accept rewrite — removed from `addDocumentStartJavaScript`, injected conditionally in `onPageFinished` with auth-cookie detection (`isLoggedIn` flag per network); universal element scan (button, div, span, a, p) replaces restrictive container-based search; iframe scanning for CMP-in-iframe; Quantcast CMP selector fixed (`button:first-child` instead of `button:last-child`); 30s MutationObserver auto-disconnect
+- Cookie consent now works on Pinterest, Quora (Quantcast CMP), and Reddit — previous version only found buttons inside `[class*="cookie"]` or `role="dialog"` containers
+- Stale auth cookies no longer block cookie consent — script injects on first page then checks auth, instead of checking first (expired cookies caused permanent skip)
+
 ### Changed
+- Cookie restore now sets domain-wide cookies — `baseDomainOf()` extracts `.example.com` from URLs and restores with `Domain=` attribute so API subdomains keep the session (fixes Snapchat and improves all networks)
+- Cookie clear race condition fixed — `removeAllCookies` now uses callback to ensure async clear completes before restore begins (was fire-and-forget with `null` callback)
+- Snapchat URL changed from `web.snapchat.com` (301 redirect) to `www.snapchat.com/web/` (direct) — prevents cookie domain mismatch after redirect
+- Snapchat cookie domains added — `www.snapchat.com` + `accounts.snapchat.com` in COOKIE_URLS for complete session persistence
 - Convex client upgraded from `ConvexHttpClient` (REST polling every 30s) to `ConvexClient` (WebSocket real-time subscriptions); auth wired globally via `initConvexAuth()` — stores no longer need per-call token setup
 - Routes lazy-loaded — all 10 network views use dynamic `() => import()` instead of static imports; enables Vite code splitting
 - PrimeVue tree-shaking — 15 global `app.component()` registrations replaced by `PrimeVueResolver` auto-import; components loaded on demand
