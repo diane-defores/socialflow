@@ -342,6 +342,44 @@ private val DISMISS_APP_BANNERS_SCRIPT = """
 })();
 """.trimIndent()
 
+// Lightweight cookie-accept script injected via addDocumentStartJavaScript into ALL frames.
+// Only runs inside iframes (skips main frame) — handles cross-origin CMP dialogs
+// like Google Funding Choices (Quora) that render consent UI in an iframe.
+private val COOKIE_IFRAME_SCRIPT = """
+(function() {
+  'use strict';
+  if (window === window.top) return;
+  if (window.__sfzCookieIframe) return;
+  window.__sfzCookieIframe = true;
+
+  var RE = /^(accept( all( cookies?)?)?|i accept|allow( all( cookies?)?)?|i agree|agree|tout accepter|accepter( tout(es)?)?|autoriser( tous?( les cookies?)?)?|j'accepte|confirm all)$/i;
+
+  function tryClick() {
+    var els = document.querySelectorAll('button, div, span, a, p, [role="button"]');
+    for (var i = 0; i < els.length; i++) {
+      var label = (els[i].textContent || els[i].getAttribute('aria-label') || '').trim();
+      if (RE.test(label)) {
+        var r = els[i].getBoundingClientRect();
+        if (r.width === 0 && r.height === 0 && !els[i].offsetParent) continue;
+        var x = r.left + r.width / 2, y = r.top + r.height / 2;
+        try {
+          var opts = {bubbles:true, cancelable:true, clientX:x, clientY:y, pointerId:1, pointerType:'touch'};
+          els[i].dispatchEvent(new PointerEvent('pointerdown', opts));
+          els[i].dispatchEvent(new PointerEvent('pointerup', opts));
+        } catch(e) {}
+        els[i].click();
+        return;
+      }
+    }
+  }
+
+  tryClick();
+  setTimeout(tryClick, 500);
+  setTimeout(tryClick, 1500);
+  setTimeout(tryClick, 4000);
+})();
+""".trimIndent()
+
 // JavaScript injected after every page load to auto-accept cookie consent dialogs.
 // Uses MutationObserver so it also catches dialogs that appear after initial load.
 private val COOKIE_ACCEPT_SCRIPT = """
@@ -383,10 +421,18 @@ private val COOKIE_ACCEPT_SCRIPT = """
   // Text patterns matched case-insensitively against button innerText / aria-label
   var ACCEPT_RE = /^(accept( all( cookies?)?)?|accept cookies on this browser|accepter( tout(es)?( les cookies?)?)?|tout accepter|tout autoriser|autoriser( tous?( les cookies?)?)?|autoriser les cookies.*|allow( all( cookies?)?)?|allow.*cookies|i agree|j'accepte|ok|got it|i accept|confirm all|agree)$/i;
 
-  function clickIfVisible(el) {
+  // Robust click: dispatch pointer events (for React/Vue onPointerDown handlers)
+  // then native click. Covers all frameworks.
+  function robustClick(el) {
     if (!el) return false;
     var r = el.getBoundingClientRect();
-    if (r.width === 0 && r.height === 0) return false;
+    if (r.width === 0 && r.height === 0 && !el.offsetParent) return false;
+    var x = r.left + r.width / 2, y = r.top + r.height / 2;
+    try {
+      var opts = {bubbles:true, cancelable:true, clientX:x, clientY:y, pointerId:1, pointerType:'touch'};
+      el.dispatchEvent(new PointerEvent('pointerdown', opts));
+      el.dispatchEvent(new PointerEvent('pointerup', opts));
+    } catch(e) {}
     el.click();
     return true;
   }
@@ -400,10 +446,10 @@ private val COOKIE_ACCEPT_SCRIPT = """
       var btns = banner.shadowRoot.querySelectorAll('button');
       for (var i = 0; i < btns.length; i++) {
         var label = (btns[i].textContent || '').trim();
-        if (ACCEPT_RE.test(label)) { btns[i].click(); return true; }
+        if (ACCEPT_RE.test(label)) { robustClick(btns[i]); return true; }
       }
       // Fallback: click the last button (typically "Allow all" / "Accept")
-      if (btns.length > 0) { btns[btns.length - 1].click(); return true; }
+      if (btns.length > 0) { robustClick(btns[btns.length - 1]); return true; }
     } catch(e) {}
     return false;
   }
@@ -416,19 +462,17 @@ private val COOKIE_ACCEPT_SCRIPT = """
     for (var i = 0; i < SELECTORS.length; i++) {
       try {
         var el = document.querySelector(SELECTORS[i]);
-        if (clickIfVisible(el)) return;
+        if (robustClick(el)) return;
       } catch(e) {}
     }
 
     // 2. Scan ALL elements — button, div, span, a, anything.
     //    ACCEPT_RE is strict (anchored ^...$) so false positives are minimal.
-    //    Skip containers with multiple children to avoid matching parent wrappers.
     function scanDoc(doc) {
       var els = doc.querySelectorAll('button, div, span, a, p, [role="button"]');
       for (var b = 0; b < els.length; b++) {
-        if (els[b].children.length > 1) continue;
         var label = (els[b].textContent || els[b].getAttribute('aria-label') || '').trim();
-        if (ACCEPT_RE.test(label) && clickIfVisible(els[b])) return true;
+        if (ACCEPT_RE.test(label) && robustClick(els[b])) return true;
       }
       return false;
     }
@@ -584,6 +628,18 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         return found
     }
 
+    // ── Debug log buffer — last 200 lines, copyable from popup menu ─────────
+    private val debugLog = mutableListOf<String>()
+    private fun dbg(msg: String) {
+        val ts = java.text.SimpleDateFormat("HH:mm:ss.SSS", java.util.Locale.US).format(java.util.Date())
+        val line = "$ts $msg"
+        Log.i(TAG, msg)
+        synchronized(debugLog) {
+            debugLog.add(line)
+            if (debugLog.size > 200) debugLog.removeAt(0)
+        }
+    }
+
     // Usage counters — persisted across app restarts via SharedPreferences
     private val prefs by lazy {
         activity.getSharedPreferences("sfz_network_usage", Context.MODE_PRIVATE)
@@ -609,18 +665,30 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
     /** Save all cookies for the current profile session key. */
     private fun saveCookiesForSession(sessionKey: String) {
+        dbg("── SAVE cookies for: $sessionKey ──")
         val cm = CookieManager.getInstance()
         val editor = cookiePrefs.edit()
+        var totalSaved = 0
         for (url in COOKIE_URLS) {
             val cookies = cm.getCookie(url)
             if (cookies != null) {
+                val names = cookies.split(";").map { it.trim().substringBefore("=") }
                 editor.putString("$sessionKey|$url", cookies)
+                // Detailed log for Snapchat domains
+                if (url.contains("snapchat")) {
+                    dbg("  SAVE $url → ${names.size} cookies: ${names.joinToString(", ")}")
+                    dbg("  RAW: ${cookies.take(300)}")
+                }
+                totalSaved += names.size
             } else {
                 editor.remove("$sessionKey|$url")
+                if (url.contains("snapchat")) {
+                    dbg("  SAVE $url → null (no cookies)")
+                }
             }
         }
         editor.apply()
-        Log.i(TAG, "Cookies saved for session: $sessionKey")
+        dbg("── SAVE done: $totalSaved total cookies saved ──")
     }
 
     /** Clear all cookies, then restore saved cookies for the target session. */
@@ -635,16 +703,21 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     }
 
     private fun restoreCookiesForSession(sessionKey: String) {
+        dbg("── RESTORE cookies for: $sessionKey ──")
         val cm = CookieManager.getInstance()
+        dbg("  removeAllCookies → starting async clear...")
         // removeAllCookies is ASYNC — restore only after it completes,
         // otherwise the pending removal can wipe freshly-restored cookies.
-        cm.removeAllCookies {
-            var restored = 0
+        cm.removeAllCookies { cleared ->
+            dbg("  removeAllCookies callback → cleared=$cleared")
+            var restoredUrls = 0
+            var restoredCookies = 0
             for (url in COOKIE_URLS) {
                 val cookies = cookiePrefs.getString("$sessionKey|$url", null) ?: continue
                 val domain = baseDomainOf(url)
+                val parts = cookies.split(";")
                 // setCookie expects one cookie at a time; the stored string may have multiple
-                for (cookie in cookies.split(";")) {
+                for (cookie in parts) {
                     val trimmed = cookie.trim()
                     if (trimmed.isNotEmpty()) {
                         // Restore as domain-wide cookie so all subdomains see it
@@ -654,12 +727,25 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                             trimmed
                         }
                         cm.setCookie(url, cookieWithDomain)
+                        restoredCookies++
                     }
                 }
-                restored++
+                // Detailed log for Snapchat domains
+                if (url.contains("snapchat")) {
+                    val names = parts.map { it.trim().substringBefore("=") }
+                    dbg("  RESTORE $url (domain=$domain) → ${names.size} cookies: ${names.joinToString(", ")}")
+                }
+                restoredUrls++
             }
             cm.flush()
-            Log.i(TAG, "Cookies restored for session: $sessionKey ($restored URLs)")
+            dbg("── RESTORE done: $restoredCookies cookies across $restoredUrls URLs ──")
+            // Verify: read back Snapchat cookies to confirm they're set
+            val snapVerify = cm.getCookie("https://www.snapchat.com")
+            val snapAccVerify = cm.getCookie("https://accounts.snapchat.com")
+            val snapNames = snapVerify?.split(";")?.map { it.trim().substringBefore("=") }
+            val snapAccNames = snapAccVerify?.split(";")?.map { it.trim().substringBefore("=") }
+            dbg("  VERIFY www.snapchat.com → ${snapNames?.size ?: 0} cookies: ${snapNames?.joinToString(", ") ?: "null"}")
+            dbg("  VERIFY accounts.snapchat.com → ${snapAccNames?.size ?: 0} cookies: ${snapAccNames?.joinToString(", ") ?: "null"}")
         }
     }
 
@@ -766,9 +852,11 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     fun openWebView(invoke: Invoke) {
         val args = invoke.parseArgs(OpenWebViewArgs::class.java)
         incrementUsage(args.networkId)
+        dbg("▶ OPEN webview: network=${args.networkId} account=${args.accountId} url=${args.url}")
 
         activity.runOnUiThread {
             if (socialWebView != null) {
+                dbg("  reuse existing webview (switch)")
                 // Save cookies for the old session before switching
                 currentAccountId?.let { saveCookiesForSession(it) }
                 // Restore cookies for the new session
@@ -1083,25 +1171,21 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                         for (i in 0 until row.childCount) {
                             val child = row.getChildAt(i)
                             child.animate().cancel()
-                            child.animate().alpha(1f).setDuration(250).start()
+                            child.animate().alpha(1f).setDuration(600).start()
                         }
                     }
                     MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                         isTouching = false
                         val row = getChildAt(0) as? LinearLayout ?: return super.dispatchTouchEvent(ev)
-                        row.postDelayed({
-                            if (!isTouching) {
-                                for (i in 0 until row.childCount) {
-                                    val child = row.getChildAt(i)
-                                    val netId = child.tag as? String
-                                    if (netId != null) {
-                                        val targetAlpha = if (netId == currentNetworkId) 1f else 0.45f
-                                        child.animate().cancel()
-                                        child.animate().alpha(targetAlpha).setDuration(400).start()
-                                    }
-                                }
+                        for (i in 0 until row.childCount) {
+                            val child = row.getChildAt(i)
+                            val netId = child.tag as? String
+                            if (netId != null) {
+                                val targetAlpha = if (netId == currentNetworkId) 1f else 0.45f
+                                child.animate().cancel()
+                                child.animate().alpha(targetAlpha).setDuration(800).start()
                             }
-                        }, 500)
+                        }
                     }
                 }
                 return super.dispatchTouchEvent(ev)
@@ -1269,6 +1353,15 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         menu.addView(buildPopupMenuItem(density, darkIcon, darkLabel) {
             dismissPopupMenu()
             dispatchToVue("sfz-toggle-dark-mode")
+        })
+
+        // 5. Copy debug logs
+        menu.addView(buildPopupMenuItem(density, "\ue957", "Copy debug logs") {  // pi-copy
+            val logText = synchronized(debugLog) { debugLog.joinToString("\n") }
+            val clipboard = activity.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+            clipboard.setPrimaryClip(android.content.ClipData.newPlainText("SFZ Debug Logs", logText))
+            dbg("Logs copied to clipboard (${debugLog.size} lines)")
+            dismissPopupMenu()
         })
 
         root.addView(menu)
@@ -1530,17 +1623,21 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             btn.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
             dismissPopupMenu()
             if (net.id != currentNetworkId) {
+                dbg("⇄ SWITCH ${currentNetworkId} → ${net.id}")
                 // Save cookies for old network, restore for new (same profile)
                 currentAccountId?.let { oldKey ->
+                    dbg("  oldKey=$oldKey")
                     saveCookiesForSession(oldKey)
                     val profilePrefix = oldKey.substringBeforeLast("-")
                     val newKey = "$profilePrefix-${net.id}"
+                    dbg("  newKey=$newKey")
                     restoreCookiesForSession(newKey)
                     currentAccountId = newKey
                 }
                 initialBackIndex = -1
                 isLoggedIn = false
                 applyUaForNetwork(net.id)
+                dbg("  loadUrl: ${net.url}")
                 socialWebView?.loadUrl(net.url)
                 currentNetworkId = net.id
                 incrementUsage(net.id)
@@ -1657,16 +1754,20 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             wrapper.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
             dismissPopupMenu()
             if (net.id != currentNetworkId) {
+                dbg("⇄ SWITCH ${currentNetworkId} → ${net.id} (threads btn)")
                 currentAccountId?.let { oldKey ->
+                    dbg("  oldKey=$oldKey")
                     saveCookiesForSession(oldKey)
                     val profilePrefix = oldKey.substringBeforeLast("-")
                     val newKey = "$profilePrefix-${net.id}"
+                    dbg("  newKey=$newKey")
                     restoreCookiesForSession(newKey)
                     currentAccountId = newKey
                 }
                 initialBackIndex = -1
                 isLoggedIn = false
                 applyUaForNetwork(net.id)
+                dbg("  loadUrl: ${net.url}")
                 socialWebView?.loadUrl(net.url)
                 currentNetworkId = net.id
                 incrementUsage(net.id)
@@ -1793,8 +1894,10 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         if (useDocStart) {
             WebViewCompat.addDocumentStartJavaScript(webView, STEALTH_SCRIPT, setOf("*"))
             WebViewCompat.addDocumentStartJavaScript(webView, DESKTOP_VIEWPORT_SCRIPT, setOf("*"))
-            // COOKIE_ACCEPT_SCRIPT is NOT injected here — it's injected conditionally
-            // in onPageFinished only for fresh sessions (needsCookieAccept flag).
+            // COOKIE_ACCEPT_SCRIPT is injected conditionally in onPageFinished (main frame).
+            // COOKIE_IFRAME_SCRIPT runs in ALL frames but skips main frame — handles
+            // cross-origin CMP iframes (Google Funding Choices, etc.).
+            WebViewCompat.addDocumentStartJavaScript(webView, COOKIE_IFRAME_SCRIPT, setOf("*"))
             WebViewCompat.addDocumentStartJavaScript(webView, DISMISS_APP_BANNERS_SCRIPT, setOf("*"))
         }
 

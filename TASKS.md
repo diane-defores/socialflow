@@ -155,6 +155,8 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [x] Android: Snapchat URL fixed — `www.snapchat.com/web/` (direct) instead of `web.snapchat.com` (301 redirect that lost cookies) (2026-04-06)
 - [x] Android: Snapchat cookie domains — `www.snapchat.com` + `accounts.snapchat.com` added to COOKIE_URLS (2026-04-06)
 - [x] Android: cookie consent auto-accept rewrite — auth-cookie detection (`isLoggedIn`), universal element scan (button/div/span/a), iframe support, Quantcast selector fix, 30s observer timeout (2026-04-06)
+- [x] Android: cookie consent robustClick — PointerEvent dispatch (pointerdown+pointerup+click) fixes React/Meta apps; cross-origin iframe script for Google FC CMP (2026-04-06)
+- [x] Android: bottom bar icon opacity fade — touch reveals all icons (600ms fade-in), release restores dimmed state (800ms fade-out), no delay (2026-04-06)
 - [ ] 🟡 Header search/filters hidden on mobile — add mobile-accessible alternative
 - [ ] 🟡 Android: verify edge-to-edge status bar color inversion (light icons on dark home screen)
 - [ ] 🟡 Android: test cookie isolation across profile switches on device
@@ -165,6 +167,7 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 
 - [ ] Convex: `npx convex dev` → paste `VITE_CONVEX_URL` into `.env`
 - [ ] Set `AUTH_SECRET` env var in Convex dashboard (for Convex Auth session signing)
+- [ ] Vérifier Sentry — intégration, remontée d'erreurs, configuration des alertes
 
 ### Performance & Cache
 

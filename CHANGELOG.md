@@ -19,9 +19,14 @@ All notable changes to SocialFlow are documented here.
 - Service Worker (web build) — `vite-plugin-pwa` precaches 73 static assets + runtime cache for Microlink logos; instant reload on repeat visits
 
 ### Fixed
-- Cookie consent auto-accept rewrite — removed from `addDocumentStartJavaScript`, injected conditionally in `onPageFinished` with auth-cookie detection (`isLoggedIn` flag per network); universal element scan (button, div, span, a, p) replaces restrictive container-based search; iframe scanning for CMP-in-iframe; Quantcast CMP selector fixed (`button:first-child` instead of `button:last-child`); 30s MutationObserver auto-disconnect
-- Cookie consent now works on Pinterest, Quora (Quantcast CMP), and Reddit — previous version only found buttons inside `[class*="cookie"]` or `role="dialog"` containers
+- Cookie consent auto-accept rewrite — auth-cookie detection (`isLoggedIn` flag per network); universal element scan (button, div, span, a, p); Quantcast CMP selector fixed; 30s MutationObserver auto-disconnect
+- Cookie consent `robustClick()` — dispatches `pointerdown`+`pointerup`+`click` with real coordinates; fixes React/Meta apps (Instagram) where `.click()` alone doesn't trigger `onPointerDown` handlers
+- Cookie consent cross-origin iframe script — `COOKIE_IFRAME_SCRIPT` injected via `addDocumentStartJavaScript` into all frames; handles Google Funding Choices CMP (Quora) rendered in cross-origin iframes
+- Cookie consent now works on Pinterest, Reddit, and Instagram — previous version only found buttons inside specific containers and used basic `.click()`
 - Stale auth cookies no longer block cookie consent — script injects on first page then checks auth, instead of checking first (expired cookies caused permanent skip)
+
+### Improved
+- Bottom bar icon opacity — smooth fade animations (600ms in, 800ms out) on touch instead of instant alpha change; removed 500ms postDelayed on release for immediate response
 
 ### Changed
 - Cookie restore now sets domain-wide cookies — `baseDomainOf()` extracts `.example.com` from URLs and restores with `Domain=` attribute so API subdomains keep the session (fixes Snapchat and improves all networks)
