@@ -354,21 +354,26 @@ private val COOKIE_IFRAME_SCRIPT = """
 
   var RE = /^(accept( all( cookies?)?)?|i accept|allow( all( cookies?)?)?|i agree|agree|tout accepter|accepter( tout(es)?)?|autoriser( tous?( les cookies?)?)?|j'accepte|confirm all)$/i;
 
+  function clickEl(el) {
+    var r = el.getBoundingClientRect();
+    if (r.width === 0 && r.height === 0 && !el.offsetParent) return false;
+    var x = r.left + r.width / 2, y = r.top + r.height / 2;
+    try {
+      var opts = {bubbles:true, cancelable:true, clientX:x, clientY:y, pointerId:1, pointerType:'touch'};
+      el.dispatchEvent(new PointerEvent('pointerdown', opts));
+      el.dispatchEvent(new PointerEvent('pointerup', opts));
+    } catch(e) {}
+    el.click();
+    return true;
+  }
   function tryClick() {
-    var els = document.querySelectorAll('button, div, span, a, p, [role="button"]');
-    for (var i = 0; i < els.length; i++) {
-      var label = (els[i].textContent || els[i].getAttribute('aria-label') || '').trim();
-      if (RE.test(label)) {
-        var r = els[i].getBoundingClientRect();
-        if (r.width === 0 && r.height === 0 && !els[i].offsetParent) continue;
-        var x = r.left + r.width / 2, y = r.top + r.height / 2;
-        try {
-          var opts = {bubbles:true, cancelable:true, clientX:x, clientY:y, pointerId:1, pointerType:'touch'};
-          els[i].dispatchEvent(new PointerEvent('pointerdown', opts));
-          els[i].dispatchEvent(new PointerEvent('pointerup', opts));
-        } catch(e) {}
-        els[i].click();
-        return;
+    // Buttons first, then divs/spans as fallback
+    var selectors = ['button, a, [role="button"]', 'div, span, p'];
+    for (var s = 0; s < selectors.length; s++) {
+      var els = document.querySelectorAll(selectors[s]);
+      for (var i = 0; i < els.length; i++) {
+        var label = (els[i].textContent || els[i].getAttribute('aria-label') || '').trim();
+        if (RE.test(label) && clickEl(els[i])) return;
       }
     }
   }
@@ -376,8 +381,8 @@ private val COOKIE_IFRAME_SCRIPT = """
   var attempts = 0;
   var interval = setInterval(function() {
     tryClick();
-    if (++attempts >= 50) clearInterval(interval);
-  }, 100);
+    if (++attempts >= 100) clearInterval(interval);
+  }, 50);
   tryClick();
 })();
 """.trimIndent()
@@ -479,14 +484,24 @@ private val COOKIE_ACCEPT_SCRIPT = """
       } catch(e) {}
     }
 
-    // 2. Scan ALL elements — button, div, span, a, anything.
-    //    ACCEPT_RE is strict (anchored ^...$) so false positives are minimal.
+    // 2. Scan elements in two passes: interactive first (button/a), then any element.
+    //    This prevents clicking a parent <div> when the real <button> is inside it.
     function scanDoc(doc) {
-      var els = doc.querySelectorAll('button, div, span, a, p, [role="button"]');
+      // Pass 1: buttons and links only (the actual clickable elements)
+      var btns = doc.querySelectorAll('button, a, [role="button"]');
+      for (var b = 0; b < btns.length; b++) {
+        var label = (btns[b].textContent || btns[b].getAttribute('aria-label') || '').trim();
+        if (ACCEPT_RE.test(label) && robustClick(btns[b])) {
+          L('CLICKED via btn scan: <' + btns[b].tagName + '> "' + label + '"');
+          return true;
+        }
+      }
+      // Pass 2: any element (div, span, p) — fallback for non-standard CMPs
+      var els = doc.querySelectorAll('div, span, p');
       for (var b = 0; b < els.length; b++) {
         var label = (els[b].textContent || els[b].getAttribute('aria-label') || '').trim();
         if (ACCEPT_RE.test(label) && robustClick(els[b])) {
-          L('CLICKED via text scan: <' + els[b].tagName + '> "' + label + '"');
+          L('CLICKED via div scan: <' + els[b].tagName + '> "' + label + '"');
           return true;
         }
       }
@@ -505,13 +520,13 @@ private val COOKIE_ACCEPT_SCRIPT = """
     return false;
   }
 
-  // Retry every 100ms for 5 seconds, then stop.
+  // Retry every 50ms for 5 seconds, then stop.
   var clicked = false;
   var attempts = 0;
   var interval = setInterval(function() {
     if (!clicked) clicked = tryAccept();
-    if (clicked || ++attempts >= 50) clearInterval(interval);
-  }, 100);
+    if (clicked || ++attempts >= 100) clearInterval(interval);
+  }, 50);
   clicked = tryAccept();
 
   // After 6s, expose diagnostic log for Kotlin to retrieve
@@ -570,7 +585,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         "threads"   to listOf("sessionid", "ds_user_id"),
         "discord"   to listOf("__dcfduid", "__sdcfduid"),
         "snapchat"  to listOf("sc-a-session"),
-        "quora"     to listOf("m-b"),
+        "quora"     to listOf("m-login"),  // m-b is set for all visitors, m-login only after auth
         "whatsapp"  to listOf("wa_lang_pref"),  // minimal signal — WhatsApp Web is auth-gated
         "telegram"  to listOf("stel_ssid"),
         "nextdoor"  to listOf("ndsid"),
