@@ -67,28 +67,23 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [ ] macOS `.dmg` + code signing — future
 - [ ] Windows `.exe` / `.msi` — future
 
-## Phase 6 — Clerk Auth + Convex Persistence ✅ (2026-02-27)
+## Phase 6 — Auth + Convex Persistence ✅ (migrated to Convex Auth 2026-04-06)
 
-- [x] `pnpm add convex @clerk/vue svix`
-- [x] `convex/schema.ts` — `users`, `socialAccounts`, `activeAccounts`, `settings`, `subscriptions` tables
-- [x] `convex/auth.config.ts` — Clerk JWT issuer domain
-- [x] `convex/http.ts` — `POST /clerk-webhook` with svix signature verification
-- [x] `convex/users.ts` — `upsertFromClerk` (internal), `deleteFromClerk` (internal), `getMe` (query)
-- [x] `convex/socialAccounts.ts` — `list`, `upsert`, `remove`, `setActive`, `listActive`
-- [x] `convex/settings.ts` — `get`, `upsert`
-- [x] `convex/_generated/` — stubs (`api`, `server`, `dataModel`) for TS; replaced by `npx convex dev`
-- [x] `src/lib/convex.ts` — `ConvexHttpClient` singleton (`VITE_CONVEX_URL`)
-- [x] `src/composables/useConvex.ts` — `useConvexQuery` / `useConvexMutation` (Clerk JWT → Convex)
-- [x] `src/composables/useAuth.ts` — thin re-export of `useAuth`, `useUser` from `@clerk/vue`
-- [x] `main.ts` — `clerkPlugin` with `VITE_CLERK_PUBLISHABLE_KEY`
-- [x] `views/LoginView.vue` — replaced username/password mock form with Clerk `<SignIn />`
-- [x] `router/guards.ts` — replaced hardcoded dev bypass with real `useAuth()` from Clerk
-- [x] `stores/accounts.ts` — offline-first: `loadFromCloud()` merges Convex → local on sign-in; `syncToCloud()` fires on mutations
-- [x] `stores/theme.ts` — `syncThemeToCloud()` on every toggle
-- [x] `App.vue` — `watch(isSignedIn, loadFromCloud)` + fire on startup if already signed in
-- [x] Deleted `src/stores/auth.ts` + `src/ui/.../stores/auth.ts` (mock JWT dead code)
-- [x] `.env` placeholder file (gitignored)
-- [x] `pnpm tauri:build` ✅ (288 modules, 0 errors) + `cargo check` ✅
+- [x] Clerk removed — `@clerk/vue` + `svix` uninstalled, all imports stripped
+- [x] Convex Auth installed — `@convex-dev/auth` + `@auth/core`, Anonymous + Password providers
+- [x] `convex/auth.ts` — `convexAuth({ providers: [Anonymous, Password] })`
+- [x] `convex/schema.ts` — `authTables` added, `clerkId` removed from users
+- [x] `convex/http.ts` — Convex Auth HTTP routes (replaces Clerk webhook)
+- [x] `convex/users.ts` — `getMe` uses `auth.getUserId()`, `hasEmail` query added
+- [x] `convex/socialAccounts.ts` + `convex/settings.ts` — `getAuthUser` uses Convex Auth
+- [x] `src/lib/convexAuth.ts` — Vue auth client (JWT/refresh token management, signIn/signOut)
+- [x] `src/composables/useAuth.ts` — wraps Convex Auth (replaces Clerk re-exports)
+- [x] `main.ts` — `setupConvexAuth()` before mount (replaces `clerkPlugin`)
+- [x] `router/index.ts` — `createWebHashHistory()` for Tauri Android compatibility
+- [x] `views/LoginView.vue` — "Get started" (anonymous) + email/password form (replaces Clerk `<SignIn>`)
+- [x] `router/guards.ts` — uses `isAuthenticated` from Convex Auth
+- [x] Signup nudge — `useSignupNudge` composable + `SignupNudge.vue` (5 nudges, 10-day cooldown)
+- [x] Account section in Settings drawer — signup form or email display + sign out
 
 ### Audit: Design (2026-03-07, score B+)
 
@@ -166,13 +161,10 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [ ] 🟡 Android: test friends filter end-to-end on device
 - [ ] 🟡 Desktop sidebar: custom links not yet tested visually
 
-### To go live (⛔ blocked — needs accounts)
+### To go live
 
-- [ ] Clerk: create app → paste `VITE_CLERK_PUBLISHABLE_KEY` into `.env`
 - [ ] Convex: `npx convex dev` → paste `VITE_CONVEX_URL` into `.env`
-- [ ] Convex dashboard: set `CLERK_WEBHOOK_SECRET` + `CLERK_JWT_ISSUER_DOMAIN` env vars
-- [ ] Clerk dashboard: add JWT template `"convex"` with Convex issuer URL
-- [ ] Clerk dashboard: add webhook → `https://your-deployment.convex.site/clerk-webhook`
+- [ ] Set `AUTH_SECRET` env var in Convex dashboard (for Convex Auth session signing)
 
 ### Performance & Cache
 
@@ -219,8 +211,8 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 |---------|-----------|-------|
 | Social media embed | `<iframe>` (blocked by CSP) | Native `Webview` (OS-level, bypasses headers) |
 | Storage | `chrome.storage` | `localStorage` (already used in app) |
-| Auth | Supabase + localStorage | Same — no change needed |
-| Routing | `createWebHistory` | Same — Tauri-compatible |
+| Auth | Convex Auth (Anonymous + Password) | Same — JWT via ConvexClient |
+| Routing | `createWebHashHistory` | Hash routing — Tauri Android compatible |
 | Pinia persistence | `pinia-plugin-persistedstate` | Same — uses localStorage backend |
 
 - Gmail API integration works today → keep as-is

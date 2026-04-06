@@ -18,6 +18,13 @@
         </AppRightSidebar>
       </AppSidebar>
     </template>
+
+    <!-- Desktop signup nudge (Dialog mode) -->
+    <SignupNudge
+      v-model="nudgeVisible"
+      @dismiss="nudge.dismiss()"
+      @account-created="nudge.onAccountCreated()"
+    />
   </div>
 </template>
 
@@ -29,14 +36,20 @@ import { useWebviewStore } from '@/stores/webviewState'
 import { useProfilesStore } from '@/stores/profiles'
 import { useFriendsFilter } from './composables/useFriendsFilter'
 import { preloadWebviews } from './composables/useWebviewPreload'
+import { useSignupNudge } from '@/composables/useSignupNudge'
 import AppHeader from './components/AppHeader.vue'
 import AppSidebar from './components/AppSidebar.vue'
 import AppRightSidebar from './components/AppRightSidebar.vue'
 import NetworkWebviewHost from './components/NetworkWebviewHost.vue'
 import MobileLayout from './components/MobileLayout.vue'
+import SignupNudge from './components/SignupNudge.vue'
 
 const sidebarVisible = ref(true)
 const rightSidebarVisible = ref(true)
+
+// Signup nudge (desktop only — mobile has its own in MobileLayout)
+const nudge = useSignupNudge()
+const nudgeVisible = ref(false)
 
 const { locale } = useI18n()
 
@@ -96,6 +109,15 @@ onMounted(async () => {
 
   // Preload top networks off-screen so first click is instant (non-blocking)
   preloadWebviews()
+
+  // Signup nudge (desktop only — mobile uses MobileLayout's own nudge)
+  if (!isMobile.value) {
+    nudge.recordFirstLaunch()
+    await nudge.check()
+    if (nudge.showNudge.value) {
+      nudgeVisible.value = true
+    }
+  }
 
   window.addEventListener('resize', handleResize)
 

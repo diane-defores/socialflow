@@ -43,6 +43,7 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterLinkUp: typeof import('./../../../../../components/RouterLinkUp.vue')['default']
     RouterView: typeof import('vue-router')['RouterView']
+    SignupNudge: typeof import('./../components/SignupNudge.vue')['default']
     SnapchatIcon: typeof import('./../components/icons/SnapchatIcon.vue')['default']
     SnapchatView: typeof import('./../components/networks/SnapchatView.vue')['default']
     SocialAvatar: typeof import('./../components/feed/SocialAvatar.vue')['default']

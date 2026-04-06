@@ -264,6 +264,13 @@
     </Transition>
   </Teleport>
 
+  <!-- ─── Signup nudge (once/day, max 5, then 30-day pause) ─── -->
+  <SignupNudge
+    v-model="nudgeVisible"
+    @dismiss="nudge.dismiss()"
+    @account-created="nudge.onAccountCreated()"
+  />
+
   <!-- ─── Settings bottom sheet ─── -->
   <Teleport to="body">
     <Transition name="sheet">
@@ -278,8 +285,8 @@
           </div>
 
           <div class="settings-content">
-            <!-- User info section -->
-            <p class="settings-section-label">Compte</p>
+            <!-- Account section -->
+            <p class="settings-section-label">{{ $t('account.section_title') }}</p>
 
             <div class="settings-field">
               <label class="settings-label" for="settings-username">
@@ -295,20 +302,47 @@
               />
             </div>
 
-            <div class="settings-field">
-              <label class="settings-label" for="settings-email">
-                <i class="pi pi-envelope" />
-                {{ $t('settings.email_label') }}
-              </label>
-              <input
-                id="settings-email"
-                v-model="settingsEmail"
-                type="email"
-                class="settings-input"
-                placeholder="votre@email.com"
-                @blur="saveSettings"
-              />
-            </div>
+            <!-- Has email account: show email + sign out -->
+            <template v-if="nudge.hasEmailAccount.value">
+              <div class="settings-field">
+                <label class="settings-label">
+                  <i class="pi pi-envelope" />
+                  {{ $t('account.signed_in_as') }}
+                </label>
+                <span class="settings-email-display">{{ settingsEmail }}</span>
+              </div>
+              <button class="nudge-cta sign-out-btn" @click="handleSignOut">
+                <i class="pi pi-sign-out" />
+                {{ $t('account.sign_out') }}
+              </button>
+            </template>
+
+            <!-- No email account: signup form -->
+            <template v-else>
+              <p class="settings-account-hint">{{ $t('account.no_account_hint') }}</p>
+              <form class="settings-signup-form" @submit.prevent="handleSettingsSignup">
+                <input
+                  v-model="signupEmail"
+                  type="email"
+                  class="settings-input"
+                  :placeholder="$t('account.email_placeholder')"
+                  required
+                />
+                <input
+                  v-model="signupPassword"
+                  type="password"
+                  class="settings-input"
+                  :placeholder="$t('account.password_placeholder')"
+                  minlength="8"
+                  required
+                />
+                <small v-if="signupError" class="nudge-error">{{ signupError }}</small>
+                <button type="submit" class="nudge-cta" :disabled="signupLoading">
+                  <i v-if="signupLoading" class="pi pi-spin pi-spinner" />
+                  {{ signupLoading ? '' : $t('account.create_button') }}
+                </button>
+              </form>
+            </template>
 
             <!-- Preferences section -->
             <p class="settings-section-label">{{ $t('settings.preferences') }}</p>
@@ -373,6 +407,10 @@ import type { Profile } from '@/stores/profiles'
 import type { MenuItem } from '../types'
 import NetworkWebviewHost from './NetworkWebviewHost.vue'
 import BackupRestore from './BackupRestore.vue'
+import SignupNudge from './SignupNudge.vue'
+import { useSignupNudge } from '@/composables/useSignupNudge'
+import { signIn, signOut as convexSignOut } from '@/lib/convexAuth'
+import { useToast } from 'primevue/usetoast'
 import ThreadsIcon from './icons/ThreadsIcon.vue'
 import SnapchatIcon from './icons/SnapchatIcon.vue'
 import NextdoorIcon from './icons/NextdoorIcon.vue'
@@ -391,8 +429,15 @@ const settingsVisible = ref(false)
 
 // Listen for native popup menu "Changer de profil" event
 const openProfileSheetFromNative = () => { profileSheetVisible.value = true }
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('sfz-show-profile-sheet', openProfileSheetFromNative)
+
+  // Signup nudge: record first launch + check if we should show it
+  nudge.recordFirstLaunch()
+  await nudge.check()
+  if (nudge.showNudge.value) {
+    nudgeVisible.value = true
+  }
 })
 onUnmounted(() => {
   window.removeEventListener('sfz-show-profile-sheet', openProfileSheetFromNative)
@@ -405,6 +450,43 @@ const settingsEmail = ref(localStorage.getItem('sfz_email') ?? '')
 function saveSettings() {
   localStorage.setItem('sfz_username', settingsUsername.value.trim())
   localStorage.setItem('sfz_email', settingsEmail.value.trim())
+}
+
+// ─── Signup nudge ────────────────────────────────────────────
+const toast = useToast()
+const nudge = useSignupNudge()
+const nudgeVisible = ref(false)
+
+// Settings drawer signup form
+const signupEmail = ref('')
+const signupPassword = ref('')
+const signupError = ref('')
+const signupLoading = ref(false)
+
+async function handleSettingsSignup() {
+  signupError.value = ''
+  signupLoading.value = true
+  try {
+    await signIn('password', {
+      email: signupEmail.value,
+      password: signupPassword.value,
+      flow: 'signUp',
+    })
+    settingsEmail.value = signupEmail.value
+    localStorage.setItem('sfz_email', signupEmail.value)
+    nudge.onAccountCreated()
+    toast.add({ severity: 'success', summary: t('account.created_toast'), life: 3000 })
+  } catch (e: any) {
+    signupError.value = e?.message ?? t('account.error_generic')
+  } finally {
+    signupLoading.value = false
+  }
+}
+
+async function handleSignOut() {
+  await convexSignOut()
+  settingsEmail.value = ''
+  localStorage.removeItem('sfz_email')
 }
 
 // ─── Rename state ─────────────────────────────────────────────

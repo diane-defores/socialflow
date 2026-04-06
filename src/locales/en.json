@@ -193,5 +193,22 @@
   },
   "google": {
     "connect_button": "Sign in with Google"
+  },
+  "nudge": {
+    "title": "Secure your data",
+    "promo_text": "Create your account now and get 1 free month of SocialFlow Pro!",
+    "cta_button": "Create my account",
+    "dismiss": "Not now"
+  },
+  "account": {
+    "section_title": "Account",
+    "email_placeholder": "your{'@'}email.com",
+    "password_placeholder": "Password (min. 8 characters)",
+    "create_button": "Create my account",
+    "created_toast": "Account created successfully!",
+    "signed_in_as": "Signed in as",
+    "sign_out": "Sign out",
+    "error_generic": "Something went wrong. Please try again.",
+    "no_account_hint": "Create an account to sync your data across all your devices."
   }
 }

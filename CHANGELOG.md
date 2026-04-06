@@ -5,6 +5,12 @@ All notable changes to SocialFlow are documented here.
 ## [Unreleased] — 2026-04-06
 
 ### Added
+- Convex Auth — replaced Clerk with `@convex-dev/auth` (Anonymous + Password providers); auto-anonymous login on first launch, optional email/password upgrade
+- Signup nudge system — soft conversion prompt, once per calendar day, max 5 then 10-day cooldown; bottom sheet on mobile, PrimeVue Dialog on desktop; promo offer text; stops permanently when account created
+- Account section in Settings drawer — email/password signup form (anonymous users) or email display + sign out (registered users)
+- `useSignupNudge` composable — localStorage-based timing logic with calendar-day checks
+- `SignupNudge.vue` component — responsive (mobile bottom sheet / desktop dialog), email+password form with toast feedback
+- `users.hasEmail` Convex query — checks authAccounts table for password provider
 - Snapchat Web support — desktop UA + full device spoofing (maxTouchPoints, screen dimensions, navigator.platform, userAgentData, matchMedia pointer/hover) bypasses Snapchat's multi-layer mobile detection
 - reCAPTCHA support in WebView — `WebChromeClient.onCreateWindow` + `setSupportMultipleWindows` + `javaScriptCanOpenWindowsAutomatically` enable reCAPTCHA verification popups that require child windows
 - Webview pooling — `hide_webview`/`show_webview` Rust IPC commands; switching networks hides the old webview off-screen instead of destroying it, preserving page state, scroll position, and cookies for instant re-show
@@ -22,7 +28,8 @@ All notable changes to SocialFlow are documented here.
 - Cookie clear race condition fixed — `removeAllCookies` now uses callback to ensure async clear completes before restore begins (was fire-and-forget with `null` callback)
 - Snapchat URL changed from `web.snapchat.com` (301 redirect) to `www.snapchat.com/web/` (direct) — prevents cookie domain mismatch after redirect
 - Snapchat cookie domains added — `www.snapchat.com` + `accounts.snapchat.com` in COOKIE_URLS for complete session persistence
-- Convex client upgraded from `ConvexHttpClient` (REST polling every 30s) to `ConvexClient` (WebSocket real-time subscriptions); auth wired globally via `initConvexAuth()` — stores no longer need per-call token setup
+- Auth migrated from Clerk to Convex Auth — removed `@clerk/vue` + `svix`, added `@convex-dev/auth` + `@auth/core`; `convex/schema.ts` uses `authTables` (no more `clerkId`); `convex/http.ts` uses Convex Auth routes (no more Clerk webhook); Vue router uses hash history (`createWebHashHistory`) for Tauri Android compatibility
+- Convex client upgraded from `ConvexHttpClient` (REST polling every 30s) to `ConvexClient` (WebSocket real-time subscriptions); auth wired globally via `setupConvexAuth()` — stores no longer need per-call token setup
 - Routes lazy-loaded — all 10 network views use dynamic `() => import()` instead of static imports; enables Vite code splitting
 - PrimeVue tree-shaking — 15 global `app.component()` registrations replaced by `PrimeVueResolver` auto-import; components loaded on demand
 - Vendor chunk splitting — `manualChunks` separates vue/pinia (107KB) and primevue (373KB) into stable cached chunks; app code reduced from 764KB → 163KB

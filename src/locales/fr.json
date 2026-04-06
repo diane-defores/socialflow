@@ -193,5 +193,22 @@
   },
   "google": {
     "connect_button": "Se connecter avec Google"
+  },
+  "nudge": {
+    "title": "Sécurisez vos données",
+    "promo_text": "Créez votre compte maintenant et obtenez 1 mois offert sur SocialFlow Pro !",
+    "cta_button": "Créer mon compte",
+    "dismiss": "Pas maintenant"
+  },
+  "account": {
+    "section_title": "Compte",
+    "email_placeholder": "votre{'@'}email.com",
+    "password_placeholder": "Mot de passe (min. 8 caractères)",
+    "create_button": "Créer mon compte",
+    "created_toast": "Compte créé avec succès !",
+    "signed_in_as": "Connecté en tant que",
+    "sign_out": "Se déconnecter",
+    "error_generic": "Une erreur est survenue. Réessayez.",
+    "no_account_hint": "Créez un compte pour synchroniser vos données sur tous vos appareils."
   }
 }
