@@ -373,10 +373,12 @@ private val COOKIE_IFRAME_SCRIPT = """
     }
   }
 
+  var attempts = 0;
+  var interval = setInterval(function() {
+    tryClick();
+    if (++attempts >= 50) clearInterval(interval);
+  }, 100);
   tryClick();
-  setTimeout(tryClick, 500);
-  setTimeout(tryClick, 1500);
-  setTimeout(tryClick, 4000);
 })();
 """.trimIndent()
 
@@ -488,22 +490,13 @@ private val COOKIE_ACCEPT_SCRIPT = """
     }
   }
 
-  // Run immediately, then after common CMP lazy-load delays
-  tryAccept();
-  setTimeout(tryAccept, 800);
-  setTimeout(tryAccept, 2500);
-  setTimeout(tryAccept, 5000);
-
-  // Watch for dialogs injected into the DOM after initial load
-  var observer = new MutationObserver(function(mutations) {
-    for (var i = 0; i < mutations.length; i++) {
-      if (mutations[i].addedNodes.length) { setTimeout(tryAccept, 300); break; }
-    }
-  });
-  observer.observe(document.documentElement, { childList: true, subtree: true });
-
-  // Auto-disconnect after 30s — consent dialogs appear quickly on fresh sessions
-  setTimeout(function() { observer.disconnect(); }, 30000);
+  // Retry every 100ms for 5 seconds, then stop.
+  var attempts = 0;
+  var interval = setInterval(function() {
+    tryAccept();
+    if (++attempts >= 50) clearInterval(interval); // 50 × 100ms = 5s
+  }, 100);
+  tryAccept(); // also run immediately
 })();
 """.trimIndent()
 
