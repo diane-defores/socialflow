@@ -13,6 +13,9 @@ All notable changes to SocialFlow are documented here.
 - `users.hasEmail` Convex query — checks authAccounts table for password provider
 - Snapchat Web support — desktop UA + full device spoofing (maxTouchPoints, screen dimensions, navigator.platform, userAgentData, matchMedia pointer/hover) bypasses Snapchat's multi-layer mobile detection
 - reCAPTCHA support in WebView — `WebChromeClient.onCreateWindow` + `setSupportMultipleWindows` + `javaScriptCanOpenWindowsAutomatically` enable reCAPTCHA verification popups that require child windows
+- Haptic feedback setting — toggle in Settings drawer, persisted to localStorage, synced to Kotlin via `setHaptic` IPC; all `performHapticFeedback` calls gated by preference
+- Tap sound setting — toggle in Settings drawer (UI ready, sound playback to be wired)
+- Dashboard official SVG icons — `MessengerIcon.vue` and `QuoraIcon.vue` replace generic PrimeIcons (`pi-comments`, `pi-question-circle`) with Simple Icons logos
 - Webview pooling — `hide_webview`/`show_webview` Rust IPC commands; switching networks hides the old webview off-screen instead of destroying it, preserving page state, scroll position, and cookies for instant re-show
 - Webview preloading — top 3 visible networks preloaded off-screen at app startup so even the first click is instant
 - DNS prefetch — `<link rel="dns-prefetch">` for 12 social network domains in `index.html`
@@ -24,6 +27,10 @@ All notable changes to SocialFlow are documented here.
 - Cookie consent cross-origin iframe script — `COOKIE_IFRAME_SCRIPT` injected via `addDocumentStartJavaScript` into all frames; handles Google Funding Choices CMP (Quora) rendered in cross-origin iframes
 - Cookie consent now works on Pinterest, Reddit, and Instagram — previous version only found buttons inside specific containers and used basic `.click()`
 - Stale auth cookies no longer block cookie consent — script injects on first page then checks auth, instead of checking first (expired cookies caused permanent skip)
+- `__Host-` cookie restore — cookies with `__Host-` prefix now restored without `Domain=` attribute (RFC 6265bis spec); fixes Snapchat `__Host-sc-a-auth-session` silently rejected by CookieManager
+- Persistent mute — `applyMuteToWebView` now uses MutationObserver to catch dynamically created `<video>`/`<audio>` + overrides `AudioContext` to silence Web Audio API; previously only muted elements present at call time
+- Kotlin mute label — "Son activé" → "Activer le son" (action label when sound is muted)
+- Settings drawer account section — styled signup form with gradient CTA, red sign-out button, proper spacing (was unstyled raw HTML)
 
 ### Improved
 - Bottom bar icon opacity — smooth fade animations (600ms in, 800ms out) on touch instead of instant alpha change; removed 500ms postDelayed on release for immediate response

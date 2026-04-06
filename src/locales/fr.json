@@ -44,7 +44,9 @@
     "username_label": "Nom d'utilisateur",
     "email_label": "E-mail",
     "preferences": "Préférences",
-    "language": "Langue"
+    "language": "Langue",
+    "haptic_feedback": "Vibrations",
+    "tap_sound": "Son des boutons"
   },
   "theme": {
     "dark_mode": "Mode sombre",

@@ -92,6 +92,8 @@
             <ThreadsIcon v-if="item.route === '/threads'" size="1.35rem" color="#fff" />
             <SnapchatIcon v-else-if="item.route === '/snapchat'" size="1.35rem" color="#fff" />
             <NextdoorIcon v-else-if="item.route === '/nextdoor'" size="1.35rem" color="#fff" />
+            <MessengerIcon v-else-if="item.route === '/messenger'" size="1.35rem" color="#fff" />
+            <QuoraIcon v-else-if="item.route === '/quora'" size="1.35rem" color="#fff" />
             <i v-else :class="item.icon" />
           </span>
           <span class="network-name">{{ item.label }}</span>
@@ -230,6 +232,8 @@
                 <ThreadsIcon v-if="nw.id === 'threads'" size="0.9rem" class="clear-cookie-icon" />
                 <SnapchatIcon v-else-if="nw.id === 'snapchat'" size="0.9rem" class="clear-cookie-icon" />
                 <NextdoorIcon v-else-if="nw.id === 'nextdoor'" size="0.9rem" class="clear-cookie-icon" />
+                <MessengerIcon v-else-if="nw.id === 'messenger'" size="0.9rem" class="clear-cookie-icon" />
+                <QuoraIcon v-else-if="nw.id === 'quora'" size="0.9rem" class="clear-cookie-icon" />
                 <i v-else :class="nw.icon" class="clear-cookie-icon" />
                 <span class="clear-cookie-label">{{ nw.label }}</span>
                 <span v-if="clearedNetworks[`${clearCookiesProfileId}:${nw.id}`]" class="clear-cookie-done">
@@ -375,6 +379,34 @@
               </button>
             </div>
 
+            <div class="settings-toggle-row">
+              <span class="settings-toggle-label">
+                <i class="pi pi-mobile" />
+                {{ $t('settings.haptic_feedback') }}
+              </span>
+              <button
+                class="friends-toggle-pill"
+                :class="{ enabled: hapticEnabled }"
+                @click="toggleHaptic"
+              >
+                <span class="toggle-thumb" />
+              </button>
+            </div>
+
+            <div class="settings-toggle-row">
+              <span class="settings-toggle-label">
+                <i class="pi pi-volume-up" />
+                {{ $t('settings.tap_sound') }}
+              </span>
+              <button
+                class="friends-toggle-pill"
+                :class="{ enabled: tapSoundEnabled }"
+                @click="toggleTapSound"
+              >
+                <span class="toggle-thumb" />
+              </button>
+            </div>
+
             <!-- Backup / Restore -->
             <p class="settings-section-label">{{ $t('backup.section_title') }}</p>
             <BackupRestore />
@@ -414,6 +446,8 @@ import { useToast } from 'primevue/usetoast'
 import ThreadsIcon from './icons/ThreadsIcon.vue'
 import SnapchatIcon from './icons/SnapchatIcon.vue'
 import NextdoorIcon from './icons/NextdoorIcon.vue'
+import MessengerIcon from './icons/MessengerIcon.vue'
+import QuoraIcon from './icons/QuoraIcon.vue'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -636,6 +670,24 @@ function handleEditClick(item: MenuItem) {
 // ─── Friends filter ───────────────────────────────────────────
 const friendsFilterEnabled = computed(() => filterStore.enabled)
 const toggleFriendsFilter = () => filterStore.toggle()
+
+// ─── Haptic & tap sound settings ─────────────────────────────
+const hapticEnabled = ref(localStorage.getItem('sfz_haptic') !== 'false')
+const tapSoundEnabled = ref(localStorage.getItem('sfz_tap_sound') === 'true')
+
+function toggleHaptic() {
+  hapticEnabled.value = !hapticEnabled.value
+  localStorage.setItem('sfz_haptic', String(hapticEnabled.value))
+  // Sync to Kotlin bottom bar
+  import('@tauri-apps/api/core').then(({ invoke }) => {
+    invoke('plugin:android-webview|set_haptic', { enabled: hapticEnabled.value }).catch(() => {})
+  }).catch(() => {})
+}
+
+function toggleTapSound() {
+  tapSoundEnabled.value = !tapSoundEnabled.value
+  localStorage.setItem('sfz_tap_sound', String(tapSoundEnabled.value))
+}
 
 // ─── Network list ─────────────────────────────────────────────
 const menuItems = ref<MenuItem[]>([
@@ -1410,6 +1462,59 @@ function handleAvatarChange(event: Event) {
 
 .settings-input:focus {
   border-color: var(--primary-color);
+}
+
+.settings-account-hint {
+  font-size: 0.82rem;
+  color: var(--text-color-secondary);
+  line-height: 1.45;
+  margin: 0 0 0.75rem;
+}
+
+.settings-signup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.settings-signup-form .nudge-cta,
+.sign-out-btn {
+  width: 100%;
+  padding: 0.7rem;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--primary-color), #7c3aed);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.settings-signup-form .nudge-cta:disabled {
+  opacity: 0.6;
+}
+
+.sign-out-btn {
+  background: transparent;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+  margin-top: 0.5rem;
+}
+
+.nudge-error {
+  color: #ef4444;
+  font-size: 0.8rem;
+}
+
+.settings-email-display {
+  font-size: 0.85rem;
+  color: var(--text-color);
+  font-weight: 500;
 }
 
 .settings-toggle-row {

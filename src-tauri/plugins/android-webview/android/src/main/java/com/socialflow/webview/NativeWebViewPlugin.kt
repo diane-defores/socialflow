@@ -94,7 +94,7 @@ private object Strings {
     private val translations = mapOf(
         // Popup menu
         "profiles" to mapOf("fr" to "Profils", "en" to "Profiles"),
-        "mute_on" to mapOf("fr" to "Son activé", "en" to "Sound on"),
+        "mute_on" to mapOf("fr" to "Activer le son", "en" to "Sound on"),
         "mute_off" to mapOf("fr" to "Couper le son", "en" to "Mute"),
         "grayscale_on" to mapOf("fr" to "Désactiver niveaux de gris", "en" to "Disable grayscale"),
         "grayscale_off" to mapOf("fr" to "Niveaux de gris", "en" to "Grayscale"),
@@ -560,6 +560,13 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
     // Grayscale state — survives network switches within a session
     private var isGrayscale = false
+
+    // Haptic feedback — controlled from Vue settings, defaults to on
+    private var hapticEnabled = true
+
+    private fun haptic(view: View, type: Int = HapticFeedbackConstants.KEYBOARD_TAP) {
+        if (hapticEnabled) view.performHapticFeedback(type)
+    }
     private var bottomBarView: LinearLayout? = null
 
     // Dark mode state — synced from Vue settings toggle
@@ -1068,6 +1075,15 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         invoke.resolve(JSObject())
     }
 
+    // ── Set haptic feedback preference ────────────────────────────────────────
+
+    @Command
+    fun setHaptic(invoke: Invoke) {
+        val args = invoke.parseArgs(GrayscaleArgs::class.java) // reuse — same shape { enabled: bool }
+        hapticEnabled = args.enabled
+        invoke.resolve(JSObject())
+    }
+
     /** Update which networks appear in the bottom bar (synced from per-profile visibility). */
     @Command
     fun setBarNetworks(invoke: Invoke) {
@@ -1278,13 +1294,13 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
         // Single tap → show/hide popup menu
         btn.setOnClickListener {
-            btn.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+            haptic(btn)
             togglePopupMenu(density)
         }
 
         // Long press → go home (dashboard)
         btn.setOnLongClickListener {
-            btn.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+            haptic(btn, HapticFeedbackConstants.LONG_PRESS)
             dismissPopupMenu()
             goHome()
             true
@@ -1471,7 +1487,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         row.addView(text)
 
         row.setOnClickListener {
-            it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+            haptic(it)
             onClick()
         }
 
@@ -1589,7 +1605,50 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     }
 
     private fun applyMuteToWebView(webView: WebView?) {
-        val js = "document.querySelectorAll('video,audio').forEach(function(el){el.muted=${isMuted};});"
+        val js = """
+        (function(){
+          var muted = $isMuted;
+          // Mute all existing media
+          document.querySelectorAll('video,audio').forEach(function(el){ el.muted = muted; });
+          // Persistent: watch for new media elements via MutationObserver
+          if (muted && !window.__sfzMuteObserver) {
+            window.__sfzMuteObserver = new MutationObserver(function(mutations) {
+              for (var i = 0; i < mutations.length; i++) {
+                var nodes = mutations[i].addedNodes;
+                for (var j = 0; j < nodes.length; j++) {
+                  var n = nodes[j];
+                  if (n.tagName === 'VIDEO' || n.tagName === 'AUDIO') n.muted = true;
+                  if (n.querySelectorAll) n.querySelectorAll('video,audio').forEach(function(el){ el.muted = true; });
+                }
+              }
+            });
+            window.__sfzMuteObserver.observe(document.documentElement, { childList: true, subtree: true });
+            // Override AudioContext to silence Web Audio API
+            if (!window.__sfzOrigAudioCtx) {
+              window.__sfzOrigAudioCtx = window.AudioContext;
+              window.__sfzOrigWebkitCtx = window.webkitAudioContext;
+              var SilentCtx = function() {
+                var ctx = new window.__sfzOrigAudioCtx();
+                ctx.suspend();
+                return ctx;
+              };
+              SilentCtx.prototype = (window.__sfzOrigAudioCtx || function(){}).prototype;
+              window.AudioContext = SilentCtx;
+              if (window.webkitAudioContext) window.webkitAudioContext = SilentCtx;
+            }
+          }
+          // Unmute: disconnect observer and restore AudioContext
+          if (!muted && window.__sfzMuteObserver) {
+            window.__sfzMuteObserver.disconnect();
+            delete window.__sfzMuteObserver;
+            if (window.__sfzOrigAudioCtx) {
+              window.AudioContext = window.__sfzOrigAudioCtx;
+              delete window.__sfzOrigAudioCtx;
+              if (window.__sfzOrigWebkitCtx) { window.webkitAudioContext = window.__sfzOrigWebkitCtx; delete window.__sfzOrigWebkitCtx; }
+            }
+          }
+        })();
+        """.trimIndent()
         webView?.evaluateJavascript(js, null)
     }
 
@@ -1656,7 +1715,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         btn.isClickable = true
         btn.isFocusable = true
         btn.setOnClickListener {
-            btn.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+            haptic(btn)
             dismissPopupMenu()
             if (net.id != currentNetworkId) {
                 dbg("⇄ SWITCH ${currentNetworkId} → ${net.id}")
@@ -1787,7 +1846,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         wrapper.isClickable = true
         wrapper.isFocusable = true
         wrapper.setOnClickListener {
-            wrapper.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+            haptic(wrapper)
             dismissPopupMenu()
             if (net.id != currentNetworkId) {
                 dbg("⇄ SWITCH ${currentNetworkId} → ${net.id} (threads btn)")
