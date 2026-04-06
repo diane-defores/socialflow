@@ -538,7 +538,10 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
     // Cookie consent: only inject when not logged in.
     // Detected by checking for auth cookies specific to each network.
+    // pagesSinceOpen ensures the first 3 pages always get the script
+    // (consent can appear after redirects, not just on page 1).
     private var isLoggedIn = false
+    private var pagesSinceOpen = 0
 
     // Auth cookie names per network — these cookies only exist when logged in.
     private val AUTH_COOKIES = mapOf(
@@ -863,7 +866,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                 restoreCookiesForSession(args.accountId)
                 // Reuse existing webview — just navigate and update active highlight
                 initialBackIndex = -1  // Reset baseline for new network URL
-                isLoggedIn = false  // Re-check auth on new network
+                isLoggedIn = false; pagesSinceOpen = 0  // Re-check auth on new network
                 applyUaForNetwork(args.networkId)
                 socialWebView?.loadUrl(args.url)
                 currentAccountId = args.accountId
@@ -941,7 +944,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
             // Restore cookies for this profile session before loading
             restoreCookiesForSession(args.accountId)
-            isLoggedIn = false  // Re-check auth on new network
+            isLoggedIn = false; pagesSinceOpen = 0  // Re-check auth on new network
 
             // Apply persisted mute state to the new webview via JS
             applyMuteToWebView(webView)
@@ -959,7 +962,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         val args = invoke.parseArgs(NavigateArgs::class.java)
         activity.runOnUiThread {
             initialBackIndex = -1  // Reset baseline for new network URL
-            isLoggedIn = false
+            isLoggedIn = false; pagesSinceOpen = 0
             applyUaForNetwork(args.networkId)
             socialWebView?.loadUrl(args.url)
             currentNetworkId = args.networkId
@@ -1079,7 +1082,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         }
         editor.apply()
         // Re-arm cookie consent if deleting the currently active session
-        if (currentAccountId == sessionKey) isLoggedIn = false
+        if (currentAccountId == sessionKey) { isLoggedIn = false; pagesSinceOpen = 0 }
         Log.i(TAG, "Cookies deleted for session: $sessionKey")
         invoke.resolve(JSObject())
     }
@@ -1097,7 +1100,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         }
         editor.apply()
         // Re-arm cookie consent if deleting the currently active profile
-        if (currentAccountId?.startsWith("${args.profileId}-") == true) isLoggedIn = false
+        if (currentAccountId?.startsWith("${args.profileId}-") == true) { isLoggedIn = false; pagesSinceOpen = 0 }
         Log.i(TAG, "All cookies deleted for profile: ${args.profileId}")
         invoke.resolve(JSObject())
     }
@@ -1504,7 +1507,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             editor.apply()
         }
         // Clear all in-memory cookies and reload
-        isLoggedIn = false
+        isLoggedIn = false; pagesSinceOpen = 0
         cm.removeAllCookies {
             view.post { view.loadUrl(retryUrl) }
         }
@@ -1635,7 +1638,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                     currentAccountId = newKey
                 }
                 initialBackIndex = -1
-                isLoggedIn = false
+                isLoggedIn = false; pagesSinceOpen = 0
                 applyUaForNetwork(net.id)
                 dbg("  loadUrl: ${net.url}")
                 socialWebView?.loadUrl(net.url)
@@ -1765,7 +1768,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                     currentAccountId = newKey
                 }
                 initialBackIndex = -1
-                isLoggedIn = false
+                isLoggedIn = false; pagesSinceOpen = 0
                 applyUaForNetwork(net.id)
                 dbg("  loadUrl: ${net.url}")
                 socialWebView?.loadUrl(net.url)
@@ -1821,7 +1824,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             currentAccountId = newKey
         }
         initialBackIndex = -1
-        isLoggedIn = false
+        isLoggedIn = false; pagesSinceOpen = 0
         applyUaForNetwork("messenger")
         view.loadUrl(messengerUrl)
         currentNetworkId = "messenger"
@@ -1843,7 +1846,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             currentAccountId = newKey
         }
         initialBackIndex = -1
-        isLoggedIn = false
+        isLoggedIn = false; pagesSinceOpen = 0
         applyUaForNetwork("facebook")
         view.loadUrl(facebookUrl)
         currentNetworkId = "facebook"
@@ -1979,14 +1982,15 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                     view.evaluateJavascript(STEALTH_SCRIPT, null)
                     view.evaluateJavascript(DISMISS_APP_BANNERS_SCRIPT, null)
                 }
-                // Cookie consent: inject first, then check auth.
-                // Consent dialogs appear on the first page — inject before checking,
-                // so stale auth cookies don't block injection.
+                // Cookie consent: always inject for the first 3 pages after opening
+                // a network (consent can appear after redirects). After that, check
+                // auth cookies and stop injecting once logged in.
                 if (!isLoggedIn) {
+                    pagesSinceOpen++
                     view.evaluateJavascript(COOKIE_ACCEPT_SCRIPT, null)
-                    if (checkLoggedIn()) {
+                    if (pagesSinceOpen > 3 && checkLoggedIn()) {
                         isLoggedIn = true
-                        Log.i(TAG, "Auth cookies detected for $currentNetworkId — cookie consent script disabled for next pages")
+                        Log.i(TAG, "Auth cookies detected for $currentNetworkId — cookie consent script disabled")
                     }
                 }
                 // Always re-inject desktop viewport override in onPageFinished (backup —
