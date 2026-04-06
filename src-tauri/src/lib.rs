@@ -546,9 +546,8 @@ fn delete_network_session(
 
 // ─── Backup / Restore ────────────────────────────────────────────────────────
 
-/// Create an encrypted backup blob (zip + AES-256-GCM), returned as base64.
-/// File dialog + write is handled on the JS side via @tauri-apps/plugin-fs
-/// so that content:// URIs on Android are handled transparently.
+/// Create an encrypted backup, save to disk, return the file path.
+/// On Android the Tauri FS plugin is unreliable, so Rust handles all I/O directly.
 #[tauri::command]
 fn create_backup(
     app: AppHandle,
@@ -557,19 +556,31 @@ fn create_backup(
 ) -> Result<String, String> {
     use base64::{engine::general_purpose::STANDARD, Engine as _};
 
-    let sessions_dir = app
+    let app_data = app
         .path()
         .app_data_dir()
-        .map_err(|e| e.to_string())?
-        .join("sessions");
+        .map_err(|e| e.to_string())?;
+    let sessions_dir = app_data.join("sessions");
 
     let zip_bytes = backup::create_backup_archive(&sessions_dir, &store_data)?;
     let blob = backup::encrypt_archive(&zip_bytes, &password)?;
 
+    // Save encrypted blob to disk (backups/ dir inside app data)
+    let backups_dir = app_data.join("backups");
+    std::fs::create_dir_all(&backups_dir)
+        .map_err(|e| format!("Failed to create backups dir: {e}"))?;
+
+    let filename = format!("socialflow-backup-{}.sfbak", chrono::Utc::now().timestamp_millis());
+    let file_path = backups_dir.join(&filename);
+    std::fs::write(&file_path, &blob)
+        .map_err(|e| format!("Failed to write backup file: {e}"))?;
+
+    // Also return base64 for desktop (file dialog flow)
     Ok(STANDARD.encode(&blob))
 }
 
-/// Decrypt a base64-encoded backup blob, restore session files, return store data JSON.
+/// Restore from the most recent backup on disk, or from provided base64 data.
+/// If encrypted_b64 is empty, auto-finds the latest .sfbak in the backups dir.
 #[tauri::command]
 fn restore_backup(
     app: AppHandle,
@@ -578,15 +589,30 @@ fn restore_backup(
 ) -> Result<String, String> {
     use base64::{engine::general_purpose::STANDARD, Engine as _};
 
-    let blob = STANDARD
-        .decode(&encrypted_b64)
-        .map_err(|e| format!("Invalid backup data: {e}"))?;
-
-    let sessions_dir = app
+    let app_data = app
         .path()
         .app_data_dir()
-        .map_err(|e| e.to_string())?
-        .join("sessions");
+        .map_err(|e| e.to_string())?;
+    let sessions_dir = app_data.join("sessions");
+
+    let blob = if encrypted_b64.is_empty() {
+        // Auto-find latest backup on disk
+        let backups_dir = app_data.join("backups");
+        let mut backups: Vec<_> = std::fs::read_dir(&backups_dir)
+            .map_err(|_| "Aucune sauvegarde trouvée. Exportez d'abord vos données.".to_string())?
+            .filter_map(|e| e.ok())
+            .filter(|e| e.path().extension().is_some_and(|ext| ext == "sfbak"))
+            .collect();
+        backups.sort_by(|a, b| b.file_name().cmp(&a.file_name()));
+        let latest = backups.first()
+            .ok_or_else(|| "Aucune sauvegarde trouvée. Exportez d'abord vos données.".to_string())?;
+        std::fs::read(latest.path())
+            .map_err(|e| format!("Failed to read backup file: {e}"))?
+    } else {
+        STANDARD
+            .decode(&encrypted_b64)
+            .map_err(|e| format!("Invalid backup data: {e}"))?
+    };
 
     let zip_bytes = backup::decrypt_archive(&blob, &password)?;
     let store_data = backup::extract_backup_archive(&zip_bytes, &sessions_dir)?;

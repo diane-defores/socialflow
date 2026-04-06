@@ -41,6 +41,8 @@ function collectStoreData(): string {
       'user-locale': localStorage.getItem('user-locale') ?? 'fr',
       theme: localStorage.getItem('theme') ?? 'light',
       grayscale: localStorage.getItem('grayscale') ?? '0',
+      sfz_haptic: localStorage.getItem('sfz_haptic') ?? 'true',
+      sfz_tap_sound: localStorage.getItem('sfz_tap_sound') ?? 'false',
     },
   }
   return JSON.stringify(data)
@@ -100,6 +102,10 @@ function applyStoreData(json: string) {
       localStorage.setItem('theme', data.localStorage.theme)
     if (data.localStorage.grayscale)
       localStorage.setItem('grayscale', data.localStorage.grayscale)
+    if (data.localStorage.sfz_haptic)
+      localStorage.setItem('sfz_haptic', data.localStorage.sfz_haptic)
+    if (data.localStorage.sfz_tap_sound)
+      localStorage.setItem('sfz_tap_sound', data.localStorage.sfz_tap_sound)
   }
 }
 
@@ -123,25 +129,21 @@ export function useBackup() {
     if (!isTauri) throw new Error('Export is only available in the desktop/mobile app')
 
     const { invoke } = await import('@tauri-apps/api/core')
-    const { writeFile, mkdir, BaseDirectory } = await import('@tauri-apps/plugin-fs')
-
-    // 1. Rust creates the encrypted blob, returns base64
     const storeData = collectStoreData()
+    const isAndroid = navigator.userAgent.includes('Android')
+
+    // Rust creates the encrypted blob, saves to disk (Android), and returns base64
     const b64: string = await invoke('create_backup', { storeData, password })
 
-    const isAndroid = navigator.userAgent.includes('Android')
-    const fileName = `socialflow-backup-${Date.now()}.sfbak`
-
     if (isAndroid) {
-      // Android: save directly to app data (no file picker needed)
-      await mkdir('backups', { baseDir: BaseDirectory.AppData, recursive: true })
-      const filePath = `backups/${fileName}`
-      await writeFile(filePath, b64ToBytes(b64), { baseDir: BaseDirectory.AppData })
-      return filePath
+      // Rust already saved the file — just return a friendly path
+      return 'backups/'
     }
 
     // Desktop: show native save dialog
+    const { writeFile } = await import('@tauri-apps/plugin-fs')
     const { save } = await import('@tauri-apps/plugin-dialog')
+    const fileName = `socialflow-backup-${Date.now()}.sfbak`
     const filePath = await save({
       defaultPath: fileName,
       filters: [{ name: 'SocialFlow Backup', extensions: ['sfbak'] }],
@@ -155,34 +157,25 @@ export function useBackup() {
     if (!isTauri) throw new Error('Import is only available in the desktop/mobile app')
 
     const { invoke } = await import('@tauri-apps/api/core')
-    const { readFile, readDir, BaseDirectory } = await import('@tauri-apps/plugin-fs')
-
     const isAndroid = navigator.userAgent.includes('Android')
-    let bytes: Uint8Array
+
+    let encryptedB64 = ''
 
     if (isAndroid) {
-      // Android: find the most recent backup in app data
-      let entries: Awaited<ReturnType<typeof readDir>> = []
-      try {
-        entries = await readDir('backups', { baseDir: BaseDirectory.AppData })
-      } catch {
-        // Directory doesn't exist yet — no backup has been exported
-      }
-      const backups = entries.filter(e => e.name?.endsWith('.sfbak')).sort((a, b) => (b.name ?? '').localeCompare(a.name ?? ''))
-      if (backups.length === 0) throw new Error('Aucune sauvegarde trouvée. Exportez d\'abord vos données.')
-      bytes = await readFile(`backups/${backups[0].name}`, { baseDir: BaseDirectory.AppData })
+      // Rust auto-finds the latest backup on disk when encrypted_b64 is empty
+      encryptedB64 = ''
     } else {
       // Desktop: native open dialog
+      const { readFile } = await import('@tauri-apps/plugin-fs')
       const { open } = await import('@tauri-apps/plugin-dialog')
       const filePath = await open({
         filters: [{ name: 'SocialFlow Backup', extensions: ['sfbak'] }],
       })
       if (!filePath) throw new Error('No file selected')
-      bytes = await readFile(filePath)
+      const bytes = await readFile(filePath)
+      encryptedB64 = bytesToB64(bytes)
     }
 
-    // Send base64 to Rust for decryption + session restore
-    const encryptedB64 = bytesToB64(bytes)
     const restoredData = await invoke<string>('restore_backup', {
       encryptedB64,
       password,
