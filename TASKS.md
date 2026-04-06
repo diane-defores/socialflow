@@ -194,8 +194,8 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 
 ### UX — Onboarding
 
-- [ ] Onboarding première installation — guide pas-à-pas au premier lancement (présentation des fonctionnalités, configuration du profil, choix des réseaux)
-- [ ] Onboarding relançable depuis les paramètres — bouton "Revoir le tutoriel" dans Settings, même contenu que le premier lancement + explications complètes de toutes les fonctionnalités
+- [x] Onboarding première installation — guide pas-à-pas au premier lancement (présentation des fonctionnalités, configuration du profil, choix des réseaux)
+- [x] Onboarding relançable depuis les paramètres — bouton "Revoir le tutoriel" dans Settings, même contenu que le premier lancement + explications complètes de toutes les fonctionnalités
 
 ### UX — Auto-login
 

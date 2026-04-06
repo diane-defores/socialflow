@@ -54,6 +54,19 @@
 
       <Divider />
 
+      <!-- Replay onboarding -->
+      <div class="setting-item">
+        <div class="setting-label">
+          <i class="pi pi-info-circle mr-2"></i>
+          <span>{{ $t('onboarding.replay_button') }}</span>
+        </div>
+        <button class="replay-btn" @click="replayOnboarding">
+          <i class="pi pi-refresh" />
+        </button>
+      </div>
+
+      <Divider />
+
       <!-- Backup / Restore -->
       <div class="setting-item">
         <div class="setting-label">
@@ -71,6 +84,7 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { setLocale } from '@/utils/i18n'
 import { useThemeStore } from '@/stores/theme'
+import { useOnboardingStore } from '@/stores/onboarding'
 import Dialog from 'primevue/dialog'
 import InputSwitch from 'primevue/inputswitch'
 import Divider from 'primevue/divider'
@@ -83,6 +97,7 @@ const notifications = ref(true)
 const currentLocale = ref(locale.value)
 
 const themeStore = useThemeStore()
+const onboardingStore = useOnboardingStore()
 const isDarkMode = ref(themeStore.isDarkMode)
 
 const toggleTheme = () => {
@@ -91,6 +106,11 @@ const toggleTheme = () => {
 
 function onLocaleChange() {
   setLocale(currentLocale.value)
+}
+
+function replayOnboarding() {
+  visible.value = false
+  onboardingStore.reset()
 }
 
 defineExpose({
@@ -128,6 +148,20 @@ defineExpose({
   color: var(--text-color, #333);
   font-size: 0.85rem;
   cursor: pointer;
+}
+
+.replay-btn {
+  padding: 0.4rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface-card);
+  color: var(--text-color-secondary);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.replay-btn:hover {
+  background: var(--surface-hover);
 }
 
 :global(.dark) .locale-select {

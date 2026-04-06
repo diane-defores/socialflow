@@ -18,6 +18,10 @@ All notable changes to SocialFlow are documented here.
 - Dashboard official SVG icons — `MessengerIcon.vue` and `QuoraIcon.vue` replace generic PrimeIcons (`pi-comments`, `pi-question-circle`) with Simple Icons logos
 - Webview pooling — `hide_webview`/`show_webview` Rust IPC commands; switching networks hides the old webview off-screen instead of destroying it, preserving page state, scroll position, and cookies for instant re-show
 - Webview preloading — top 3 visible networks preloaded off-screen at app startup so even the first click is instant
+- Onboarding flow — 4-step first-launch guide (welcome, profile setup with emoji picker, network selection with brand-colored chips, feature tour); fullscreen, responsive, i18n (fr + en)
+- Onboarding network customization tip — explains long-press to show/hide networks per profile in the feature tour step
+- Replay onboarding — "Revoir le tutoriel" button in Settings (desktop dialog + mobile bottom sheet); resets onboarding store to re-show flow
+- `onboarding` Pinia store — persisted `completed` boolean; gates onboarding display in `App.vue`
 - DNS prefetch — `<link rel="dns-prefetch">` for 12 social network domains in `index.html`
 - Service Worker (web build) — `vite-plugin-pwa` precaches 73 static assets + runtime cache for Microlink logos; instant reload on repeat visits
 

@@ -407,6 +407,12 @@
               </button>
             </div>
 
+            <!-- Replay onboarding -->
+            <button class="settings-replay-btn" @click="replayOnboarding">
+              <i class="pi pi-info-circle" />
+              {{ $t('onboarding.replay_button') }}
+            </button>
+
             <!-- Backup / Restore -->
             <p class="settings-section-label">{{ $t('backup.section_title') }}</p>
             <BackupRestore />
@@ -435,6 +441,7 @@ import { useProfilesStore } from '@/stores/profiles'
 import { useThemeStore } from '@/stores/theme'
 import { useFriendsFilterStore } from '@/stores/friendsFilter'
 import { useCustomLinksStore } from '@/stores/customLinks'
+import { useOnboardingStore } from '@/stores/onboarding'
 import type { Profile } from '@/stores/profiles'
 import type { MenuItem } from '../types'
 import NetworkWebviewHost from './NetworkWebviewHost.vue'
@@ -456,6 +463,7 @@ const profilesStore = useProfilesStore()
 const themeStore = useThemeStore()
 const filterStore = useFriendsFilterStore()
 const customLinksStore = useCustomLinksStore()
+const onboardingStore = useOnboardingStore()
 
 // ─── Sheet state ──────────────────────────────────────────────
 const profileSheetVisible = ref(false)
@@ -687,6 +695,11 @@ function toggleHaptic() {
 function toggleTapSound() {
   tapSoundEnabled.value = !tapSoundEnabled.value
   localStorage.setItem('sfz_tap_sound', String(tapSoundEnabled.value))
+}
+
+function replayOnboarding() {
+  settingsVisible.value = false
+  onboardingStore.reset()
 }
 
 // ─── Network list ─────────────────────────────────────────────
@@ -1542,6 +1555,25 @@ function handleAvatarChange(event: Event) {
   font-size: 1rem;
   width: 2rem;
   text-align: center;
+}
+
+.settings-replay-btn {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  margin-top: 0.5rem;
+  border-radius: 10px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface-card);
+  color: var(--text-color-secondary);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+}
+
+.settings-replay-btn:active {
+  background: var(--surface-hover);
 }
 
 /* ─── Profile bottom sheet ───────────────────────────────────── */

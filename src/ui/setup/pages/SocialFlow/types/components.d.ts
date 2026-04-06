@@ -37,6 +37,7 @@ declare module 'vue' {
     NetworkLogo: typeof import('./../components/common/NetworkLogo.vue')['default']
     NetworkWebviewHost: typeof import('./../components/NetworkWebviewHost.vue')['default']
     NextdoorIcon: typeof import('./../components/icons/NextdoorIcon.vue')['default']
+    OnboardingFlow: typeof import('./../components/OnboardingFlow.vue')['default']
     Password: typeof import('primevue/password')['default']
     ProfileSwitcher: typeof import('./../components/ProfileSwitcher.vue')['default']
     ProgressSpinner: typeof import('primevue/progressspinner')['default']

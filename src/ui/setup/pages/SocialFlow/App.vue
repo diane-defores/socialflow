@@ -1,7 +1,10 @@
 <template>
   <div class="app-container">
+    <!-- Onboarding (first launch) -->
+    <OnboardingFlow v-if="!onboardingStore.completed" />
+
     <!-- Mobile layout (≤768px): single-column, no panels -->
-    <MobileLayout v-if="isMobile" />
+    <MobileLayout v-else-if="isMobile" />
 
     <!-- Desktop layout: header + resizable sidebars -->
     <template v-else>
@@ -34,6 +37,7 @@ import { useI18n } from 'vue-i18n'
 import { useThemeStore } from '@/stores/theme'
 import { useWebviewStore } from '@/stores/webviewState'
 import { useProfilesStore } from '@/stores/profiles'
+import { useOnboardingStore } from '@/stores/onboarding'
 import { useFriendsFilter } from './composables/useFriendsFilter'
 import { preloadWebviews } from './composables/useWebviewPreload'
 import { useSignupNudge } from '@/composables/useSignupNudge'
@@ -43,6 +47,7 @@ import AppRightSidebar from './components/AppRightSidebar.vue'
 import NetworkWebviewHost from './components/NetworkWebviewHost.vue'
 import MobileLayout from './components/MobileLayout.vue'
 import SignupNudge from './components/SignupNudge.vue'
+import OnboardingFlow from './components/OnboardingFlow.vue'
 
 const sidebarVisible = ref(true)
 const rightSidebarVisible = ref(true)
@@ -56,6 +61,7 @@ const { locale } = useI18n()
 const themeStore = useThemeStore()
 const webviewStore = useWebviewStore()
 const profilesStore = useProfilesStore()
+const onboardingStore = useOnboardingStore()
 useFriendsFilter() // Activates watchers: injects filter into webviews when settings change
 
 // Mobile detection — reactive on window resize
