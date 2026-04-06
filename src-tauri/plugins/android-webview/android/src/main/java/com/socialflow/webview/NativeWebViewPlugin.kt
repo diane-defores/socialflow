@@ -460,10 +460,14 @@ private val COOKIE_ACCEPT_SCRIPT = """
     // 0. TikTok shadow DOM banner (must be checked before normal selectors)
     if (tryTikTokShadowBanner()) return;
 
-    // 1. Try known CMP selectors
+    // 1. Try known CMP selectors — only click interactive elements
+    //    (aria-label selectors can match container divs, not buttons)
     for (var i = 0; i < SELECTORS.length; i++) {
       try {
         var el = document.querySelector(SELECTORS[i]);
+        if (!el) continue;
+        var tag = el.tagName;
+        if (tag !== 'BUTTON' && tag !== 'A' && !el.getAttribute('role')) continue;
         if (robustClick(el)) return;
       } catch(e) {}
     }
