@@ -31,6 +31,7 @@ All notable changes to SocialFlow are documented here.
 - Persistent mute — `applyMuteToWebView` now uses MutationObserver to catch dynamically created `<video>`/`<audio>` + overrides `AudioContext` to silence Web Audio API; previously only muted elements present at call time
 - Kotlin mute label — "Son activé" → "Activer le son" (action label when sound is muted)
 - Settings drawer account section — styled signup form with gradient CTA, red sign-out button, proper spacing (was unstyled raw HTML)
+- Android backup export was writing to private app sandbox (invisible to user) — now saves to `Download/SocialFlow/` via MediaStore; import loads the latest `.sfbak` from the same folder
 
 ### Improved
 - Bottom bar icon opacity — smooth fade animations (600ms in, 800ms out) on touch instead of instant alpha change; removed 500ms postDelayed on release for immediate response

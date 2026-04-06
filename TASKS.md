@@ -163,6 +163,7 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [x] Dashboard icons — MessengerIcon.vue + QuoraIcon.vue with official Simple Icons SVG paths (2026-04-06)
 - [x] Settings drawer account section — styled signup form, gradient CTA button, red sign-out button (was unstyled HTML) (2026-04-06)
 - [x] Kotlin i18n fix — "Son activé" → "Activer le son" in mute toggle (2026-04-06)
+- [x] Android: backup export/import via MediaStore — writes to `Download/SocialFlow/`, visible in file manager (was writing to private app sandbox) (2026-04-06)
 - [ ] 🟡 Header search/filters hidden on mobile — add mobile-accessible alternative
 - [ ] 🟡 Android: verify edge-to-edge status bar color inversion (light icons on dark home screen)
 - [ ] 🟡 Android: test cookie isolation across profile switches on device

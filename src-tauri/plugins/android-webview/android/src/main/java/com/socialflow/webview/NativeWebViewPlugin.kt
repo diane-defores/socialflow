@@ -86,6 +86,12 @@ class DeleteSessionArgs {
     var networkId: String = ""
 }
 
+@InvokeArg
+class SaveBackupArgs {
+    var base64Data: String = ""
+    var fileName: String = ""
+}
+
 // Lightweight profile data for the popup menu
 private data class ProfileMenuItem(val id: String, val name: String, val emoji: String)
 
@@ -1082,6 +1088,68 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         val args = invoke.parseArgs(GrayscaleArgs::class.java) // reuse — same shape { enabled: bool }
         hapticEnabled = args.enabled
         invoke.resolve(JSObject())
+    }
+
+    // ── Backup: save/load to Downloads via MediaStore ────────────────────────
+
+    @Command
+    fun saveBackupToDownloads(invoke: Invoke) {
+        val args = invoke.parseArgs(SaveBackupArgs::class.java)
+        try {
+            val bytes = android.util.Base64.decode(args.base64Data, android.util.Base64.DEFAULT)
+            val resolver = activity.contentResolver
+            val values = android.content.ContentValues().apply {
+                put(android.provider.MediaStore.Downloads.DISPLAY_NAME, args.fileName)
+                put(android.provider.MediaStore.Downloads.MIME_TYPE, "application/octet-stream")
+                put(android.provider.MediaStore.Downloads.RELATIVE_PATH, "Download/SocialFlow")
+                put(android.provider.MediaStore.Downloads.IS_PENDING, 1)
+            }
+            val uri = resolver.insert(android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+                ?: throw Exception("MediaStore insert failed")
+            resolver.openOutputStream(uri)?.use { it.write(bytes) }
+                ?: throw Exception("Could not open output stream")
+            values.clear()
+            values.put(android.provider.MediaStore.Downloads.IS_PENDING, 0)
+            resolver.update(uri, values, null, null)
+            val result = JSObject()
+            result.put("path", "Download/SocialFlow/${args.fileName}")
+            invoke.resolve(result)
+        } catch (e: Exception) {
+            invoke.reject("Backup save failed: ${e.message}")
+        }
+    }
+
+    @Command
+    fun loadBackupFromDownloads(invoke: Invoke) {
+        try {
+            val resolver = activity.contentResolver
+            val collection = android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI
+            val projection = arrayOf(
+                android.provider.MediaStore.Downloads._ID,
+                android.provider.MediaStore.Downloads.DISPLAY_NAME,
+                android.provider.MediaStore.Downloads.DATE_MODIFIED
+            )
+            val selection = "${android.provider.MediaStore.Downloads.RELATIVE_PATH} LIKE ? AND ${android.provider.MediaStore.Downloads.DISPLAY_NAME} LIKE ?"
+            val selectionArgs = arrayOf("Download/SocialFlow%", "%.sfbak")
+            val sortOrder = "${android.provider.MediaStore.Downloads.DATE_MODIFIED} DESC"
+
+            val cursor = resolver.query(collection, projection, selection, selectionArgs, sortOrder)
+            val uri = cursor?.use {
+                if (it.moveToFirst()) {
+                    val id = it.getLong(it.getColumnIndexOrThrow(android.provider.MediaStore.Downloads._ID))
+                    android.content.ContentUris.withAppendedId(collection, id)
+                } else null
+            } ?: throw Exception("Aucune sauvegarde trouvée dans Download/SocialFlow/")
+
+            val bytes = resolver.openInputStream(uri)?.use { it.readBytes() }
+                ?: throw Exception("Could not read backup file")
+            val b64 = android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
+            val result = JSObject()
+            result.put("base64", b64)
+            invoke.resolve(result)
+        } catch (e: Exception) {
+            invoke.reject(e.message ?: "Load backup failed")
+        }
     }
 
     /** Update which networks appear in the bottom bar (synced from per-profile visibility). */

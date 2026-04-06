@@ -132,12 +132,17 @@ export function useBackup() {
     const storeData = collectStoreData()
     const isAndroid = navigator.userAgent.includes('Android')
 
-    // Rust creates the encrypted blob, saves to disk (Android), and returns base64
+    // Rust creates the encrypted blob and returns base64
     const b64: string = await invoke('create_backup', { storeData, password })
 
     if (isAndroid) {
-      // Rust already saved the file — just return a friendly path
-      return 'backups/'
+      // Save to Downloads/SocialFlow/ via Kotlin MediaStore
+      const fileName = `socialflow-backup-${Date.now()}.sfbak`
+      const result = await invoke<{ path: string }>(
+        'plugin:android-webview|saveBackupToDownloads',
+        { base64Data: b64, fileName },
+      )
+      return result.path
     }
 
     // Desktop: show native save dialog
@@ -162,8 +167,12 @@ export function useBackup() {
     let encryptedB64 = ''
 
     if (isAndroid) {
-      // Rust auto-finds the latest backup on disk when encrypted_b64 is empty
-      encryptedB64 = ''
+      // Load the latest .sfbak from Downloads/SocialFlow/ via Kotlin MediaStore
+      const result = await invoke<{ base64: string }>(
+        'plugin:android-webview|loadBackupFromDownloads',
+        {},
+      )
+      encryptedB64 = result.base64
     } else {
       // Desktop: native open dialog
       const { readFile } = await import('@tauri-apps/plugin-fs')
