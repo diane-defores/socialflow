@@ -18,6 +18,9 @@ const PRELOAD_COUNT = 3
  */
 export async function preloadWebviews() {
   if (!isTauri()) return
+  // Skip on Android — the Kotlin plugin already pre-warms a blank WebView.
+  // Calling open_webview here would show the social overlay on startup.
+  if (/android/i.test(navigator.userAgent)) return
 
   const { invoke } = await import('@tauri-apps/api/core')
   const profilesStore = useProfilesStore()
