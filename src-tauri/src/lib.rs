@@ -405,6 +405,20 @@ fn set_dark_mode(_app: AppHandle, _enabled: bool) -> Result<(), String> {
     Ok(()) // no-op on desktop — Vue applies the CSS class directly
 }
 
+#[tauri::command]
+#[cfg(target_os = "android")]
+fn set_text_zoom(app: AppHandle, level: i32) -> Result<(), String> {
+    app.android_webview()
+        .set_text_zoom(level)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+#[cfg(not(target_os = "android"))]
+fn set_text_zoom(_app: AppHandle, _level: i32) -> Result<(), String> {
+    Ok(()) // no-op on desktop
+}
+
 /// Sync the bottom bar network icons with the profile's visible networks.
 #[tauri::command]
 #[cfg(target_os = "android")]
@@ -650,6 +664,7 @@ pub fn run() {
             show_webview,
             set_grayscale,
             set_dark_mode,
+            set_text_zoom,
             set_bar_networks,
             set_profiles,
             set_locale,

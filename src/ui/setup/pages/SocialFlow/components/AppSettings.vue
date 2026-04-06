@@ -67,6 +67,26 @@
 
       <Divider />
 
+      <!-- Text zoom -->
+      <div class="setting-item">
+        <div class="setting-label">
+          <i class="pi pi-search-plus mr-2"></i>
+          <span>{{ $t('settings.text_zoom') }}</span>
+        </div>
+        <span class="text-zoom-value">{{ textZoomLevel }}%</span>
+      </div>
+      <input
+        type="range"
+        class="text-zoom-slider"
+        :min="75"
+        :max="200"
+        :step="25"
+        v-model.number="textZoomLevel"
+        @change="onTextZoomChange"
+      />
+
+      <Divider />
+
       <!-- Backup / Restore -->
       <div class="setting-item">
         <div class="setting-label">
@@ -113,6 +133,18 @@ function replayOnboarding() {
   onboardingStore.reset()
 }
 
+const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
+const textZoomLevel = ref(Number(localStorage.getItem('sfz_text_zoom') ?? '100'))
+
+function onTextZoomChange() {
+  localStorage.setItem('sfz_text_zoom', String(textZoomLevel.value))
+  if (isTauri) {
+    import('@tauri-apps/api/core').then(({ invoke }) => {
+      invoke('set_text_zoom', { level: textZoomLevel.value }).catch(() => {})
+    })
+  }
+}
+
 defineExpose({
   show: () => visible.value = true
 })
@@ -148,6 +180,18 @@ defineExpose({
   color: var(--text-color, #333);
   font-size: 0.85rem;
   cursor: pointer;
+}
+
+.text-zoom-value {
+  font-size: 0.85rem;
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.text-zoom-slider {
+  width: 100%;
+  margin: -0.5rem 0 0.5rem;
+  accent-color: var(--primary-color);
 }
 
 .replay-btn {

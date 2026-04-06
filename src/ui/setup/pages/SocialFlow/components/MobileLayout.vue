@@ -407,6 +407,24 @@
               </button>
             </div>
 
+            <!-- Text zoom -->
+            <div class="settings-toggle-row">
+              <span class="settings-toggle-label">
+                <i class="pi pi-search-plus" />
+                {{ $t('settings.text_zoom') }}
+              </span>
+              <span class="text-zoom-value">{{ textZoomLevel }}%</span>
+            </div>
+            <input
+              type="range"
+              class="text-zoom-slider"
+              min="75"
+              max="200"
+              step="25"
+              v-model.number="textZoomLevel"
+              @change="onTextZoomChange"
+            />
+
             <!-- Replay onboarding -->
             <button class="settings-replay-btn" @click="replayOnboarding">
               <i class="pi pi-info-circle" />
@@ -695,6 +713,18 @@ function toggleHaptic() {
 function toggleTapSound() {
   tapSoundEnabled.value = !tapSoundEnabled.value
   localStorage.setItem('sfz_tap_sound', String(tapSoundEnabled.value))
+}
+
+const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
+const textZoomLevel = ref(Number(localStorage.getItem('sfz_text_zoom') ?? '100'))
+
+function onTextZoomChange() {
+  localStorage.setItem('sfz_text_zoom', String(textZoomLevel.value))
+  if (isTauri) {
+    import('@tauri-apps/api/core').then(({ invoke }) => {
+      invoke('set_text_zoom', { level: textZoomLevel.value }).catch(() => {})
+    })
+  }
 }
 
 function replayOnboarding() {
@@ -1555,6 +1585,20 @@ function handleAvatarChange(event: Event) {
   font-size: 1rem;
   width: 2rem;
   text-align: center;
+}
+
+.text-zoom-value {
+  font-size: 0.85rem;
+  color: var(--primary-color);
+  font-weight: 600;
+  min-width: 3rem;
+  text-align: right;
+}
+
+.text-zoom-slider {
+  width: 100%;
+  margin: 0 0 0.75rem;
+  accent-color: var(--primary-color);
 }
 
 .settings-replay-btn {

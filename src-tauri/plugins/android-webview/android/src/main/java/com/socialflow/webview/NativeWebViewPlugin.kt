@@ -59,6 +59,11 @@ class DarkModeArgs {
 }
 
 @InvokeArg
+class TextZoomArgs {
+    var level: Int = 100
+}
+
+@InvokeArg
 class NavigateArgs {
     var url: String = ""
     var networkId: String = ""
@@ -569,6 +574,9 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
     // Haptic feedback — controlled from Vue settings, defaults to on
     private var hapticEnabled = true
+
+    // Text zoom level — percentage, 100 = default
+    private var textZoomLevel: Int = 100
 
     private fun haptic(view: View, type: Int = HapticFeedbackConstants.KEYBOARD_TAP) {
         if (hapticEnabled) view.performHapticFeedback(type)
@@ -1087,6 +1095,16 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     fun setHaptic(invoke: Invoke) {
         val args = invoke.parseArgs(GrayscaleArgs::class.java) // reuse — same shape { enabled: bool }
         hapticEnabled = args.enabled
+        invoke.resolve(JSObject())
+    }
+
+    @Command
+    fun setTextZoom(invoke: Invoke) {
+        val args = invoke.parseArgs(TextZoomArgs::class.java)
+        activity.runOnUiThread {
+            textZoomLevel = args.level
+            socialWebView?.settings?.textZoom = textZoomLevel
+        }
         invoke.resolve(JSObject())
     }
 
@@ -2041,6 +2059,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         settings.useWideViewPort = true
         settings.builtInZoomControls = true
         settings.displayZoomControls = false
+        settings.textZoom = textZoomLevel
         // Use the real WebView UA but strip the "; wv" token that flags us as a WebView.
         // This keeps the Chrome version in sync with the actual engine (no fingerprint mismatch).
         val defaultUa = WebSettings.getDefaultUserAgent(activity)

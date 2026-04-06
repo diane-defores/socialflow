@@ -133,6 +133,11 @@ onMounted(async () => {
     invoke('setup_display').catch(() => {})
     // Sync initial dark mode state to native bar
     invoke('set_dark_mode', { enabled: themeStore.isDarkMode }).catch(() => {})
+    // Sync initial text zoom to native webview
+    const savedZoom = Number(localStorage.getItem('sfz_text_zoom') ?? '100')
+    if (savedZoom !== 100) {
+      invoke('set_text_zoom', { level: savedZoom }).catch(() => {})
+    }
 
     // Tray events use Rust Emitter.emit() → listen() from @tauri-apps/api/event
     const { listen } = await import('@tauri-apps/api/event')

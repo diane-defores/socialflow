@@ -46,7 +46,8 @@
     "preferences": "Préférences",
     "language": "Langue",
     "haptic_feedback": "Vibrations",
-    "tap_sound": "Son des boutons"
+    "tap_sound": "Son des boutons",
+    "text_zoom": "Taille du texte"
   },
   "theme": {
     "dark_mode": "Mode sombre",
