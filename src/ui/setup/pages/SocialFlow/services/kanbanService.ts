@@ -24,9 +24,9 @@ export class KanbanService {
 
   constructor() {
     this.columns = new Map([
-      ['archived', { id: 'archived', title: 'Archivé', items: [] }],
-      ['todo', { id: 'todo', title: 'À faire', items: [] }],
-      ['waiting', { id: 'waiting', title: 'En attente', items: [] }]
+      ['archived', { id: 'archived', title: 'kanban.archived', items: [] }],
+      ['todo', { id: 'todo', title: 'kanban.todo', items: [] }],
+      ['waiting', { id: 'waiting', title: 'kanban.waiting', items: [] }]
     ])
   }
 

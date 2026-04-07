@@ -33,6 +33,8 @@ declare module 'vue' {
     LocaleSwitch: typeof import('./../../../../../components/LocaleSwitch.vue')['default']
     MessengerIcon: typeof import('./../components/icons/MessengerIcon.vue')['default']
     MobileLayout: typeof import('./../components/MobileLayout.vue')['default']
+    MobileProfileSheet: typeof import('./../components/MobileProfileSheet.vue')['default']
+    MobileSettingsSheet: typeof import('./../components/MobileSettingsSheet.vue')['default']
     MultiSelect: typeof import('primevue/multiselect')['default']
     NetworkLogo: typeof import('./../components/common/NetworkLogo.vue')['default']
     NetworkWebviewHost: typeof import('./../components/NetworkWebviewHost.vue')['default']

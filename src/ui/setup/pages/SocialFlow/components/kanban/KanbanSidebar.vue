@@ -14,7 +14,7 @@
         @drop="handleDrop($event, column.id)"
       >
         <div class="section-header">
-          <span class="section-title">{{ column.title }}</span>
+          <span class="section-title">{{ $t(column.title) }}</span>
           <span class="section-count">{{ getColumnItems(column.id).length }}</span>
         </div>
 

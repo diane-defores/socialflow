@@ -11,8 +11,17 @@ All notable changes to SocialFlow are documented here.
 - **Event listener leak in App.vue** — 5 Kotlin custom event handlers (`sfz-webview-back`, `sfz-grayscale-changed`, etc.) now properly removed on `onUnmounted`
 - **Gravatar hash** — `gmailService.ts` broken `md5()` replaced with `crypto.subtle.digest('SHA-256')` for correct avatar URLs
 
+### Changed
+- **MobileLayout split** — extracted `MobileProfileSheet.vue` (profile management) and `MobileSettingsSheet.vue` (settings bottom sheet) from `MobileLayout.vue` (1972→956 lines)
+- **Router cleanup** — removed dead `networkAccessGuard` and `roles` meta from all routes
+- **Kanban i18n** — hardcoded French column names replaced with i18n keys (`kanban.todo`, `kanban.in_progress`, `kanban.done`)
+- **`@vueuse/core`** — deduplicated version conflict, pinned to `^12.3.0` in deps only
+
 ### Security
 - Removed dead Supabase client (`supabase-client.ts` + `supabase.d.ts`) — was creating live connections to a stale backend after Convex migration
+
+### Added
+- `.env.example` — documents required env vars (`VITE_CONVEX_URL`, `VITE_GMAIL_CLIENT_ID`, `VITE_GMAIL_API_KEY`)
 
 ## [Unreleased] — 2026-04-06
 

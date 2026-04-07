@@ -1,5 +1,5 @@
 import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router'
-import { authGuard, networkAccessGuard } from './guards'
+import { authGuard } from './guards'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -21,7 +21,7 @@ const routes: RouteRecordRaw[] = [
       auth: true,
       requiresAuth: true,
       networkId: 'twitter',
-      roles: ['user', 'admin']
+
     }
   },
   {
@@ -32,7 +32,7 @@ const routes: RouteRecordRaw[] = [
       auth: true,
       requiresAuth: true,
       networkId: 'facebook',
-      roles: ['user', 'admin']
+
     }
   },
   {
@@ -43,7 +43,7 @@ const routes: RouteRecordRaw[] = [
       auth: true,
       requiresAuth: true,
       networkId: 'instagram',
-      roles: ['user', 'admin']
+
     }
   },
   {
@@ -54,7 +54,7 @@ const routes: RouteRecordRaw[] = [
       auth: true,
       requiresAuth: true,
       networkId: 'linkedin',
-      roles: ['user', 'admin']
+
     }
   },
   {
@@ -65,7 +65,7 @@ const routes: RouteRecordRaw[] = [
       auth: true,
       requiresAuth: true,
       networkId: 'tiktok',
-      roles: ['user', 'admin']
+
     }
   },
   {
@@ -76,7 +76,7 @@ const routes: RouteRecordRaw[] = [
       auth: true,
       requiresAuth: true,
       networkId: 'threads',
-      roles: ['user', 'admin']
+
     }
   },
   {
@@ -87,7 +87,7 @@ const routes: RouteRecordRaw[] = [
       auth: true,
       requiresAuth: true,
       networkId: 'discord',
-      roles: ['user', 'admin']
+
     }
   },
   {
@@ -98,7 +98,7 @@ const routes: RouteRecordRaw[] = [
       auth: true,
       requiresAuth: true,
       networkId: 'reddit',
-      roles: ['user', 'admin']
+
     }
   },
   {
@@ -109,7 +109,7 @@ const routes: RouteRecordRaw[] = [
       auth: true,
       requiresAuth: true,
       networkId: 'snapchat',
-      roles: ['user', 'admin']
+
     }
   },
   {
@@ -120,7 +120,7 @@ const routes: RouteRecordRaw[] = [
       auth: true,
       requiresAuth: true,
       networkId: 'gmail',
-      roles: ['user', 'admin']
+
     }
   }
 ]
@@ -130,8 +130,6 @@ const router = createRouter({
   routes
 })
 
-// Ajout des guards globaux
 router.beforeEach(authGuard)
-router.beforeEach(networkAccessGuard)
 
 export { router }

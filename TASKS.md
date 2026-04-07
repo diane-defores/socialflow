@@ -178,14 +178,14 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [x] 🟠 `convexAuth.ts` — auth results typed (`AuthResult` interface), empty catches now log warnings
 - [x] 🟠 App.vue event listeners — all 5 custom event handlers now cleaned up on `onUnmounted`
 - [x] 🟡 `gmailService.ts` broken `md5()` replaced with `crypto.subtle.digest('SHA-256')`
-- [ ] 🟠 `networkAccessGuard` is a no-op — route `roles` meta never checked (guards.ts:28)
-- [ ] 🟠 `@vueuse/core` version conflict — `^10.11.1` (deps) vs `^12.3.0` (devDeps)
-- [ ] 🟡 MobileLayout.vue is 1972 lines — should be split into 5-8 smaller components
+- [x] 🟠 `networkAccessGuard` removed — was a no-op with dead `roles` meta
+- [x] 🟠 `@vueuse/core` version conflict fixed — deduplicated to `^12.3.0` in deps only
+- [x] 🟡 MobileLayout.vue split — 1972→956 lines; extracted MobileProfileSheet + MobileSettingsSheet
 - [ ] 🟡 Duplicate stores — `src/stores/socialNetworks.ts` vs `src/ui/.../stores/socialNetworks.ts`
 - [ ] 🟡 Zero test coverage — no test framework, no test files, no CI test step
-- [ ] 🟡 No `.env.example` — new developers don't know required env vars
+- [x] 🟡 `.env.example` created with VITE_CONVEX_URL, VITE_GMAIL_CLIENT_ID, VITE_GMAIL_API_KEY
+- [x] 🟡 Hardcoded French in kanban stores → i18n keys (`kanban.todo`, etc.) + locale entries
 - [ ] 🟡 Content script injects iframe on ALL pages (`*://*/*`) — performance/privacy concern
-- [ ] 🟡 Hardcoded French strings in stores (kanban, socialNetworks) despite vue-i18n
 - [ ] 🟡 `accessToken` stored in plain Pinia state — could leak to localStorage if persisted
 
 ### To go live

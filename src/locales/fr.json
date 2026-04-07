@@ -239,5 +239,12 @@
     "sign_out": "Se déconnecter",
     "error_generic": "Une erreur est survenue. Réessayez.",
     "no_account_hint": "Créez un compte pour synchroniser vos données sur tous vos appareils."
+  },
+  "kanban": {
+    "todo": "À faire",
+    "in_progress": "En cours",
+    "done": "Terminé",
+    "archived": "Archivé",
+    "waiting": "En attente"
   }
 }

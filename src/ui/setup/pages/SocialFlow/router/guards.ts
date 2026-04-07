@@ -24,7 +24,3 @@ export const authGuard: NavigationGuard = async (to, _from, next) => {
 
   next();
 };
-
-export const networkAccessGuard: NavigationGuard = (_to, _from, next) => {
-  next();
-};

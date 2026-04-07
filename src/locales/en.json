@@ -239,5 +239,12 @@
     "sign_out": "Sign out",
     "error_generic": "Something went wrong. Please try again.",
     "no_account_hint": "Create an account to sync your data across all your devices."
+  },
+  "kanban": {
+    "todo": "To do",
+    "in_progress": "In progress",
+    "done": "Done",
+    "archived": "Archived",
+    "waiting": "Waiting"
   }
 }

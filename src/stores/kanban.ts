@@ -23,9 +23,9 @@ interface KanbanState {
 export const useKanbanStore = defineStore('kanban', {
   state: (): KanbanState => ({
     columns: [
-      { id: 'todo', title: 'À faire', items: [] },
-      { id: 'inProgress', title: 'En cours', items: [] },
-      { id: 'done', title: 'Terminé', items: [] }
+      { id: 'todo', title: 'kanban.todo', items: [] },
+      { id: 'inProgress', title: 'kanban.in_progress', items: [] },
+      { id: 'done', title: 'kanban.done', items: [] }
     ],
     draggedItem: null
   }),
