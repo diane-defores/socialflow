@@ -20,6 +20,15 @@ function storageKey(key: string, namespace: string) {
 export const isAuthenticated = ref(false);
 export const isAuthLoading = ref(true);
 
+interface AuthTokens {
+  token: string;
+  refreshToken: string;
+}
+
+interface AuthResult {
+  tokens?: AuthTokens;
+}
+
 let _client: ConvexClient | null = null;
 let _namespace = "";
 let _currentToken: string | null = null;
@@ -49,9 +58,9 @@ export async function setupConvexAuth(client: ConvexClient, convexUrl: string) {
         }
         try {
           const httpClient = new ConvexHttpClient(convexUrl);
-          const result: any = await httpClient.action("auth:signIn" as any, {
+          const result = (await httpClient.action("auth:signIn" as any, {
             refreshToken,
-          });
+          })) as AuthResult | null;
           if (result?.tokens) {
             persistTokens(result.tokens);
             return result.tokens.token;
@@ -81,8 +90,8 @@ export async function setupConvexAuth(client: ConvexClient, convexUrl: string) {
   // No existing session → auto sign-in anonymously
   try {
     await signIn("anonymous");
-  } catch {
-    // Offline — app works locally, Convex sync will resume later
+  } catch (e) {
+    console.warn("[ConvexAuth] Anonymous sign-in failed (offline?)", e);
   }
   isAuthLoading.value = false;
 }
@@ -101,10 +110,10 @@ export async function signIn(
 ) {
   if (!_client) throw new Error("setupConvexAuth not called");
 
-  const result: any = await _client.action("auth:signIn" as any, {
+  const result = (await _client.action("auth:signIn" as any, {
     provider,
     params: params ?? {},
-  });
+  })) as AuthResult | null;
 
   if (result?.tokens) {
     persistTokens(result.tokens);
@@ -117,8 +126,8 @@ export async function signOut() {
   if (!_client) return;
   try {
     await _client.action("auth:signOut" as any, {});
-  } catch {
-    // Already signed out — ignore
+  } catch (e) {
+    console.warn("[ConvexAuth] Sign-out failed (already signed out?)", e);
   }
   clearTokens();
 }

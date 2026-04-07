@@ -86,7 +86,7 @@ export class GmailService {
     }
   }
 
-  private parseMessage(message: any) {
+  private async parseMessage(message: any) {
     const headers = message.payload.headers
     const subject = headers.find((h: any) => h.name === 'Subject')?.value
     const from = headers.find((h: any) => h.name === 'From')?.value
@@ -118,20 +118,17 @@ export class GmailService {
         id: senderEmail,
         name: senderName || senderEmail,
         email: senderEmail,
-        avatar: `https://www.gravatar.com/avatar/${this.md5(senderEmail)}?d=mp`
+        avatar: `https://www.gravatar.com/avatar/${await this.hashEmail(senderEmail)}?d=mp`
       },
       isRead: !message.labelIds.includes('UNREAD'),
       labels: message.labelIds || []
     }
   }
 
-  private md5(str: string): string {
-    // Une implémentation simple de MD5 pour les avatars Gravatar
-    // Dans un environnement de production, utilisez une bibliothèque dédiée
-    return str.split('').reduce((a, b) => {
-      a = ((a << 5) - a) + b.charCodeAt(0)
-      return a & a
-    }, 0).toString(16)
+  private async hashEmail(email: string): Promise<string> {
+    const data = new TextEncoder().encode(email.trim().toLowerCase())
+    const hash = await crypto.subtle.digest('SHA-256', data)
+    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('')
   }
 
   async markAsRead(messageId: string): Promise<void> {

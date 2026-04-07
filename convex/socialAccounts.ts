@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { auth } from "./auth";
 
-async function getAuthUserId(ctx: any) {
+async function getAuthUserId(ctx: { db: any; auth: any }) {
   const userId = await auth.getUserId(ctx);
   if (!userId) throw new Error("Not authenticated");
   return userId;
@@ -35,6 +35,9 @@ export const upsert = mutation({
       .unique();
 
     if (existing) {
+      if (existing.userId !== userId) {
+        throw new Error("Account belongs to another user");
+      }
       await ctx.db.patch(existing._id, { label: args.label });
       return existing._id;
     }

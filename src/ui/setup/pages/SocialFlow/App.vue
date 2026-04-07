@@ -72,6 +72,30 @@ let unlistenTray: (() => void) | undefined
 
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
 
+// Event handlers declared at module scope so onUnmounted can remove them
+const onWebviewBack = () => { webviewStore.clearNetwork() }
+const onGrayscaleChanged = ((e: CustomEvent) => {
+  themeStore.setGrayscale(e.detail.enabled)
+}) as unknown as (e: Event) => void
+const onOpenProfileSheet = () => {
+  webviewStore.clearNetwork()
+  setTimeout(() => {
+    window.dispatchEvent(new CustomEvent('sfz-show-profile-sheet'))
+  }, 100)
+}
+const onSwitchProfile = ((e: CustomEvent) => {
+  const { profileId } = e.detail
+  if (profileId && profileId !== profilesStore.activeProfileId) {
+    profilesStore.setActive(profileId)
+    const networkId = webviewStore.activeNetworkId
+    if (networkId) {
+      webviewStore.clearNetwork()
+      setTimeout(() => webviewStore.selectNetwork(networkId), 100)
+    }
+  }
+}) as unknown as (e: Event) => void
+const onToggleDarkMode = () => { themeStore.toggleTheme() }
+
 // Sync locale to Android plugin for native UI translations
 watch(locale, async (newLocale) => {
   if (!isTauri) return
@@ -150,45 +174,20 @@ onMounted(async () => {
   // Kotlin bottom bar communicates via CustomEvents dispatched on the main Tauri WebView.
   // This uses evaluateJavascript() — the same proven mechanism as grayscale/mute injection.
   // (Plugin trigger() + addPluginListener was unreliable in production.)
-  window.addEventListener('sfz-webview-back', () => {
-    webviewStore.clearNetwork()
-  })
-  window.addEventListener('sfz-grayscale-changed', ((e: CustomEvent) => {
-    themeStore.setGrayscale(e.detail.enabled)
-  }) as EventListener)
-
-  // Popup menu: open profile sheet (Kotlin dispatches this when user taps "Changer de profil")
-  window.addEventListener('sfz-open-profile-sheet', () => {
-    // Close the webview first, then the profile sheet is shown by MobileLayout
-    webviewStore.clearNetwork()
-    // Small delay so MobileLayout renders before we trigger the sheet
-    setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('sfz-show-profile-sheet'))
-    }, 100)
-  })
-
-  // Popup menu: inline profile switch (Kotlin dispatches this with { profileId })
-  window.addEventListener('sfz-switch-profile', ((e: CustomEvent) => {
-    const { profileId } = e.detail
-    if (profileId && profileId !== profilesStore.activeProfileId) {
-      profilesStore.setActive(profileId)
-      // Reload the current network with the new profile's session
-      const networkId = webviewStore.activeNetworkId
-      if (networkId) {
-        webviewStore.clearNetwork()
-        setTimeout(() => webviewStore.selectNetwork(networkId), 100)
-      }
-    }
-  }) as EventListener)
-
-  // Popup menu: toggle dark mode (Kotlin dispatches this)
-  window.addEventListener('sfz-toggle-dark-mode', () => {
-    themeStore.toggleTheme()
-  })
+  window.addEventListener('sfz-webview-back', onWebviewBack)
+  window.addEventListener('sfz-grayscale-changed', onGrayscaleChanged)
+  window.addEventListener('sfz-open-profile-sheet', onOpenProfileSheet)
+  window.addEventListener('sfz-switch-profile', onSwitchProfile)
+  window.addEventListener('sfz-toggle-dark-mode', onToggleDarkMode)
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
+  window.removeEventListener('sfz-webview-back', onWebviewBack)
+  window.removeEventListener('sfz-grayscale-changed', onGrayscaleChanged)
+  window.removeEventListener('sfz-open-profile-sheet', onOpenProfileSheet)
+  window.removeEventListener('sfz-switch-profile', onSwitchProfile)
+  window.removeEventListener('sfz-toggle-dark-mode', onToggleDarkMode)
   unlistenTray?.()
 })
 </script>

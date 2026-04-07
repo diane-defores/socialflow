@@ -2,6 +2,18 @@
 
 All notable changes to SocialFlow are documented here.
 
+## [Unreleased] — 2026-04-07
+
+### Fixed
+- **XSS in SocialPost.vue** — `formatText()` now escapes HTML before injecting via `v-html`, preventing script injection through post content
+- **IDOR in socialAccounts upsert** — Convex mutation now verifies `userId` ownership before patching an existing account record
+- **Auth token types** — `convexAuth.ts` results typed with `AuthResult` interface instead of `any`; empty catches now log warnings instead of silently swallowing errors
+- **Event listener leak in App.vue** — 5 Kotlin custom event handlers (`sfz-webview-back`, `sfz-grayscale-changed`, etc.) now properly removed on `onUnmounted`
+- **Gravatar hash** — `gmailService.ts` broken `md5()` replaced with `crypto.subtle.digest('SHA-256')` for correct avatar URLs
+
+### Security
+- Removed dead Supabase client (`supabase-client.ts` + `supabase.d.ts`) — was creating live connections to a stale backend after Convex migration
+
 ## [Unreleased] — 2026-04-06
 
 ### Added

@@ -1,5 +1,8 @@
 <template>
-  <div class="social-post" :class="networkClass">
+  <div
+    class="social-post"
+    :class="networkClass"
+  >
     <div class="post-header">
       <SocialAvatar 
         :user="post.author"
@@ -13,7 +16,10 @@
         </div>
         <div class="post-info">
           <span>{{ formatDate(post.timestamp) }}</span>
-          <i v-if="post.privacy" :class="privacyIcon" />
+          <i
+            v-if="post.privacy"
+            :class="privacyIcon"
+          />
         </div>
       </div>
       <Button 
@@ -25,11 +31,25 @@
     </div>
 
     <div class="post-content">
-      <p v-if="post.content.text" class="content-text" v-html="formatText(post.content.text)" />
+      <p
+        v-if="post.content.text"
+        class="content-text"
+        v-html="formatText(post.content.text)"
+      />
       
-      <div v-if="post.content.link" class="content-link">
-        <a :href="post.content.link.url" target="_blank" rel="noopener">
-          <img :src="post.content.link.thumbnail" :alt="post.content.link.title" />
+      <div
+        v-if="post.content.link"
+        class="content-link"
+      >
+        <a
+          :href="post.content.link.url"
+          target="_blank"
+          rel="noopener"
+        >
+          <img
+            :src="post.content.link.thumbnail"
+            :alt="post.content.link.title"
+          />
           <div class="link-info">
             <h5>{{ post.content.link.title }}</h5>
             <p>{{ post.content.link.description }}</p>
@@ -37,7 +57,11 @@
         </a>
       </div>
 
-      <div v-if="post.content.images" class="content-images" :class="imageLayoutClass">
+      <div
+        v-if="post.content.images"
+        class="content-images"
+        :class="imageLayoutClass"
+      >
         <img 
           v-for="(image, index) in post.content.images" 
           :key="index"
@@ -46,20 +70,30 @@
         />
       </div>
 
-      <div v-if="post.content.video" class="content-video">
+      <div
+        v-if="post.content.video"
+        class="content-video"
+      >
         <video controls>
-          <source :src="post.content.video" type="video/mp4">
+          <source
+            :src="post.content.video"
+            type="video/mp4"
+          >
         </video>
       </div>
     </div>
 
     <div class="post-stats">
-      <div class="reactions" v-if="showReactions">
+      <div
+        v-if="showReactions"
+        class="reactions"
+      >
         <div class="reaction-icons">
-          <i v-for="(count, type) in post.stats.reactions" 
-             :key="type"
-             :class="reactionIcon(type)"
-             v-show="count > 0"
+          <i
+            v-for="(count, type) in post.stats.reactions" 
+            v-show="count > 0"
+            :key="type"
+            :class="reactionIcon(type)"
           />
         </div>
         <span>{{ totalReactions }}</span>
@@ -102,7 +136,10 @@
       </slot>
     </div>
 
-    <div v-if="showComments" class="post-comments">
+    <div
+      v-if="showComments"
+      class="post-comments"
+    >
       <slot name="comments" />
     </div>
   </div>
@@ -210,7 +247,13 @@ const formatDate = (timestamp: string) => {
   return new Date(timestamp).toLocaleDateString()
 }
 
+const escapeHtml = (str: string) =>
+  str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+
 const formatText = (text: string) => {
+  // Escape HTML first to prevent XSS
+  text = escapeHtml(text)
+
   // Convertit les URLs en liens
   const urlRegex = /(https?:\/\/[^\s]+)/g
   text = text.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener">$1</a>')

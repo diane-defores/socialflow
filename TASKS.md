@@ -170,6 +170,24 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [ ] 🟡 Android: test friends filter end-to-end on device
 - [ ] 🟡 Desktop sidebar: custom links not yet tested visually
 
+### Audit: Code (2026-04-06, score C)
+
+- [x] 🔴 XSS via `v-html` in SocialPost.vue — `formatText()` now escapes HTML before injecting
+- [x] 🔴 Dead Supabase client removed — `supabase-client.ts` + `supabase.d.ts` deleted
+- [x] 🟠 IDOR in `socialAccounts.ts` — `upsert` now checks `userId` ownership before patching
+- [x] 🟠 `convexAuth.ts` — auth results typed (`AuthResult` interface), empty catches now log warnings
+- [x] 🟠 App.vue event listeners — all 5 custom event handlers now cleaned up on `onUnmounted`
+- [x] 🟡 `gmailService.ts` broken `md5()` replaced with `crypto.subtle.digest('SHA-256')`
+- [ ] 🟠 `networkAccessGuard` is a no-op — route `roles` meta never checked (guards.ts:28)
+- [ ] 🟠 `@vueuse/core` version conflict — `^10.11.1` (deps) vs `^12.3.0` (devDeps)
+- [ ] 🟡 MobileLayout.vue is 1972 lines — should be split into 5-8 smaller components
+- [ ] 🟡 Duplicate stores — `src/stores/socialNetworks.ts` vs `src/ui/.../stores/socialNetworks.ts`
+- [ ] 🟡 Zero test coverage — no test framework, no test files, no CI test step
+- [ ] 🟡 No `.env.example` — new developers don't know required env vars
+- [ ] 🟡 Content script injects iframe on ALL pages (`*://*/*`) — performance/privacy concern
+- [ ] 🟡 Hardcoded French strings in stores (kanban, socialNetworks) despite vue-i18n
+- [ ] 🟡 `accessToken` stored in plain Pinia state — could leak to localStorage if persisted
+
 ### To go live
 
 - [ ] Convex: `npx convex dev` → paste `VITE_CONVEX_URL` into `.env`

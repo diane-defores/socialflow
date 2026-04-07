@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { auth } from "./auth";
 
-async function getAuthUserId(ctx: any) {
+async function getAuthUserId(ctx: { db: any; auth: any }) {
   const userId = await auth.getUserId(ctx);
   if (!userId) throw new Error("Not authenticated");
   return userId;
