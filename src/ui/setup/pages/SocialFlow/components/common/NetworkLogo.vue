@@ -9,7 +9,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useLogoCacheStore } from '../../stores/logoCache'
+import { useLogoCacheStore } from '@/stores/logoCache'
 
 const props = defineProps<{
   domain: string

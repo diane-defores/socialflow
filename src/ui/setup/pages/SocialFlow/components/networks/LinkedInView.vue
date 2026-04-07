@@ -170,7 +170,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useSocialNetworksStore } from '../../stores/socialNetworks'
+import { useSocialNetworksStore } from '@/stores/socialNetworks'
 import Button from 'primevue/button'
 import Textarea from 'primevue/textarea'
 import Avatar from 'primevue/avatar'

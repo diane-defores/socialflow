@@ -12,6 +12,9 @@ All notable changes to SocialFlow are documented here.
 ### Added
 - **Lifetime Deal card** — pricing pages (FR+EN): 159$ barré → 99$ launch price, Pro features + lifetime updates, badge "Offre limitée" / "Limited offer"
 
+### Refactored
+- **Store deduplication** — consolidated 4 duplicate Pinia stores from `src/ui/.../stores/` into `src/stores/`; promoted rich implementations (KanbanService, GmailService, Microlink cache TTL) over stubs; moved services to `src/services/` and config to `src/config/`; updated 13 imports across 7 components; deleted 4 redundant store files (-549 lines)
+
 ### Fixed
 - **XSS in SocialPost.vue** — `formatText()` now escapes HTML before injecting via `v-html`, preventing script injection through post content
 - **IDOR in socialAccounts upsert** — Convex mutation now verifies `userId` ownership before patching an existing account record

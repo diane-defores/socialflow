@@ -1,104 +1,86 @@
 import { defineStore } from 'pinia'
+import { KanbanService, type KanbanItem, type KanbanColumnId } from '@/services/kanbanService'
 
-export interface KanbanItem {
-  id: string
-  title: string
-  type: 'email' | 'task' | 'note'
-  columnId: KanbanColumnId
-}
-
-export type KanbanColumnId = 'todo' | 'inProgress' | 'done'
-
-interface KanbanColumn {
-  id: KanbanColumnId
-  title: string
-  items: KanbanItem[]
-}
-
-interface KanbanState {
-  columns: KanbanColumn[]
-  draggedItem: KanbanItem | null
-}
+export type { KanbanItem, KanbanColumnId }
 
 export const useKanbanStore = defineStore('kanban', {
-  state: (): KanbanState => ({
-    columns: [
-      { id: 'todo', title: 'kanban.todo', items: [] },
-      { id: 'inProgress', title: 'kanban.in_progress', items: [] },
-      { id: 'done', title: 'kanban.done', items: [] }
-    ],
-    draggedItem: null
+  state: () => ({
+    service: new KanbanService(),
+    loading: false,
+    error: null as string | null,
+    draggedItem: null as KanbanItem | null
   }),
 
+  getters: {
+    columns: (state) => state.service.getColumns(),
+
+    getColumnItems: (state) => (columnId: KanbanColumnId) => {
+      const column = state.service.getColumn(columnId)
+      return column?.items.sort((a, b) => a.order - b.order) || []
+    }
+  },
+
   actions: {
-    initialize() {
-      // Charger les données depuis le stockage local si disponible
-      const savedData = localStorage.getItem('kanban-data')
-      if (savedData) {
-        const parsedData = JSON.parse(savedData)
-        this.columns = parsedData.columns
+    async initialize() {
+      this.loading = true
+      try {
+        this.service.loadState()
+      } catch (error) {
+        this.error = 'Erreur lors de l\'initialisation du Kanban'
+        console.error(error)
+      } finally {
+        this.loading = false
       }
     },
 
-    saveToLocalStorage() {
-      localStorage.setItem('kanban-data', JSON.stringify({
-        columns: this.columns
-      }))
-    },
-
-    getColumnItems(columnId: KanbanColumnId) {
-      const column = this.columns.find(col => col.id === columnId)
-      return column ? column.items : []
-    },
-
-    addItem(item: Omit<KanbanItem, 'id'>) {
-      const newItem = {
-        ...item,
-        id: crypto.randomUUID()
-      }
-      const column = this.columns.find(col => col.id === item.columnId)
-      if (column) {
-        column.items.push(newItem)
-        this.saveToLocalStorage()
+    addItem(columnId: KanbanColumnId, item: Omit<KanbanItem, 'id' | 'order' | 'columnId'>) {
+      try {
+        const newItem = this.service.addItem(columnId, item)
+        this.service.saveState()
+        return newItem
+      } catch (error) {
+        this.error = 'Erreur lors de l\'ajout de l\'élément'
+        console.error(error)
       }
     },
 
     moveItem(itemId: string, targetColumnId: KanbanColumnId) {
-      // Trouver l'item et sa colonne source
-      let sourceColumn: KanbanColumn | undefined
-      let item: KanbanItem | undefined
-
-      for (const column of this.columns) {
-        const foundItem = column.items.find(i => i.id === itemId)
-        if (foundItem) {
-          sourceColumn = column
-          item = foundItem
-          break
-        }
+      try {
+        this.service.moveItem(itemId, targetColumnId)
+        this.service.saveState()
+      } catch (error) {
+        this.error = 'Erreur lors du déplacement de l\'élément'
+        console.error(error)
       }
+    },
 
-      if (sourceColumn && item) {
-        // Retirer l'item de sa colonne source
-        sourceColumn.items = sourceColumn.items.filter(i => i.id !== itemId)
-        
-        // Ajouter l'item à la colonne cible
-        const targetColumn = this.columns.find(col => col.id === targetColumnId)
-        if (targetColumn) {
-          item.columnId = targetColumnId
-          targetColumn.items.push(item)
-          this.saveToLocalStorage()
-        }
+    reorderItems(columnId: KanbanColumnId, itemIds: string[]) {
+      try {
+        this.service.reorderItems(columnId, itemIds)
+        this.service.saveState()
+      } catch (error) {
+        this.error = 'Erreur lors de la réorganisation des éléments'
+        console.error(error)
       }
     },
 
     deleteItem(itemId: string) {
-      for (const column of this.columns) {
-        const index = column.items.findIndex(item => item.id === itemId)
-        if (index !== -1) {
-          column.items.splice(index, 1)
-          this.saveToLocalStorage()
-          break
-        }
+      try {
+        this.service.deleteItem(itemId)
+        this.service.saveState()
+      } catch (error) {
+        this.error = 'Erreur lors de la suppression de l\'élément'
+        console.error(error)
+      }
+    },
+
+    addEmailToKanban(email: any, columnId: KanbanColumnId = 'todo') {
+      try {
+        const kanbanItem = this.service.emailToKanbanItem(email)
+        return this.addItem(columnId, kanbanItem)
+      } catch (error) {
+        this.error = 'Erreur lors de l\'ajout de l\'email au Kanban'
+        console.error(error)
       }
     },
 
@@ -108,6 +90,10 @@ export const useKanbanStore = defineStore('kanban', {
 
     endDragging() {
       this.draggedItem = null
+    },
+
+    clearError() {
+      this.error = null
     }
   }
-}) 
+})

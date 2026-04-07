@@ -1,27 +1,40 @@
 import { defineStore } from 'pinia'
 
-interface LogoCacheState {
-  logos: Record<string, string>
+interface LogoCache {
+  [url: string]: {
+    logoUrl: string
+    timestamp: number
+  }
 }
 
 export const useLogoCacheStore = defineStore('logoCache', {
-  state: (): LogoCacheState => ({
-    logos: {}
+  state: () => ({
+    cache: {} as LogoCache,
+    CACHE_DURATION: 7 * 24 * 60 * 60 * 1000
   }),
 
   actions: {
-    setLogo(network: string, url: string) {
-      this.logos[network] = url
-    },
+    async getLogoUrl(domain: string): Promise<string> {
+      const cachedLogo = this.cache[domain]
+      const now = Date.now()
 
-    getLogo(network: string): string | undefined {
-      return this.logos[network]
-    },
+      if (cachedLogo && (now - cachedLogo.timestamp) < this.CACHE_DURATION) {
+        return cachedLogo.logoUrl
+      }
 
-    clearCache() {
-      this.logos = {}
+      const logoUrl = `https://logo.microlink.io/${domain}`
+
+      this.cache[domain] = {
+        logoUrl,
+        timestamp: now
+      }
+
+      return logoUrl
     }
   },
 
-  persist: true,
-}) 
+  persist: {
+    storage: localStorage,
+    pick: ['cache']
+  }
+})
