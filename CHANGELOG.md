@@ -4,6 +4,14 @@ All notable changes to SocialFlow are documented here.
 
 ## [Unreleased] — 2026-04-07
 
+### Changed
+- **Removed all "open source" claims** — 15 files (FR+EN): index, pricing, download, technology, FAQ, and 5 vs-* comparison pages; replaced with "privacy-focused" / "données locales" messaging
+- **Comparison tables** — "Open source" row replaced with "Privacy (local data)" / "Vie privée (données locales)" across pricing and vs-* pages
+- **Free tier description** — "Community edition (open source)" → "Free edition (2 profiles, 5 networks)" in all vs-* pricing tables
+
+### Added
+- **Lifetime Deal card** — pricing pages (FR+EN): 159$ barré → 99$ launch price, Pro features + lifetime updates, badge "Offre limitée" / "Limited offer"
+
 ### Fixed
 - **XSS in SocialPost.vue** — `formatText()` now escapes HTML before injecting via `v-html`, preventing script injection through post content
 - **IDOR in socialAccounts upsert** — Convex mutation now verifies `userId` ownership before patching an existing account record
