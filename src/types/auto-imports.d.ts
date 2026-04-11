@@ -243,6 +243,7 @@ declare global {
   const useNow: typeof import('@vueuse/core')['useNow']
   const useObjectUrl: typeof import('@vueuse/core')['useObjectUrl']
   const useOffsetPagination: typeof import('@vueuse/core')['useOffsetPagination']
+  const useOnboardingStore: typeof import('../stores/onboarding')['useOnboardingStore']
   const useOnline: typeof import('@vueuse/core')['useOnline']
   const useOptionsStore: typeof import('../stores/options.store')['useOptionsStore']
   const usePageLeave: typeof import('@vueuse/core')['usePageLeave']
@@ -272,6 +273,7 @@ declare global {
   const useScrollLock: typeof import('@vueuse/core')['useScrollLock']
   const useSessionStorage: typeof import('@vueuse/core')['useSessionStorage']
   const useShare: typeof import('@vueuse/core')['useShare']
+  const useSignupNudge: typeof import('../composables/useSignupNudge')['useSignupNudge']
   const useSlots: typeof import('vue')['useSlots']
   const useSocialNetworksStore: typeof import('../stores/socialNetworks')['useSocialNetworksStore']
   const useSorted: typeof import('@vueuse/core')['useSorted']
@@ -601,6 +603,7 @@ declare module 'vue' {
     readonly useNow: UnwrapRef<typeof import('@vueuse/core')['useNow']>
     readonly useObjectUrl: UnwrapRef<typeof import('@vueuse/core')['useObjectUrl']>
     readonly useOffsetPagination: UnwrapRef<typeof import('@vueuse/core')['useOffsetPagination']>
+    readonly useOnboardingStore: UnwrapRef<typeof import('../stores/onboarding')['useOnboardingStore']>
     readonly useOnline: UnwrapRef<typeof import('@vueuse/core')['useOnline']>
     readonly useOptionsStore: UnwrapRef<typeof import('../stores/options.store')['useOptionsStore']>
     readonly usePageLeave: UnwrapRef<typeof import('@vueuse/core')['usePageLeave']>
@@ -630,6 +633,7 @@ declare module 'vue' {
     readonly useScrollLock: UnwrapRef<typeof import('@vueuse/core')['useScrollLock']>
     readonly useSessionStorage: UnwrapRef<typeof import('@vueuse/core')['useSessionStorage']>
     readonly useShare: UnwrapRef<typeof import('@vueuse/core')['useShare']>
+    readonly useSignupNudge: UnwrapRef<typeof import('../composables/useSignupNudge')['useSignupNudge']>
     readonly useSlots: UnwrapRef<typeof import('vue')['useSlots']>
     readonly useSocialNetworksStore: UnwrapRef<typeof import('../stores/socialNetworks')['useSocialNetworksStore']>
     readonly useSorted: UnwrapRef<typeof import('@vueuse/core')['useSorted']>

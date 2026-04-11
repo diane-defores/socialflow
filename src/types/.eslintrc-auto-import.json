@@ -349,6 +349,8 @@
     "useFriendsFilterStore": true,
     "CustomLink": true,
     "useCustomLinksStore": true,
-    "setLocale": true
+    "setLocale": true,
+    "useOnboardingStore": true,
+    "useSignupNudge": true
   }
 }

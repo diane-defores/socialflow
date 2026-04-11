@@ -13,6 +13,7 @@
     "fs:allow-write-file",
     "fs:allow-mkdir",
     "fs:allow-read-dir",
-    "fs:scope-appdata-recursive"
+    "fs:scope-appdata-recursive",
+    "android-webview:default"
   ]
 }

@@ -139,7 +139,7 @@ export function useBackup() {
       // Save to Downloads/SocialFlow/ via Kotlin MediaStore
       const fileName = `socialflow-backup-${Date.now()}.sfbak`
       const result = await invoke<{ path: string }>(
-        'plugin:android-webview|saveBackupToDownloads',
+        'plugin:android-webview|save_backup_to_downloads',
         { base64Data: b64, fileName },
       )
       return result.path
@@ -169,7 +169,7 @@ export function useBackup() {
     if (isAndroid) {
       // Load the latest .sfbak from Downloads/SocialFlow/ via Kotlin MediaStore
       const result = await invoke<{ base64: string }>(
-        'plugin:android-webview|loadBackupFromDownloads',
+        'plugin:android-webview|load_backup_from_downloads',
         {},
       )
       encryptedB64 = result.base64

@@ -2,6 +2,11 @@
 
 All notable changes to SocialFlow are documented here.
 
+## [2026-04-11]
+
+### Fixed
+- **Android backup "command not found"** — registered `save_backup_to_downloads`, `load_backup_from_downloads`, `set_haptic` in plugin `build.rs` COMMANDS array; added `android-webview:default` to Tauri capabilities; fixed JS command names from camelCase to snake_case
+
 ## [Unreleased] — 2026-04-07
 
 ### Changed
