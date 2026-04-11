@@ -2,6 +2,12 @@
 
 All notable changes to SocialFlow are documented here.
 
+## [2026-04-12]
+
+### Fixed
+- **Android backup restore fails after reinstall** — replaced MediaStore query (blocked by scoped storage ownership) with SAF file picker (`ACTION_OPEN_DOCUMENT`); user now selects the `.sfbak` file manually, works regardless of app reinstall
+- **Backup error displayed as `[object Object]`** — Tauri plugin rejections are plain objects, not Error instances; error handler now extracts `.message` property
+
 ## [2026-04-11]
 
 ### Fixed

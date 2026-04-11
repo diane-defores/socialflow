@@ -298,7 +298,13 @@ async function confirm() {
       startCountdown()
     }
   } catch (e: unknown) {
-    rawError.value = e instanceof Error ? e.message : String(e)
+    if (e instanceof Error) {
+      rawError.value = e.message
+    } else if (e && typeof e === 'object' && 'message' in e) {
+      rawError.value = String((e as { message: unknown }).message)
+    } else {
+      rawError.value = String(e)
+    }
     step.value = 'error'
   } finally {
     busy.value = false

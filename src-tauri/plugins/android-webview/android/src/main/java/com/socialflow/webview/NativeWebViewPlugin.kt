@@ -578,6 +578,10 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     // Text zoom level — percentage, 100 = default
     private var textZoomLevel: Int = 100
 
+    // SAF file picker — pending invoke for backup restore
+    private var pendingBackupInvoke: Invoke? = null
+    private var pickBackupLauncher: androidx.activity.result.ActivityResultLauncher<android.content.Intent>? = null
+
     private fun haptic(view: View, type: Int = HapticFeedbackConstants.KEYBOARD_TAP) {
         if (hapticEnabled) view.performHapticFeedback(type)
     }
@@ -814,6 +818,37 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         activity.runOnUiThread {
             prewarmedWebView = createWebView()
             Log.i(TAG, "WebView pre-warmed")
+        }
+        // Register SAF file picker for backup restore — must happen before STARTED
+        try {
+            (activity as? androidx.activity.ComponentActivity)?.let { componentActivity ->
+                pickBackupLauncher = componentActivity.registerForActivityResult(
+                    androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+                ) { result ->
+                    val invoke = pendingBackupInvoke ?: return@registerForActivityResult
+                    pendingBackupInvoke = null
+
+                    if (result.resultCode != Activity.RESULT_OK || result.data?.data == null) {
+                        invoke.reject("Aucun fichier sélectionné")
+                        return@registerForActivityResult
+                    }
+
+                    try {
+                        val uri = result.data!!.data!!
+                        val bytes = activity.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                            ?: throw Exception("Could not read backup file")
+                        val b64 = android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
+                        val jsResult = JSObject()
+                        jsResult.put("base64", b64)
+                        invoke.resolve(jsResult)
+                    } catch (e: Exception) {
+                        invoke.reject(e.message ?: "Load backup failed")
+                    }
+                }
+                Log.i(TAG, "Backup file picker registered")
+            }
+        } catch (e: IllegalStateException) {
+            Log.w(TAG, "Could not register backup file picker: ${e.message}")
         }
     }
 
@@ -1140,32 +1175,18 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     @Command
     fun loadBackupFromDownloads(invoke: Invoke) {
         try {
-            val resolver = activity.contentResolver
-            val collection = android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI
-            val projection = arrayOf(
-                android.provider.MediaStore.Downloads._ID,
-                android.provider.MediaStore.Downloads.DISPLAY_NAME,
-                android.provider.MediaStore.Downloads.DATE_MODIFIED
-            )
-            val selection = "${android.provider.MediaStore.Downloads.RELATIVE_PATH} LIKE ? AND ${android.provider.MediaStore.Downloads.DISPLAY_NAME} LIKE ?"
-            val selectionArgs = arrayOf("Download/SocialFlow%", "%.sfbak")
-            val sortOrder = "${android.provider.MediaStore.Downloads.DATE_MODIFIED} DESC"
-
-            val cursor = resolver.query(collection, projection, selection, selectionArgs, sortOrder)
-            val uri = cursor?.use {
-                if (it.moveToFirst()) {
-                    val id = it.getLong(it.getColumnIndexOrThrow(android.provider.MediaStore.Downloads._ID))
-                    android.content.ContentUris.withAppendedId(collection, id)
-                } else null
-            } ?: throw Exception("Aucune sauvegarde trouvée dans Download/SocialFlow/")
-
-            val bytes = resolver.openInputStream(uri)?.use { it.readBytes() }
-                ?: throw Exception("Could not read backup file")
-            val b64 = android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
-            val result = JSObject()
-            result.put("base64", b64)
-            invoke.resolve(result)
+            val launcher = pickBackupLauncher
+                ?: throw Exception("File picker not available")
+            // Use SAF file picker — works even after uninstall/reinstall
+            // (MediaStore scoped storage hides files from reinstalled apps)
+            pendingBackupInvoke = invoke
+            val intent = android.content.Intent(android.content.Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(android.content.Intent.CATEGORY_OPENABLE)
+                type = "*/*"
+            }
+            launcher.launch(intent)
         } catch (e: Exception) {
+            pendingBackupInvoke = null
             invoke.reject(e.message ?: "Load backup failed")
         }
     }

@@ -189,6 +189,10 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [ ] 🟡 Content script injects iframe on ALL pages (`*://*/*`) — performance/privacy concern
 - [ ] 🟡 `accessToken` stored in plain Pinia state — could leak to localStorage if persisted
 
+### Bug: Android backup restore fails after reinstall
+
+- [x] 🔴 Backup restore after uninstall/reinstall shows `[object Object]` — fixed: (1) replaced MediaStore query with SAF file picker (bypasses scoped storage ownership), (2) error handler extracts `.message` from Tauri plugin error objects
+
 ### To go live
 
 - [ ] Convex: `npx convex dev` → paste `VITE_CONVEX_URL` into `.env`
