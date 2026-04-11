@@ -14,6 +14,9 @@
     "fs:allow-mkdir",
     "fs:allow-read-dir",
     "fs:scope-appdata-recursive",
-    "android-webview:default"
+    "android-webview:default",
+    "android-webview:allow-save-backup-to-downloads",
+    "android-webview:allow-load-backup-from-downloads",
+    "android-webview:allow-set-haptic"
   ]
 }
