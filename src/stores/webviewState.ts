@@ -15,7 +15,7 @@ export const WEBVIEW_URLS: Record<string, string> = {
   snapchat: 'https://web.snapchat.com',
   quora: 'https://www.quora.com',
   pinterest: 'https://www.pinterest.com',
-  whatsapp: 'https://web.whatsapp.com',
+  // whatsapp: 'https://web.whatsapp.com', // disabled 2026-04-12 — see docs/whatsapp-web-integration.md
   telegram: 'https://web.telegram.org',
   nextdoor: 'https://nextdoor.com',
 }

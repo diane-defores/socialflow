@@ -4,6 +4,9 @@ All notable changes to SocialFlow are documented here.
 
 ## [2026-04-12]
 
+### Removed
+- **WhatsApp Web temporairement désactivé** — commenté dans `webviewState.ts`, `AppSidebar.vue`, `MobileLayout.vue`, `OnboardingFlow.vue`, et `NativeWebViewPlugin.kt` (liste `NETWORKS`). Symptôme : loader infini sur `web.whatsapp.com` après saisie du code de pairing à 8 chiffres, même avec un téléphone appairé. Cause principale : les clés Signal du protocole Noise sont stockées en IndexedDB, or notre isolation de profil ne persiste que les cookies — la session est donc vide à chaque ouverture et le handshake ne termine jamais. Cause secondaire : `navigator.userAgentData` non patché (UA Chrome 136 Windows mais `userAgentData.mobile = true` → mismatch détectable). Plan de réactivation complet et ordonné dans `docs/whatsapp-web-integration.md` (persister IDB par profil, patcher Client Hints, supprimer signaux touch, fallback UI sur timeout)
+
 ### Added
 - **Backup coverage** — `useBackup.ts` now persists the `onboarding` store (completed flag), `sfz_text_zoom` (text zoom level), and `kanban-state` (board state) in addition to previously-covered stores and localStorage keys; closes gaps where restored devices lost zoom, kanban, and re-triggered the tutorial
 - **Global haptic + tap sound on Vue buttons** — delegated `pointerdown` listener in `App.vue` matches `button`/`[role=button]`/`label[for]`/etc. and invokes `trigger_haptic` IPC, reusing the existing `hapticEnabled`/`tapSoundEnabled` gating; 50ms throttle prevents double-fire; opt-out via `data-no-haptic`

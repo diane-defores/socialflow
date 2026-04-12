@@ -369,7 +369,7 @@ const menuItems = ref<MenuItem[]>([
   { id: 10, label: 'Snapchat', icon: 'pi pi-camera', route: '/snapchat' },
   { id: 11, label: 'Quora', icon: 'pi pi-question-circle', route: '/quora' },
   { id: 12, label: 'Pinterest', icon: 'pi pi-pinterest', route: '/pinterest' },
-  { id: 13, label: 'WhatsApp', icon: 'pi pi-whatsapp', route: '/whatsapp' },
+  // { id: 13, label: 'WhatsApp', icon: 'pi pi-whatsapp', route: '/whatsapp' }, // disabled 2026-04-12 — see docs/whatsapp-web-integration.md
   { id: 14, label: 'Telegram', icon: 'pi pi-telegram', route: '/telegram' },
   { id: 15, label: 'Nextdoor', icon: 'pi pi-map-marker', route: '/nextdoor' },
   { id: 16, label: 'Kanban', icon: 'pi pi-th-large', route: '/kanban' }

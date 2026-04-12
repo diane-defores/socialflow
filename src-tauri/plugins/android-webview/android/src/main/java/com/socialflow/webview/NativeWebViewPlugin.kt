@@ -149,7 +149,7 @@ private val NETWORKS = listOf(
     NetworkInfo("snapchat",  "\ue96c", Color.parseColor("#FFFC00"), "https://www.snapchat.com/web/"),
     NetworkInfo("quora",     "\ue959", Color.parseColor("#A82400"), "https://www.quora.com"),
     NetworkInfo("pinterest", "\uea09", Color.parseColor("#E60023"), "https://www.pinterest.com"),
-    NetworkInfo("whatsapp",  "\ue9d0", Color.parseColor("#25D366"), "https://web.whatsapp.com"),
+    // NetworkInfo("whatsapp",  "\ue9d0", Color.parseColor("#25D366"), "https://web.whatsapp.com"), // disabled 2026-04-12 — see docs/whatsapp-web-integration.md
     NetworkInfo("telegram",  "\ue9d3", Color.parseColor("#0088CC"), "https://web.telegram.org"),
     NetworkInfo("nextdoor",  "\ue968", Color.parseColor("#8ED500"), "https://nextdoor.com"),
 )

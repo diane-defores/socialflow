@@ -196,6 +196,8 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 
 - [x] 🔴 Backup restore after uninstall/reinstall shows `[object Object]` — fixed: (1) replaced MediaStore query with SAF file picker (bypasses scoped storage ownership), (2) error handler extracts `.message` from Tauri plugin error objects
 - [x] Backup coverage audit — added `onboarding` store, `sfz_text_zoom`, `kanban-state` to `useBackup.ts` (2026-04-12)
+- [x] WhatsApp Web disabled — infinite loader after phone+code pairing caused by IndexedDB not persisted per profile (Signal keys lost on switch) + `navigator.userAgentData` mismatch; commented out in 5 files, re-enable plan documented in `docs/whatsapp-web-integration.md` (2026-04-12)
+- [ ] 🟡 Per-profile IndexedDB + localStorage persistence — unblocks WhatsApp, Telegram (MTProto keys in IDB), Discord (token in localStorage); prefer copying `/data/data/<pkg>/app_webview/Default/IndexedDB/` between profile dirs over JS serialization
 
 ### To go live
 
