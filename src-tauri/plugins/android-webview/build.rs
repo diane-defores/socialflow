@@ -2,6 +2,8 @@ const COMMANDS: &[&str] = &[
     "save_backup_to_downloads",
     "load_backup_from_downloads",
     "set_haptic",
+    "set_tap_sound",
+    "trigger_haptic",
 ];
 
 fn main() {

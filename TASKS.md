@@ -163,6 +163,7 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [x] Dashboard icons — MessengerIcon.vue + QuoraIcon.vue with official Simple Icons SVG paths (2026-04-06)
 - [x] Settings drawer account section — styled signup form, gradient CTA button, red sign-out button (was unstyled HTML) (2026-04-06)
 - [x] Kotlin i18n fix — "Son activé" → "Activer le son" in mute toggle (2026-04-06)
+- [x] Audit haptic + tap-sound flow — fixed dead tap-sound toggle (`set_tap_sound` IPC + `playSoundEffect`), boot sync from localStorage, global `pointerdown` handler so Vue buttons also fire haptic/sound via new `trigger_haptic` IPC (2026-04-12)
 - [x] Android: backup export/import via MediaStore — writes to `Download/SocialFlow/`, visible in file manager (was writing to private app sandbox) (2026-04-06)
 - [x] Android: fix backup "command not found" — register plugin commands in `build.rs` COMMANDS array + add `android-webview:default` to capabilities + fix JS command names to snake_case (2026-04-11)
 - [ ] 🟡 Header search/filters hidden on mobile — add mobile-accessible alternative
@@ -192,6 +193,7 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 ### Bug: Android backup restore fails after reinstall
 
 - [x] 🔴 Backup restore after uninstall/reinstall shows `[object Object]` — fixed: (1) replaced MediaStore query with SAF file picker (bypasses scoped storage ownership), (2) error handler extracts `.message` from Tauri plugin error objects
+- [x] Backup coverage audit — added `onboarding` store, `sfz_text_zoom`, `kanban-state` to `useBackup.ts` (2026-04-12)
 
 ### To go live
 

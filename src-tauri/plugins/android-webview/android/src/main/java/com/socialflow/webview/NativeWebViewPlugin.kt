@@ -575,6 +575,9 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     // Haptic feedback — controlled from Vue settings, defaults to on
     private var hapticEnabled = true
 
+    // Tap sound — controlled from Vue settings, defaults to off
+    private var tapSoundEnabled = false
+
     // Text zoom level — percentage, 100 = default
     private var textZoomLevel: Int = 100
 
@@ -584,6 +587,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
     private fun haptic(view: View, type: Int = HapticFeedbackConstants.KEYBOARD_TAP) {
         if (hapticEnabled) view.performHapticFeedback(type)
+        if (tapSoundEnabled) view.playSoundEffect(android.view.SoundEffectConstants.CLICK)
     }
     private var bottomBarView: LinearLayout? = null
 
@@ -1132,6 +1136,24 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     fun setHaptic(invoke: Invoke) {
         val args = invoke.parseArgs(GrayscaleArgs::class.java) // reuse — same shape { enabled: bool }
         hapticEnabled = args.enabled
+        invoke.resolve(JSObject())
+    }
+
+    @Command
+    fun setTapSound(invoke: Invoke) {
+        val args = invoke.parseArgs(GrayscaleArgs::class.java) // reuse — same shape { enabled: bool }
+        tapSoundEnabled = args.enabled
+        invoke.resolve(JSObject())
+    }
+
+    // Trigger haptic + tap sound from Vue-side buttons.
+    // Gating respects the same hapticEnabled / tapSoundEnabled flags as the native bottom bar.
+    @Command
+    fun triggerHaptic(invoke: Invoke) {
+        activity.runOnUiThread {
+            val view = bottomBarView ?: socialWebView ?: activity.window.decorView
+            haptic(view)
+        }
         invoke.resolve(JSObject())
     }
 

@@ -4,7 +4,14 @@ All notable changes to SocialFlow are documented here.
 
 ## [2026-04-12]
 
+### Added
+- **Backup coverage** — `useBackup.ts` now persists the `onboarding` store (completed flag), `sfz_text_zoom` (text zoom level), and `kanban-state` (board state) in addition to previously-covered stores and localStorage keys; closes gaps where restored devices lost zoom, kanban, and re-triggered the tutorial
+- **Global haptic + tap sound on Vue buttons** — delegated `pointerdown` listener in `App.vue` matches `button`/`[role=button]`/`label[for]`/etc. and invokes `trigger_haptic` IPC, reusing the existing `hapticEnabled`/`tapSoundEnabled` gating; 50ms throttle prevents double-fire; opt-out via `data-no-haptic`
+- **`set_tap_sound` + `trigger_haptic` Tauri commands** — new Kotlin commands registered in `build.rs` + capabilities; `haptic()` helper now also calls `view.playSoundEffect(CLICK)` when tap sound enabled
+
 ### Fixed
+- **Tap sound toggle was a dead switch** — setting was stored in localStorage but never read anywhere; now wired end-to-end from `MobileSettingsSheet` toggle → IPC → native plugin → `playSoundEffect` on button press
+- **Haptic/tap-sound prefs not synced at boot** — Kotlin defaulted to `haptic=on`/`tapSound=off` on every cold start regardless of user setting; `App.vue` onMounted now pushes `sfz_haptic` + `sfz_tap_sound` from localStorage to the native plugin alongside `set_dark_mode` and `set_text_zoom`
 - **Android backup restore fails after reinstall** — replaced MediaStore query (blocked by scoped storage ownership) with SAF file picker (`ACTION_OPEN_DOCUMENT`); user now selects the `.sfbak` file manually, works regardless of app reinstall
 - **Backup error displayed as `[object Object]`** — Tauri plugin rejections are plain objects, not Error instances; error handler now extracts `.message` property
 

@@ -3,6 +3,7 @@ import { useAccountsStore } from '@/stores/accounts'
 import { useFriendsFilterStore } from '@/stores/friendsFilter'
 import { useThemeStore } from '@/stores/theme'
 import { useCustomLinksStore } from '@/stores/customLinks'
+import { useOnboardingStore } from '@/stores/onboarding'
 import { setLocale } from '@/utils/i18n'
 
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
@@ -14,6 +15,7 @@ function collectStoreData(): string {
   const friends = useFriendsFilterStore()
   const theme = useThemeStore()
   const customLinks = useCustomLinksStore()
+  const onboarding = useOnboardingStore()
 
   const data = {
     profiles: {
@@ -35,6 +37,9 @@ function collectStoreData(): string {
     customLinks: {
       links: customLinks.links,
     },
+    onboarding: {
+      completed: onboarding.completed,
+    },
     localStorage: {
       sfz_username: localStorage.getItem('sfz_username') ?? '',
       sfz_email: localStorage.getItem('sfz_email') ?? '',
@@ -43,6 +48,8 @@ function collectStoreData(): string {
       grayscale: localStorage.getItem('grayscale') ?? '0',
       sfz_haptic: localStorage.getItem('sfz_haptic') ?? 'true',
       sfz_tap_sound: localStorage.getItem('sfz_tap_sound') ?? 'false',
+      sfz_text_zoom: localStorage.getItem('sfz_text_zoom') ?? '100',
+      'kanban-state': localStorage.getItem('kanban-state') ?? '',
     },
   }
   return JSON.stringify(data)
@@ -89,6 +96,13 @@ function applyStoreData(json: string) {
     store.links = data.customLinks.links ?? {}
   }
 
+  if (data.onboarding) {
+    const store = useOnboardingStore()
+    store.$patch({
+      completed: data.onboarding.completed ?? false,
+    })
+  }
+
   if (data.localStorage) {
     if (data.localStorage.sfz_username)
       localStorage.setItem('sfz_username', data.localStorage.sfz_username)
@@ -106,6 +120,10 @@ function applyStoreData(json: string) {
       localStorage.setItem('sfz_haptic', data.localStorage.sfz_haptic)
     if (data.localStorage.sfz_tap_sound)
       localStorage.setItem('sfz_tap_sound', data.localStorage.sfz_tap_sound)
+    if (data.localStorage.sfz_text_zoom)
+      localStorage.setItem('sfz_text_zoom', data.localStorage.sfz_text_zoom)
+    if (data.localStorage['kanban-state'])
+      localStorage.setItem('kanban-state', data.localStorage['kanban-state'])
   }
 }
 

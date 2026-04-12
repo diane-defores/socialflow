@@ -239,6 +239,9 @@ function toggleHaptic() {
 function toggleTapSound() {
   tapSoundEnabled.value = !tapSoundEnabled.value
   localStorage.setItem('sfz_tap_sound', String(tapSoundEnabled.value))
+  import('@tauri-apps/api/core').then(({ invoke }) => {
+    invoke('plugin:android-webview|set_tap_sound', { enabled: tapSoundEnabled.value }).catch(() => {})
+  }).catch(() => {})
 }
 
 // ─── Text zoom ──────────────────────────────────────────────

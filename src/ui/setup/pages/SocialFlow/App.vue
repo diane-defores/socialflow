@@ -96,6 +96,27 @@ const onSwitchProfile = ((e: CustomEvent) => {
 }) as unknown as (e: Event) => void
 const onToggleDarkMode = () => { themeStore.toggleTheme() }
 
+// Global tap feedback — delegated to the native plugin so it honors
+// the same hapticEnabled / tapSoundEnabled flags as the Kotlin bottom bar.
+// Throttled to 50ms to avoid double-fire on fast repeat taps.
+let lastTapAt = 0
+const onGlobalTap = (e: Event) => {
+  const target = e.target as HTMLElement | null
+  if (!target) return
+  const trigger = target.closest(
+    'button, [role="button"], a[role="button"], .sfz-tap, input[type="button"], input[type="submit"], label[for]',
+  ) as HTMLElement | null
+  if (!trigger) return
+  if (trigger.hasAttribute('disabled') || trigger.getAttribute('aria-disabled') === 'true') return
+  if (trigger.closest('[data-no-haptic]')) return
+  const now = performance.now()
+  if (now - lastTapAt < 50) return
+  lastTapAt = now
+  import('@tauri-apps/api/core').then(({ invoke }) => {
+    invoke('plugin:android-webview|trigger_haptic').catch(() => {})
+  }).catch(() => {})
+}
+
 // Sync locale to Android plugin for native UI translations
 watch(locale, async (newLocale) => {
   if (!isTauri) return
@@ -162,6 +183,14 @@ onMounted(async () => {
     if (savedZoom !== 100) {
       invoke('set_text_zoom', { level: savedZoom }).catch(() => {})
     }
+    // Sync initial haptic + tap sound preferences to native plugin
+    // (Kotlin defaults to haptic=on, tapSound=off — resync if user changed them)
+    const savedHaptic = localStorage.getItem('sfz_haptic') !== 'false'
+    const savedTapSound = localStorage.getItem('sfz_tap_sound') === 'true'
+    invoke('plugin:android-webview|set_haptic', { enabled: savedHaptic }).catch(() => {})
+    if (savedTapSound) {
+      invoke('plugin:android-webview|set_tap_sound', { enabled: true }).catch(() => {})
+    }
 
     // Tray events use Rust Emitter.emit() → listen() from @tauri-apps/api/event
     const { listen } = await import('@tauri-apps/api/event')
@@ -179,6 +208,13 @@ onMounted(async () => {
   window.addEventListener('sfz-open-profile-sheet', onOpenProfileSheet)
   window.addEventListener('sfz-switch-profile', onSwitchProfile)
   window.addEventListener('sfz-toggle-dark-mode', onToggleDarkMode)
+
+  // Global haptic/sound feedback for Vue-side buttons.
+  // Delegated pointerdown → native plugin respects user's haptic + tap_sound prefs.
+  // Opt-out with `data-no-haptic` on an element or ancestor.
+  if (isTauri) {
+    document.addEventListener('pointerdown', onGlobalTap, { capture: true, passive: true })
+  }
 })
 
 onUnmounted(() => {
@@ -188,6 +224,7 @@ onUnmounted(() => {
   window.removeEventListener('sfz-open-profile-sheet', onOpenProfileSheet)
   window.removeEventListener('sfz-switch-profile', onSwitchProfile)
   window.removeEventListener('sfz-toggle-dark-mode', onToggleDarkMode)
+  document.removeEventListener('pointerdown', onGlobalTap, { capture: true } as EventListenerOptions)
   unlistenTray?.()
 })
 </script>
