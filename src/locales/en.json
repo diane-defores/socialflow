@@ -238,7 +238,8 @@
     "signed_in_as": "Signed in as",
     "sign_out": "Sign out",
     "error_generic": "Something went wrong. Please try again.",
-    "no_account_hint": "Create an account to sync your data across all your devices."
+    "no_account_hint": "Create an account to sync your data across all your devices.",
+    "unavailable_hint": "Account sync is unavailable in this build — the Convex backend is not configured."
   },
   "kanban": {
     "todo": "To do",

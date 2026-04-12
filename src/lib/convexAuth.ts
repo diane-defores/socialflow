@@ -19,6 +19,7 @@ function storageKey(key: string, namespace: string) {
 
 export const isAuthenticated = ref(false);
 export const isAuthLoading = ref(true);
+export const isConvexConfigured = ref(false);
 
 interface AuthTokens {
   token: string;
@@ -43,6 +44,7 @@ let _currentToken: string | null = null;
 export async function setupConvexAuth(client: ConvexClient, convexUrl: string) {
   _client = client;
   _namespace = convexUrl;
+  isConvexConfigured.value = true;
 
   const jwtK = storageKey(JWT_KEY, _namespace);
   const refreshK = storageKey(REFRESH_TOKEN_KEY, _namespace);
@@ -108,7 +110,11 @@ export async function signIn(
   provider: string,
   params?: Record<string, string>,
 ) {
-  if (!_client) throw new Error("setupConvexAuth not called");
+  if (!_client) {
+    throw new Error(
+      "Account sync is unavailable — this build was not configured with a Convex backend.",
+    );
+  }
 
   const result = (await _client.action("auth:signIn" as any, {
     provider,

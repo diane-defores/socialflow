@@ -44,6 +44,11 @@
               </button>
             </template>
 
+            <!-- Convex not configured: show notice instead of signup form -->
+            <template v-else-if="!isConvexConfigured">
+              <p class="settings-account-hint">{{ $t('account.unavailable_hint') }}</p>
+            </template>
+
             <!-- No email account: signup form -->
             <template v-else>
               <p class="settings-account-hint">{{ $t('account.no_account_hint') }}</p>
@@ -170,7 +175,7 @@ import { useI18n } from 'vue-i18n'
 import { useThemeStore } from '@/stores/theme'
 import { useOnboardingStore } from '@/stores/onboarding'
 import { useSignupNudge } from '@/composables/useSignupNudge'
-import { signIn, signOut as convexSignOut } from '@/lib/convexAuth'
+import { signIn, signOut as convexSignOut, isConvexConfigured } from '@/lib/convexAuth'
 import { useToast } from 'primevue/usetoast'
 import BackupRestore from './BackupRestore.vue'
 
@@ -333,6 +338,24 @@ function replayOnboarding() {
 .settings-content {
   padding: 0 1.25rem 1.5rem;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-color, #6366f1) transparent;
+  scrollbar-gutter: stable;
+}
+
+.settings-content::-webkit-scrollbar {
+  width: 6px;
+  -webkit-appearance: none;
+}
+
+.settings-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.settings-content::-webkit-scrollbar-thumb {
+  background: var(--primary-color, #6366f1);
+  border-radius: 3px;
+  opacity: 0.6;
 }
 
 .settings-section-label {

@@ -238,7 +238,8 @@
     "signed_in_as": "Connecté en tant que",
     "sign_out": "Se déconnecter",
     "error_generic": "Une erreur est survenue. Réessayez.",
-    "no_account_hint": "Créez un compte pour synchroniser vos données sur tous vos appareils."
+    "no_account_hint": "Créez un compte pour synchroniser vos données sur tous vos appareils.",
+    "unavailable_hint": "La synchro de compte n'est pas disponible dans cette version — backend Convex non configuré."
   },
   "kanban": {
     "todo": "À faire",

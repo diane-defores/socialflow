@@ -153,6 +153,25 @@ defineExpose({
 <style scoped>
 .settings-container {
   padding: 1rem;
+  max-height: 70vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-color, #6366f1) transparent;
+  scrollbar-gutter: stable;
+}
+
+.settings-container::-webkit-scrollbar {
+  width: 6px;
+  -webkit-appearance: none;
+}
+
+.settings-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.settings-container::-webkit-scrollbar-thumb {
+  background: var(--primary-color, #6366f1);
+  border-radius: 3px;
 }
 
 .setting-item {
