@@ -819,18 +819,20 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             prewarmedWebView = createWebView()
             Log.i(TAG, "WebView pre-warmed")
         }
-        // Register SAF file picker for backup restore — must happen before STARTED
+        // Register SAF file picker for backup restore using activityResultRegistry directly
+        // (works regardless of lifecycle state, unlike registerForActivityResult on ComponentActivity)
         try {
             (activity as? androidx.activity.ComponentActivity)?.let { componentActivity ->
-                pickBackupLauncher = componentActivity.registerForActivityResult(
+                pickBackupLauncher = componentActivity.activityResultRegistry.register(
+                    "sfz_backup_picker",
                     androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
                 ) { result ->
-                    val invoke = pendingBackupInvoke ?: return@registerForActivityResult
+                    val invoke = pendingBackupInvoke ?: return@register
                     pendingBackupInvoke = null
 
                     if (result.resultCode != Activity.RESULT_OK || result.data?.data == null) {
                         invoke.reject("Aucun fichier sélectionné")
-                        return@registerForActivityResult
+                        return@register
                     }
 
                     try {
@@ -845,9 +847,9 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                         invoke.reject(e.message ?: "Load backup failed")
                     }
                 }
-                Log.i(TAG, "Backup file picker registered")
-            }
-        } catch (e: IllegalStateException) {
+                Log.i(TAG, "Backup file picker registered via activityResultRegistry")
+            } ?: Log.w(TAG, "Activity is not a ComponentActivity — file picker unavailable")
+        } catch (e: Exception) {
             Log.w(TAG, "Could not register backup file picker: ${e.message}")
         }
     }
