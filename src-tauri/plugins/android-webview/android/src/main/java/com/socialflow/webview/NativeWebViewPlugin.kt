@@ -8,6 +8,8 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.util.Log
 import android.view.Gravity
+import android.media.AudioAttributes
+import android.media.SoundPool
 import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.ViewGroup
@@ -575,8 +577,14 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     // Haptic feedback — controlled from Vue settings, defaults to on
     private var hapticEnabled = true
 
-    // Tap sound — controlled from Vue settings, defaults to off
+    // Tap sound — controlled from Vue settings, defaults to off.
+    // We use SoundPool with a bundled click.wav rather than view.playSoundEffect()
+    // because the latter respects the system "Touch sounds" setting, which is
+    // off by default on most Android devices.
     private var tapSoundEnabled = false
+    private var soundPool: SoundPool? = null
+    private var clickSoundId: Int = 0
+    private var clickSoundLoaded: Boolean = false
 
     // Text zoom level — percentage, 100 = default
     private var textZoomLevel: Int = 100
@@ -587,7 +595,37 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
     private fun haptic(view: View, type: Int = HapticFeedbackConstants.KEYBOARD_TAP) {
         if (hapticEnabled) view.performHapticFeedback(type)
-        if (tapSoundEnabled) view.playSoundEffect(android.view.SoundEffectConstants.CLICK)
+        if (tapSoundEnabled) playClickSound()
+    }
+
+    private fun playClickSound() {
+        val pool = soundPool ?: return
+        if (!clickSoundLoaded) return
+        pool.play(clickSoundId, 1.0f, 1.0f, 1, 0, 1.0f)
+    }
+
+    private fun initSoundPool() {
+        if (soundPool != null) return
+        val attrs = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_MEDIA)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build()
+        val pool = SoundPool.Builder()
+            .setMaxStreams(2)
+            .setAudioAttributes(attrs)
+            .build()
+        pool.setOnLoadCompleteListener { _, _, status ->
+            clickSoundLoaded = (status == 0)
+            if (status != 0) Log.w(TAG, "click.wav failed to load (status=$status)")
+        }
+        try {
+            val afd = activity.assets.openFd("sounds/click.wav")
+            clickSoundId = pool.load(afd, 1)
+            afd.close()
+        } catch (e: Exception) {
+            Log.w(TAG, "Could not load click.wav from assets", e)
+        }
+        soundPool = pool
     }
     private var bottomBarView: LinearLayout? = null
 
@@ -823,6 +861,8 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             prewarmedWebView = createWebView()
             Log.i(TAG, "WebView pre-warmed")
         }
+        // Init SoundPool for tap sound (uses bundled asset, independent of system "Touch sounds" setting)
+        initSoundPool()
         // Register SAF file picker for backup restore using activityResultRegistry directly
         // (works regardless of lifecycle state, unlike registerForActivityResult on ComponentActivity)
         try {

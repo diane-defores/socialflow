@@ -35,7 +35,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useThemeStore } from '@/stores/theme'
-import { useWebviewStore } from '@/stores/webviewState'
+import { useWebviewStore, WEBVIEW_URLS } from '@/stores/webviewState'
 import { useProfilesStore } from '@/stores/profiles'
 import { useOnboardingStore } from '@/stores/onboarding'
 import { useFriendsFilter } from './composables/useFriendsFilter'
@@ -150,6 +150,26 @@ watch(
     const { invoke } = await import('@tauri-apps/api/core')
     const profilesJson = JSON.stringify(profilesStore.profiles.map(p => ({ id: p.id, name: p.name, emoji: p.emoji })))
     invoke('set_profiles', { profilesJson, activeProfileId: activeId }).catch(() => {})
+  },
+  { immediate: true },
+)
+
+// Sync the per-profile visible networks to the Android bottom bar.
+// Re-fires when the active profile changes or its hiddenNetworks list is edited.
+const hiddenFingerprint = computed(() => {
+  const p = profilesStore.activeProfile
+  return p ? `${p.id}:${(p.hiddenNetworks ?? []).join(',')}` : ''
+})
+watch(
+  hiddenFingerprint,
+  async () => {
+    if (!isTauri) return
+    const profileId = profilesStore.activeProfileId
+    if (!profileId) return
+    const visibleIds = Object.keys(WEBVIEW_URLS)
+      .filter(id => !profilesStore.isNetworkHidden(profileId, id))
+    const { invoke } = await import('@tauri-apps/api/core')
+    invoke('set_bar_networks', { networkIds: visibleIds }).catch(() => {})
   },
   { immediate: true },
 )

@@ -59,10 +59,8 @@ watch(
       networkId !== prevNetworkId || profileId !== prevProfileId || url !== prevUrl
     if (keyChanged && (prevNetworkId || prevProfileId)) {
       await switchTo(url, profileId, networkId)
-      syncBarNetworks()
     } else if (!prevNetworkId && !prevProfileId) {
       await open(url, profileId, networkId)
-      syncBarNetworks()
     }
   },
   { immediate: true },
