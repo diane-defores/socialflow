@@ -39,8 +39,8 @@
               />
             </div>
 
-            <!-- Has email account: show email + sign out -->
-            <template v-if="nudge.hasEmailAccount.value">
+            <!-- Signed in with email account: show email + sign out -->
+            <template v-if="isSignedIn && nudge.hasEmailAccount.value">
               <div class="settings-field">
                 <label class="settings-label">
                   <i class="pi pi-envelope" />
@@ -62,12 +62,30 @@
               <p class="settings-account-hint">{{ $t('account.unavailable_hint') }}</p>
             </template>
 
-            <!-- No email account: signup form -->
+            <!-- Signed out / anonymous: auth form -->
             <template v-else>
-              <p class="settings-account-hint">{{ $t('account.no_account_hint') }}</p>
+              <div class="account-mode-toggle">
+                <button
+                  class="account-mode-btn"
+                  :class="{ active: authMode === 'signIn' }"
+                  @click="authMode = 'signIn'"
+                >
+                  {{ $t('account.sign_in_button') }}
+                </button>
+                <button
+                  class="account-mode-btn"
+                  :class="{ active: authMode === 'signUp' }"
+                  @click="authMode = 'signUp'"
+                >
+                  {{ $t('account.create_button') }}
+                </button>
+              </div>
+              <p class="settings-account-hint">
+                {{ authMode === 'signIn' ? $t('account.sign_in_hint') : $t('account.no_account_hint') }}
+              </p>
               <form
                 class="settings-signup-form"
-                @submit.prevent="handleSettingsSignup"
+                @submit.prevent="handleAccountAuth"
               >
                 <input
                   v-model="signupEmail"
@@ -120,7 +138,7 @@
                     v-if="signupLoading"
                     class="pi pi-spin pi-spinner"
                   />
-                  {{ signupLoading ? '' : $t('account.create_button') }}
+                  {{ signupLoading ? '' : authMode === 'signIn' ? $t('account.sign_in_button') : $t('account.create_button') }}
                 </button>
               </form>
             </template>
@@ -227,7 +245,7 @@ import { useI18n } from 'vue-i18n'
 import { useThemeStore } from '@/stores/theme'
 import { useOnboardingStore } from '@/stores/onboarding'
 import { useSignupNudge } from '@/composables/useSignupNudge'
-import { signIn, signOut as convexSignOut, isConvexConfigured } from '@/lib/convexAuth'
+import { signIn, signOut as convexSignOut, isAuthenticated, isConvexConfigured } from '@/lib/convexAuth'
 import { useToast } from 'primevue/usetoast'
 import BackupRestore from './BackupRestore.vue'
 
@@ -239,6 +257,7 @@ const themeStore = useThemeStore()
 const onboardingStore = useOnboardingStore()
 const toast = useToast()
 const nudge = useSignupNudge()
+const isSignedIn = isAuthenticated
 
 // ─── Settings state ──────────────────────────────────────────
 const settingsUsername = ref(localStorage.getItem('sfz_username') ?? '')
@@ -252,6 +271,7 @@ function saveSettings() {
 // ─── Signup form ─────────────────────────────────────────────
 const signupEmail = ref('')
 const signupPassword = ref('')
+const authMode = ref<'signIn' | 'signUp'>('signUp')
 const signupError = ref('')
 const signupLoading = ref(false)
 const signupErrorCopied = ref(false)
@@ -267,7 +287,7 @@ const displayedSignupError = computed(() => {
   return `${signupError.value.slice(0, SIGNUP_ERROR_PREVIEW_LENGTH).trimEnd()}…`
 })
 
-async function handleSettingsSignup() {
+async function handleAccountAuth() {
   signupError.value = ''
   signupErrorCopied.value = false
   signupErrorExpanded.value = false
@@ -276,12 +296,17 @@ async function handleSettingsSignup() {
     await signIn('password', {
       email: signupEmail.value,
       password: signupPassword.value,
-      flow: 'signUp',
+      flow: authMode.value,
     })
     settingsEmail.value = signupEmail.value
     localStorage.setItem('sfz_email', signupEmail.value)
     nudge.onAccountCreated()
-    toast.add({ severity: 'success', summary: t('account.created_toast'), life: 3000 })
+    toast.add({
+      severity: 'success',
+      summary: authMode.value === 'signIn' ? t('account.signed_in_toast') : t('account.created_toast'),
+      life: 3000,
+    })
+    signupPassword.value = ''
   } catch (e: unknown) {
     signupError.value = e instanceof Error ? e.message : t('account.error_generic')
   } finally {
@@ -311,8 +336,12 @@ async function copySignupError() {
 
 async function handleSignOut() {
   await convexSignOut()
+  nudge.hasEmailAccount.value = false
   settingsEmail.value = ''
   localStorage.removeItem('sfz_email')
+  signupPassword.value = ''
+  authMode.value = 'signIn'
+  toast.add({ severity: 'success', summary: t('account.signed_out_toast'), life: 3000 })
 }
 
 // ─── Haptic & tap sound ─────────────────────────────────────
@@ -493,6 +522,33 @@ function replayOnboarding() {
   color: var(--text-color-secondary);
   line-height: 1.45;
   margin: 0 0 0.75rem;
+}
+
+.account-mode-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.account-mode-btn {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  background: rgba(99, 102, 241, 0.06);
+  color: var(--text-color);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.account-mode-btn.active {
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--primary-color), #7c3aed);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(99, 102, 241, 0.24);
 }
 
 .settings-signup-form {
