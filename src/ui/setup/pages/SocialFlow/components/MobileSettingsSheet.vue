@@ -240,6 +240,8 @@ import { useThemeStore } from '@/stores/theme'
 import { useOnboardingStore } from '@/stores/onboarding'
 import { useSignupNudge } from '@/composables/useSignupNudge'
 import { signIn, signOut as convexSignOut, isAuthenticated, isConvexConfigured } from '@/lib/convexAuth'
+import { getConvexClient } from '@/lib/convex'
+import { api } from '../../../../../../convex/_generated/api'
 import { useToast } from 'primevue/usetoast'
 import BackupRestore from './BackupRestore.vue'
 
@@ -301,13 +303,26 @@ async function handleAccountAuth(flow: 'signIn' | 'signUp') {
   authAction.value = flow
   signupLoading.value = true
   try {
+    const normalizedEmail = signupEmail.value.trim().toLowerCase()
+    signupEmail.value = normalizedEmail
+
+    if (flow === 'signUp') {
+      const emailExists = await getConvexClient().query(api.users.emailExists, {
+        email: normalizedEmail,
+      })
+      if (emailExists) {
+        signupError.value = t('account.already_exists_error')
+        return
+      }
+    }
+
     await signIn('password', {
-      email: signupEmail.value,
+      email: normalizedEmail,
       password: signupPassword.value,
       flow,
     })
-    settingsEmail.value = signupEmail.value
-    localStorage.setItem('sfz_email', signupEmail.value)
+    settingsEmail.value = normalizedEmail
+    localStorage.setItem('sfz_email', normalizedEmail)
     nudge.onAccountCreated()
     toast.add({
       severity: 'success',
