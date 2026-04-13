@@ -7,11 +7,16 @@ export default defineSchema({
 
   users: defineTable({
     email: v.optional(v.string()),
+    emailVerificationTime: v.optional(v.number()),
     name: v.optional(v.string()),
     avatarUrl: v.optional(v.string()),
     isAnonymous: v.optional(v.boolean()),
-    createdAt: v.number(),
-  }).index("by_email", ["email"]),
+    phone: v.optional(v.string()),
+    phoneVerificationTime: v.optional(v.number()),
+    createdAt: v.optional(v.number()),
+  })
+    .index("email", ["email"])
+    .index("phone", ["phone"]),
 
   socialAccounts: defineTable({
     userId: v.id("users"),
