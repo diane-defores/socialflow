@@ -589,6 +589,9 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     // Text zoom level — percentage, 100 = default
     private var textZoomLevel: Int = 100
 
+    // Facebook stays mobile by default; switch to desktop only for story-specific flows.
+    private var facebookDesktopOverride = false
+
     // SAF file picker — pending invoke for backup restore
     private var pendingBackupInvoke: Invoke? = null
     private var pickBackupLauncher: androidx.activity.result.ActivityResultLauncher<android.content.Intent>? = null
@@ -1059,7 +1062,10 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                 // Reuse existing webview — just navigate and update active highlight
                 initialBackIndex = -1  // Reset baseline for new network URL
                 isLoggedIn = false; pagesSinceOpen = 0  // Re-check auth on new network
-                applyUaForNetwork(args.networkId)
+                if (args.networkId == "facebook") {
+                    facebookDesktopOverride = isFacebookDesktopFlow(args.url)
+                }
+                applyUaForNetwork(args.networkId, args.url)
                 socialWebView?.loadUrl(args.url)
                 currentAccountId = args.accountId
                 currentNetworkId = args.networkId
@@ -1141,7 +1147,10 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             // Apply persisted mute state to the new webview via JS
             applyMuteToWebView(webView)
 
-            applyUaForNetwork(args.networkId)
+            if (args.networkId == "facebook") {
+                facebookDesktopOverride = isFacebookDesktopFlow(args.url)
+            }
+            applyUaForNetwork(args.networkId, args.url)
             webView.loadUrl(args.url)
             invoke.resolve(JSObject())
         }
@@ -1153,9 +1162,12 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     fun navigateWebView(invoke: Invoke) {
         val args = invoke.parseArgs(NavigateArgs::class.java)
         activity.runOnUiThread {
+            if (args.networkId == "facebook") {
+                facebookDesktopOverride = isFacebookDesktopFlow(args.url)
+            }
             initialBackIndex = -1  // Reset baseline for new network URL
             isLoggedIn = false; pagesSinceOpen = 0
-            applyUaForNetwork(args.networkId)
+            applyUaForNetwork(args.networkId, args.url)
             socialWebView?.loadUrl(args.url)
             currentNetworkId = args.networkId
             updateBottomBarActiveNetwork(args.networkId)
@@ -1959,7 +1971,10 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                 }
                 initialBackIndex = -1
                 isLoggedIn = false; pagesSinceOpen = 0
-                applyUaForNetwork(net.id)
+                if (net.id == "facebook") {
+                    facebookDesktopOverride = false
+                }
+                applyUaForNetwork(net.id, net.url)
                 dbg("  loadUrl: ${net.url}")
                 socialWebView?.loadUrl(net.url)
                 currentNetworkId = net.id
@@ -2167,23 +2182,53 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         }
         initialBackIndex = -1
         isLoggedIn = false; pagesSinceOpen = 0
-        applyUaForNetwork("facebook")
+        facebookDesktopOverride = false
+        applyUaForNetwork("facebook", facebookUrl)
         view.loadUrl(facebookUrl)
         currentNetworkId = "facebook"
         incrementUsage("facebook")
         updateBottomBarActiveNetwork("facebook")
     }
 
-    // Networks that require a desktop UA (their web app blocks mobile browsers
-    // or gates key actions such as upload/story creation behind the native app).
-    private val DESKTOP_UA_NETWORKS = setOf("facebook", "whatsapp", "telegram", "discord", "messenger", "snapchat")
+    // Networks that require a desktop UA (their web app blocks mobile browsers).
+    private val DESKTOP_UA_NETWORKS = setOf("whatsapp", "telegram", "discord", "messenger", "snapchat")
     private val DESKTOP_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
     private lateinit var mobileUa: String
 
-    /** Set the appropriate UA before loading a URL — desktop for WhatsApp/Telegram/Discord, mobile for everything else. */
-    private fun applyUaForNetwork(networkId: String?) {
+    private fun isFacebookDesktopFlow(url: String?): Boolean {
+        val value = url?.lowercase() ?: return false
+        return value.contains("/stories/create") ||
+            value.contains("/stories?") ||
+            value.contains("/stories/") ||
+            value.contains("story.php") ||
+            value.contains("story_bucket")
+    }
+
+    private fun shouldUseDesktopUa(networkId: String?, url: String? = null): Boolean {
+        if (networkId in DESKTOP_UA_NETWORKS) return true
+        if (networkId == "facebook") {
+            return facebookDesktopOverride || isFacebookDesktopFlow(url)
+        }
+        return false
+    }
+
+    /** Set the appropriate UA before loading a URL — desktop only where required. */
+    private fun applyUaForNetwork(networkId: String?, url: String? = null) {
         val wv = socialWebView ?: return
-        wv.settings.userAgentString = if (networkId in DESKTOP_UA_NETWORKS) DESKTOP_UA else mobileUa
+        wv.settings.userAgentString = if (shouldUseDesktopUa(networkId, url)) DESKTOP_UA else mobileUa
+    }
+
+    private fun maybeHandleFacebookUaSwitch(view: WebView, url: String): Boolean {
+        if (currentNetworkId != "facebook") return false
+
+        val targetDesktop = isFacebookDesktopFlow(url)
+        if (targetDesktop == facebookDesktopOverride) return false
+
+        facebookDesktopOverride = targetDesktop
+        applyUaForNetwork("facebook", url)
+        dbg("[ua] facebook -> ${if (targetDesktop) "desktop" else "mobile"} for $url")
+        view.loadUrl(url)
+        return true
     }
 
     // ── WebView factory ───────────────────────────────────────────────────────
@@ -2236,6 +2281,9 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
                 // Allow normal web navigation — but intercept app store redirects
                 if (scheme == "http" || scheme == "https") {
+                    if (maybeHandleFacebookUaSwitch(view, url)) {
+                        return true
+                    }
                     // Intercept Play Store / App Store redirects → send to web login instead
                     if (host.contains("play.google.com") || host.contains("apps.apple.com") || host.contains("itunes.apple.com")) {
                         val loginUrl = NETWORK_LOGIN_URLS[currentNetworkId]
@@ -2307,7 +2355,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             }
             override fun onPageFinished(view: WebView, url: String) {
                 super.onPageFinished(view, url)
-                dbg("[page] finished net=${currentNetworkId ?: "?"} ua=${if (currentNetworkId in DESKTOP_UA_NETWORKS) "desktop" else "mobile"} url=$url")
+                dbg("[page] finished net=${currentNetworkId ?: "?"} ua=${if (shouldUseDesktopUa(currentNetworkId, url)) "desktop" else "mobile"} url=$url")
                 // Fallback: inject scripts here only if addDocumentStartJavaScript wasn't available
                 if (!useDocStart) {
                     view.evaluateJavascript(STEALTH_SCRIPT, null)
@@ -2338,7 +2386,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                 }
                 // Always re-inject desktop viewport override in onPageFinished (backup —
                 // the page may have set its own viewport meta after our document-start script)
-                if (currentNetworkId in DESKTOP_UA_NETWORKS) {
+                if (shouldUseDesktopUa(currentNetworkId, url)) {
                     view.evaluateJavascript(DESKTOP_VIEWPORT_SCRIPT, null)
                 }
                 if (isGrayscale) applyGrayscaleToWebView(view)
