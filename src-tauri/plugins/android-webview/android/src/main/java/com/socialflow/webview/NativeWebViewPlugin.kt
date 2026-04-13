@@ -279,6 +279,14 @@ private val DISMISS_APP_BANNERS_SCRIPT = """
   'use strict';
   if (window.__sfzAppBannerWatcher) return;
   window.__sfzAppBannerWatcher = true;
+  window.__sfzAppBannerLog = window.__sfzAppBannerLog || [];
+
+  function L(msg) {
+    try {
+      window.__sfzAppBannerLog.push(msg);
+      if (window.__sfzAppBannerLog.length > 80) window.__sfzAppBannerLog.shift();
+    } catch (e) {}
+  }
 
   // Persistent CSS — hides known app-banner elements even if re-inserted into the DOM
   var style = document.createElement('style');
@@ -318,6 +326,7 @@ private val DISMISS_APP_BANNERS_SCRIPT = """
       if (el.children.length > 10 || el.offsetHeight > 120) continue;
       var txt = (el.textContent || '').trim();
       if (txt.length < 200 && DOWNLOAD_RE.test(txt)) {
+        L('HIDE banner: ' + txt.substring(0, 120));
         el.style.display = 'none';
       }
     }
@@ -338,9 +347,20 @@ private val DISMISS_APP_BANNERS_SCRIPT = """
         '[id*="app" i], [class*="app" i], [id*="banner" i], [class*="banner" i],' +
         '[id*="install" i], [class*="install" i], [id*="promo" i], [class*="promo" i]'
       );
-      if (parent) { el.click(); return; }
+      if (parent) { L('DISMISS CTA: ' + label); el.click(); return; }
     }
   }
+
+  // Trace likely content-creation clicks so Kotlin logs can show what happened
+  // right before an app-promo banner appears or the flow stalls.
+  var STORY_RE = /(story|stories|create story|créer une story|ajouter à la story|your story|reel|camera|photo|create post|composer)/i;
+  document.addEventListener('click', function(ev) {
+    var el = ev.target && ev.target.closest ? ev.target.closest('button, a, [role="button"], div, span') : null;
+    if (!el) return;
+    var label = (el.textContent || el.getAttribute('aria-label') || el.getAttribute('title') || '').trim();
+    if (!label || !STORY_RE.test(label)) return;
+    L('CLICK candidate: ' + label.substring(0, 140));
+  }, true);
 
   dismissAppPrompts();
   setTimeout(dismissAppPrompts, 800);
@@ -2383,6 +2403,23 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                         isLoggedIn = true
                         dbg("[cookie:$netId] Auth cookies detected — disabled")
                     }
+                }
+                if (currentNetworkId == "facebook") {
+                    view.postDelayed({
+                        view.evaluateJavascript("JSON.stringify(window.__sfzAppBannerLog || [])") { result ->
+                            val raw = result?.trim()
+                            if (raw.isNullOrEmpty() || raw == "null" || raw == "[]") return@evaluateJavascript
+                            try {
+                                val arr = org.json.JSONArray(raw)
+                                for (i in 0 until arr.length()) {
+                                    dbg("[fb-ui] ${arr.optString(i)}")
+                                }
+                                view.evaluateJavascript("window.__sfzAppBannerLog = []", null)
+                            } catch (e: Exception) {
+                                dbg("[fb-ui] log parse failed: ${e.message}")
+                            }
+                        }
+                    }, 1200)
                 }
                 // Always re-inject desktop viewport override in onPageFinished (backup —
                 // the page may have set its own viewport meta after our document-start script)
