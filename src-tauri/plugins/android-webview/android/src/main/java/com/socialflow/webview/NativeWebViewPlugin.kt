@@ -592,6 +592,8 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     // SAF file picker — pending invoke for backup restore
     private var pendingBackupInvoke: Invoke? = null
     private var pickBackupLauncher: androidx.activity.result.ActivityResultLauncher<android.content.Intent>? = null
+    private var pendingFilePathCallback: android.webkit.ValueCallback<Array<android.net.Uri>>? = null
+    private var pickFileLauncher: androidx.activity.result.ActivityResultLauncher<android.content.Intent>? = null
 
     private fun haptic(view: View, type: Int = HapticFeedbackConstants.KEYBOARD_TAP) {
         if (hapticEnabled) view.performHapticFeedback(type)
@@ -863,7 +865,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         }
         // Init SoundPool for tap sound (uses bundled asset, independent of system "Touch sounds" setting)
         initSoundPool()
-        // Register SAF file picker for backup restore using activityResultRegistry directly
+        // Register SAF file pickers using activityResultRegistry directly
         // (works regardless of lifecycle state, unlike registerForActivityResult on ComponentActivity)
         try {
             (activity as? androidx.activity.ComponentActivity)?.let { componentActivity ->
@@ -892,9 +894,64 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                     }
                 }
                 Log.i(TAG, "Backup file picker registered via activityResultRegistry")
+
+                pickFileLauncher = componentActivity.activityResultRegistry.register(
+                    "sfz_web_file_picker",
+                    androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+                ) { result ->
+                    val callback = pendingFilePathCallback ?: return@register
+                    pendingFilePathCallback = null
+                    dbg("[file] picker resultCode=${result.resultCode}")
+
+                    if (result.resultCode != Activity.RESULT_OK) {
+                        dbg("[file] picker cancelled")
+                        callback.onReceiveValue(null)
+                        return@register
+                    }
+
+                    val intent = result.data
+                    val uris = mutableListOf<android.net.Uri>()
+
+                    try {
+                        val clipData = intent?.clipData
+                        if (clipData != null) {
+                            for (i in 0 until clipData.itemCount) {
+                                clipData.getItemAt(i)?.uri?.let { uri ->
+                                    try {
+                                        activity.contentResolver.takePersistableUriPermission(
+                                            uri,
+                                            android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                        )
+                                    } catch (_: Exception) {}
+                                    uris.add(uri)
+                                }
+                            }
+                        }
+
+                        intent?.data?.let { uri ->
+                            try {
+                                activity.contentResolver.takePersistableUriPermission(
+                                    uri,
+                                    android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                )
+                            } catch (_: Exception) {}
+                            if (!uris.contains(uri)) uris.add(uri)
+                        }
+
+                        callback.onReceiveValue(
+                            if (uris.isEmpty()) null else uris.toTypedArray()
+                        )
+                        dbg("[file] picker returned ${uris.size} uri(s): ${uris.joinToString(", ")}")
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Web file picker result handling failed: ${e.message}")
+                        dbg("[file] picker handling failed: ${e.message}")
+                        callback.onReceiveValue(null)
+                    }
+                }
+                Log.i(TAG, "Web file picker registered via activityResultRegistry")
             } ?: Log.w(TAG, "Activity is not a ComponentActivity — file picker unavailable")
         } catch (e: Exception) {
-            Log.w(TAG, "Could not register backup file picker: ${e.message}")
+            Log.w(TAG, "Could not register file pickers: ${e.message}")
         }
     }
 
@@ -2117,8 +2174,9 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         updateBottomBarActiveNetwork("facebook")
     }
 
-    // Networks that require a desktop UA (their web app blocks mobile browsers)
-    private val DESKTOP_UA_NETWORKS = setOf("whatsapp", "telegram", "discord", "messenger", "snapchat")
+    // Networks that require a desktop UA (their web app blocks mobile browsers
+    // or gates key actions such as upload/story creation behind the native app).
+    private val DESKTOP_UA_NETWORKS = setOf("facebook", "whatsapp", "telegram", "discord", "messenger", "snapchat")
     private val DESKTOP_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
     private lateinit var mobileUa: String
 
@@ -2172,35 +2230,39 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             override fun shouldOverrideUrlLoading(view: WebView, request: android.webkit.WebResourceRequest): Boolean {
                 val url = request.url.toString()
                 val scheme = request.url.scheme ?: ""
+                val host = request.url.host ?: ""
+                val path = request.url.path ?: ""
+                dbg("[nav] net=${currentNetworkId ?: "?"} scheme=$scheme host=$host path=$path url=$url")
 
                 // Allow normal web navigation — but intercept app store redirects
                 if (scheme == "http" || scheme == "https") {
-                    val host = request.url.host ?: ""
                     // Intercept Play Store / App Store redirects → send to web login instead
                     if (host.contains("play.google.com") || host.contains("apps.apple.com") || host.contains("itunes.apple.com")) {
                         val loginUrl = NETWORK_LOGIN_URLS[currentNetworkId]
                         if (loginUrl != null) {
                             Log.i(TAG, "App store redirect intercepted ($host) → $loginUrl")
+                            dbg("[nav] app-store redirect blocked → $loginUrl")
                             view.loadUrl(loginUrl)
                             return true
                         }
+                        dbg("[nav] app-store redirect blocked with no fallback")
                         return true  // block even if no login URL known
                     }
                     // Facebook tab → messages: switch to Messenger tab instead of loading
                     // in-webview (mobile UA shows "Download Messenger" loop)
                     if (currentNetworkId == "facebook") {
-                        val path = request.url.path ?: ""
                         if ((host.contains("facebook.com") && path.startsWith("/messages")) || host.contains("messenger.com")) {
                             Log.i(TAG, "Facebook→Messenger redirect intercepted → switching to Messenger tab")
+                            dbg("[nav] facebook→messenger intercepted")
                             switchToMessenger(view)
                             return true
                         }
                     }
                     // Messenger tab → Facebook feed: switch to Facebook tab
                     if (currentNetworkId == "messenger" && host.contains("facebook.com")) {
-                        val path = request.url.path ?: ""
                         if (!path.startsWith("/messages")) {
                             Log.i(TAG, "Messenger→Facebook redirect intercepted → switching to Facebook tab")
+                            dbg("[nav] messenger→facebook intercepted")
                             switchToFacebook(view)
                             return true
                         }
@@ -2211,12 +2273,14 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                 // Handle our custom "clear cookies and retry" action from the blocked page
                 if (url.startsWith("sfz://clear-cookies")) {
                     val retryUrl = android.net.Uri.parse(url).getQueryParameter("retry") ?: return true
+                    dbg("[nav] clear-cookies action retry=$retryUrl")
                     clearCookiesAndRetry(view, retryUrl)
                     return true
                 }
 
                 // fb-messenger:// deep link → switch to Messenger tab (desktop UA)
                 if (scheme == "fb-messenger") {
+                    dbg("[nav] fb-messenger deep link intercepted")
                     switchToMessenger(view)
                     return true
                 }
@@ -2226,9 +2290,11 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                 val loginUrl = NETWORK_LOGIN_URLS[currentNetworkId]
                 if (loginUrl != null) {
                     Log.i(TAG, "Blocked custom scheme ($scheme) → redirecting to $loginUrl")
+                    dbg("[nav] custom scheme blocked ($scheme) → $loginUrl")
                     view.loadUrl(loginUrl)
                 } else {
                     Log.i(TAG, "Blocked custom scheme: $url")
+                    dbg("[nav] custom scheme blocked without fallback: $url")
                 }
                 return true
             }
@@ -2241,6 +2307,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             }
             override fun onPageFinished(view: WebView, url: String) {
                 super.onPageFinished(view, url)
+                dbg("[page] finished net=${currentNetworkId ?: "?"} ua=${if (currentNetworkId in DESKTOP_UA_NETWORKS) "desktop" else "mobile"} url=$url")
                 // Fallback: inject scripts here only if addDocumentStartJavaScript wasn't available
                 if (!useDocStart) {
                     view.evaluateJavascript(STEALTH_SCRIPT, null)
@@ -2298,6 +2365,67 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             }
         }
         webView.webChromeClient = object : WebChromeClient() {
+            override fun onShowFileChooser(
+                webView: WebView?,
+                filePathCallback: android.webkit.ValueCallback<Array<android.net.Uri>>?,
+                fileChooserParams: FileChooserParams?
+            ): Boolean {
+                val launcher = pickFileLauncher
+                if (launcher == null || filePathCallback == null) {
+                    dbg("[file] chooser unavailable launcher=${launcher != null} callback=${filePathCallback != null}")
+                    filePathCallback?.onReceiveValue(null)
+                    return false
+                }
+
+                pendingFilePathCallback?.onReceiveValue(null)
+                pendingFilePathCallback = filePathCallback
+
+                return try {
+                    val rawAcceptTypes = (fileChooserParams?.acceptTypes ?: emptyArray())
+                        .mapNotNull { it?.trim() }
+                        .filter { it.isNotEmpty() }
+                        .flatMap { value -> value.split(",").map(String::trim) }
+                        .filter { it.isNotEmpty() }
+                        .distinct()
+
+                    val allowMultiple =
+                        fileChooserParams?.mode == FileChooserParams.MODE_OPEN_MULTIPLE
+                    val filenameHint = fileChooserParams?.filenameHint ?: ""
+                    val title = fileChooserParams?.title ?: ""
+                    val isCaptureEnabled = fileChooserParams?.isCaptureEnabled ?: false
+                    dbg(
+                        "[file] chooser opened net=${currentNetworkId ?: "?"} " +
+                            "accept=${if (rawAcceptTypes.isEmpty()) "*/*" else rawAcceptTypes.joinToString("|")} " +
+                            "multiple=$allowMultiple capture=$isCaptureEnabled title=$title hint=$filenameHint"
+                    )
+
+                    val intent = android.content.Intent(android.content.Intent.ACTION_OPEN_DOCUMENT).apply {
+                        addCategory(android.content.Intent.CATEGORY_OPENABLE)
+                        addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        addFlags(android.content.Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+                        putExtra(android.content.Intent.EXTRA_ALLOW_MULTIPLE, allowMultiple)
+
+                        if (rawAcceptTypes.size == 1) {
+                            type = rawAcceptTypes.first()
+                        } else {
+                            type = "*/*"
+                            if (rawAcceptTypes.isNotEmpty()) {
+                                putExtra(android.content.Intent.EXTRA_MIME_TYPES, rawAcceptTypes.toTypedArray())
+                            }
+                        }
+                    }
+
+                    launcher.launch(intent)
+                    true
+                } catch (e: Exception) {
+                    Log.w(TAG, "Could not open web file picker: ${e.message}")
+                    dbg("[file] chooser launch failed: ${e.message}")
+                    pendingFilePathCallback = null
+                    filePathCallback.onReceiveValue(null)
+                    false
+                }
+            }
+
             // reCAPTCHA (and other verification services) open a hidden child window
             // to communicate with Google's servers. Without this, reCAPTCHA fails with
             // "impossible d'établir une connexion avec le service Recaptcha".

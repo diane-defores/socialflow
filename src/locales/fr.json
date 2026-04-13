@@ -35,7 +35,9 @@
     "visibility_public": "Tout le monde",
     "ok": "OK",
     "copy": "Copier",
-    "copied": "Copié !"
+    "copied": "Copié !",
+    "show_more": "Voir plus",
+    "show_less": "Voir moins"
   },
   "settings": {
     "title": "Paramètres",

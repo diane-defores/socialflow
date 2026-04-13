@@ -35,7 +35,9 @@
     "visibility_public": "Everyone",
     "ok": "OK",
     "copy": "Copy",
-    "copied": "Copied!"
+    "copied": "Copied!",
+    "show_more": "Show more",
+    "show_less": "Show less"
   },
   "settings": {
     "title": "Settings",

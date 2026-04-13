@@ -2,6 +2,20 @@
 
 All notable changes to SocialFlow are documented here.
 
+## [2026-04-13]
+
+### Added
+- **Android WebView file chooser support** — implemented `WebChromeClient.onShowFileChooser` with an SAF-backed picker via `activityResultRegistry`, returning one or multiple `Uri`s to the page; unblocks photo/file selection flows for web composers such as Facebook post/message uploads
+- **Targeted Android debug logs for Facebook upload/story analysis** — the native plugin now records navigation URL/scheme/host/path, page-finished UA mode, file chooser parameters (`accept`, `multiple`, `capture`) and picker results so copied debug logs are actionable for diagnosing WebView-only regressions
+
+### Changed
+- **Facebook now uses desktop UA in Android WebView** — added `facebook` to `DESKTOP_UA_NETWORKS` to reduce mobile-web gating that pushes story/upload flows toward the native app
+- **Signup error UI in account surfaces** — settings drawer and signup nudge now render errors in a compact card with `Copy` / `Show more` controls instead of dumping the full raw message inline
+
+### Fixed
+- **Account creation errors were hard to read/copy** — long backend/auth errors are truncated by default, can be expanded on demand, and the full raw message can be copied from both the drawer and the signup nudge
+- **Android social WebView photo picker did nothing** — web `<input type="file">` requests now open the Android picker instead of failing silently
+
 ## [2026-04-12]
 
 ### Removed

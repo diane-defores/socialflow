@@ -28,7 +28,23 @@
                 minlength="8"
                 required
               />
-              <small v-if="error" class="nudge-error">{{ error }}</small>
+              <div v-if="error" class="signup-error-card">
+                <p class="nudge-error">{{ displayedError }}</p>
+                <div class="signup-error-actions">
+                  <button type="button" class="signup-error-btn" @click="copyError">
+                    <i class="pi" :class="errorCopied ? 'pi-check' : 'pi-copy'" />
+                    {{ errorCopied ? $t('common.copied') : $t('common.copy') }}
+                  </button>
+                  <button
+                    v-if="errorNeedsCollapse"
+                    type="button"
+                    class="signup-error-btn"
+                    @click="errorExpanded = !errorExpanded"
+                  >
+                    {{ errorExpanded ? $t('common.show_less') : $t('common.show_more') }}
+                  </button>
+                </div>
+              </div>
               <button type="submit" class="nudge-cta" :disabled="loading">
                 <i v-if="loading" class="pi pi-spin pi-spinner" />
                 {{ loading ? '' : $t('nudge.cta_button') }}
@@ -76,7 +92,23 @@
           minlength="8"
           required
         />
-        <small v-if="error" class="nudge-error">{{ error }}</small>
+        <div v-if="error" class="signup-error-card">
+          <p class="nudge-error">{{ displayedError }}</p>
+          <div class="signup-error-actions">
+            <button type="button" class="signup-error-btn" @click="copyError">
+              <i class="pi" :class="errorCopied ? 'pi-check' : 'pi-copy'" />
+              {{ errorCopied ? $t('common.copied') : $t('common.copy') }}
+            </button>
+            <button
+              v-if="errorNeedsCollapse"
+              type="button"
+              class="signup-error-btn"
+              @click="errorExpanded = !errorExpanded"
+            >
+              {{ errorExpanded ? $t('common.show_less') : $t('common.show_more') }}
+            </button>
+          </div>
+        </div>
         <button type="submit" class="nudge-cta" :disabled="loading">
           <i v-if="loading" class="pi pi-spin pi-spinner" />
           {{ loading ? '' : $t('nudge.cta_button') }}
@@ -117,6 +149,18 @@ const email = ref('')
 const password = ref('')
 const error = ref('')
 const loading = ref(false)
+const errorCopied = ref(false)
+const errorExpanded = ref(false)
+const ERROR_PREVIEW_LENGTH = 180
+
+const errorNeedsCollapse = computed(() =>
+  error.value.length > ERROR_PREVIEW_LENGTH || error.value.includes('\n'),
+)
+
+const displayedError = computed(() => {
+  if (errorExpanded.value || !errorNeedsCollapse.value) return error.value
+  return `${error.value.slice(0, ERROR_PREVIEW_LENGTH).trimEnd()}…`
+})
 
 function handleDismiss() {
   visible.value = false
@@ -125,6 +169,8 @@ function handleDismiss() {
 
 async function handleSignup() {
   error.value = ''
+  errorCopied.value = false
+  errorExpanded.value = false
   loading.value = true
   try {
     await signIn('password', {
@@ -144,6 +190,26 @@ async function handleSignup() {
   } finally {
     loading.value = false
   }
+}
+
+async function copyError() {
+  if (!error.value) return
+
+  try {
+    await navigator.clipboard.writeText(error.value)
+  } catch {
+    const ta = document.createElement('textarea')
+    ta.value = error.value
+    document.body.appendChild(ta)
+    ta.select()
+    document.execCommand('copy')
+    document.body.removeChild(ta)
+  }
+
+  errorCopied.value = true
+  window.setTimeout(() => {
+    errorCopied.value = false
+  }, 2000)
 }
 </script>
 
@@ -238,10 +304,44 @@ async function handleSignup() {
   border-color: var(--primary-color);
 }
 
+.signup-error-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 12px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.18);
+}
+
 .nudge-error {
-  color: #ef4444;
+  margin: 0;
+  color: #dc2626;
   font-size: 0.8rem;
+  line-height: 1.45;
   text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.signup-error-actions {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.signup-error-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.6);
+  color: #b91c1c;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .nudge-cta {

@@ -68,7 +68,23 @@
                   minlength="8"
                   required
                 />
-                <small v-if="signupError" class="nudge-error">{{ signupError }}</small>
+                <div v-if="signupError" class="signup-error-card">
+                  <p class="nudge-error">{{ displayedSignupError }}</p>
+                  <div class="signup-error-actions">
+                    <button type="button" class="signup-error-btn" @click="copySignupError">
+                      <i class="pi" :class="signupErrorCopied ? 'pi-check' : 'pi-copy'" />
+                      {{ signupErrorCopied ? $t('common.copied') : $t('common.copy') }}
+                    </button>
+                    <button
+                      v-if="signupErrorNeedsCollapse"
+                      type="button"
+                      class="signup-error-btn"
+                      @click="signupErrorExpanded = !signupErrorExpanded"
+                    >
+                      {{ signupErrorExpanded ? $t('common.show_less') : $t('common.show_more') }}
+                    </button>
+                  </div>
+                </div>
                 <button type="submit" class="nudge-cta" :disabled="signupLoading">
                   <i v-if="signupLoading" class="pi pi-spin pi-spinner" />
                   {{ signupLoading ? '' : $t('account.create_button') }}
@@ -170,7 +186,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useThemeStore } from '@/stores/theme'
 import { useOnboardingStore } from '@/stores/onboarding'
@@ -202,9 +218,23 @@ const signupEmail = ref('')
 const signupPassword = ref('')
 const signupError = ref('')
 const signupLoading = ref(false)
+const signupErrorCopied = ref(false)
+const signupErrorExpanded = ref(false)
+const SIGNUP_ERROR_PREVIEW_LENGTH = 180
+
+const signupErrorNeedsCollapse = computed(() =>
+  signupError.value.length > SIGNUP_ERROR_PREVIEW_LENGTH || signupError.value.includes('\n'),
+)
+
+const displayedSignupError = computed(() => {
+  if (signupErrorExpanded.value || !signupErrorNeedsCollapse.value) return signupError.value
+  return `${signupError.value.slice(0, SIGNUP_ERROR_PREVIEW_LENGTH).trimEnd()}…`
+})
 
 async function handleSettingsSignup() {
   signupError.value = ''
+  signupErrorCopied.value = false
+  signupErrorExpanded.value = false
   signupLoading.value = true
   try {
     await signIn('password', {
@@ -221,6 +251,26 @@ async function handleSettingsSignup() {
   } finally {
     signupLoading.value = false
   }
+}
+
+async function copySignupError() {
+  if (!signupError.value) return
+
+  try {
+    await navigator.clipboard.writeText(signupError.value)
+  } catch {
+    const ta = document.createElement('textarea')
+    ta.value = signupError.value
+    document.body.appendChild(ta)
+    ta.select()
+    document.execCommand('copy')
+    document.body.removeChild(ta)
+  }
+
+  signupErrorCopied.value = true
+  window.setTimeout(() => {
+    signupErrorCopied.value = false
+  }, 2000)
 }
 
 async function handleSignOut() {
@@ -444,9 +494,43 @@ function replayOnboarding() {
   margin-top: 0.5rem;
 }
 
+.signup-error-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 12px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.18);
+}
+
 .nudge-error {
-  color: #ef4444;
+  margin: 0;
+  color: #dc2626;
   font-size: 0.8rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.signup-error-actions {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.signup-error-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.6);
+  color: #b91c1c;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .settings-email-display {

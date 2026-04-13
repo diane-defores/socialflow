@@ -166,6 +166,9 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [x] Android bottom bar not synced with active profile — moved `set_bar_networks` sync from `NetworkWebviewHost.vue` (only mounted when a webview is open) to persistent `App.vue` watcher on `activeProfile.id + hiddenNetworks` fingerprint, so bar matches dashboard on mount, profile switch, and visibility edits (2026-04-12)
 - [x] Tap sound inaudible on device — replaced `view.playSoundEffect(CLICK)` (depends on system "Touch sounds" setting) with `SoundPool` + bundled `assets/sounds/click.wav` (40ms 2kHz decayed sine), routed via `USAGE_MEDIA` so it plays on STREAM_MUSIC independent of touch-sounds setting (2026-04-12)
 - [x] Audit haptic + tap-sound flow — fixed dead tap-sound toggle (`set_tap_sound` IPC + `playSoundEffect`), boot sync from localStorage, global `pointerdown` handler so Vue buttons also fire haptic/sound via new `trigger_haptic` IPC (2026-04-12)
+- [x] Account signup errors in settings drawer / signup nudge — compact error card with `Copier` action + long-message truncation (`Voir plus / Voir moins`) (2026-04-13)
+- [x] Android WebView uploads — `onShowFileChooser` wired to SAF picker so Facebook post/message photo selection now opens Android documents/photos picker (2026-04-13)
+- [x] Android debug logs enriched for Facebook upload/story analysis — navigation, custom schemes, file chooser params/results, page-finished UA mode (2026-04-13)
 - [x] Android: backup export/import via MediaStore — writes to `Download/SocialFlow/`, visible in file manager (was writing to private app sandbox) (2026-04-06)
 - [x] Android: fix backup "command not found" — register plugin commands in `build.rs` COMMANDS array + add `android-webview:default` to capabilities + fix JS command names to snake_case (2026-04-11)
 - [ ] 🟡 Header search/filters hidden on mobile — add mobile-accessible alternative
@@ -198,6 +201,7 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [x] Backup coverage audit — added `onboarding` store, `sfz_text_zoom`, `kanban-state` to `useBackup.ts` (2026-04-12)
 - [x] WhatsApp Web disabled — infinite loader after phone+code pairing caused by IndexedDB not persisted per profile (Signal keys lost on switch) + `navigator.userAgentData` mismatch; commented out in 5 files, re-enable plan documented in `docs/whatsapp-web-integration.md` (2026-04-12)
 - [ ] 🟡 Per-profile IndexedDB + localStorage persistence — unblocks WhatsApp, Telegram (MTProto keys in IDB), Discord (token in localStorage); prefer copying `/data/data/<pkg>/app_webview/Default/IndexedDB/` between profile dirs over JS serialization
+- [ ] 🟠 Android WebView camera capture — extend `onShowFileChooser` with camera intent (`capture`) in addition to gallery/doc picker, then re-test Facebook story flow on device
 
 ### To go live
 
