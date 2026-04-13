@@ -43,25 +43,19 @@
                 </span>
               </div>
 
-              <div class="settings-sync-summary">
-                <div class="settings-sync-summary-row">
-                  <i class="pi pi-cloud" />
-                  <p>{{ $t('account.sync_summary') }}</p>
-                </div>
-                <button
-                  type="button"
-                  class="settings-sync-toggle"
-                  @click="syncInfoExpanded = !syncInfoExpanded"
-                >
-                  <span>
-                    {{ syncInfoExpanded ? $t('account.sync_less') : $t('account.sync_more') }}
-                  </span>
-                  <i
-                    class="pi"
-                    :class="syncInfoExpanded ? 'pi-chevron-up' : 'pi-chevron-down'"
-                  />
-                </button>
-              </div>
+              <button
+                type="button"
+                class="settings-sync-toggle"
+                @click="syncInfoExpanded = !syncInfoExpanded"
+              >
+                <span>
+                  {{ syncInfoExpanded ? $t('account.sync_less') : $t('account.sync_more') }}
+                </span>
+                <i
+                  class="pi"
+                  :class="syncInfoExpanded ? 'pi-chevron-up' : 'pi-chevron-down'"
+                />
+              </button>
 
               <div
                 v-if="syncInfoExpanded"
@@ -618,52 +612,22 @@ function replayOnboarding() {
 }
 
 .settings-account-status.connected {
-  background: rgba(34, 197, 94, 0.16);
-  color: #15803d;
-}
-
-.settings-sync-summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.7rem 0.8rem;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.45);
-  border: 1px solid rgba(148, 163, 184, 0.18);
-}
-
-.settings-sync-summary-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.55rem;
-  min-width: 0;
-}
-
-.settings-sync-summary-row i {
+  background: color-mix(in srgb, var(--primary-color) 14%, transparent);
   color: var(--primary-color);
-  font-size: 0.95rem;
-  margin-top: 0.15rem;
-}
-
-.settings-sync-summary-row p {
-  margin: 0;
-  font-size: 0.8rem;
-  line-height: 1.4;
-  color: var(--text-color-secondary);
 }
 
 .settings-sync-toggle {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.35rem;
-  flex-shrink: 0;
-  padding: 0.4rem 0.55rem;
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  align-self: flex-start;
+  padding: 0;
+  border: none;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.75);
-  color: var(--text-color);
-  font-size: 0.74rem;
+  background: transparent;
+  color: var(--primary-color);
+  font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
 }
@@ -673,10 +637,9 @@ function replayOnboarding() {
   flex-direction: column;
   gap: 0.55rem;
   padding: 0.7rem 0.8rem;
-  margin-top: -0.25rem;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.45);
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: color-mix(in srgb, var(--surface-ground) 88%, var(--primary-color) 12%);
+  border: 1px solid color-mix(in srgb, var(--surface-border) 82%, var(--primary-color) 18%);
 }
 
 .settings-sync-info-row,
@@ -693,7 +656,7 @@ function replayOnboarding() {
 }
 
 .settings-sync-warning-row i {
-  color: #d97706;
+  color: color-mix(in srgb, var(--primary-color) 55%, #f59e0b 45%);
   font-size: 0.95rem;
   margin-top: 0.15rem;
 }
@@ -742,9 +705,9 @@ function replayOnboarding() {
 }
 
 .secondary-auth-btn {
-  background: rgba(99, 102, 241, 0.08);
+  background: color-mix(in srgb, var(--primary-color) 10%, var(--surface-card) 90%);
   color: var(--primary-color);
-  border: 1px solid rgba(99, 102, 241, 0.18);
+  border: 1px solid color-mix(in srgb, var(--primary-color) 22%, var(--surface-border) 78%);
   box-shadow: none;
 }
 
@@ -787,7 +750,7 @@ function replayOnboarding() {
   padding: 0.3rem 0.6rem;
   border: 1px solid rgba(239, 68, 68, 0.2);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.6);
+  background: color-mix(in srgb, var(--surface-card) 92%, #fff 8%);
   color: #b91c1c;
   font-size: 0.76rem;
   font-weight: 600;
@@ -971,15 +934,6 @@ function replayOnboarding() {
   .settings-account-card {
     gap: 0.75rem;
     padding: 0.8rem;
-  }
-
-  .settings-sync-summary {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .settings-sync-toggle {
-    justify-content: center;
   }
 }
 </style>
