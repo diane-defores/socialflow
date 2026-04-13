@@ -57,6 +57,7 @@
   },
   "backup": {
     "section_title": "Backup",
+    "inline_hint": "Export or restore your cookies and local sessions when moving to another device.",
     "info_text": "Your profiles, settings, and accounts are automatically synced via the cloud — they follow you across all your devices. Only session cookies (which keep you logged into social networks) cannot be synced: browsers forbid transferring them to third-party servers. To transfer your logged-in sessions to a new device, use the encrypted export below.",
     "export_label": "Export my data",
     "export_button": "Export",
@@ -233,7 +234,7 @@
   },
   "account": {
     "section_title": "Account",
-    "card_title": "Account sync",
+    "card_title": "Account and sync",
     "connected_status": "Connected",
     "disconnected_status": "Not connected",
     "email_placeholder": "your{'@'}email.com",
@@ -248,6 +249,8 @@
     "sign_out": "Sign out",
     "error_generic": "Something went wrong. Please try again.",
     "auth_hint": "Sign in with an existing account or create one to sync your data across devices.",
+    "sync_info": "The cloud syncs your SocialFlow profiles, settings, and accounts across your other devices.",
+    "cookies_info": "Social network login cookies cannot be sent to the cloud. To transfer them, use the encrypted export below.",
     "sign_in_hint": "Sign in with your existing account to restore your synced data.",
     "already_exists_error": "An account already exists for this email. Use “Sign in” instead.",
     "invalid_credentials_error": "Incorrect email or password.",

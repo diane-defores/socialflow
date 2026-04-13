@@ -19,27 +19,8 @@
           </div>
 
           <div class="settings-content">
-            <!-- Account section -->
+            <!-- Account + backup section -->
             <p class="settings-section-label">{{ $t('account.section_title') }}</p>
-
-            <div class="settings-field">
-              <label
-                class="settings-label"
-                for="settings-username"
-              >
-                <i class="pi pi-user" />
-                {{ $t('settings.username_label') }}
-              </label>
-              <input
-                id="settings-username"
-                v-model="settingsUsername"
-                class="settings-input"
-                placeholder="Votre nom…"
-                @blur="saveSettings"
-              />
-            </div>
-
-            <!-- Signed in with email account: show email + sign out -->
             <div class="settings-account-card">
               <div class="settings-account-card-header">
                 <div>
@@ -60,6 +41,17 @@
                     ? $t('account.connected_status')
                     : $t('account.disconnected_status') }}
                 </span>
+              </div>
+
+              <div class="settings-sync-info-box">
+                <div class="settings-sync-info-row">
+                  <i class="pi pi-cloud" />
+                  <p>{{ $t('account.sync_info') }}</p>
+                </div>
+                <div class="settings-sync-warning-row">
+                  <i class="pi pi-info-circle" />
+                  <p>{{ $t('account.cookies_info') }}</p>
+                </div>
               </div>
 
               <template v-if="isSignedIn && nudge.hasEmailAccount.value">
@@ -153,6 +145,14 @@
                   </div>
                 </form>
               </template>
+
+              <div class="settings-backup-section">
+                <div class="settings-backup-header">
+                  <p class="settings-backup-title">{{ $t('backup.section_title') }}</p>
+                  <p class="settings-backup-hint">{{ $t('backup.inline_hint') }}</p>
+                </div>
+                <BackupRestore :show-info="false" />
+              </div>
             </div>
 
             <!-- Preferences section -->
@@ -240,10 +240,6 @@
               <i class="pi pi-info-circle" />
               {{ $t('onboarding.replay_button') }}
             </button>
-
-            <!-- Backup / Restore -->
-            <p class="settings-section-label">{{ $t('backup.section_title') }}</p>
-            <BackupRestore />
           </div>
         </div>
       </div>
@@ -274,13 +270,7 @@ const nudge = useSignupNudge()
 const isSignedIn = isAuthenticated
 
 // ─── Settings state ──────────────────────────────────────────
-const settingsUsername = ref(localStorage.getItem('sfz_username') ?? '')
 const settingsEmail = ref(localStorage.getItem('sfz_email') ?? '')
-
-function saveSettings() {
-  localStorage.setItem('sfz_username', settingsUsername.value.trim())
-  localStorage.setItem('sfz_email', settingsEmail.value.trim())
-}
 
 // ─── Signup form ─────────────────────────────────────────────
 const signupEmail = ref('')
@@ -608,6 +598,43 @@ function replayOnboarding() {
   color: #15803d;
 }
 
+.settings-sync-info-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.75rem 0.8rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.settings-sync-info-row,
+.settings-sync-warning-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+}
+
+.settings-sync-info-row i {
+  color: var(--primary-color);
+  font-size: 0.95rem;
+  margin-top: 0.15rem;
+}
+
+.settings-sync-warning-row i {
+  color: #d97706;
+  font-size: 0.95rem;
+  margin-top: 0.15rem;
+}
+
+.settings-sync-info-row p,
+.settings-sync-warning-row p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--text-color-secondary);
+}
+
 .settings-signup-form {
   display: flex;
   flex-direction: column;
@@ -700,6 +727,34 @@ function replayOnboarding() {
   font-size: 0.85rem;
   color: var(--text-color);
   font-weight: 500;
+}
+
+.settings-backup-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding-top: 0.15rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.settings-backup-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.settings-backup-title {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.settings-backup-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--text-color-secondary);
 }
 
 .settings-toggle-row {

@@ -1,6 +1,9 @@
 <template>
   <div class="backup-section">
-    <div class="backup-info">
+    <div
+      v-if="showInfo"
+      class="backup-info"
+    >
       <i class="pi pi-info-circle" />
       <p>{{ $t('backup.info_text') }}</p>
     </div>
@@ -211,6 +214,12 @@
 import { ref, computed, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useBackup } from '../composables/useBackup'
+
+withDefaults(defineProps<{
+  showInfo?: boolean
+}>(), {
+  showInfo: true,
+})
 
 const { t } = useI18n()
 const { exportBackup, importBackup } = useBackup()

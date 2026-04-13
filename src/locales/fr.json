@@ -57,6 +57,7 @@
   },
   "backup": {
     "section_title": "Sauvegarde",
+    "inline_hint": "Exportez ou restaurez vos cookies et sessions locales quand vous changez d’appareil.",
     "info_text": "Vos profils, paramètres et comptes sont synchronisés automatiquement via le cloud — ils vous suivent sur tous vos appareils. Seuls les cookies de session (qui maintiennent vos connexions aux réseaux sociaux) ne peuvent pas être synchronisés : les navigateurs interdisent leur transfert vers des serveurs tiers. Pour transférer vos sessions connectées sur un nouvel appareil, utilisez l'export chiffré ci-dessous.",
     "export_label": "Exporter mes données",
     "export_button": "Exporter",
@@ -233,7 +234,7 @@
   },
   "account": {
     "section_title": "Compte",
-    "card_title": "Synchronisation du compte",
+    "card_title": "Compte et synchronisation",
     "connected_status": "Connecté",
     "disconnected_status": "Non connecté",
     "email_placeholder": "votre{'@'}email.com",
@@ -248,6 +249,8 @@
     "sign_out": "Se déconnecter",
     "error_generic": "Une erreur est survenue. Réessayez.",
     "auth_hint": "Connectez-vous avec un compte existant ou créez-en un pour synchroniser vos données entre vos appareils.",
+    "sync_info": "Le cloud synchronise vos profils, paramètres et comptes SocialFlow sur vos autres appareils.",
+    "cookies_info": "Les cookies de connexion aux réseaux sociaux ne peuvent pas être envoyés dans le cloud. Pour les transférer, utilisez l’export chiffré ci-dessous.",
     "sign_in_hint": "Connectez-vous avec votre compte existant pour retrouver vos données synchronisées.",
     "already_exists_error": "Un compte existe déjà pour cet e-mail. Utilisez « Se connecter » à la place.",
     "invalid_credentials_error": "E-mail ou mot de passe incorrect.",
