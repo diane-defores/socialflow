@@ -243,7 +243,10 @@
     "signed_in_as": "Signed in as",
     "sign_out": "Sign out",
     "error_generic": "Something went wrong. Please try again.",
+    "auth_hint": "Sign in with an existing account or create one to sync your data across devices.",
     "sign_in_hint": "Sign in with your existing account to restore your synced data.",
+    "already_exists_error": "An account already exists for this email. Use “Sign in” instead.",
+    "invalid_credentials_error": "Incorrect email or password.",
     "no_account_hint": "Create an account to sync your data across all your devices.",
     "unavailable_hint": "Account sync is unavailable in this build — the Convex backend is not configured."
   },

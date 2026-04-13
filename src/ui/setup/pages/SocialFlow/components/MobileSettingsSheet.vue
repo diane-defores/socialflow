@@ -64,28 +64,10 @@
 
             <!-- Signed out / anonymous: auth form -->
             <template v-else>
-              <div class="account-mode-toggle">
-                <button
-                  class="account-mode-btn"
-                  :class="{ active: authMode === 'signIn' }"
-                  @click="authMode = 'signIn'"
-                >
-                  {{ $t('account.sign_in_button') }}
-                </button>
-                <button
-                  class="account-mode-btn"
-                  :class="{ active: authMode === 'signUp' }"
-                  @click="authMode = 'signUp'"
-                >
-                  {{ $t('account.create_button') }}
-                </button>
-              </div>
-              <p class="settings-account-hint">
-                {{ authMode === 'signIn' ? $t('account.sign_in_hint') : $t('account.no_account_hint') }}
-              </p>
+              <p class="settings-account-hint">{{ $t('account.auth_hint') }}</p>
               <form
                 class="settings-signup-form"
-                @submit.prevent="handleAccountAuth"
+                @submit.prevent="handleAccountAuth('signIn')"
               >
                 <input
                   v-model="signupEmail"
@@ -138,7 +120,19 @@
                     v-if="signupLoading"
                     class="pi pi-spin pi-spinner"
                   />
-                  {{ signupLoading ? '' : authMode === 'signIn' ? $t('account.sign_in_button') : $t('account.create_button') }}
+                  {{ signupLoading ? '' : $t('account.sign_in_button') }}
+                </button>
+                <button
+                  type="button"
+                  class="nudge-cta secondary-auth-btn"
+                  :disabled="signupLoading"
+                  @click="handleAccountAuth('signUp')"
+                >
+                  <i
+                    v-if="signupLoading && authAction === 'signUp'"
+                    class="pi pi-spin pi-spinner"
+                  />
+                  {{ signupLoading && authAction === 'signUp' ? '' : $t('account.create_button') }}
                 </button>
               </form>
             </template>
@@ -271,7 +265,7 @@ function saveSettings() {
 // ─── Signup form ─────────────────────────────────────────────
 const signupEmail = ref('')
 const signupPassword = ref('')
-const authMode = ref<'signIn' | 'signUp'>('signUp')
+const authAction = ref<'signIn' | 'signUp'>('signIn')
 const signupError = ref('')
 const signupLoading = ref(false)
 const signupErrorCopied = ref(false)
@@ -287,28 +281,42 @@ const displayedSignupError = computed(() => {
   return `${signupError.value.slice(0, SIGNUP_ERROR_PREVIEW_LENGTH).trimEnd()}…`
 })
 
-async function handleAccountAuth() {
+function getAuthErrorMessage(error: unknown, flow: 'signIn' | 'signUp') {
+  const message = error instanceof Error ? error.message : ''
+
+  if (flow === 'signUp' && /already exists/i.test(message)) {
+    return t('account.already_exists_error')
+  }
+  if (flow === 'signIn' && /invalid/i.test(message)) {
+    return t('account.invalid_credentials_error')
+  }
+
+  return message || t('account.error_generic')
+}
+
+async function handleAccountAuth(flow: 'signIn' | 'signUp') {
   signupError.value = ''
   signupErrorCopied.value = false
   signupErrorExpanded.value = false
+  authAction.value = flow
   signupLoading.value = true
   try {
     await signIn('password', {
       email: signupEmail.value,
       password: signupPassword.value,
-      flow: authMode.value,
+      flow,
     })
     settingsEmail.value = signupEmail.value
     localStorage.setItem('sfz_email', signupEmail.value)
     nudge.onAccountCreated()
     toast.add({
       severity: 'success',
-      summary: authMode.value === 'signIn' ? t('account.signed_in_toast') : t('account.created_toast'),
+      summary: flow === 'signIn' ? t('account.signed_in_toast') : t('account.created_toast'),
       life: 3000,
     })
     signupPassword.value = ''
   } catch (e: unknown) {
-    signupError.value = e instanceof Error ? e.message : t('account.error_generic')
+    signupError.value = getAuthErrorMessage(e, flow)
   } finally {
     signupLoading.value = false
   }
@@ -340,7 +348,7 @@ async function handleSignOut() {
   settingsEmail.value = ''
   localStorage.removeItem('sfz_email')
   signupPassword.value = ''
-  authMode.value = 'signIn'
+  authAction.value = 'signIn'
   toast.add({ severity: 'success', summary: t('account.signed_out_toast'), life: 3000 })
 }
 
@@ -524,33 +532,6 @@ function replayOnboarding() {
   margin: 0 0 0.75rem;
 }
 
-.account-mode-toggle {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-}
-
-.account-mode-btn {
-  width: 100%;
-  padding: 0.7rem 0.85rem;
-  border-radius: 999px;
-  border: 1px solid rgba(99, 102, 241, 0.18);
-  background: rgba(99, 102, 241, 0.06);
-  color: var(--text-color);
-  font-size: 0.85rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-}
-
-.account-mode-btn.active {
-  border-color: transparent;
-  background: linear-gradient(135deg, var(--primary-color), #7c3aed);
-  color: #fff;
-  box-shadow: 0 10px 24px rgba(99, 102, 241, 0.24);
-}
-
 .settings-signup-form {
   display: flex;
   flex-direction: column;
@@ -577,6 +558,13 @@ function replayOnboarding() {
 
 .settings-signup-form .nudge-cta:disabled {
   opacity: 0.6;
+}
+
+.secondary-auth-btn {
+  background: rgba(99, 102, 241, 0.08);
+  color: var(--primary-color);
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  box-shadow: none;
 }
 
 .sign-out-btn {
