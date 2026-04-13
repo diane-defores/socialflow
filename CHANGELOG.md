@@ -7,14 +7,18 @@ All notable changes to SocialFlow are documented here.
 ### Added
 - **Android WebView file chooser support** — implemented `WebChromeClient.onShowFileChooser` with an SAF-backed picker via `activityResultRegistry`, returning one or multiple `Uri`s to the page; unblocks photo/file selection flows for web composers such as Facebook post/message uploads
 - **Targeted Android debug logs for Facebook upload/story analysis** — the native plugin now records navigation URL/scheme/host/path, page-finished UA mode, file chooser parameters (`accept`, `multiple`, `capture`) and picker results so copied debug logs are actionable for diagnosing WebView-only regressions
+- **Bottom-bar quick controls in webviews** — the Android popup menu now includes a native dark-mode toggle and a text-zoom slider next to the profile switcher, so users can adjust readability without opening Settings
 
 ### Changed
-- **Facebook now uses desktop UA in Android WebView** — added `facebook` to `DESKTOP_UA_NETWORKS` to reduce mobile-web gating that pushes story/upload flows toward the native app
+- **Facebook reverted to mobile by default** — desktop UA is no longer forced globally; only story-like URLs can trigger a temporary desktop override, keeping the normal feed and composer in the mobile layout
 - **Signup error UI in account surfaces** — settings drawer and signup nudge now render errors in a compact card with `Copy` / `Show more` controls instead of dumping the full raw message inline
+- **Text zoom application is more aggressive on Android WebViews** — `set_text_zoom` now reapplies both native `WebSettings.textZoom` and a JS/CSS fallback (`-webkit-text-size-adjust`, plus a Facebook-specific font-size pass) to improve sites that ignore the native zoom setting
 
 ### Fixed
 - **Account creation errors were hard to read/copy** — long backend/auth errors are truncated by default, can be expanded on demand, and the full raw message can be copied from both the drawer and the signup nudge
 - **Android social WebView photo picker did nothing** — web `<input type="file">` requests now open the Android picker instead of failing silently
+- **Facebook mobile story CTA no longer fails silently** — when the user taps `Créer une story` and Facebook only shows the mobile-app upsell, SocialFlow now explains that Stories are not available in Facebook mobile web instead of leaving the user with a disappearing prompt
+- **Facebook UI diagnostics were noisy/broken** — `fb-ui` logs now flush correctly instead of throwing JSON parse errors, making copied logs readable for future debugging
 
 ## [2026-04-12]
 

@@ -169,6 +169,8 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [x] Account signup errors in settings drawer / signup nudge — compact error card with `Copier` action + long-message truncation (`Voir plus / Voir moins`) (2026-04-13)
 - [x] Android WebView uploads — `onShowFileChooser` wired to SAF picker so Facebook post/message photo selection now opens Android documents/photos picker (2026-04-13)
 - [x] Android debug logs enriched for Facebook upload/story analysis — navigation, custom schemes, file chooser params/results, page-finished UA mode (2026-04-13)
+- [x] Android bottom-bar popup — quick dark mode toggle + text zoom slider added next to the profile switcher while browsing webviews (2026-04-13)
+- [x] Facebook mobile stories — show an explicit “not available in mobile web” notice instead of silently dismissing the app-install prompt (2026-04-13)
 - [x] Android: backup export/import via MediaStore — writes to `Download/SocialFlow/`, visible in file manager (was writing to private app sandbox) (2026-04-06)
 - [x] Android: fix backup "command not found" — register plugin commands in `build.rs` COMMANDS array + add `android-webview:default` to capabilities + fix JS command names to snake_case (2026-04-11)
 - [ ] 🟡 Header search/filters hidden on mobile — add mobile-accessible alternative
@@ -202,6 +204,7 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [x] WhatsApp Web disabled — infinite loader after phone+code pairing caused by IndexedDB not persisted per profile (Signal keys lost on switch) + `navigator.userAgentData` mismatch; commented out in 5 files, re-enable plan documented in `docs/whatsapp-web-integration.md` (2026-04-12)
 - [ ] 🟡 Per-profile IndexedDB + localStorage persistence — unblocks WhatsApp, Telegram (MTProto keys in IDB), Discord (token in localStorage); prefer copying `/data/data/<pkg>/app_webview/Default/IndexedDB/` between profile dirs over JS serialization
 - [ ] 🟠 Android WebView camera capture — extend `onShowFileChooser` with camera intent (`capture`) in addition to gallery/doc picker, then re-test Facebook story flow on device
+- [ ] 🟠 Facebook mobile text zoom — validate on device whether the new CSS/JS fallback actually changes `m.facebook.com` typography; tighten the fallback if it still looks unchanged
 
 ### To go live
 

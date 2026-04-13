@@ -95,6 +95,11 @@ const onSwitchProfile = ((e: CustomEvent) => {
   }
 }) as unknown as (e: Event) => void
 const onToggleDarkMode = () => { themeStore.toggleTheme() }
+const onNativeTextZoomChanged = ((e: CustomEvent) => {
+  const level = Number(e.detail?.level)
+  if (!Number.isFinite(level)) return
+  localStorage.setItem('sfz_text_zoom', String(level))
+}) as unknown as (e: Event) => void
 
 // Global tap feedback — delegated to the native plugin so it honors
 // the same hapticEnabled / tapSoundEnabled flags as the Kotlin bottom bar.
@@ -228,6 +233,7 @@ onMounted(async () => {
   window.addEventListener('sfz-open-profile-sheet', onOpenProfileSheet)
   window.addEventListener('sfz-switch-profile', onSwitchProfile)
   window.addEventListener('sfz-toggle-dark-mode', onToggleDarkMode)
+  window.addEventListener('sfz-text-zoom-changed', onNativeTextZoomChanged)
 
   // Global haptic/sound feedback for Vue-side buttons.
   // Delegated pointerdown → native plugin respects user's haptic + tap_sound prefs.
@@ -244,6 +250,7 @@ onUnmounted(() => {
   window.removeEventListener('sfz-open-profile-sheet', onOpenProfileSheet)
   window.removeEventListener('sfz-switch-profile', onSwitchProfile)
   window.removeEventListener('sfz-toggle-dark-mode', onToggleDarkMode)
+  window.removeEventListener('sfz-text-zoom-changed', onNativeTextZoomChanged)
   document.removeEventListener('pointerdown', onGlobalTap, { capture: true } as EventListenerOptions)
   unlistenTray?.()
 })

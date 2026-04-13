@@ -23,7 +23,9 @@ import android.widget.FrameLayout
 import android.widget.HorizontalScrollView
 import android.widget.ImageButton
 import android.widget.LinearLayout
+import android.widget.SeekBar
 import android.widget.TextView
+import android.widget.Toast
 import android.view.MotionEvent
 import androidx.activity.OnBackPressedCallback
 import androidx.core.graphics.PathParser
@@ -113,6 +115,7 @@ private object Strings {
         "grayscale_off" to mapOf("fr" to "Niveaux de gris", "en" to "Grayscale"),
         "dark_mode_on" to mapOf("fr" to "Mode clair", "en" to "Light mode"),
         "dark_mode_off" to mapOf("fr" to "Mode sombre", "en" to "Dark mode"),
+        "text_zoom" to mapOf("fr" to "Taille du texte", "en" to "Text size"),
         // Blocked page
         "blocked_title" to mapOf("fr" to "Accès bloqué par", "en" to "Access blocked by"),
         "blocked_message" to mapOf(
@@ -611,6 +614,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
     // Facebook stays mobile by default; switch to desktop only for story-specific flows.
     private var facebookDesktopOverride = false
+    private var facebookStoryNoticeShown = false
 
     // SAF file picker — pending invoke for backup restore
     private var pendingBackupInvoke: Invoke? = null
@@ -989,6 +993,20 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         wv.evaluateJavascript(js, null)
     }
 
+    private fun showFacebookStoryUnavailableNotice() {
+        if (facebookStoryNoticeShown) return
+        facebookStoryNoticeShown = true
+        val message = if (Strings.locale == "fr") {
+            "Les stories Facebook ne sont pas disponibles dans la version mobile web. Utilisez les posts ou messages avec photos à la place."
+        } else {
+            "Facebook Stories are not available in the mobile web version. Use posts or messages with photos instead."
+        }
+        activity.runOnUiThread {
+            Toast.makeText(activity, message, Toast.LENGTH_LONG).show()
+        }
+        dbg("[fb-ui] story unavailable notice shown")
+    }
+
     private fun incrementUsage(networkId: String) {
         val count = prefs.getInt(networkId, 0)
         prefs.edit().putInt(networkId, count + 1).apply()
@@ -1073,6 +1091,9 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         dbg("▶ OPEN webview: network=${args.networkId} account=${args.accountId} url=${args.url}")
 
         activity.runOnUiThread {
+            if (args.networkId != "facebook") {
+                facebookStoryNoticeShown = false
+            }
             if (socialWebView != null) {
                 dbg("  reuse existing webview (switch)")
                 // Save cookies for the old session before switching
@@ -1169,6 +1190,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
             if (args.networkId == "facebook") {
                 facebookDesktopOverride = isFacebookDesktopFlow(args.url)
+                facebookStoryNoticeShown = false
             }
             applyUaForNetwork(args.networkId, args.url)
             webView.loadUrl(args.url)
@@ -1184,6 +1206,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         activity.runOnUiThread {
             if (args.networkId == "facebook") {
                 facebookDesktopOverride = isFacebookDesktopFlow(args.url)
+                facebookStoryNoticeShown = false
             }
             initialBackIndex = -1  // Reset baseline for new network URL
             isLoggedIn = false; pagesSinceOpen = 0
@@ -1292,6 +1315,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         activity.runOnUiThread {
             textZoomLevel = args.level
             socialWebView?.settings?.textZoom = textZoomLevel
+            applyTextZoomToWebView(socialWebView)
         }
         invoke.resolve(JSObject())
     }
@@ -1667,7 +1691,10 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             dispatchToVue("sfz-toggle-dark-mode")
         })
 
-        // 5. Copy debug logs
+        // 5. Text zoom quick control
+        menu.addView(buildTextZoomControl(density))
+
+        // 6. Copy debug logs
         menu.addView(buildPopupMenuItem(density, "\ue957", "Copy debug logs") {  // pi-copy
             val logText = synchronized(debugLog) { debugLog.joinToString("\n") }
             val clipboard = activity.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
@@ -1678,6 +1705,65 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
         root.addView(menu)
         popupMenuView = menu
+    }
+
+    private fun buildTextZoomControl(density: Float): LinearLayout {
+        val wrap = LinearLayout(activity)
+        wrap.orientation = LinearLayout.VERTICAL
+        val padH = (12 * density).toInt()
+        val padTop = (8 * density).toInt()
+        val padBottom = (10 * density).toInt()
+        wrap.setPadding(padH, padTop, padH, padBottom)
+
+        val textColor = if (isDarkMode) Color.parseColor("#E0E0E0") else Color.parseColor("#1C1C1E")
+        val secondaryColor = if (isDarkMode) Color.parseColor("#9A9AB0") else Color.parseColor("#6C757D")
+
+        val topRow = LinearLayout(activity)
+        topRow.orientation = LinearLayout.HORIZONTAL
+        topRow.gravity = Gravity.CENTER_VERTICAL
+
+        val label = TextView(activity)
+        label.text = Strings.t("text_zoom")
+        label.textSize = 14f
+        label.setTextColor(textColor)
+        label.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+        label.layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+
+        val value = TextView(activity)
+        value.text = "${textZoomLevel}%"
+        value.textSize = 12f
+        value.setTextColor(secondaryColor)
+        value.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+
+        topRow.addView(label)
+        topRow.addView(value)
+        wrap.addView(topRow)
+
+        val slider = SeekBar(activity)
+        slider.max = 5
+        slider.progress = (((textZoomLevel.coerceIn(75, 200) - 75) / 25)).coerceIn(0, 5)
+        slider.layoutParams = LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+        slider.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                val level = 75 + (progress * 25)
+                value.text = "$level%"
+                if (!fromUser || level == textZoomLevel) return
+                textZoomLevel = level
+                socialWebView?.settings?.textZoom = textZoomLevel
+                applyTextZoomToWebView(socialWebView)
+                dispatchToVue("sfz-text-zoom-changed", """{"level": $textZoomLevel}""")
+                dbg("[zoom] level=$textZoomLevel net=${currentNetworkId ?: "?"}")
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+        wrap.addView(slider)
+
+        return wrap
     }
 
     private fun buildPopupMenuItem(
@@ -1752,6 +1838,40 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         }
 
         return row
+    }
+
+    private fun applyTextZoomToWebView(view: WebView?) {
+        val wv = view ?: return
+        wv.settings.textZoom = textZoomLevel
+        val level = textZoomLevel.coerceIn(75, 200)
+        val js = """
+            (function() {
+              var level = $level;
+              var percent = level + '%';
+              document.documentElement.style.setProperty('-webkit-text-size-adjust', percent);
+              if (document.body) {
+                document.body.style.setProperty('-webkit-text-size-adjust', percent);
+              }
+              if (/facebook\.com/.test(location.host)) {
+                var nodes = document.querySelectorAll('body, div, span, a, p, h1, h2, h3, h4, h5, h6');
+                for (var i = 0; i < nodes.length; i++) {
+                  var el = nodes[i];
+                  var style = window.getComputedStyle(el);
+                  var size = parseFloat(style.fontSize || '0');
+                  if (!size || size < 10 || size > 40) continue;
+                  if (el.dataset.sfzZoomBase !== undefined) continue;
+                  el.dataset.sfzZoomBase = String(size);
+                }
+                for (var j = 0; j < nodes.length; j++) {
+                  var node = nodes[j];
+                  var base = parseFloat(node.dataset.sfzZoomBase || '0');
+                  if (!base) continue;
+                  node.style.fontSize = (base * level / 100) + 'px';
+                }
+              }
+            })();
+        """.trimIndent()
+        wv.evaluateJavascript(js, null)
     }
 
     /**
@@ -2406,18 +2526,35 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                 }
                 if (currentNetworkId == "facebook") {
                     view.postDelayed({
-                        view.evaluateJavascript("JSON.stringify(window.__sfzAppBannerLog || [])") { result ->
+                        view.evaluateJavascript("(window.__sfzAppBannerLog || []).join('\\n')") { result ->
                             val raw = result?.trim()
-                            if (raw.isNullOrEmpty() || raw == "null" || raw == "[]") return@evaluateJavascript
-                            try {
-                                val arr = org.json.JSONArray(raw)
-                                for (i in 0 until arr.length()) {
-                                    dbg("[fb-ui] ${arr.optString(i)}")
-                                }
-                                view.evaluateJavascript("window.__sfzAppBannerLog = []", null)
-                            } catch (e: Exception) {
-                                dbg("[fb-ui] log parse failed: ${e.message}")
+                            if (raw.isNullOrEmpty() || raw == "null" || raw == "\"\"") return@evaluateJavascript
+                            val decoded = try {
+                                org.json.JSONTokener(raw).nextValue()?.toString() ?: ""
+                            } catch (_: Exception) {
+                                raw.trim('"')
                             }
+                            if (decoded.isBlank()) return@evaluateJavascript
+
+                            var sawStoryClick = false
+                            var sawOpenAppBanner = false
+                            decoded.split("\n").forEach { line ->
+                                val entry = line.trim()
+                                if (entry.isBlank()) return@forEach
+                                dbg("[fb-ui] $entry")
+                                if (entry.contains("CLICK candidate:", ignoreCase = true) &&
+                                    entry.contains("story", ignoreCase = true)) {
+                                    sawStoryClick = true
+                                }
+                                if (entry.contains("HIDE banner:", ignoreCase = true) &&
+                                    entry.contains("ouvrir l’application", ignoreCase = true)) {
+                                    sawOpenAppBanner = true
+                                }
+                            }
+                            if (sawStoryClick && sawOpenAppBanner && !shouldUseDesktopUa(currentNetworkId, url)) {
+                                showFacebookStoryUnavailableNotice()
+                            }
+                            view.evaluateJavascript("window.__sfzAppBannerLog = []", null)
                         }
                     }, 1200)
                 }
