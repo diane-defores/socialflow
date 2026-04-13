@@ -43,7 +43,30 @@
                 </span>
               </div>
 
-              <div class="settings-sync-info-box">
+              <div class="settings-sync-summary">
+                <div class="settings-sync-summary-row">
+                  <i class="pi pi-cloud" />
+                  <p>{{ $t('account.sync_summary') }}</p>
+                </div>
+                <button
+                  type="button"
+                  class="settings-sync-toggle"
+                  @click="syncInfoExpanded = !syncInfoExpanded"
+                >
+                  <span>
+                    {{ syncInfoExpanded ? $t('account.sync_less') : $t('account.sync_more') }}
+                  </span>
+                  <i
+                    class="pi"
+                    :class="syncInfoExpanded ? 'pi-chevron-up' : 'pi-chevron-down'"
+                  />
+                </button>
+              </div>
+
+              <div
+                v-if="syncInfoExpanded"
+                class="settings-sync-info-box"
+              >
                 <div class="settings-sync-info-row">
                   <i class="pi pi-cloud" />
                   <p>{{ $t('account.sync_info') }}</p>
@@ -278,6 +301,7 @@ const signupPassword = ref('')
 const authAction = ref<'signIn' | 'signUp'>('signIn')
 const signupError = ref('')
 const signupLoading = ref(false)
+const syncInfoExpanded = ref(false)
 const signupErrorCopied = ref(false)
 const signupErrorExpanded = ref(false)
 const SIGNUP_ERROR_PREVIEW_LENGTH = 180
@@ -598,11 +622,58 @@ function replayOnboarding() {
   color: #15803d;
 }
 
+.settings-sync-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.settings-sync-summary-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.settings-sync-summary-row i {
+  color: var(--primary-color);
+  font-size: 0.95rem;
+  margin-top: 0.15rem;
+}
+
+.settings-sync-summary-row p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--text-color-secondary);
+}
+
+.settings-sync-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  color: var(--text-color);
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .settings-sync-info-box {
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
-  padding: 0.75rem 0.8rem;
+  padding: 0.7rem 0.8rem;
+  margin-top: -0.25rem;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.45);
   border: 1px solid rgba(148, 163, 184, 0.18);
@@ -732,8 +803,8 @@ function replayOnboarding() {
 .settings-backup-section {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
-  padding-top: 0.15rem;
+  gap: 0.5rem;
+  padding-top: 0.05rem;
   border-top: 1px solid rgba(148, 163, 184, 0.18);
 }
 
@@ -895,6 +966,20 @@ function replayOnboarding() {
 
   .settings-account-status {
     justify-self: start;
+  }
+
+  .settings-account-card {
+    gap: 0.75rem;
+    padding: 0.8rem;
+  }
+
+  .settings-sync-summary {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .settings-sync-toggle {
+    justify-content: center;
   }
 }
 </style>
