@@ -34,6 +34,15 @@ let _client: ConvexClient | null = null;
 let _namespace = "";
 let _currentToken: string | null = null;
 
+function getHttpClient() {
+  if (!_namespace) {
+    throw new Error(
+      "Account sync is unavailable — this build was not configured with a Convex backend.",
+    );
+  }
+  return new ConvexHttpClient(_namespace);
+}
+
 // --------------- Bootstrap ---------------
 
 /**
@@ -116,7 +125,8 @@ export async function signIn(
     );
   }
 
-  const result = (await _client.action("auth:signIn" as any, {
+  const httpClient = getHttpClient();
+  const result = (await httpClient.action("auth:signIn" as any, {
     provider,
     params: params ?? {},
   })) as AuthResult | null;
@@ -131,7 +141,8 @@ export async function signIn(
 export async function signOut() {
   if (!_client) return;
   try {
-    await _client.action("auth:signOut" as any, {});
+    const httpClient = getHttpClient();
+    await httpClient.action("auth:signOut" as any, {});
   } catch (e) {
     console.warn("[ConvexAuth] Sign-out failed (already signed out?)", e);
   }
