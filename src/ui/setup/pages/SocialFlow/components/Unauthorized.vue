@@ -3,7 +3,11 @@
     <i class="pi pi-lock unauthorized-icon" />
     <h1>Accès non autorisé</h1>
     <p>Vous n'avez pas les permissions nécessaires pour accéder à cette page.</p>
-    <Button label="Retour" icon="pi pi-arrow-left" @click="router.back()" />
+    <Button
+      label="Retour"
+      icon="pi pi-arrow-left"
+      @click="router.back()"
+    />
   </div>
 </template>
 

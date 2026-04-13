@@ -251,7 +251,7 @@ onUnmounted(() => {
   window.removeEventListener('sfz-switch-profile', onSwitchProfile)
   window.removeEventListener('sfz-toggle-dark-mode', onToggleDarkMode)
   window.removeEventListener('sfz-text-zoom-changed', onNativeTextZoomChanged)
-  document.removeEventListener('pointerdown', onGlobalTap, { capture: true } as EventListenerOptions)
+  document.removeEventListener('pointerdown', onGlobalTap, true)
   unlistenTray?.()
 })
 </script>

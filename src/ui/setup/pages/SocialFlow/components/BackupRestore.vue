@@ -10,7 +10,11 @@
         <i class="pi pi-download mr-2"></i>
         <span>{{ $t('backup.export_label') }}</span>
       </div>
-      <button class="backup-btn" :disabled="busy" @click="startExport">
+      <button
+        class="backup-btn"
+        :disabled="busy"
+        @click="startExport"
+      >
         <i class="pi pi-lock" />
         {{ $t('backup.export_button') }}
       </button>
@@ -21,7 +25,11 @@
         <i class="pi pi-upload mr-2"></i>
         <span>{{ $t('backup.restore_label') }}</span>
       </div>
-      <button class="backup-btn" :disabled="busy" @click="startImport">
+      <button
+        class="backup-btn"
+        :disabled="busy"
+        @click="startImport"
+      >
         <i class="pi pi-lock-open" />
         {{ $t('backup.import_button') }}
       </button>
@@ -30,9 +38,12 @@
     <!-- Dialog -->
     <Teleport to="body">
       <Transition name="fade">
-        <div v-if="dialogVisible" class="backup-dialog-overlay" @click.self="closeIfIdle">
+        <div
+          v-if="dialogVisible"
+          class="backup-dialog-overlay"
+          @click.self="closeIfIdle"
+        >
           <div class="backup-dialog">
-
             <!-- ───── Step 1: Password ───── -->
             <template v-if="step === 'password'">
               <h3>{{ dialogTitle }}</h3>
@@ -48,12 +59,18 @@
                   autocomplete="off"
                   @keyup.enter="confirm"
                 />
-                <button class="toggle-password" @click="showPassword = !showPassword">
+                <button
+                  class="toggle-password"
+                  @click="showPassword = !showPassword"
+                >
                   <i :class="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'" />
                 </button>
               </div>
 
-              <div v-if="mode === 'export'" class="dialog-field">
+              <div
+                v-if="mode === 'export'"
+                class="dialog-field"
+              >
                 <label>{{ $t('backup.confirm_password_label') }}</label>
                 <input
                   v-model="passwordConfirm"
@@ -65,9 +82,22 @@
               </div>
 
               <div class="dialog-actions">
-                <button class="dialog-btn cancel" @click="close" :disabled="busy">{{ $t('common.cancel') }}</button>
-                <button class="dialog-btn primary" @click="confirm" :disabled="busy || !canConfirm">
-                  <i v-if="busy" class="pi pi-spin pi-spinner" />
+                <button
+                  class="dialog-btn cancel"
+                  :disabled="busy"
+                  @click="close"
+                >
+                  {{ $t('common.cancel') }}
+                </button>
+                <button
+                  class="dialog-btn primary"
+                  :disabled="busy || !canConfirm"
+                  @click="confirm"
+                >
+                  <i
+                    v-if="busy"
+                    class="pi pi-spin pi-spinner"
+                  />
                   {{ busy ? $t('common.loading') : (mode === 'export' ? $t('backup.export_button') : $t('backup.import_button')) }}
                 </button>
               </div>
@@ -113,7 +143,12 @@
               </template>
 
               <div class="dialog-actions">
-                <button class="dialog-btn primary" @click="close">{{ $t('common.ok') }}</button>
+                <button
+                  class="dialog-btn primary"
+                  @click="close"
+                >
+                  {{ $t('common.ok') }}
+                </button>
               </div>
             </template>
 
@@ -129,13 +164,19 @@
 
               <div class="error-box">
                 <p>{{ friendlyError }}</p>
-                <button class="copy-error-btn" @click="copyError">
+                <button
+                  class="copy-error-btn"
+                  @click="copyError"
+                >
                   <i :class="copied ? 'pi pi-check' : 'pi pi-copy'" />
                   {{ copied ? $t('common.copied') : $t('common.copy') }}
                 </button>
               </div>
 
-              <div v-if="mode === 'import'" class="result-instructions">
+              <div
+                v-if="mode === 'import'"
+                class="result-instructions"
+              >
                 <p class="result-instructions-title">{{ $t('backup.error_checklist_title') }}</p>
                 <ul>
                   <li>{{ $t('backup.error_check_password') }}</li>
@@ -145,11 +186,20 @@
               </div>
 
               <div class="dialog-actions">
-                <button class="dialog-btn cancel" @click="close">{{ $t('common.cancel') }}</button>
-                <button class="dialog-btn primary" @click="retry">{{ $t('backup.try_again') }}</button>
+                <button
+                  class="dialog-btn cancel"
+                  @click="close"
+                >
+                  {{ $t('common.cancel') }}
+                </button>
+                <button
+                  class="dialog-btn primary"
+                  @click="retry"
+                >
+                  {{ $t('backup.try_again') }}
+                </button>
               </div>
             </template>
-
           </div>
         </div>
       </Transition>

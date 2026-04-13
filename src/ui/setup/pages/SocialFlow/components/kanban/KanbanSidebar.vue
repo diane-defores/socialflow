@@ -19,7 +19,10 @@
         </div>
 
         <div class="section-content">
-          <TransitionGroup name="list" tag="div">
+          <TransitionGroup
+            name="list"
+            tag="div"
+          >
             <div
               v-for="item in getColumnItems(column.id)"
               :key="item.id"

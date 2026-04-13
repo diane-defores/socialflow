@@ -3,7 +3,11 @@
     <h2>Threads Feed</h2>
     <div class="threads-content">
       <div class="thread-list">
-        <div v-for="i in 5" :key="i" class="thread-card">
+        <div
+          v-for="i in 5"
+          :key="i"
+          class="thread-card"
+        >
           <div class="thread-header">
             <Avatar 
               :image="`https://api.dicebear.com/7.x/avataaars/svg?seed=user${i}`"
@@ -19,9 +23,18 @@
             <p>This is a thread post #{{ i }}. Engaging with the community! 🚀</p>
           </div>
           <div class="thread-actions">
-            <Button icon="pi pi-heart" text />
-            <Button icon="pi pi-comment" text />
-            <Button icon="pi pi-share-alt" text />
+            <Button
+              icon="pi pi-heart"
+              text
+            />
+            <Button
+              icon="pi pi-comment"
+              text
+            />
+            <Button
+              icon="pi pi-share-alt"
+              text
+            />
           </div>
         </div>
       </div>

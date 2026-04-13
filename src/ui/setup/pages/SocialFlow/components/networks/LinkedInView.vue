@@ -14,7 +14,12 @@
           <div class="profile-card">
             <div class="profile-banner" />
             <div class="profile-info">
-              <Avatar :image="profileInfo.avatar" size="xlarge" shape="circle" class="profile-avatar" />
+              <Avatar
+                :image="profileInfo.avatar"
+                size="xlarge"
+                shape="circle"
+                class="profile-avatar"
+              />
               <h3>{{ profileInfo.name }}</h3>
               <p class="headline">{{ profileInfo.headline }}</p>
               <div class="profile-stats">
@@ -53,7 +58,11 @@
 
         <div class="feed-section">
           <div class="post-composer">
-            <Avatar :image="profileInfo.avatar" size="normal" shape="circle" />
+            <Avatar
+              :image="profileInfo.avatar"
+              size="normal"
+              shape="circle"
+            />
             <div class="composer-input">
               <Button 
                 class="start-post"
@@ -63,28 +72,65 @@
                 {{ $t('linkedin.start_post') }}
               </Button>
               <div class="post-types">
-                <Button icon="pi pi-image" :label="$t('common.photo')" text class="flex-1" />
-                <Button icon="pi pi-video" :label="$t('common.video')" text class="flex-1" />
-                <Button icon="pi pi-calendar" :label="$t('common.event')" text class="flex-1" />
-                <Button icon="pi pi-file" :label="$t('common.article')" text class="flex-1" />
+                <Button
+                  icon="pi pi-image"
+                  :label="$t('common.photo')"
+                  text
+                  class="flex-1"
+                />
+                <Button
+                  icon="pi pi-video"
+                  :label="$t('common.video')"
+                  text
+                  class="flex-1"
+                />
+                <Button
+                  icon="pi pi-calendar"
+                  :label="$t('common.event')"
+                  text
+                  class="flex-1"
+                />
+                <Button
+                  icon="pi pi-file"
+                  :label="$t('common.article')"
+                  text
+                  class="flex-1"
+                />
               </div>
             </div>
           </div>
 
-          <div v-for="post in posts" :key="post.id" class="post-card">
+          <div
+            v-for="post in posts"
+            :key="post.id"
+            class="post-card"
+          >
             <div class="post-header">
-              <Avatar :image="post.authorAvatar" size="normal" shape="circle" />
+              <Avatar
+                :image="post.authorAvatar"
+                size="normal"
+                shape="circle"
+              />
               <div class="author-info">
                 <h4>{{ post.authorName }}</h4>
                 <p class="author-headline">{{ post.authorHeadline }}</p>
                 <span class="post-time">{{ post.time }}</span>
               </div>
-              <Button icon="pi pi-ellipsis-h" text rounded />
+              <Button
+                icon="pi pi-ellipsis-h"
+                text
+                rounded
+              />
             </div>
             
             <div class="post-content">
               <p>{{ post.text }}</p>
-              <img v-if="post.image" :src="post.image" :alt="post.text" class="post-image" />
+              <img
+                v-if="post.image"
+                :src="post.image"
+                :alt="post.text"
+                class="post-image"
+              />
             </div>
 
             <div class="post-stats">
@@ -94,10 +140,26 @@
             </div>
 
             <div class="post-actions">
-              <Button icon="pi pi-thumbs-up" :label="$t('common.like')" text />
-              <Button icon="pi pi-comment" :label="$t('common.comment')" text />
-              <Button icon="pi pi-share-alt" :label="$t('common.share')" text />
-              <Button icon="pi pi-send" :label="$t('common.send')" text />
+              <Button
+                icon="pi pi-thumbs-up"
+                :label="$t('common.like')"
+                text
+              />
+              <Button
+                icon="pi pi-comment"
+                :label="$t('common.comment')"
+                text
+              />
+              <Button
+                icon="pi pi-share-alt"
+                :label="$t('common.share')"
+                text
+              />
+              <Button
+                icon="pi pi-send"
+                :label="$t('common.send')"
+                text
+              />
             </div>
           </div>
         </div>
@@ -115,8 +177,8 @@
         <Button 
           icon="pi pi-linkedin" 
           :label="$t('linkedin.connect_button')"
-          @click="connectLinkedIn"
           class="p-button-linkedin"
+          @click="connectLinkedIn"
         />
       </div>
     </template>
@@ -129,7 +191,11 @@
     >
       <div class="dialog-content">
         <div class="dialog-header">
-          <Avatar :image="profileInfo.avatar" size="normal" shape="circle" />
+          <Avatar
+            :image="profileInfo.avatar"
+            size="normal"
+            shape="circle"
+          />
           <div>
             <h4>{{ profileInfo.name }}</h4>
             <Button 
@@ -144,18 +210,42 @@
         <Textarea
           v-model="newPost"
           :placeholder="$t('linkedin.post_placeholder')"
-          :autoResize="true"
+          :auto-resize="true"
           rows="5"
         />
 
         <div class="dialog-footer">
           <div class="post-attachments">
-            <Button icon="pi pi-image" text rounded />
-            <Button icon="pi pi-video" text rounded />
-            <Button icon="pi pi-file" text rounded />
-            <Button icon="pi pi-briefcase" text rounded />
-            <Button icon="pi pi-chart-bar" text rounded />
-            <Button icon="pi pi-ellipsis-h" text rounded />
+            <Button
+              icon="pi pi-image"
+              text
+              rounded
+            />
+            <Button
+              icon="pi pi-video"
+              text
+              rounded
+            />
+            <Button
+              icon="pi pi-file"
+              text
+              rounded
+            />
+            <Button
+              icon="pi pi-briefcase"
+              text
+              rounded
+            />
+            <Button
+              icon="pi pi-chart-bar"
+              text
+              rounded
+            />
+            <Button
+              icon="pi pi-ellipsis-h"
+              text
+              rounded
+            />
           </div>
           <Button 
             :label="$t('common.publish')"

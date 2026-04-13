@@ -2,7 +2,11 @@
   <!-- Mobile: bottom sheet -->
   <Teleport to="body">
     <Transition name="nudge-sheet">
-      <div v-if="visible && isMobile" class="nudge-overlay" @click.self="handleDismiss">
+      <div
+        v-if="visible && isMobile"
+        class="nudge-overlay"
+        @click.self="handleDismiss"
+      >
         <div class="nudge-sheet">
           <div class="nudge-handle" />
           <div class="nudge-content">
@@ -12,7 +16,10 @@
             <h3 class="nudge-title">{{ $t('nudge.title') }}</h3>
             <p class="nudge-promo">{{ $t('nudge.promo_text') }}</p>
 
-            <form class="nudge-form" @submit.prevent="handleSignup">
+            <form
+              class="nudge-form"
+              @submit.prevent="handleSignup"
+            >
               <input
                 v-model="email"
                 type="email"
@@ -28,11 +35,21 @@
                 minlength="8"
                 required
               />
-              <div v-if="error" class="signup-error-card">
+              <div
+                v-if="error"
+                class="signup-error-card"
+              >
                 <p class="nudge-error">{{ displayedError }}</p>
                 <div class="signup-error-actions">
-                  <button type="button" class="signup-error-btn" @click="copyError">
-                    <i class="pi" :class="errorCopied ? 'pi-check' : 'pi-copy'" />
+                  <button
+                    type="button"
+                    class="signup-error-btn"
+                    @click="copyError"
+                  >
+                    <i
+                      class="pi"
+                      :class="errorCopied ? 'pi-check' : 'pi-copy'"
+                    />
                     {{ errorCopied ? $t('common.copied') : $t('common.copy') }}
                   </button>
                   <button
@@ -45,13 +62,23 @@
                   </button>
                 </div>
               </div>
-              <button type="submit" class="nudge-cta" :disabled="loading">
-                <i v-if="loading" class="pi pi-spin pi-spinner" />
+              <button
+                type="submit"
+                class="nudge-cta"
+                :disabled="loading"
+              >
+                <i
+                  v-if="loading"
+                  class="pi pi-spin pi-spinner"
+                />
                 {{ loading ? '' : $t('nudge.cta_button') }}
               </button>
             </form>
 
-            <button class="nudge-dismiss" @click="handleDismiss">
+            <button
+              class="nudge-dismiss"
+              @click="handleDismiss"
+            >
               {{ $t('nudge.dismiss') }}
             </button>
           </div>
@@ -76,7 +103,10 @@
       </div>
       <p class="nudge-promo">{{ $t('nudge.promo_text') }}</p>
 
-      <form class="nudge-form" @submit.prevent="handleSignup">
+      <form
+        class="nudge-form"
+        @submit.prevent="handleSignup"
+      >
         <input
           v-model="email"
           type="email"
@@ -92,11 +122,21 @@
           minlength="8"
           required
         />
-        <div v-if="error" class="signup-error-card">
+        <div
+          v-if="error"
+          class="signup-error-card"
+        >
           <p class="nudge-error">{{ displayedError }}</p>
           <div class="signup-error-actions">
-            <button type="button" class="signup-error-btn" @click="copyError">
-              <i class="pi" :class="errorCopied ? 'pi-check' : 'pi-copy'" />
+            <button
+              type="button"
+              class="signup-error-btn"
+              @click="copyError"
+            >
+              <i
+                class="pi"
+                :class="errorCopied ? 'pi-check' : 'pi-copy'"
+              />
               {{ errorCopied ? $t('common.copied') : $t('common.copy') }}
             </button>
             <button
@@ -109,13 +149,23 @@
             </button>
           </div>
         </div>
-        <button type="submit" class="nudge-cta" :disabled="loading">
-          <i v-if="loading" class="pi pi-spin pi-spinner" />
+        <button
+          type="submit"
+          class="nudge-cta"
+          :disabled="loading"
+        >
+          <i
+            v-if="loading"
+            class="pi pi-spin pi-spinner"
+          />
           {{ loading ? '' : $t('nudge.cta_button') }}
         </button>
       </form>
 
-      <button class="nudge-dismiss" @click="handleDismiss">
+      <button
+        class="nudge-dismiss"
+        @click="handleDismiss"
+      >
         {{ $t('nudge.dismiss') }}
       </button>
     </div>

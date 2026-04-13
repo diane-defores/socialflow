@@ -1,5 +1,9 @@
 <template>
-  <Message v-if="error" severity="error" :closable="false">
+  <Message
+    v-if="error"
+    severity="error"
+    :closable="false"
+  >
     {{ error }}
   </Message>
 </template>

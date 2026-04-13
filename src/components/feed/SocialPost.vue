@@ -15,7 +15,12 @@
 
     <div class="post-content">
       <p>{{ post.content }}</p>
-      <img v-if="post.image" :src="post.image" :alt="post.content" class="post-image" />
+      <img
+        v-if="post.image"
+        :src="post.image"
+        :alt="post.content"
+        class="post-image"
+      />
     </div>
 
     <div class="post-actions">

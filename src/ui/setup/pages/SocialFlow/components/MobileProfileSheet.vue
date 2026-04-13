@@ -1,7 +1,11 @@
 <template>
   <Teleport to="body">
     <Transition name="sheet">
-      <div v-if="modelValue" class="sheet-overlay" @click.self="closeSheet">
+      <div
+        v-if="modelValue"
+        class="sheet-overlay"
+        @click.self="closeSheet"
+      >
         <div class="profile-sheet">
           <!-- Handle -->
           <div class="sheet-handle" />
@@ -9,7 +13,10 @@
           <!-- Header -->
           <div class="sheet-header">
             <span class="sheet-title">{{ $t('profiles.title') }}</span>
-            <button class="sheet-close-btn" @click="closeSheet">
+            <button
+              class="sheet-close-btn"
+              @click="closeSheet"
+            >
               <i class="pi pi-times" />
             </button>
           </div>
@@ -23,14 +30,30 @@
               :class="{ 'sheet-profile-row--active': profile.id === profilesStore.activeProfileId }"
             >
               <!-- Avatar (tap to select profile) -->
-              <div class="sheet-avatar" @click="selectProfile(profile.id)">
-                <img v-if="profile.avatar" :src="profile.avatar" class="sheet-avatar-img" />
-                <span v-else class="sheet-avatar-emoji">{{ profile.emoji }}</span>
-                <i v-if="profile.id === profilesStore.activeProfileId" class="pi pi-check sheet-avatar-check" />
+              <div
+                class="sheet-avatar"
+                @click="selectProfile(profile.id)"
+              >
+                <img
+                  v-if="profile.avatar"
+                  :src="profile.avatar"
+                  class="sheet-avatar-img"
+                />
+                <span
+                  v-else
+                  class="sheet-avatar-emoji"
+                >{{ profile.emoji }}</span>
+                <i
+                  v-if="profile.id === profilesStore.activeProfileId"
+                  class="pi pi-check sheet-avatar-check"
+                />
               </div>
 
               <!-- Name / inline edit -->
-              <div class="sheet-profile-info" @click="selectProfile(profile.id)">
+              <div
+                class="sheet-profile-info"
+                @click="selectProfile(profile.id)"
+              >
                 <input
                   v-if="editingId === profile.id"
                   :ref="el => { if (el) editInputRef = el as HTMLInputElement }"
@@ -41,19 +64,37 @@
                   @keydown.escape="cancelEdit"
                   @click.stop
                 />
-                <span v-else class="sheet-profile-name">{{ profile.name }}</span>
-                <span v-if="profile.id === profilesStore.activeProfileId" class="active-label">{{ $t('profile.active_label') }}</span>
+                <span
+                  v-else
+                  class="sheet-profile-name"
+                >{{ profile.name }}</span>
+                <span
+                  v-if="profile.id === profilesStore.activeProfileId"
+                  class="active-label"
+                >{{ $t('profile.active_label') }}</span>
               </div>
 
               <!-- Actions -->
               <div class="sheet-profile-actions">
-                <button class="sheet-action" :title="$t('profile.rename_action')" @click.stop="startEdit(profile)">
+                <button
+                  class="sheet-action"
+                  :title="$t('profile.rename_action')"
+                  @click.stop="startEdit(profile)"
+                >
                   <i class="pi pi-pencil" />
                 </button>
-                <button class="sheet-action" :title="$t('profile.avatar_action')" @click.stop="pickAvatar(profile.id)">
+                <button
+                  class="sheet-action"
+                  :title="$t('profile.avatar_action')"
+                  @click.stop="pickAvatar(profile.id)"
+                >
                   <i class="pi pi-camera" />
                 </button>
-                <button class="sheet-action" :title="$t('profile.clear_cookies_action')" @click.stop="clearCookiesProfileId = clearCookiesProfileId === profile.id ? null : profile.id">
+                <button
+                  class="sheet-action"
+                  :title="$t('profile.clear_cookies_action')"
+                  @click.stop="clearCookiesProfileId = clearCookiesProfileId === profile.id ? null : profile.id"
+                >
                   <i class="pi pi-eraser" />
                 </button>
                 <button
@@ -69,11 +110,18 @@
           </div>
 
           <!-- Clear cookies per network (expandable per profile) -->
-          <div v-if="clearCookiesProfileId" class="clear-cookies-section">
+          <div
+            v-if="clearCookiesProfileId"
+            class="clear-cookies-section"
+          >
             <div class="clear-cookies-header">
               <i class="pi pi-trash" />
               <span>{{ $t('profile.clear_cookies_header', { name: profilesStore.profiles.find(p => p.id === clearCookiesProfileId)?.name }) }}</span>
-              <button class="sheet-close-btn" @click="clearCookiesProfileId = null" style="margin-left:auto;">
+              <button
+                class="sheet-close-btn"
+                style="margin-left:auto;"
+                @click="clearCookiesProfileId = null"
+              >
                 <i class="pi pi-times" />
               </button>
             </div>
@@ -84,24 +132,57 @@
                 class="clear-cookie-row"
                 @click="clearNetworkCookies(nw.id)"
               >
-                <ThreadsIcon v-if="nw.id === 'threads'" size="0.9rem" class="clear-cookie-icon" />
-                <SnapchatIcon v-else-if="nw.id === 'snapchat'" size="0.9rem" class="clear-cookie-icon" />
-                <NextdoorIcon v-else-if="nw.id === 'nextdoor'" size="0.9rem" class="clear-cookie-icon" />
-                <MessengerIcon v-else-if="nw.id === 'messenger'" size="0.9rem" class="clear-cookie-icon" />
-                <QuoraIcon v-else-if="nw.id === 'quora'" size="0.9rem" class="clear-cookie-icon" />
-                <i v-else :class="nw.icon" class="clear-cookie-icon" />
+                <ThreadsIcon
+                  v-if="nw.id === 'threads'"
+                  size="0.9rem"
+                  class="clear-cookie-icon"
+                />
+                <SnapchatIcon
+                  v-else-if="nw.id === 'snapchat'"
+                  size="0.9rem"
+                  class="clear-cookie-icon"
+                />
+                <NextdoorIcon
+                  v-else-if="nw.id === 'nextdoor'"
+                  size="0.9rem"
+                  class="clear-cookie-icon"
+                />
+                <MessengerIcon
+                  v-else-if="nw.id === 'messenger'"
+                  size="0.9rem"
+                  class="clear-cookie-icon"
+                />
+                <QuoraIcon
+                  v-else-if="nw.id === 'quora'"
+                  size="0.9rem"
+                  class="clear-cookie-icon"
+                />
+                <i
+                  v-else
+                  :class="nw.icon"
+                  class="clear-cookie-icon"
+                />
                 <span class="clear-cookie-label">{{ nw.label }}</span>
-                <span v-if="clearedNetworks[`${clearCookiesProfileId}:${nw.id}`]" class="clear-cookie-done">
+                <span
+                  v-if="clearedNetworks[`${clearCookiesProfileId}:${nw.id}`]"
+                  class="clear-cookie-done"
+                >
                   <i class="pi pi-check" />
                 </span>
-                <i v-else class="pi pi-eraser clear-cookie-action" />
+                <i
+                  v-else
+                  class="pi pi-eraser clear-cookie-action"
+                />
               </button>
             </div>
           </div>
 
           <!-- Add new profile -->
           <div class="sheet-footer">
-            <div v-if="addingNew" class="add-profile-form">
+            <div
+              v-if="addingNew"
+              class="add-profile-form"
+            >
               <input
                 :ref="el => { if (el) addInputRef = el as HTMLInputElement }"
                 v-model="newProfileName"
@@ -110,10 +191,24 @@
                 @keydown.enter="confirmAdd"
                 @keydown.escape="cancelAdd"
               />
-              <button class="add-confirm-btn" @click="confirmAdd"><i class="pi pi-check" /></button>
-              <button class="add-cancel-btn" @click="cancelAdd"><i class="pi pi-times" /></button>
+              <button
+                class="add-confirm-btn"
+                @click="confirmAdd"
+              >
+                <i class="pi pi-check" />
+              </button>
+              <button
+                class="add-cancel-btn"
+                @click="cancelAdd"
+              >
+                <i class="pi pi-times" />
+              </button>
             </div>
-            <button v-else class="add-profile-btn" @click="startAdd">
+            <button
+              v-else
+              class="add-profile-btn"
+              @click="startAdd"
+            >
               <i class="pi pi-plus" />
               <span>{{ $t('profile.add_new_button') }}</span>
             </button>

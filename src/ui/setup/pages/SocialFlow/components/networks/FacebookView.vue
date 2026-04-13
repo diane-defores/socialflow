@@ -7,13 +7,18 @@
         <div class="stories-section">
           <ScrollPanel class="stories-scroll">
             <div class="stories-container">
-              <div v-for="story in store.stories" 
+              <div
+                v-for="story in store.stories" 
                 :key="story.id" 
                 class="story-card"
                 :class="{ viewed: story.viewed }"
                 @click="store.viewStory(story.id)"
               >
-                <img :src="story.image" :alt="story.author.name" class="story-image" />
+                <img
+                  :src="story.image"
+                  :alt="story.author.name"
+                  class="story-image"
+                />
                 <div class="story-overlay">
                   <SocialAvatar 
                     :user="story.author"
@@ -48,8 +53,14 @@
             @share="store.sharePost(post.id)"
             @toggle-comments="togglePostComments(post.id)"
           >
-            <template #comments v-if="post.showComments">
-              <div v-if="post.comments?.length" class="comments-container">
+            <template
+              v-if="post.showComments"
+              #comments
+            >
+              <div
+                v-if="post.comments?.length"
+                class="comments-container"
+              >
                 <SocialComment
                   v-for="comment in post.comments"
                   :key="comment.id"
@@ -79,7 +90,8 @@
       <div class="right-sidebar">
         <div class="online-friends">
           <h4>{{ $t('facebook.contacts') }}</h4>
-          <div v-for="friend in store.onlineFriends" 
+          <div
+            v-for="friend in store.onlineFriends" 
             :key="friend.id" 
             class="friend-item"
           >

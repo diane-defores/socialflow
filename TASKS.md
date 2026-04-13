@@ -208,8 +208,9 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 
 ### To go live
 
-- [ ] Convex: `npx convex dev` → paste `VITE_CONVEX_URL` into `.env`
-- [ ] Set `AUTH_SECRET` env var in Convex dashboard (for Convex Auth session signing)
+- [x] Convex: `npx convex dev` linked the workspace and generated `.env.local` with `VITE_CONVEX_URL`
+- [x] Convex Auth signing keys configured on the dev deployment — `JWT_PRIVATE_KEY` + `JWKS` via `@convex-dev/auth`
+- [ ] Vérifier le signup/signin Convex Auth end-to-end sur le bon déploiement et nettoyer l’ancien dev deployment link si inutile
 - [ ] Vérifier Sentry — intégration, remontée d'erreurs, configuration des alertes
 
 ### Performance & Cache

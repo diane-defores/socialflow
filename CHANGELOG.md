@@ -15,6 +15,7 @@ All notable changes to SocialFlow are documented here.
 - **Text zoom application is more aggressive on Android WebViews** — `set_text_zoom` now reapplies both native `WebSettings.textZoom` and a JS/CSS fallback (`-webkit-text-size-adjust`, plus a Facebook-specific font-size pass) to improve sites that ignore the native zoom setting
 
 ### Fixed
+- **Convex Auth sign-in bootstrap on dev deployment** — the `users` schema is now compatible with `@convex-dev/auth` default writes (`createdAt` optional, auth verification fields/indexes added), the workspace is linked to a live Convex dev deployment, and missing auth signing secrets (`JWT_PRIVATE_KEY`, `JWKS`) were provisioned so password sign-in can mint session tokens instead of failing at startup
 - **Account creation errors were hard to read/copy** — long backend/auth errors are truncated by default, can be expanded on demand, and the full raw message can be copied from both the drawer and the signup nudge
 - **Android social WebView photo picker did nothing** — web `<input type="file">` requests now open the Android picker instead of failing silently
 - **Facebook mobile story CTA no longer fails silently** — when the user taps `Créer une story` and Facebook only shows the mobile-app upsell, SocialFlow now explains that Stories are not available in Facebook mobile web instead of leaving the user with a disappearing prompt

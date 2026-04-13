@@ -1,17 +1,30 @@
 <template>
   <!-- Webview active: transparent host — the native Kotlin overlay covers everything -->
-  <div v-if="webviewStore.activeUrl" class="mobile-webview-screen">
+  <div
+    v-if="webviewStore.activeUrl"
+    class="mobile-webview-screen"
+  >
     <NetworkWebviewHost class="mobile-webview-host" />
   </div>
 
   <!-- Home screen -->
-  <div v-else class="mobile-home" @click.self="exitEditMode">
-
+  <div
+    v-else
+    class="mobile-home"
+    @click.self="exitEditMode"
+  >
     <!-- Profile card (sticky top) -->
-    <div class="profile-card" @click="networkEditMode ? exitEditMode() : (profileSheetVisible = true)">
+    <div
+      class="profile-card"
+      @click="networkEditMode ? exitEditMode() : (profileSheetVisible = true)"
+    >
       <div class="profile-avatar-wrap">
         <div class="profile-avatar">
-          <img v-if="profilesStore.activeProfile?.avatar" :src="profilesStore.activeProfile.avatar" class="profile-avatar-img" />
+          <img
+            v-if="profilesStore.activeProfile?.avatar"
+            :src="profilesStore.activeProfile.avatar"
+            class="profile-avatar-img"
+          />
           <span v-else>{{ profilesStore.activeProfile?.emoji ?? '👤' }}</span>
         </div>
         <div class="profile-avatar-ring" />
@@ -19,11 +32,19 @@
       <div class="profile-info">
         <span class="profile-name">{{ profilesStore.activeProfile?.name ?? $t('profile.default_name') }}</span>
         <span class="profile-sub">
-          <i class="pi pi-th-large" style="font-size:0.65rem; margin-right:0.3rem;" />
+          <i
+            class="pi pi-th-large"
+            style="font-size:0.65rem; margin-right:0.3rem;"
+          />
           {{ visibleMenuItems.length }} {{ $t('profile.networks_count', { count: visibleMenuItems.length }) }} · {{ $t('profile.tap_to_manage') }}
         </span>
         <div class="profile-pills">
-          <span v-for="item in visibleMenuItems.slice(0, 5)" :key="item.id" class="profile-pill" :style="{ background: pillColor(item.id) }" />
+          <span
+            v-for="item in visibleMenuItems.slice(0, 5)"
+            :key="item.id"
+            class="profile-pill"
+            :style="{ background: pillColor(item.id) }"
+          />
         </div>
       </div>
       <i class="pi pi-chevron-down profile-chevron" />
@@ -32,10 +53,16 @@
     <!-- Quick actions bar (sticky top) -->
     <div class="quick-actions">
       <!-- Notifications -->
-      <button class="quick-action-btn" @click="notificationsVisible = !notificationsVisible">
+      <button
+        class="quick-action-btn"
+        @click="notificationsVisible = !notificationsVisible"
+      >
         <span class="quick-action-icon">
           <i class="pi pi-bell" />
-          <span v-if="notificationCount > 0" class="notif-badge">{{ notificationCount }}</span>
+          <span
+            v-if="notificationCount > 0"
+            class="notif-badge"
+          >{{ notificationCount }}</span>
         </span>
         <span class="quick-action-label">{{ $t('common.notifications') }}</span>
         <i class="pi pi-chevron-right quick-action-arrow" />
@@ -58,10 +85,18 @@
     </div>
 
     <!-- Notifications panel -->
-    <div v-if="notificationsVisible" class="notif-panel">
+    <div
+      v-if="notificationsVisible"
+      class="notif-panel"
+    >
       <div class="notif-header">
         <span class="notif-title">{{ $t('common.notifications') }}</span>
-        <button class="notif-clear" @click="notificationCount = 0">{{ $t('notif.mark_all_read') }}</button>
+        <button
+          class="notif-clear"
+          @click="notificationCount = 0"
+        >
+          {{ $t('notif.mark_all_read') }}
+        </button>
       </div>
       <div class="notif-empty">
         <i class="pi pi-bell-slash" />
@@ -71,72 +106,141 @@
 
     <!-- Scrollable network grid -->
     <div class="mobile-home-scroll">
+      <!-- Network grid -->
+      <div
+        class="networks-section"
+        @click.self="exitEditMode"
+      >
+        <p class="section-title">{{ $t('sidebar.networks_section') }}</p>
+        <div class="network-grid">
+          <button
+            v-for="item in visibleMenuItems"
+            :key="item.id"
+            class="network-tile"
+            :class="{ active: isNetworkActive(item), 'edit-mode': networkEditMode }"
+            :style="{ background: tileBg(item.id) }"
+            @click="networkEditMode ? handleEditClick(item) : navigateToNetwork(item)"
+            @touchstart="startLongPress(item)"
+            @touchend="cancelLongPress"
+            @touchmove="cancelLongPress"
+            @contextmenu.prevent
+          >
+            <span
+              class="network-icon-wrap"
+              :style="{ background: networkColors[item.id] ?? 'var(--surface-hover)' }"
+            >
+              <ThreadsIcon
+                v-if="item.route === '/threads'"
+                size="1.35rem"
+                color="#fff"
+              />
+              <SnapchatIcon
+                v-else-if="item.route === '/snapchat'"
+                size="1.35rem"
+                color="#fff"
+              />
+              <NextdoorIcon
+                v-else-if="item.route === '/nextdoor'"
+                size="1.35rem"
+                color="#fff"
+              />
+              <MessengerIcon
+                v-else-if="item.route === '/messenger'"
+                size="1.35rem"
+                color="#fff"
+              />
+              <QuoraIcon
+                v-else-if="item.route === '/quora'"
+                size="1.35rem"
+                color="#fff"
+              />
+              <i
+                v-else
+                :class="item.icon"
+              />
+            </span>
+            <span class="network-name">{{ item.label }}</span>
+            <span
+              v-if="networkEditMode && !item.route.startsWith('/custom-')"
+              class="network-toggle"
+              :class="{ hidden: isNetworkHiddenForProfile(item) }"
+            >
+              <span class="network-toggle-thumb" />
+            </span>
+            <span
+              v-if="networkEditMode && item.route.startsWith('/custom-')"
+              class="custom-delete-badge"
+            >
+              <i class="pi pi-times" />
+            </span>
+          </button>
 
-    <!-- Network grid -->
-    <div class="networks-section" @click.self="exitEditMode">
-      <p class="section-title">{{ $t('sidebar.networks_section') }}</p>
-      <div class="network-grid">
-        <button
-          v-for="item in visibleMenuItems"
-          :key="item.id"
-          class="network-tile"
-          :class="{ active: isNetworkActive(item), 'edit-mode': networkEditMode }"
-          :style="{ background: tileBg(item.id) }"
-          @click="networkEditMode ? handleEditClick(item) : navigateToNetwork(item)"
-          @touchstart="startLongPress(item)"
-          @touchend="cancelLongPress"
-          @touchmove="cancelLongPress"
-          @contextmenu.prevent
-        >
-          <span class="network-icon-wrap" :style="{ background: networkColors[item.id] ?? 'var(--surface-hover)' }">
-            <ThreadsIcon v-if="item.route === '/threads'" size="1.35rem" color="#fff" />
-            <SnapchatIcon v-else-if="item.route === '/snapchat'" size="1.35rem" color="#fff" />
-            <NextdoorIcon v-else-if="item.route === '/nextdoor'" size="1.35rem" color="#fff" />
-            <MessengerIcon v-else-if="item.route === '/messenger'" size="1.35rem" color="#fff" />
-            <QuoraIcon v-else-if="item.route === '/quora'" size="1.35rem" color="#fff" />
-            <i v-else :class="item.icon" />
-          </span>
-          <span class="network-name">{{ item.label }}</span>
-          <span v-if="networkEditMode && !item.route.startsWith('/custom-')" class="network-toggle" :class="{ hidden: isNetworkHiddenForProfile(item) }">
-            <span class="network-toggle-thumb" />
-          </span>
-          <span v-if="networkEditMode && item.route.startsWith('/custom-')" class="custom-delete-badge">
-            <i class="pi pi-times" />
-          </span>
-        </button>
-
-        <!-- Add custom link tile (only in edit mode) -->
-        <button
+          <!-- Add custom link tile (only in edit mode) -->
+          <button
+            v-if="networkEditMode"
+            class="network-tile add-custom-tile edit-mode"
+            @click="showAddLinkForm = true"
+          >
+            <span
+              class="network-icon-wrap"
+              style="background: var(--surface-hover)"
+            >
+              <i class="pi pi-plus" />
+            </span>
+            <span class="network-name">{{ $t('common.add') }}</span>
+          </button>
+        </div>
+        <p
           v-if="networkEditMode"
-          class="network-tile add-custom-tile edit-mode"
-          @click="showAddLinkForm = true"
+          class="edit-hint"
         >
-          <span class="network-icon-wrap" style="background: var(--surface-hover)">
-            <i class="pi pi-plus" />
-          </span>
-          <span class="network-name">{{ $t('common.add') }}</span>
-        </button>
-      </div>
-      <p v-if="networkEditMode" class="edit-hint">{{ $t('networks.edit_mode_hint') }}</p>
+          {{ $t('networks.edit_mode_hint') }}
+        </p>
 
-      <!-- Add custom link form -->
-      <div v-if="showAddLinkForm" class="add-link-sheet" @click.self="showAddLinkForm = false">
-        <div class="add-link-card">
-          <p class="add-link-title">{{ $t('links.add_dialog_title') }}</p>
-          <input v-model="newLinkLabel" class="add-link-input" placeholder="Nom (ex: Mon site)" />
-          <input v-model="newLinkUrl" class="add-link-input" placeholder="URL (ex: example.com)" @keydown.enter="submitCustomLink" />
-          <div class="add-link-actions">
-            <button class="add-link-cancel" @click="showAddLinkForm = false">{{ $t('common.cancel') }}</button>
-            <button class="add-link-confirm" :disabled="!newLinkLabel.trim() || !newLinkUrl.trim()" @click="submitCustomLink">{{ $t('common.add') }}</button>
+        <!-- Add custom link form -->
+        <div
+          v-if="showAddLinkForm"
+          class="add-link-sheet"
+          @click.self="showAddLinkForm = false"
+        >
+          <div class="add-link-card">
+            <p class="add-link-title">{{ $t('links.add_dialog_title') }}</p>
+            <input
+              v-model="newLinkLabel"
+              class="add-link-input"
+              placeholder="Nom (ex: Mon site)"
+            />
+            <input
+              v-model="newLinkUrl"
+              class="add-link-input"
+              placeholder="URL (ex: example.com)"
+              @keydown.enter="submitCustomLink"
+            />
+            <div class="add-link-actions">
+              <button
+                class="add-link-cancel"
+                @click="showAddLinkForm = false"
+              >
+                {{ $t('common.cancel') }}
+              </button>
+              <button
+                class="add-link-confirm"
+                :disabled="!newLinkLabel.trim() || !newLinkUrl.trim()"
+                @click="submitCustomLink"
+              >
+                {{ $t('common.add') }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-
     </div><!-- /.mobile-home-scroll -->
 
     <!-- Settings button (sticky bottom) -->
-    <button class="settings-btn" @click="settingsVisible = true">
+    <button
+      class="settings-btn"
+      @click="settingsVisible = true"
+    >
       <i class="pi pi-cog" />
       <span>{{ $t('common.settings') }}</span>
       <i class="pi pi-chevron-right quick-action-arrow" />

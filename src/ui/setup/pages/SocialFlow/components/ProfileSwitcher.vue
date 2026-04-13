@@ -1,25 +1,40 @@
 <template>
-  <div class="profile-switcher" :class="{ 'icons-only': iconsOnly }">
+  <div
+    class="profile-switcher"
+    :class="{ 'icons-only': iconsOnly }"
+  >
     <!-- Trigger button -->
     <div
+      v-tooltip.right="iconsOnly ? (profilesStore.activeProfile?.name ?? 'Profile') : undefined"
       class="profile-trigger"
       :class="{ active: menuVisible }"
       role="button"
       tabindex="0"
       :aria-label="iconsOnly ? 'Switch profile' : undefined"
-      v-tooltip.right="iconsOnly ? (profilesStore.activeProfile?.name ?? 'Profile') : undefined"
       @click="toggleMenu"
       @keydown.enter.space.prevent="toggleMenu"
     >
       <span class="profile-emoji">{{ profilesStore.activeProfile?.emoji ?? '👤' }}</span>
-      <span v-if="!iconsOnly" class="profile-name">
+      <span
+        v-if="!iconsOnly"
+        class="profile-name"
+      >
         {{ profilesStore.activeProfile?.name ?? 'No profile' }}
       </span>
-      <i v-if="!iconsOnly" class="pi pi-chevron-down chevron" :class="{ rotated: menuVisible }" />
+      <i
+        v-if="!iconsOnly"
+        class="pi pi-chevron-down chevron"
+        :class="{ rotated: menuVisible }"
+      />
     </div>
 
     <!-- Dropdown panel -->
-    <div v-if="menuVisible" class="profile-menu" role="listbox" aria-label="Profiles">
+    <div
+      v-if="menuVisible"
+      class="profile-menu"
+      role="listbox"
+      aria-label="Profiles"
+    >
       <div class="profile-menu-header">Profiles</div>
 
       <div
@@ -34,7 +49,10 @@
         @keydown.enter.space.prevent="selectProfile(profile.id)"
       >
         <span class="profile-option-emoji">{{ profile.emoji }}</span>
-        <span v-if="editingId !== profile.id" class="profile-option-name">{{ profile.name }}</span>
+        <span
+          v-if="editingId !== profile.id"
+          class="profile-option-name"
+        >{{ profile.name }}</span>
         <input
           v-else
           ref="editInputRef"
@@ -65,7 +83,10 @@
       </div>
 
       <div class="profile-menu-footer">
-        <div v-if="addingNew" class="add-profile-row">
+        <div
+          v-if="addingNew"
+          class="add-profile-row"
+        >
           <input
             ref="addInputRef"
             v-model="newProfileName"
@@ -76,7 +97,11 @@
             @keydown.escape="cancelAdd"
           />
         </div>
-        <button v-else class="add-profile-btn" @click="startAdd">
+        <button
+          v-else
+          class="add-profile-btn"
+          @click="startAdd"
+        >
           <i class="pi pi-plus" />
           <span>Add profile</span>
         </button>

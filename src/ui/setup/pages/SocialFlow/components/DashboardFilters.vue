@@ -4,8 +4,8 @@
       <!-- Date Range Picker -->
       <Calendar 
         v-model="filters.dateRange" 
-        selectionMode="range" 
-        :showIcon="true"
+        selection-mode="range" 
+        :show-icon="true"
         placeholder="Filtrer par date"
         :disabled="!currentNetwork"
       />
@@ -19,8 +19,8 @@
           :outlined="filters.quickDate !== filter.value"
           :severity="filters.quickDate === filter.value ? 'primary' : 'secondary'"
           size="small"
-          @click="selectQuickDate(filter.value)"
           :disabled="!currentNetwork"
+          @click="selectQuickDate(filter.value)"
         />
       </div>
 
@@ -28,9 +28,9 @@
       <MultiSelect
         v-model="filters.selectedFilters"
         :options="filterOptions"
-        optionLabel="label"
+        option-label="label"
         placeholder="Filtres"
-        :maxSelectedLabels="3"
+        :max-selected-labels="3"
         :disabled="!currentNetwork"
       />
 
@@ -38,19 +38,19 @@
       <Dropdown
         v-model="filters.sort"
         :options="sortOptions"
-        optionLabel="label"
+        option-label="label"
         placeholder="Trier par"
         :disabled="!currentNetwork"
       />
 
       <!-- Reset Button -->
       <Button 
+        v-tooltip="$t('filters.reset_tooltip')" 
         icon="pi pi-filter-slash" 
-        text 
+        text
         severity="secondary"
-        @click="resetFilters"
-        v-tooltip="$t('filters.reset_tooltip')"
         :disabled="!currentNetwork"
+        @click="resetFilters"
       />
     </div>
   </div>

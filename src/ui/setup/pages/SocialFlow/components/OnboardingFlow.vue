@@ -12,19 +12,32 @@
       </div>
 
       <!-- Step 1: Welcome -->
-      <div v-if="step === 1" class="onboarding-step">
+      <div
+        v-if="step === 1"
+        class="onboarding-step"
+      >
         <div class="welcome-icon">
-          <img :src="logoUrl" alt="SocialFlow" class="welcome-logo" />
+          <img
+            :src="logoUrl"
+            alt="SocialFlow"
+            class="welcome-logo"
+          />
         </div>
         <h1 class="step-title">{{ $t('onboarding.welcome_title') }}</h1>
         <p class="step-desc">{{ $t('onboarding.welcome_desc') }}</p>
-        <button class="btn-primary" @click="step = 2">
+        <button
+          class="btn-primary"
+          @click="step = 2"
+        >
           {{ $t('onboarding.start_button') }}
         </button>
       </div>
 
       <!-- Step 2: Profile setup -->
-      <div v-if="step === 2" class="onboarding-step">
+      <div
+        v-if="step === 2"
+        class="onboarding-step"
+      >
         <h2 class="step-title">{{ $t('onboarding.profile_title') }}</h2>
         <p class="step-desc">{{ $t('onboarding.profile_desc') }}</p>
 
@@ -50,13 +63,26 @@
         </div>
 
         <div class="step-actions">
-          <button class="btn-ghost" @click="step = 1">{{ $t('onboarding.back') }}</button>
-          <button class="btn-primary" @click="step = 3">{{ $t('onboarding.next') }}</button>
+          <button
+            class="btn-ghost"
+            @click="step = 1"
+          >
+            {{ $t('onboarding.back') }}
+          </button>
+          <button
+            class="btn-primary"
+            @click="step = 3"
+          >
+            {{ $t('onboarding.next') }}
+          </button>
         </div>
       </div>
 
       <!-- Step 3: Network selection -->
-      <div v-if="step === 3" class="onboarding-step">
+      <div
+        v-if="step === 3"
+        class="onboarding-step"
+      >
         <h2 class="step-title">{{ $t('onboarding.networks_title') }}</h2>
         <p class="step-desc">{{ $t('onboarding.networks_desc') }}</p>
 
@@ -75,13 +101,26 @@
         </div>
 
         <div class="step-actions">
-          <button class="btn-ghost" @click="step = 2">{{ $t('onboarding.back') }}</button>
-          <button class="btn-primary" @click="step = 4">{{ $t('onboarding.next') }}</button>
+          <button
+            class="btn-ghost"
+            @click="step = 2"
+          >
+            {{ $t('onboarding.back') }}
+          </button>
+          <button
+            class="btn-primary"
+            @click="step = 4"
+          >
+            {{ $t('onboarding.next') }}
+          </button>
         </div>
       </div>
 
       <!-- Step 4: Feature highlights -->
-      <div v-if="step === 4" class="onboarding-step">
+      <div
+        v-if="step === 4"
+        class="onboarding-step"
+      >
         <h2 class="step-title">{{ $t('onboarding.features_title') }}</h2>
         <div class="features-list">
           <div class="feature-item">
@@ -122,15 +161,27 @@
         </div>
 
         <div class="step-actions">
-          <button class="btn-ghost" @click="step = 3">{{ $t('onboarding.back') }}</button>
-          <button class="btn-primary" @click="finish">
+          <button
+            class="btn-ghost"
+            @click="step = 3"
+          >
+            {{ $t('onboarding.back') }}
+          </button>
+          <button
+            class="btn-primary"
+            @click="finish"
+          >
             {{ $t('onboarding.finish_button') }}
           </button>
         </div>
       </div>
 
       <!-- Skip link -->
-      <button v-if="step < 4" class="skip-link" @click="finish">
+      <button
+        v-if="step < 4"
+        class="skip-link"
+        @click="finish"
+      >
         {{ $t('onboarding.skip') }}
       </button>
     </div>

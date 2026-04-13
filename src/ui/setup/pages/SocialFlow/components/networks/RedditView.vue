@@ -12,18 +12,36 @@
       <div class="reddit-content">
         <div class="subreddits-sidebar">
           <h3>Mes Subreddits</h3>
-          <div v-for="sub in subreddits" :key="sub.id" class="subreddit-item">
-            <Avatar :image="sub.icon" shape="circle" size="normal" />
+          <div
+            v-for="sub in subreddits"
+            :key="sub.id"
+            class="subreddit-item"
+          >
+            <Avatar
+              :image="sub.icon"
+              shape="circle"
+              size="normal"
+            />
             <span>r/{{ sub.name }}</span>
             <span class="members">{{ sub.members }}</span>
           </div>
         </div>
         <div class="posts-section">
-          <div v-for="i in 5" :key="i" class="post-card">
+          <div
+            v-for="i in 5"
+            :key="i"
+            class="post-card"
+          >
             <div class="vote-section">
-              <Button icon="pi pi-chevron-up" text />
+              <Button
+                icon="pi pi-chevron-up"
+                text
+              />
               <span>{{ Math.floor(Math.random() * 1000) }}</span>
-              <Button icon="pi pi-chevron-down" text />
+              <Button
+                icon="pi pi-chevron-down"
+                text
+              />
             </div>
             <div class="post-content">
               <div class="post-header">
@@ -33,11 +51,24 @@
               <h3>Post Title #{{ i }}</h3>
               <p>This is a sample post content. Lorem ipsum dolor sit amet...</p>
               <div class="post-actions">
-                <Button icon="pi pi-comments" text>
+                <Button
+                  icon="pi pi-comments"
+                  text
+                >
                   {{ Math.floor(Math.random() * 100) }} Comments
                 </Button>
-                <Button icon="pi pi-share-alt" text>{{ $t('common.share') }}</Button>
-                <Button icon="pi pi-bookmark" text>{{ $t('reddit.save_button') }}</Button>
+                <Button
+                  icon="pi pi-share-alt"
+                  text
+                >
+                  {{ $t('common.share') }}
+                </Button>
+                <Button
+                  icon="pi pi-bookmark"
+                  text
+                >
+                  {{ $t('reddit.save_button') }}
+                </Button>
               </div>
             </div>
           </div>
@@ -56,8 +87,8 @@
         <Button 
           icon="pi pi-reddit" 
           :label="$t('reddit.connect_button')"
-          @click="connectReddit"
           class="p-button-reddit"
+          @click="connectReddit"
         />
       </div>
     </template>

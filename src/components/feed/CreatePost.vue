@@ -8,12 +8,15 @@
         class="mr-2"
       />
       <div class="post-input">
-        <label for="post-content" class="sr-only">Compose your post</label>
+        <label
+          for="post-content"
+          class="sr-only"
+        >Compose your post</label>
         <Textarea
           id="post-content"
           v-model="content"
           :placeholder="placeholder"
-          :autoResize="true"
+          :auto-resize="true"
           rows="3"
           class="w-full"
           aria-label="Compose your post"
@@ -21,8 +24,15 @@
       </div>
     </div>
 
-    <div v-if="selectedImage" class="image-preview">
-      <img :src="selectedImage" alt="Preview" class="preview-image" />
+    <div
+      v-if="selectedImage"
+      class="image-preview"
+    >
+      <img
+        :src="selectedImage"
+        alt="Preview"
+        class="preview-image"
+      />
       <Button
         icon="pi pi-times"
         text
@@ -39,10 +49,10 @@
           mode="basic"
           :auto="true"
           accept="image/*"
-          :maxFileSize="5000000"
-          @select="onImageSelect"
-          chooseLabel=""
+          :max-file-size="5000000"
+          choose-label=""
           class="image-upload"
+          @select="onImageSelect"
         >
           <template #chooseicon>
             <i class="pi pi-image"></i>

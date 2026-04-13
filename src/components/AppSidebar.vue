@@ -1,7 +1,7 @@
 <template>
-  <Sidebar 
-    v-model:visible="modelValue"
-    :baseZIndex="1000"
+  <Sidebar
+    v-model:visible="visible"
+    :base-z-index="1000"
     class="app-sidebar"
   >
     <div class="sidebar-content">
@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits } from 'vue'
+import { computed } from 'vue'
 import Sidebar from 'primevue/sidebar'
 
 const props = defineProps<{
@@ -21,6 +21,11 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
 }>()
+
+const visible = computed({
+  get: () => props.modelValue,
+  set: (value: boolean) => emit('update:modelValue', value),
+})
 </script>
 
 <style scoped>

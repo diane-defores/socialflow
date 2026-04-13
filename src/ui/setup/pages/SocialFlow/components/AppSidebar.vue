@@ -7,37 +7,53 @@
     >
       <SplitterPanel 
         :size="panelSize" 
-        :minSize="5" 
+        :min-size="5" 
         class="sidebar"
         :class="{ 'icons-only': iconsOnly }"
       >
-        <div class="sidebar-content" :class="{ 'content-centered': iconsOnly }">
+        <div
+          class="sidebar-content"
+          :class="{ 'content-centered': iconsOnly }"
+        >
           <!-- Profile switcher (global — one profile = all networks) -->
-          <ProfileSwitcher :iconsOnly="iconsOnly" />
+          <ProfileSwitcher :icons-only="iconsOnly" />
 
-          <div class="flex align-items-center mb-3" :class="{ 'justify-content-center': iconsOnly, 'justify-content-between': !iconsOnly }">
+          <div
+            class="flex align-items-center mb-3"
+            :class="{ 'justify-content-center': iconsOnly, 'justify-content-between': !iconsOnly }"
+          >
             <Button
+              v-tooltip.right="'Toggle compact mode'"
               icon="pi pi-arrows-h"
               text
               aria-label="Toggle compact mode"
               @click="toggleIconsOnly"
-              v-tooltip.right="'Toggle compact mode'"
             />
           </div>
 
           <!-- Réseaux sociaux -->
           <div class="menu-section">
-            <div class="section-header" v-if="!iconsOnly">
+            <div
+              v-if="!iconsOnly"
+              class="section-header"
+            >
               <h3>{{ $t('sidebar.networks_section') }}</h3>
             </div>
             <div class="menu-items">
-              <div v-for="item in menuItems" :key="item.id" class="menu-item-group">
-                <div class="network-row" :class="{ active: isNetworkActive(item) }">
+              <div
+                v-for="item in menuItems"
+                :key="item.id"
+                class="menu-item-group"
+              >
+                <div
+                  class="network-row"
+                  :class="{ active: isNetworkActive(item) }"
+                >
                   <Button
                     :icon="hasCustomIcon(item) ? undefined : item.icon"
                     :label="iconsOnly ? undefined : item.label"
                     :tooltip="iconsOnly ? item.label : undefined"
-                    :tooltipOptions="{ position: 'right' }"
+                    :tooltip-options="{ position: 'right' }"
                     text
                     :class="[
                       'network-btn',
@@ -46,10 +62,22 @@
                     ]"
                     @click="navigateToNetwork(item)"
                   >
-                    <template v-if="hasCustomIcon(item)" #icon>
-                      <ThreadsIcon v-if="item.route === '/threads'" size="1rem" />
-                      <SnapchatIcon v-else-if="item.route === '/snapchat'" size="1rem" />
-                      <NextdoorIcon v-else-if="item.route === '/nextdoor'" size="1rem" />
+                    <template
+                      v-if="hasCustomIcon(item)"
+                      #icon
+                    >
+                      <ThreadsIcon
+                        v-if="item.route === '/threads'"
+                        size="1rem"
+                      />
+                      <SnapchatIcon
+                        v-else-if="item.route === '/snapchat'"
+                        size="1rem"
+                      />
+                      <NextdoorIcon
+                        v-else-if="item.route === '/nextdoor'"
+                        size="1rem"
+                      />
                     </template>
                   </Button>
                 </div>
@@ -59,36 +87,42 @@
 
           <!-- Filtre Amis -->
           <div class="friends-section">
-            <div class="section-header" v-if="!iconsOnly">
+            <div
+              v-if="!iconsOnly"
+              class="section-header"
+            >
               <h3>{{ $t('sidebar.friends_section') }}</h3>
               <Button
+                v-tooltip.right="$t('friends_filter.manage_tooltip')"
                 icon="pi pi-users"
                 text
                 size="small"
                 :aria-label="$t('friends_filter.manage_button')"
-                v-tooltip.right="$t('friends_filter.manage_tooltip')"
                 @click="showFriendsPanel = true"
               />
             </div>
-            <div class="friends-toggle" :class="{ 'friends-toggle--centered': iconsOnly }">
+            <div
+              class="friends-toggle"
+              :class="{ 'friends-toggle--centered': iconsOnly }"
+            >
               <ToggleButton
-                :modelValue="filterEnabled"
-                @change="setFilterEnabled"
-                :onLabel="iconsOnly ? undefined : $t('friends_filter.friends_only')"
-                :offLabel="iconsOnly ? undefined : $t('friends_filter.see_all')"
-                onIcon="pi pi-filter-fill"
-                offIcon="pi pi-filter"
-                :pt="{ root: { style: 'width: 100%; border-radius: 0; height: 2.5rem;' } }"
                 v-tooltip.right="iconsOnly ? (filterEnabled ? $t('friends_filter.filter_active') : $t('friends_filter.filter_inactive')) : undefined"
+                :model-value="filterEnabled"
+                :on-label="iconsOnly ? undefined : $t('friends_filter.friends_only')"
+                :off-label="iconsOnly ? undefined : $t('friends_filter.see_all')"
+                on-icon="pi pi-filter-fill"
+                off-icon="pi pi-filter"
+                :pt="{ root: { style: 'width: 100%; border-radius: 0; height: 2.5rem;' } }"
+                @change="setFilterEnabled"
               />
               <Button
                 v-if="iconsOnly"
+                v-tooltip.right="$t('friends_filter.manage_tooltip')"
                 icon="pi pi-users"
                 text
                 size="small"
                 class="friends-manage-btn"
                 :aria-label="$t('friends_filter.manage_button')"
-                v-tooltip.right="$t('friends_filter.manage_tooltip')"
                 @click="showFriendsPanel = true"
               />
             </div>
@@ -96,30 +130,46 @@
 
           <FriendsPanel
             v-model="showFriendsPanel"
-            :networkId="webviewStore.activeNetworkId ?? 'twitter'"
+            :network-id="webviewStore.activeNetworkId ?? 'twitter'"
           />
 
           <!-- Custom Links -->
-          <div class="custom-links-section" v-if="customLinkItems.length || !iconsOnly">
-            <div class="section-header" v-if="!iconsOnly">
+          <div
+            v-if="customLinkItems.length || !iconsOnly"
+            class="custom-links-section"
+          >
+            <div
+              v-if="!iconsOnly"
+              class="section-header"
+            >
               <h3>{{ $t('sidebar.custom_links_section') }}</h3>
               <Button
+                v-tooltip.right="$t('links.add_tooltip')"
                 icon="pi pi-plus"
                 text
                 size="small"
                 :aria-label="$t('links.add_button')"
-                v-tooltip.right="$t('links.add_tooltip')"
                 @click="showAddLinkDialog = true"
               />
             </div>
-            <div class="menu-items" v-if="customLinkItems.length">
-              <div v-for="item in customLinkItems" :key="item.id" class="menu-item-group">
-                <div class="network-row" :class="{ active: isNetworkActive(item) }">
+            <div
+              v-if="customLinkItems.length"
+              class="menu-items"
+            >
+              <div
+                v-for="item in customLinkItems"
+                :key="item.id"
+                class="menu-item-group"
+              >
+                <div
+                  class="network-row"
+                  :class="{ active: isNetworkActive(item) }"
+                >
                   <Button
                     :icon="item.icon"
                     :label="iconsOnly ? undefined : item.label"
                     :tooltip="iconsOnly ? item.label : undefined"
-                    :tooltipOptions="{ position: 'right' }"
+                    :tooltip-options="{ position: 'right' }"
                     text
                     :class="[
                       'network-btn',
@@ -136,20 +186,20 @@
                     size="small"
                     severity="danger"
                     class="custom-link-delete"
-                    @click="removeCustomLink(item.route.slice(1))"
                     :aria-label="$t('common.delete')"
+                    @click="removeCustomLink(item.route.slice(1))"
                   />
                 </div>
               </div>
             </div>
             <Button
               v-if="iconsOnly"
+              v-tooltip.right="$t('links.add_tooltip')"
               icon="pi pi-plus"
               text
               size="small"
               class="custom-link-add-icon"
               :aria-label="$t('links.add_button')"
-              v-tooltip.right="$t('links.add_tooltip')"
               @click="showAddLinkDialog = true"
             />
           </div>
@@ -183,7 +233,10 @@
           </Dialog>
 
           <!-- Kanban Columns -->
-          <div class="kanban-section" v-if="!iconsOnly">
+          <div
+            v-if="!iconsOnly"
+            class="kanban-section"
+          >
             <div class="kanban-columns">
               <div 
                 v-for="column in kanbanStore.columns" 
@@ -197,7 +250,10 @@
                   <span class="column-count">{{ getColumnItems(column.id).length }}</span>
                 </div>
                 <div class="column-content">
-                  <TransitionGroup name="list" tag="div">
+                  <TransitionGroup
+                    name="list"
+                    tag="div"
+                  >
                     <div
                       v-for="item in getColumnItems(column.id)"
                       :key="item.id"

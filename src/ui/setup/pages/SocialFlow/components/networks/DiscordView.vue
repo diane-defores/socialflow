@@ -25,7 +25,12 @@
             size="large"
             class="server-avatar"
           />
-          <div v-if="server.notifications > 0" class="notification-badge">{{ server.notifications }}</div>
+          <div
+            v-if="server.notifications > 0"
+            class="notification-badge"
+          >
+            {{ server.notifications }}
+          </div>
         </div>
       </div>
       <div class="channels-section">

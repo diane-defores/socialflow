@@ -1,5 +1,8 @@
 <template>
-  <div class="social-avatar" :class="sizeClass">
+  <div
+    class="social-avatar"
+    :class="sizeClass"
+  >
     <Avatar 
       :image="avatarUrl" 
       :size="avatarSize"
@@ -9,16 +12,23 @@
       }"
       @error="handleAvatarError"
     />
-    <Badge v-if="showBadge" 
+    <Badge
+      v-if="showBadge" 
       :value="badgeContent" 
       :severity="badgeSeverity"
       :pt="{
         root: { class: 'avatar-badge' }
       }"
     >
-      <i v-if="badgeIcon" :class="badgeIcon"></i>
+      <i
+        v-if="badgeIcon"
+        :class="badgeIcon"
+      ></i>
     </Badge>
-    <div v-if="showStatus" :class="['status-indicator', user.status]" />
+    <div
+      v-if="showStatus"
+      :class="['status-indicator', user.status]"
+    />
   </div>
 </template>
 

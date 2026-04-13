@@ -13,7 +13,11 @@
           <i class="pi pi-globe mr-2"></i>
           <span>{{ $t('settings.language') }}</span>
         </div>
-        <select v-model="currentLocale" class="locale-select" @change="onLocaleChange">
+        <select
+          v-model="currentLocale"
+          class="locale-select"
+          @change="onLocaleChange"
+        >
           <option value="fr">Français</option>
           <option value="en">English</option>
         </select>
@@ -27,7 +31,10 @@
           <i class="pi pi-moon mr-2"></i>
           <span>{{ $t('theme.dark_mode') }}</span>
         </div>
-        <InputSwitch v-model="isDarkMode" @change="toggleTheme" />
+        <InputSwitch
+          v-model="isDarkMode"
+          @change="toggleTheme"
+        />
       </div>
 
       <Divider />
@@ -38,7 +45,10 @@
           <i class="pi pi-palette mr-2"></i>
           <span>{{ $t('theme.focus_mode') }}</span>
         </div>
-        <InputSwitch :modelValue="themeStore.grayscaleEnabled" @change="themeStore.setGrayscale(!themeStore.grayscaleEnabled)" />
+        <InputSwitch
+          :model-value="themeStore.grayscaleEnabled"
+          @change="themeStore.setGrayscale(!themeStore.grayscaleEnabled)"
+        />
       </div>
 
       <Divider />
@@ -60,7 +70,10 @@
           <i class="pi pi-info-circle mr-2"></i>
           <span>{{ $t('onboarding.replay_button') }}</span>
         </div>
-        <button class="replay-btn" @click="replayOnboarding">
+        <button
+          class="replay-btn"
+          @click="replayOnboarding"
+        >
           <i class="pi pi-refresh" />
         </button>
       </div>
@@ -76,12 +89,12 @@
         <span class="text-zoom-value">{{ textZoomLevel }}%</span>
       </div>
       <input
+        v-model.number="textZoomLevel"
         type="range"
         class="text-zoom-slider"
         :min="75"
         :max="200"
         :step="25"
-        v-model.number="textZoomLevel"
         @change="onTextZoomChange"
       />
 

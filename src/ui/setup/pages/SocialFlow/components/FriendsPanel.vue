@@ -17,19 +17,22 @@
         v-model="newFriend"
         placeholder="Nom ou @pseudo"
         class="add-input"
-        @keydown.enter="addFriend"
         autofocus
+        @keydown.enter="addFriend"
       />
       <Button
         icon="pi pi-plus"
         :disabled="!newFriend.trim()"
-        @click="addFriend"
         :aria-label="$t('common.add')"
+        @click="addFriend"
       />
     </div>
 
     <!-- Friends list -->
-    <div v-if="friends.length" class="friends-list">
+    <div
+      v-if="friends.length"
+      class="friends-list"
+    >
       <div
         v-for="friend in friends"
         :key="friend"
@@ -43,14 +46,20 @@
           rounded
           size="small"
           severity="danger"
-          @click="removeFriend(friend)"
           :aria-label="$t('common.delete')"
+          @click="removeFriend(friend)"
         />
       </div>
     </div>
 
-    <div v-else class="empty-state">
-      <i class="pi pi-users" style="font-size: 2rem; opacity: 0.3" />
+    <div
+      v-else
+      class="empty-state"
+    >
+      <i
+        class="pi pi-users"
+        style="font-size: 2rem; opacity: 0.3"
+      />
       <p>{{ $t('friends_filter.empty_state') }}</p>
       <p class="hint">{{ $t('friends_filter.empty_hint') }}</p>
     </div>

@@ -13,7 +13,11 @@
         <div class="profile-sidebar">
           <h3>{{ $t('twitter.my_profile') }}</h3>
           <div class="profile-card">
-            <Avatar :image="profileInfo.avatar" size="xlarge" shape="circle" />
+            <Avatar
+              :image="profileInfo.avatar"
+              size="xlarge"
+              shape="circle"
+            />
             <h4>{{ profileInfo.name }}</h4>
             <p class="handle">@{{ profileInfo.handle }}</p>
             <div class="stats">
@@ -30,7 +34,11 @@
           
           <div class="trends">
             <h3>{{ $t('twitter.trends') }}</h3>
-            <div v-for="trend in trends" :key="trend.id" class="trend-item">
+            <div
+              v-for="trend in trends"
+              :key="trend.id"
+              class="trend-item"
+            >
               <span class="category">{{ trend.category }}</span>
               <h4>{{ trend.tag }}</h4>
               <span class="tweets">{{ trend.tweets }} {{ $t('twitter.tweets_count') }}</span>
@@ -40,20 +48,40 @@
 
         <div class="tweets-section">
           <div class="compose-tweet">
-            <Avatar :image="profileInfo.avatar" size="normal" shape="circle" />
+            <Avatar
+              :image="profileInfo.avatar"
+              size="normal"
+              shape="circle"
+            />
             <div class="compose-input">
               <Textarea 
                 v-model="newTweet" 
                 :placeholder="$t('twitter.compose_placeholder')"
-                :autoResize="true"
+                :auto-resize="true"
                 rows="2"
               />
               <div class="compose-actions">
                 <div class="tweet-tools">
-                  <Button icon="pi pi-image" text rounded />
-                  <Button icon="pi pi-video" text rounded />
-                  <Button icon="pi pi-list" text rounded />
-                  <Button icon="pi pi-smile" text rounded />
+                  <Button
+                    icon="pi pi-image"
+                    text
+                    rounded
+                  />
+                  <Button
+                    icon="pi pi-video"
+                    text
+                    rounded
+                  />
+                  <Button
+                    icon="pi pi-list"
+                    text
+                    rounded
+                  />
+                  <Button
+                    icon="pi pi-smile"
+                    text
+                    rounded
+                  />
                 </div>
                 <Button 
                   label="Tweeter" 
@@ -64,8 +92,16 @@
             </div>
           </div>
 
-          <div v-for="tweet in tweets" :key="tweet.id" class="tweet-card">
-            <Avatar :image="tweet.authorAvatar" size="normal" shape="circle" />
+          <div
+            v-for="tweet in tweets"
+            :key="tweet.id"
+            class="tweet-card"
+          >
+            <Avatar
+              :image="tweet.authorAvatar"
+              size="normal"
+              shape="circle"
+            />
             <div class="tweet-content">
               <div class="tweet-header">
                 <span class="author-name">{{ tweet.authorName }}</span>
@@ -74,16 +110,32 @@
               </div>
               <p class="tweet-text">{{ tweet.text }}</p>
               <div class="tweet-actions">
-                <Button icon="pi pi-comment" text rounded>
+                <Button
+                  icon="pi pi-comment"
+                  text
+                  rounded
+                >
                   {{ tweet.replies }}
                 </Button>
-                <Button icon="pi pi-refresh" text rounded>
+                <Button
+                  icon="pi pi-refresh"
+                  text
+                  rounded
+                >
                   {{ tweet.retweets }}
                 </Button>
-                <Button icon="pi pi-heart" text rounded>
+                <Button
+                  icon="pi pi-heart"
+                  text
+                  rounded
+                >
                   {{ tweet.likes }}
                 </Button>
-                <Button icon="pi pi-share-alt" text rounded />
+                <Button
+                  icon="pi pi-share-alt"
+                  text
+                  rounded
+                />
               </div>
             </div>
           </div>
@@ -102,8 +154,8 @@
         <Button 
           icon="pi pi-twitter" 
           :label="$t('twitter.connect_button')"
-          @click="connectTwitter"
           class="p-button-twitter"
+          @click="connectTwitter"
         />
       </div>
     </template>

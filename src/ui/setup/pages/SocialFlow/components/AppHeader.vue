@@ -2,11 +2,11 @@
   <header class="header">
     <div class="header-start">
       <Button
+        v-tooltip.bottom="'Toggle left sidebar'"
         icon="pi pi-bars"
         text
         aria-label="Toggle left sidebar"
         @click="toggleLeftSidebar"
-        v-tooltip.bottom="'Toggle left sidebar'"
       />
       <h1 class="app-title">SocialFlow</h1>
     </div>
@@ -15,12 +15,15 @@
       <div class="search-container">
         <span class="p-input-icon-left">
           <i class="pi pi-search" />
-          <InputText placeholder="Rechercher..." class="search-input" />
+          <InputText
+            placeholder="Rechercher..."
+            class="search-input"
+          />
         </span>
       </div>
       <div class="filters-container">
         <DashboardFilters 
-          :currentNetwork="currentNetwork"
+          :current-network="currentNetwork"
           @filter-change="handleFilterChange"
         />
       </div>
@@ -28,11 +31,11 @@
 
     <div class="header-end">
       <Button
+        v-tooltip.bottom="'Toggle right sidebar'"
         icon="pi pi-bars"
         text
         aria-label="Toggle right sidebar"
         @click="toggleRightSidebar"
-        v-tooltip.bottom="'Toggle right sidebar'"
       />
     </div>
   </header>

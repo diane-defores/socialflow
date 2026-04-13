@@ -7,11 +7,34 @@
       </div>
 
       <!-- Email/password upgrade form -->
-      <form v-if="showEmailForm" class="login-form" @submit.prevent="handleSignIn">
-        <InputText v-model="email" placeholder="Email" type="email" class="w-full" />
-        <Password v-model="password" placeholder="Password" :feedback="false" class="w-full" toggleMask />
-        <small v-if="error" class="p-error">{{ error }}</small>
-        <Button :label="isSignUp ? 'Create account' : 'Sign in'" type="submit" class="w-full" :loading="loading" />
+      <form
+        v-if="showEmailForm"
+        class="login-form"
+        @submit.prevent="handleSignIn"
+      >
+        <InputText
+          v-model="email"
+          placeholder="Email"
+          type="email"
+          class="w-full"
+        />
+        <Password
+          v-model="password"
+          placeholder="Password"
+          :feedback="false"
+          class="w-full"
+          toggle-mask
+        />
+        <small
+          v-if="error"
+          class="p-error"
+        >{{ error }}</small>
+        <Button
+          :label="isSignUp ? 'Create account' : 'Sign in'"
+          type="submit"
+          class="w-full"
+          :loading="loading"
+        />
         <Button
           :label="isSignUp ? 'Already have an account?' : 'Create an account'"
           text
@@ -21,11 +44,25 @@
       </form>
 
       <!-- Default: anonymous sign-in (auto) -->
-      <div v-else class="login-actions">
-        <ProgressSpinner v-if="signingIn" style="width: 2rem; height: 2rem" />
+      <div
+        v-else
+        class="login-actions"
+      >
+        <ProgressSpinner
+          v-if="signingIn"
+          style="width: 2rem; height: 2rem"
+        />
         <template v-else>
-          <Button label="Get started" icon="pi pi-arrow-right" @click="handleAnonymousSignIn" />
-          <Button label="Sign in with email" text @click="showEmailForm = true" />
+          <Button
+            label="Get started"
+            icon="pi pi-arrow-right"
+            @click="handleAnonymousSignIn"
+          />
+          <Button
+            label="Sign in with email"
+            text
+            @click="showEmailForm = true"
+          />
         </template>
       </div>
     </div>

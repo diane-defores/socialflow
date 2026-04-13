@@ -2,7 +2,10 @@
   <div class="gmail-container">
     <div class="gmail-header">
       <h2>Gmail</h2>
-      <div class="unread-count" v-if="store.gmail.unreadCount">
+      <div
+        v-if="store.gmail.unreadCount"
+        class="unread-count"
+      >
         {{ store.gmail.unreadCount }} non lu(s)
       </div>
     </div>
@@ -10,17 +13,32 @@
     <div class="gmail-content">
       <!-- Liste des emails -->
       <div class="emails-section">
-        <div v-if="loading" class="loading-state">
-          <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+        <div
+          v-if="loading"
+          class="loading-state"
+        >
+          <i
+            class="pi pi-spin pi-spinner"
+            style="font-size: 2rem"
+          ></i>
           <p>Chargement des emails...</p>
         </div>
 
-        <div v-else-if="!store.gmail.emails?.length" class="empty-state">
-          <i class="pi pi-inbox" style="font-size: 2rem"></i>
+        <div
+          v-else-if="!store.gmail.emails?.length"
+          class="empty-state"
+        >
+          <i
+            class="pi pi-inbox"
+            style="font-size: 2rem"
+          ></i>
           <p>Aucun email à afficher</p>
         </div>
 
-        <div v-else class="emails-list">
+        <div
+          v-else
+          class="emails-list"
+        >
           <div 
             v-for="email in store.gmail.emails" 
             :key="email.id" 
@@ -38,10 +56,10 @@
               />
               <span class="sender">{{ email.sender.name }}</span>
               <Button
+                v-tooltip.left="$t('gmail.add_to_kanban')"
                 icon="pi pi-plus"
                 text
                 rounded
-                v-tooltip.left="$t('gmail.add_to_kanban')"
                 @click.stop="addToKanban(email)"
               />
               <span class="date">{{ formatDate(email.date) }}</span>
@@ -50,8 +68,15 @@
               <h3>{{ email.subject }}</h3>
               <p>{{ email.preview }}</p>
             </div>
-            <div class="email-labels" v-if="email.labels?.length">
-              <span v-for="label in email.labels" :key="label" class="label">{{ label }}</span>
+            <div
+              v-if="email.labels?.length"
+              class="email-labels"
+            >
+              <span
+                v-for="label in email.labels"
+                :key="label"
+                class="label"
+              >{{ label }}</span>
             </div>
           </div>
         </div>

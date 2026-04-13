@@ -351,6 +351,11 @@
     "useCustomLinksStore": true,
     "setLocale": true,
     "useOnboardingStore": true,
-    "useSignupNudge": true
+    "useSignupNudge": true,
+    "createRef": true,
+    "onElementRemoval": true,
+    "useCountdown": true,
+    "usePreferredReducedTransparency": true,
+    "useSSRWidth": true
   }
 }

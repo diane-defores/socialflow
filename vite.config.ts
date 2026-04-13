@@ -88,7 +88,7 @@ export default defineConfig({
 
     // imagemin({}),
 
-    TurboConsole(),
+    ...(process.env.NODE_ENV === "development" ? [TurboConsole()] : []),
 
     // https://github.com/unplugin/unplugin-auto-import
     AutoImport({

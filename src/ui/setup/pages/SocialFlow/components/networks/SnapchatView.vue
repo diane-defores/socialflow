@@ -3,7 +3,11 @@
     <h2>Snapchat</h2>
     <div class="snapchat-content">
       <div class="snap-grid">
-        <div v-for="i in 6" :key="i" class="snap-card">
+        <div
+          v-for="i in 6"
+          :key="i"
+          class="snap-card"
+        >
           <div class="snap-placeholder">
             <i class="pi pi-camera"></i>
           </div>

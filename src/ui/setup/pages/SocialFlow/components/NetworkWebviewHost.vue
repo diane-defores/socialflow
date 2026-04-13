@@ -1,10 +1,19 @@
 <template>
   <!-- Transparent host div — the native Tauri webview floats on top -->
-  <div ref="hostEl" class="webview-host">
+  <div
+    ref="hostEl"
+    class="webview-host"
+  >
     <!-- Dev-mode placeholder (running in browser, not Tauri) -->
-    <div v-if="!isTauri" class="dev-placeholder">
+    <div
+      v-if="!isTauri"
+      class="dev-placeholder"
+    >
       <div class="placeholder-content">
-        <i class="pi pi-desktop" style="font-size: 3rem; opacity: 0.3" />
+        <i
+          class="pi pi-desktop"
+          style="font-size: 3rem; opacity: 0.3"
+        />
         <p><strong>{{ webviewStore.activeNetworkId }}</strong></p>
         <p>{{ profilesStore.activeProfile?.emoji }} {{ profilesStore.activeProfile?.name ?? 'No profile' }}</p>
         <p class="hint">Native webview renders here in the Tauri desktop app.</p>

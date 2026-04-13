@@ -1,11 +1,20 @@
 <template>
   <div class="kanban-board">
-    <div v-if="loading" class="loading-state">
-      <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+    <div
+      v-if="loading"
+      class="loading-state"
+    >
+      <i
+        class="pi pi-spin pi-spinner"
+        style="font-size: 2rem"
+      ></i>
       <p>Chargement du Kanban...</p>
     </div>
 
-    <div v-else class="columns-container">
+    <div
+      v-else
+      class="columns-container"
+    >
       <div 
         v-for="column in store.columns" 
         :key="column.id"
@@ -19,7 +28,10 @@
         </div>
 
         <div class="column-content">
-          <TransitionGroup name="list" tag="div">
+          <TransitionGroup
+            name="list"
+            tag="div"
+          >
             <div
               v-for="item in getColumnItems(column.id)"
               :key="item.id"

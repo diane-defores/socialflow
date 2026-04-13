@@ -3,7 +3,11 @@
     <h2>TikTok Feed</h2>
     <div class="tiktok-content">
       <div class="video-grid">
-        <div v-for="i in 6" :key="i" class="video-card">
+        <div
+          v-for="i in 6"
+          :key="i"
+          class="video-card"
+        >
           <div class="video-placeholder">
             <i class="pi pi-play"></i>
           </div>

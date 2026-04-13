@@ -1,5 +1,8 @@
 <template>
-  <div class="create-post" :class="networkClass">
+  <div
+    class="create-post"
+    :class="networkClass"
+  >
     <div class="post-composer">
       <SocialAvatar 
         :user="currentUser"
@@ -15,7 +18,8 @@
         </Button>
         <div class="post-types">
           <slot name="post-types">
-            <Button v-for="type in postTypes"
+            <Button
+              v-for="type in postTypes"
               :key="type.id"
               :icon="type.icon"
               :label="type.label"
@@ -46,7 +50,7 @@
             <Dropdown
               v-model="privacy"
               :options="privacyOptions"
-              optionLabel="label"
+              option-label="label"
               :placeholder="$t('post.privacy_placeholder')"
               class="privacy-dropdown"
             >
@@ -64,22 +68,33 @@
           <InputTextarea
             v-model="postContent"
             :placeholder="resolvedEditorPlaceholder"
-            :autoResize="true"
+            :auto-resize="true"
             rows="5"
             class="w-full"
           />
 
-          <div v-if="selectedFiles.length" class="selected-files">
-            <div v-for="(file, index) in selectedFiles" 
+          <div
+            v-if="selectedFiles.length"
+            class="selected-files"
+          >
+            <div
+              v-for="(file, index) in selectedFiles" 
               :key="index" 
               class="file-preview"
             >
-              <img v-if="file.type.startsWith('image/')" 
+              <img
+                v-if="file.type.startsWith('image/')" 
                 :src="file.preview" 
                 :alt="file.file.name"
               />
-              <video v-else-if="file.type.startsWith('video/')" controls>
-                <source :src="file.preview" :type="file.type">
+              <video
+                v-else-if="file.type.startsWith('video/')"
+                controls
+              >
+                <source
+                  :src="file.preview"
+                  :type="file.type"
+                >
               </video>
               <div class="file-overlay">
                 <Button 
@@ -100,13 +115,14 @@
                 mode="basic"
                 :multiple="true"
                 accept="image/*,video/*"
-                :maxFileSize="10000000"
-                @select="onFileSelect"
+                :max-file-size="10000000"
                 :auto="true"
-                chooseLabel=""
+                choose-label=""
                 class="hidden-upload"
+                @select="onFileSelect"
               />
-              <Button v-for="tool in postTools"
+              <Button
+                v-for="tool in postTools"
                 :key="tool.id"
                 :icon="tool.icon"
                 :severity="tool.severity"

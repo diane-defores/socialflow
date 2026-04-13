@@ -33,9 +33,21 @@ export const upsert = mutation({
       .withIndex("by_userId", (q) => q.eq("userId", userId))
       .unique();
 
-    const patch = Object.fromEntries(
-      Object.entries(args).filter(([, v]) => v !== undefined),
-    );
+    const patch: {
+      theme?: "light" | "dark";
+      language?: string;
+      sidebarVisible?: boolean;
+    } = {};
+
+    if (args.theme !== undefined) {
+      patch.theme = args.theme;
+    }
+    if (args.language !== undefined) {
+      patch.language = args.language;
+    }
+    if (args.sidebarVisible !== undefined) {
+      patch.sidebarVisible = args.sidebarVisible;
+    }
 
     if (existing) {
       await ctx.db.patch(existing._id, patch);

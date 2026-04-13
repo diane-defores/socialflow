@@ -10,7 +10,11 @@
     </div>
     <div class="instagram-grid">
       <!-- Grille de photos Instagram -->
-      <div v-for="i in 9" :key="i" class="instagram-item">
+      <div
+        v-for="i in 9"
+        :key="i"
+        class="instagram-item"
+      >
         <div class="image-placeholder">
           <i class="pi pi-image"></i>
         </div>

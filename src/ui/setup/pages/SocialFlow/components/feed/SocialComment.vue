@@ -1,5 +1,8 @@
 <template>
-  <div class="social-comment" :class="{ 'is-reply': isReply }">
+  <div
+    class="social-comment"
+    :class="{ 'is-reply': isReply }"
+  >
     <div class="comment-container">
       <SocialAvatar 
         :user="comment.author"
@@ -29,7 +32,10 @@
           <span class="comment-time">{{ formatDate(comment.timestamp) }}</span>
         </div>
 
-        <div v-if="showLikes && comment.likes > 0" class="likes-count">
+        <div
+          v-if="showLikes && comment.likes > 0"
+          class="likes-count"
+        >
           <i class="pi pi-thumbs-up"></i>
           <span>{{ comment.likes }}</span>
         </div>
@@ -45,8 +51,14 @@
       />
     </div>
 
-    <div v-if="comment.replies?.length" class="replies-section">
-      <div v-if="!showAllReplies && comment.replies.length > 2" class="show-replies">
+    <div
+      v-if="comment.replies?.length"
+      class="replies-section"
+    >
+      <div
+        v-if="!showAllReplies && comment.replies.length > 2"
+        class="show-replies"
+      >
         <Button 
           :label="$t('comment.show_more_replies', { count: comment.replies.length - 2 })"
           link

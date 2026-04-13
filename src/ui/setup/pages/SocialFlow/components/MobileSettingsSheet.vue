@@ -1,12 +1,19 @@
 <template>
   <Teleport to="body">
     <Transition name="sheet">
-      <div v-if="modelValue" class="sheet-overlay" @click.self="emit('update:modelValue', false)">
+      <div
+        v-if="modelValue"
+        class="sheet-overlay"
+        @click.self="emit('update:modelValue', false)"
+      >
         <div class="profile-sheet settings-sheet">
           <div class="sheet-handle" />
           <div class="sheet-header">
             <span class="sheet-title">{{ $t('common.settings') }}</span>
-            <button class="sheet-close-btn" @click="emit('update:modelValue', false)">
+            <button
+              class="sheet-close-btn"
+              @click="emit('update:modelValue', false)"
+            >
               <i class="pi pi-times" />
             </button>
           </div>
@@ -16,7 +23,10 @@
             <p class="settings-section-label">{{ $t('account.section_title') }}</p>
 
             <div class="settings-field">
-              <label class="settings-label" for="settings-username">
+              <label
+                class="settings-label"
+                for="settings-username"
+              >
                 <i class="pi pi-user" />
                 {{ $t('settings.username_label') }}
               </label>
@@ -38,7 +48,10 @@
                 </label>
                 <span class="settings-email-display">{{ settingsEmail }}</span>
               </div>
-              <button class="nudge-cta sign-out-btn" @click="handleSignOut">
+              <button
+                class="nudge-cta sign-out-btn"
+                @click="handleSignOut"
+              >
                 <i class="pi pi-sign-out" />
                 {{ $t('account.sign_out') }}
               </button>
@@ -52,7 +65,10 @@
             <!-- No email account: signup form -->
             <template v-else>
               <p class="settings-account-hint">{{ $t('account.no_account_hint') }}</p>
-              <form class="settings-signup-form" @submit.prevent="handleSettingsSignup">
+              <form
+                class="settings-signup-form"
+                @submit.prevent="handleSettingsSignup"
+              >
                 <input
                   v-model="signupEmail"
                   type="email"
@@ -68,11 +84,21 @@
                   minlength="8"
                   required
                 />
-                <div v-if="signupError" class="signup-error-card">
+                <div
+                  v-if="signupError"
+                  class="signup-error-card"
+                >
                   <p class="nudge-error">{{ displayedSignupError }}</p>
                   <div class="signup-error-actions">
-                    <button type="button" class="signup-error-btn" @click="copySignupError">
-                      <i class="pi" :class="signupErrorCopied ? 'pi-check' : 'pi-copy'" />
+                    <button
+                      type="button"
+                      class="signup-error-btn"
+                      @click="copySignupError"
+                    >
+                      <i
+                        class="pi"
+                        :class="signupErrorCopied ? 'pi-check' : 'pi-copy'"
+                      />
                       {{ signupErrorCopied ? $t('common.copied') : $t('common.copy') }}
                     </button>
                     <button
@@ -85,8 +111,15 @@
                     </button>
                   </div>
                 </div>
-                <button type="submit" class="nudge-cta" :disabled="signupLoading">
-                  <i v-if="signupLoading" class="pi pi-spin pi-spinner" />
+                <button
+                  type="submit"
+                  class="nudge-cta"
+                  :disabled="signupLoading"
+                >
+                  <i
+                    v-if="signupLoading"
+                    class="pi pi-spin pi-spinner"
+                  />
                   {{ signupLoading ? '' : $t('account.create_button') }}
                 </button>
               </form>
@@ -160,17 +193,20 @@
               <span class="text-zoom-value">{{ textZoomLevel }}%</span>
             </div>
             <input
+              v-model.number="textZoomLevel"
               type="range"
               class="text-zoom-slider"
               min="75"
               max="200"
               step="25"
-              v-model.number="textZoomLevel"
               @change="onTextZoomChange"
             />
 
             <!-- Replay onboarding -->
-            <button class="settings-replay-btn" @click="replayOnboarding">
+            <button
+              class="settings-replay-btn"
+              @click="replayOnboarding"
+            >
               <i class="pi pi-info-circle" />
               {{ $t('onboarding.replay_button') }}
             </button>

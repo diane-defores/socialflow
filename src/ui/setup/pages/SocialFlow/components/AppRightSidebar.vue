@@ -10,22 +10,31 @@
       </SplitterPanel>
       <SplitterPanel 
         :size="panelSize" 
-        :minSize="5" 
+        :min-size="5" 
         class="sidebar"
         :class="{ 'icons-only': iconsOnly }"
       >
-        <div class="sidebar-content" :class="{ 'content-centered': iconsOnly }">
-          <div class="flex align-items-center mb-3" :class="{ 'justify-content-center': iconsOnly, 'justify-content-between': !iconsOnly }">
+        <div
+          class="sidebar-content"
+          :class="{ 'content-centered': iconsOnly }"
+        >
+          <div
+            class="flex align-items-center mb-3"
+            :class="{ 'justify-content-center': iconsOnly, 'justify-content-between': !iconsOnly }"
+          >
             <Button 
+              v-tooltip.left="'Toggle compact mode'" 
               icon="pi pi-arrows-h" 
-              text 
+              text
               @click="toggleIconsOnly"
-              v-tooltip.left="'Toggle compact mode'"
             />
           </div>
 
           <!-- Section profil -->
-          <div class="profile-section" v-show="!iconsOnly">
+          <div
+            v-show="!iconsOnly"
+            class="profile-section"
+          >
             <Avatar 
               image="https://api.dicebear.com/7.x/avataaars/svg?seed=John"
               size="xlarge"
@@ -37,12 +46,43 @@
 
           <!-- Menu principal -->
           <div class="menu-section">
-            <Button icon="pi pi-home" :label="iconsOnly ? undefined : $t('sidebar.feed_button')" text :class="['w-full', iconsOnly ? 'justify-content-center' : 'justify-content-start']" />
-            <Button icon="pi pi-user" :label="iconsOnly ? undefined : $t('sidebar.profile_button')" text :class="['w-full', iconsOnly ? 'justify-content-center' : 'justify-content-start']" />
-            <Button icon="pi pi-users" :label="iconsOnly ? undefined : $t('sidebar.friends_button')" text :class="['w-full', iconsOnly ? 'justify-content-center' : 'justify-content-start']" />
-            <Button icon="pi pi-bell" :label="iconsOnly ? undefined : $t('common.notifications')" :badge="'3'" text :class="['w-full', iconsOnly ? 'justify-content-center' : 'justify-content-start']" />
-            <Button icon="pi pi-bookmark" :label="iconsOnly ? undefined : $t('sidebar.saved_button')" text :class="['w-full', iconsOnly ? 'justify-content-center' : 'justify-content-start']" />
-            <Button icon="pi pi-calendar" :label="iconsOnly ? undefined : $t('sidebar.events_button')" text :class="['w-full', iconsOnly ? 'justify-content-center' : 'justify-content-start']" />
+            <Button
+              icon="pi pi-home"
+              :label="iconsOnly ? undefined : $t('sidebar.feed_button')"
+              text
+              :class="['w-full', iconsOnly ? 'justify-content-center' : 'justify-content-start']"
+            />
+            <Button
+              icon="pi pi-user"
+              :label="iconsOnly ? undefined : $t('sidebar.profile_button')"
+              text
+              :class="['w-full', iconsOnly ? 'justify-content-center' : 'justify-content-start']"
+            />
+            <Button
+              icon="pi pi-users"
+              :label="iconsOnly ? undefined : $t('sidebar.friends_button')"
+              text
+              :class="['w-full', iconsOnly ? 'justify-content-center' : 'justify-content-start']"
+            />
+            <Button
+              icon="pi pi-bell"
+              :label="iconsOnly ? undefined : $t('common.notifications')"
+              :badge="'3'"
+              text
+              :class="['w-full', iconsOnly ? 'justify-content-center' : 'justify-content-start']"
+            />
+            <Button
+              icon="pi pi-bookmark"
+              :label="iconsOnly ? undefined : $t('sidebar.saved_button')"
+              text
+              :class="['w-full', iconsOnly ? 'justify-content-center' : 'justify-content-start']"
+            />
+            <Button
+              icon="pi pi-calendar"
+              :label="iconsOnly ? undefined : $t('sidebar.events_button')"
+              text
+              :class="['w-full', iconsOnly ? 'justify-content-center' : 'justify-content-start']"
+            />
           </div>
         </div>
       </SplitterPanel>
