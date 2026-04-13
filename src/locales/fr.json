@@ -233,6 +233,9 @@
   },
   "account": {
     "section_title": "Compte",
+    "card_title": "Synchronisation du compte",
+    "connected_status": "Connecté",
+    "disconnected_status": "Non connecté",
     "email_placeholder": "votre{'@'}email.com",
     "password_placeholder": "Mot de passe (min. 8 caractères)",
     "sign_in_button": "Se connecter",
@@ -241,6 +244,7 @@
     "signed_in_toast": "Connexion réussie !",
     "signed_out_toast": "Déconnexion réussie.",
     "signed_in_as": "Connecté en tant que",
+    "signed_in_hint": "Votre compte est bien relié. Vous pouvez vous déconnecter à tout moment.",
     "sign_out": "Se déconnecter",
     "error_generic": "Une erreur est survenue. Réessayez.",
     "auth_hint": "Connectez-vous avec un compte existant ou créez-en un pour synchroniser vos données entre vos appareils.",

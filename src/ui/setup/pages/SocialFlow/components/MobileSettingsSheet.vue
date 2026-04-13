@@ -40,102 +40,120 @@
             </div>
 
             <!-- Signed in with email account: show email + sign out -->
-            <template v-if="isSignedIn && nudge.hasEmailAccount.value">
-              <div class="settings-field">
-                <label class="settings-label">
-                  <i class="pi pi-envelope" />
-                  {{ $t('account.signed_in_as') }}
-                </label>
-                <span class="settings-email-display">{{ settingsEmail }}</span>
-              </div>
-              <button
-                class="nudge-cta sign-out-btn"
-                @click="handleSignOut"
-              >
-                <i class="pi pi-sign-out" />
-                {{ $t('account.sign_out') }}
-              </button>
-            </template>
-
-            <!-- Convex not configured: show notice instead of signup form -->
-            <template v-else-if="!isConvexConfigured">
-              <p class="settings-account-hint">{{ $t('account.unavailable_hint') }}</p>
-            </template>
-
-            <!-- Signed out / anonymous: auth form -->
-            <template v-else>
-              <p class="settings-account-hint">{{ $t('account.auth_hint') }}</p>
-              <form
-                class="settings-signup-form"
-                @submit.prevent="handleAccountAuth('signIn')"
-              >
-                <input
-                  v-model="signupEmail"
-                  type="email"
-                  class="settings-input"
-                  :placeholder="$t('account.email_placeholder')"
-                  required
-                />
-                <input
-                  v-model="signupPassword"
-                  type="password"
-                  class="settings-input"
-                  :placeholder="$t('account.password_placeholder')"
-                  minlength="8"
-                  required
-                />
-                <div
-                  v-if="signupError"
-                  class="signup-error-card"
+            <div class="settings-account-card">
+              <div class="settings-account-card-header">
+                <div>
+                  <p class="settings-account-title">{{ $t('account.card_title') }}</p>
+                  <p class="settings-account-hint">
+                    {{ isSignedIn && nudge.hasEmailAccount.value
+                      ? $t('account.signed_in_hint')
+                      : !isConvexConfigured
+                        ? $t('account.unavailable_hint')
+                        : $t('account.auth_hint') }}
+                  </p>
+                </div>
+                <span
+                  class="settings-account-status"
+                  :class="{ connected: isSignedIn && nudge.hasEmailAccount.value }"
                 >
-                  <p class="nudge-error">{{ displayedSignupError }}</p>
-                  <div class="signup-error-actions">
-                    <button
-                      type="button"
-                      class="signup-error-btn"
-                      @click="copySignupError"
-                    >
-                      <i
-                        class="pi"
-                        :class="signupErrorCopied ? 'pi-check' : 'pi-copy'"
-                      />
-                      {{ signupErrorCopied ? $t('common.copied') : $t('common.copy') }}
-                    </button>
-                    <button
-                      v-if="signupErrorNeedsCollapse"
-                      type="button"
-                      class="signup-error-btn"
-                      @click="signupErrorExpanded = !signupErrorExpanded"
-                    >
-                      {{ signupErrorExpanded ? $t('common.show_less') : $t('common.show_more') }}
-                    </button>
-                  </div>
+                  {{ isSignedIn && nudge.hasEmailAccount.value
+                    ? $t('account.connected_status')
+                    : $t('account.disconnected_status') }}
+                </span>
+              </div>
+
+              <template v-if="isSignedIn && nudge.hasEmailAccount.value">
+                <div class="settings-field">
+                  <label class="settings-label">
+                    <i class="pi pi-envelope" />
+                    {{ $t('account.signed_in_as') }}
+                  </label>
+                  <span class="settings-email-display">{{ settingsEmail }}</span>
                 </div>
                 <button
-                  type="submit"
-                  class="nudge-cta"
-                  :disabled="signupLoading"
+                  class="nudge-cta sign-out-btn"
+                  @click="handleSignOut"
                 >
-                  <i
-                    v-if="signupLoading"
-                    class="pi pi-spin pi-spinner"
-                  />
-                  {{ signupLoading ? '' : $t('account.sign_in_button') }}
+                  <i class="pi pi-sign-out" />
+                  {{ $t('account.sign_out') }}
                 </button>
-                <button
-                  type="button"
-                  class="nudge-cta secondary-auth-btn"
-                  :disabled="signupLoading"
-                  @click="handleAccountAuth('signUp')"
+              </template>
+
+              <template v-else-if="isConvexConfigured">
+                <form
+                  class="settings-signup-form"
+                  @submit.prevent="handleAccountAuth('signIn')"
                 >
-                  <i
-                    v-if="signupLoading && authAction === 'signUp'"
-                    class="pi pi-spin pi-spinner"
+                  <input
+                    v-model="signupEmail"
+                    type="email"
+                    class="settings-input"
+                    :placeholder="$t('account.email_placeholder')"
+                    required
                   />
-                  {{ signupLoading && authAction === 'signUp' ? '' : $t('account.create_button') }}
-                </button>
-              </form>
-            </template>
+                  <input
+                    v-model="signupPassword"
+                    type="password"
+                    class="settings-input"
+                    :placeholder="$t('account.password_placeholder')"
+                    minlength="8"
+                    required
+                  />
+                  <div
+                    v-if="signupError"
+                    class="signup-error-card"
+                  >
+                    <p class="nudge-error">{{ displayedSignupError }}</p>
+                    <div class="signup-error-actions">
+                      <button
+                        type="button"
+                        class="signup-error-btn"
+                        @click="copySignupError"
+                      >
+                        <i
+                          class="pi"
+                          :class="signupErrorCopied ? 'pi-check' : 'pi-copy'"
+                        />
+                        {{ signupErrorCopied ? $t('common.copied') : $t('common.copy') }}
+                      </button>
+                      <button
+                        v-if="signupErrorNeedsCollapse"
+                        type="button"
+                        class="signup-error-btn"
+                        @click="signupErrorExpanded = !signupErrorExpanded"
+                      >
+                        {{ signupErrorExpanded ? $t('common.show_less') : $t('common.show_more') }}
+                      </button>
+                    </div>
+                  </div>
+                  <div class="settings-auth-actions">
+                    <button
+                      type="submit"
+                      class="nudge-cta"
+                      :disabled="signupLoading"
+                    >
+                      <i
+                        v-if="signupLoading && authAction === 'signIn'"
+                        class="pi pi-spin pi-spinner"
+                      />
+                      {{ signupLoading && authAction === 'signIn' ? '' : $t('account.sign_in_button') }}
+                    </button>
+                    <button
+                      type="button"
+                      class="nudge-cta secondary-auth-btn"
+                      :disabled="signupLoading"
+                      @click="handleAccountAuth('signUp')"
+                    >
+                      <i
+                        v-if="signupLoading && authAction === 'signUp'"
+                        class="pi pi-spin pi-spinner"
+                      />
+                      {{ signupLoading && authAction === 'signUp' ? '' : $t('account.create_button') }}
+                    </button>
+                  </div>
+                </form>
+              </template>
+            </div>
 
             <!-- Preferences section -->
             <p class="settings-section-label">{{ $t('settings.preferences') }}</p>
@@ -544,13 +562,62 @@ function replayOnboarding() {
   font-size: 0.82rem;
   color: var(--text-color-secondary);
   line-height: 1.45;
-  margin: 0 0 0.75rem;
+  margin: 0;
+}
+
+.settings-account-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 0.9rem;
+  margin-bottom: 1rem;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--surface-card) 86%, var(--primary-color) 14%);
+  border: 1px solid color-mix(in srgb, var(--surface-border) 70%, var(--primary-color) 30%);
+}
+
+.settings-account-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.settings-account-title {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.settings-account-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.18);
+  color: var(--text-color-secondary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.settings-account-status.connected {
+  background: rgba(34, 197, 94, 0.16);
+  color: #15803d;
 }
 
 .settings-signup-form {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.settings-auth-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
 }
 
 .settings-signup-form .nudge-cta,
@@ -569,6 +636,7 @@ function replayOnboarding() {
   justify-content: center;
   gap: 0.5rem;
   margin-top: 0.25rem;
+  min-height: 2.8rem;
 }
 
 .settings-signup-form .nudge-cta:disabled {
@@ -586,7 +654,7 @@ function replayOnboarding() {
   background: transparent;
   color: #ef4444;
   border: 1px solid #ef4444;
-  margin-top: 0.5rem;
+  margin-top: 0;
 }
 
 .signup-error-card {
@@ -757,6 +825,21 @@ function replayOnboarding() {
   .friends-toggle-pill,
   .toggle-thumb {
     transition: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .settings-account-card-header,
+  .settings-auth-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-account-card-header {
+    display: grid;
+  }
+
+  .settings-account-status {
+    justify-self: start;
   }
 }
 </style>
