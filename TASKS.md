@@ -86,6 +86,9 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [x] Account section in Settings drawer — signup form or email display + sign out
 - [x] Convex sync overhaul (2026-04-14) — cloud-backed sync for profiles, active profile, custom links, friends filter, SocialFlow accounts, and key preferences
 - [x] Auth bootstrap now hydrates from Convex on sign-in/startup with cloud-priority behavior (2026-04-14)
+- [x] Durable Convex sync queue (2026-04-15) — cloud writes are now persisted locally, retried on visibility/focus/network/timer, and flushed before cloud hydration
+- [x] Placeholder default profile stays local-only until customized (2026-04-15) — avoids syncing unwanted `Profile 1` into signed-in accounts
+- [x] Android WebView dark-mode bridge now reaches the web content layer (2026-04-15) — native darkening APIs + `prefers-color-scheme` hinting applied on toggle/page-finish
 - [x] Backup restore now re-seeds Convex when the user is signed in (2026-04-14)
 - [x] Website FR/EN copy updated to explain exactly what syncs via cloud vs what stays local-only (2026-04-14)
 

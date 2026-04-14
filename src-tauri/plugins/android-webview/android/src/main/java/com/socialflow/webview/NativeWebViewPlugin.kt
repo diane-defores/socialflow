@@ -29,6 +29,7 @@ import android.widget.Toast
 import android.view.MotionEvent
 import androidx.activity.OnBackPressedCallback
 import androidx.core.graphics.PathParser
+import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
 import app.tauri.annotation.Command
@@ -1087,6 +1088,92 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         }
     }
 
+    /**
+     * Best-effort dark mode for social WebViews.
+     *
+     * There are two layers here:
+     * 1. Native WebView darkening APIs (when supported by the Android System WebView)
+     * 2. A JS hint layer for sites that consult prefers-color-scheme / color-scheme
+     *
+     * This cannot guarantee every social site will obey, because many of them
+     * store theme choice server-side or in site-local storage/cookies, but it
+     * gives us a real, explicit signal instead of only recoloring the native chrome.
+     */
+    private fun applyDarkModeToWebView(view: WebView?) {
+        if (view == null) return
+
+        val settings = view.settings
+
+        try {
+            if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
+                WebSettingsCompat.setForceDark(
+                    settings,
+                    if (isDarkMode) WebSettingsCompat.FORCE_DARK_ON else WebSettingsCompat.FORCE_DARK_OFF
+                )
+            }
+
+            if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK_STRATEGY)) {
+                WebSettingsCompat.setForceDarkStrategy(
+                    settings,
+                    WebSettingsCompat.DARK_STRATEGY_PREFER_WEB_THEME_OVER_USER_AGENT_DARKENING
+                )
+            }
+
+            if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
+                WebSettingsCompat.setAlgorithmicDarkeningAllowed(settings, isDarkMode)
+            }
+        } catch (_: Exception) {
+            // Older / vendor WebViews may expose a feature flag but still fail at runtime.
+        }
+
+        val darkModeScript = """
+            (function() {
+              try {
+                var dark = ${if (isDarkMode) "true" else "false"};
+                window.__sfzPreferredDark = dark;
+                var originalMatchMedia = window.__sfzOriginalMatchMedia || window.matchMedia;
+                if (!window.__sfzOriginalMatchMedia && originalMatchMedia) {
+                  window.__sfzOriginalMatchMedia = originalMatchMedia;
+                }
+                if (originalMatchMedia) {
+                  window.matchMedia = function(query) {
+                    if (query && query.indexOf('prefers-color-scheme') !== -1) {
+                      var base = originalMatchMedia.call(window, query);
+                      var isDarkQuery = query.indexOf('dark') !== -1;
+                      var isLightQuery = query.indexOf('light') !== -1;
+                      return {
+                        matches: isDarkQuery ? dark : (isLightQuery ? !dark : base.matches),
+                        media: query,
+                        onchange: null,
+                        addListener: function() {},
+                        removeListener: function() {},
+                        addEventListener: function() {},
+                        removeEventListener: function() {},
+                        dispatchEvent: function() { return false; }
+                      };
+                    }
+                    return originalMatchMedia.call(window, query);
+                  };
+                }
+
+                document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+
+                var style = document.getElementById('__sfz-dark-mode-hint');
+                if (!style) {
+                  style = document.createElement('style');
+                  style.id = '__sfz-dark-mode-hint';
+                  (document.head || document.documentElement).appendChild(style);
+                }
+                style.textContent = dark
+                  ? ':root{color-scheme:dark !important;} html,body{background:#0f172a !important;}'
+                  : ':root{color-scheme:light !important;}';
+              } catch (e) {}
+            })();
+        """.trimIndent()
+
+        view.evaluateJavascript(darkModeScript, null)
+    }
+
     // ── Open / navigate ──────────────────────────────────────────────────────
 
     @Command
@@ -1272,6 +1359,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         val args = invoke.parseArgs(DarkModeArgs::class.java)
         activity.runOnUiThread {
             isDarkMode = args.enabled
+            applyDarkModeToWebView(socialWebView)
             applyDarkModeToBottomBar(bottomBarView)
             applyStatusBarIconColor()
         }
@@ -2448,6 +2536,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         val defaultUa = WebSettings.getDefaultUserAgent(activity)
         mobileUa = defaultUa.replace("; wv", "")
         settings.userAgentString = mobileUa
+        applyDarkModeToWebView(webView)
 
         val cookieManager = CookieManager.getInstance()
         cookieManager.setAcceptCookie(true)
@@ -2618,6 +2707,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                 if (shouldUseDesktopUa(currentNetworkId, url)) {
                     view.evaluateJavascript(DESKTOP_VIEWPORT_SCRIPT, null)
                 }
+                applyDarkModeToWebView(view)
                 if (isGrayscale) applyGrayscaleToWebView(view)
                 if (isMuted) applyMuteToWebView(view)
                 // Detect Akamai/CDN block pages that return 200 but show "Access Denied"

@@ -9,6 +9,7 @@ export interface Profile {
   avatar?: string   // base64 data URL or remote URL
   hiddenNetworks?: string[]  // network IDs hidden for this profile (e.g. ['tiktok', 'discord'])
   createdAt: number
+  localOnly?: boolean
 }
 
 const DEFAULT_EMOJIS = ['🟦', '🟥', '🟩', '🟨', '🟪', '🟧', '⬛', '🔵']
@@ -25,8 +26,29 @@ export const useProfilesStore = defineStore('profiles', {
   },
 
   actions: {
+    getPlaceholderProfile(): Profile | undefined {
+      return this.profiles.length === 1 && this.profiles[0].localOnly
+        ? this.profiles[0]
+        : undefined
+    },
+
+    materializeProfile(profile: Profile) {
+      if (!profile.localOnly) return
+      profile.localOnly = false
+    },
+
     /** Add a new profile and make it active. */
     add(name: string): Profile {
+      const placeholder = this.getPlaceholderProfile()
+      if (placeholder) {
+        placeholder.name = name
+        this.materializeProfile(placeholder)
+        this.activeProfileId = placeholder.id
+        this.syncProfileToCloud(placeholder)
+        this.syncActiveProfileToCloud(placeholder.id)
+        return placeholder
+      }
+
       const emoji = DEFAULT_EMOJIS[this.profiles.length % DEFAULT_EMOJIS.length]
       const profile: Profile = {
         id: crypto.randomUUID(),
@@ -58,6 +80,16 @@ export const useProfilesStore = defineStore('profiles', {
       const profile = this.profiles.find((p) => p.id === profileId)
       if (profile) {
         profile.name = name
+        this.materializeProfile(profile)
+        this.syncProfileToCloud(profile)
+      }
+    },
+
+    setEmoji(profileId: string, emoji: string) {
+      const profile = this.profiles.find((p) => p.id === profileId)
+      if (profile) {
+        profile.emoji = emoji
+        this.materializeProfile(profile)
         this.syncProfileToCloud(profile)
       }
     },
@@ -67,6 +99,7 @@ export const useProfilesStore = defineStore('profiles', {
       const profile = this.profiles.find((p) => p.id === profileId)
       if (profile) {
         profile.avatar = avatar
+        this.materializeProfile(profile)
         this.syncProfileToCloud(profile)
       }
     },
@@ -88,6 +121,7 @@ export const useProfilesStore = defineStore('profiles', {
       } else {
         profile.hiddenNetworks.splice(idx, 1)
       }
+      this.materializeProfile(profile)
       this.syncProfileToCloud(profile)
     },
 
@@ -103,7 +137,16 @@ export const useProfilesStore = defineStore('profiles', {
      */
     ensureDefault(): Profile {
       if (this.profiles.length === 0) {
-        return this.add('Profile 1')
+        const profile: Profile = {
+          id: crypto.randomUUID(),
+          name: 'Profile 1',
+          emoji: DEFAULT_EMOJIS[0],
+          createdAt: Date.now(),
+          localOnly: true,
+        }
+        this.profiles.push(profile)
+        this.activeProfileId = profile.id
+        return profile
       }
       if (!this.activeProfileId || !this.profiles.find((p) => p.id === this.activeProfileId)) {
         this.activeProfileId = this.profiles[0].id
@@ -130,6 +173,7 @@ export const useProfilesStore = defineStore('profiles', {
           avatar: profile.avatar,
           hiddenNetworks: profile.hiddenNetworks ?? [],
           createdAt: profile.createdAt,
+          localOnly: false,
         }))
         .sort((a, b) => a.createdAt - b.createdAt)
       this.activeProfileId = activeProfileId && this.profiles.some((p) => p.id === activeProfileId)
@@ -138,6 +182,7 @@ export const useProfilesStore = defineStore('profiles', {
     },
 
     async syncProfileToCloud(profile: Profile) {
+      if (profile.localOnly) return
       enqueueProfileUpsert({
         profileId: profile.id,
         name: profile.name,
@@ -155,11 +200,16 @@ export const useProfilesStore = defineStore('profiles', {
     },
 
     async syncActiveProfileToCloud(profileId?: string) {
+      if (profileId) {
+        const profile = this.profiles.find((item) => item.id === profileId)
+        if (profile?.localOnly) return
+      }
       await syncSettingsPatch({ activeProfileId: profileId })
     },
 
     async seedCloud() {
       for (const profile of this.profiles) {
+        if (profile.localOnly) continue
         await this.syncProfileToCloud(profile)
       }
       if (this.activeProfileId) {

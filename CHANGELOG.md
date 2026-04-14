@@ -2,6 +2,15 @@
 
 All notable changes to SocialFlow are documented here.
 
+## [2026-04-15]
+
+### Changed
+- **Convex sync is now durable instead of best-effort** — cloud writes for profiles, settings, links, friends filters, and social accounts are now persisted in a local retry queue, replayed automatically when the app regains focus/visibility/network, and flushed before cloud hydration so recent local edits are not silently lost
+- **Default profile behavior is now account-safe** — the auto-created `Profile 1` fallback remains local-only until the user actually customizes it, so signing into an existing account no longer pollutes Convex with an unwanted placeholder profile
+
+### Fixed
+- **Android WebView dark mode reached only the native chrome** — the settings toggle now also pushes dark-mode hints down to the web content layer via Android WebView darkening APIs plus a `prefers-color-scheme`/`color-scheme` bridge, instead of recoloring only the bottom bar and status icons
+
 ## [2026-04-14]
 
 ### Added

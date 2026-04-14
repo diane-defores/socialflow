@@ -241,7 +241,7 @@ function finish() {
     if (profileName.value.trim()) {
       profilesStore.rename(profile.id, profileName.value.trim())
     }
-    profile.emoji = selectedEmoji.value
+    profilesStore.setEmoji(profile.id, selectedEmoji.value)
 
     // Hide unselected networks
     const allIds = NETWORKS.map(n => n.id)
