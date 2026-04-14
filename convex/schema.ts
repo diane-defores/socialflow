@@ -42,7 +42,46 @@ export default defineSchema({
     theme: v.union(v.literal("light"), v.literal("dark")),
     language: v.optional(v.string()),
     sidebarVisible: v.optional(v.boolean()),
+    grayscaleEnabled: v.optional(v.boolean()),
+    textZoom: v.optional(v.number()),
+    hapticEnabled: v.optional(v.boolean()),
+    tapSoundEnabled: v.optional(v.boolean()),
+    activeProfileId: v.optional(v.string()),
+    onboardingCompleted: v.optional(v.boolean()),
+    friendsFilterEnabled: v.optional(v.boolean()),
   }).index("by_userId", ["userId"]),
+
+  profiles: defineTable({
+    userId: v.id("users"),
+    profileId: v.string(),
+    name: v.string(),
+    emoji: v.string(),
+    avatar: v.optional(v.string()),
+    hiddenNetworks: v.optional(v.array(v.string())),
+    createdAt: v.number(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_user_profile", ["userId", "profileId"]),
+
+  customLinks: defineTable({
+    userId: v.id("users"),
+    linkId: v.string(),
+    profileId: v.string(),
+    label: v.string(),
+    url: v.string(),
+    icon: v.string(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_user_link", ["userId", "linkId"])
+    .index("by_user_profile", ["userId", "profileId"]),
+
+  friendsFilters: defineTable({
+    userId: v.id("users"),
+    networkId: v.string(),
+    names: v.array(v.string()),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_user_network", ["userId", "networkId"]),
 
   subscriptions: defineTable({
     userId: v.id("users"),

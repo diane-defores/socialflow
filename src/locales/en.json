@@ -250,7 +250,7 @@
     "auth_hint": "Sign in with an existing account or create one to sync your data across devices.",
     "sync_more": "More info",
     "sync_less": "Less info",
-    "sync_info": "The cloud syncs your SocialFlow profiles, settings, and accounts across your other devices.",
+    "sync_info": "The cloud syncs your SocialFlow profiles, settings, accounts, friends filters, and custom links across your other devices.",
     "cookies_info": "We would also like to sync your logged-in sessions, but browsers and social networks forbid sending those cookies to third-party servers. To move your sessions to a new device, use the encrypted export below.",
     "sign_in_hint": "Sign in with your existing account to restore your synced data.",
     "already_exists_error": "An account already exists for this email. Use “Sign in” instead.",

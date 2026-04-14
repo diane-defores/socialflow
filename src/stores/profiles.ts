@@ -1,4 +1,7 @@
 import { defineStore } from 'pinia'
+import { getConvexClient } from '@/lib/convex'
+import { syncSettingsPatch } from '@/lib/cloudSettings'
+import { api } from '../../convex/_generated/api'
 
 export interface Profile {
   id: string
@@ -34,6 +37,8 @@ export const useProfilesStore = defineStore('profiles', {
       }
       this.profiles.push(profile)
       this.activeProfileId = profile.id
+      this.syncProfileToCloud(profile)
+      this.syncActiveProfileToCloud(profile.id)
       return profile
     },
 
@@ -44,24 +49,33 @@ export const useProfilesStore = defineStore('profiles', {
       this.profiles.splice(idx, 1)
       if (this.activeProfileId === profileId) {
         this.activeProfileId = this.profiles[0]?.id ?? ''
+        this.syncActiveProfileToCloud(this.activeProfileId || undefined)
       }
+      this.removeProfileFromCloud(profileId)
     },
 
     /** Rename a profile. */
     rename(profileId: string, name: string) {
       const profile = this.profiles.find((p) => p.id === profileId)
-      if (profile) profile.name = name
+      if (profile) {
+        profile.name = name
+        this.syncProfileToCloud(profile)
+      }
     },
 
     /** Set or clear a profile avatar (base64 data URL). */
     setAvatar(profileId: string, avatar: string | undefined) {
       const profile = this.profiles.find((p) => p.id === profileId)
-      if (profile) profile.avatar = avatar
+      if (profile) {
+        profile.avatar = avatar
+        this.syncProfileToCloud(profile)
+      }
     },
 
     /** Switch the active profile. */
     setActive(profileId: string) {
       this.activeProfileId = profileId
+      this.syncActiveProfileToCloud(profileId)
     },
 
     /** Toggle a network's visibility for a profile. */
@@ -75,6 +89,7 @@ export const useProfilesStore = defineStore('profiles', {
       } else {
         profile.hiddenNetworks.splice(idx, 1)
       }
+      this.syncProfileToCloud(profile)
     },
 
     /** Check if a network is hidden for a profile. */
@@ -95,6 +110,75 @@ export const useProfilesStore = defineStore('profiles', {
         this.activeProfileId = this.profiles[0].id
       }
       return this.profiles.find((p) => p.id === this.activeProfileId)!
+    },
+
+    replaceFromCloud(
+      cloudProfiles: Array<{
+        profileId: string;
+        name: string;
+        emoji: string;
+        avatar?: string;
+        hiddenNetworks?: string[];
+        createdAt: number;
+      }>,
+      activeProfileId?: string,
+    ) {
+      this.profiles = cloudProfiles
+        .map((profile) => ({
+          id: profile.profileId,
+          name: profile.name,
+          emoji: profile.emoji,
+          avatar: profile.avatar,
+          hiddenNetworks: profile.hiddenNetworks ?? [],
+          createdAt: profile.createdAt,
+        }))
+        .sort((a, b) => a.createdAt - b.createdAt)
+      this.activeProfileId = activeProfileId && this.profiles.some((p) => p.id === activeProfileId)
+        ? activeProfileId
+        : (this.profiles[0]?.id ?? '')
+    },
+
+    async syncProfileToCloud(profile: Profile) {
+      try {
+        const client = getConvexClient()
+        await client.mutation(api.profiles.upsert, {
+          profileId: profile.id,
+          name: profile.name,
+          emoji: profile.emoji,
+          avatar: profile.avatar,
+          hiddenNetworks: profile.hiddenNetworks ?? [],
+          createdAt: profile.createdAt,
+        })
+      } catch {
+        // Offline or unauthenticated.
+      }
+    },
+
+    async removeProfileFromCloud(profileId: string) {
+      try {
+        const client = getConvexClient()
+        await client.mutation(api.profiles.remove, { profileId })
+      } catch {
+        // Offline or unauthenticated.
+      }
+    },
+
+    async syncActiveProfileToCloud(profileId?: string) {
+      await syncSettingsPatch({ activeProfileId: profileId })
+    },
+
+    async seedCloud() {
+      for (const profile of this.profiles) {
+        await this.syncProfileToCloud(profile)
+      }
+      if (this.activeProfileId) {
+        await this.syncActiveProfileToCloud(this.activeProfileId)
+      }
+    },
+
+    clearLocal() {
+      this.profiles = []
+      this.activeProfileId = ''
     },
   },
 

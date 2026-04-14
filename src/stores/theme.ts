@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
-import { getConvexClient } from '@/lib/convex'
-import { api } from '../../convex/_generated/api'
+import { syncSettingsPatch } from '@/lib/cloudSettings'
 
 export const useThemeStore = defineStore('theme', {
   state: () => ({
@@ -24,6 +23,7 @@ export const useThemeStore = defineStore('theme', {
       this.grayscaleEnabled = enabled
       this.applyGrayscale()
       localStorage.setItem('grayscale', enabled ? '1' : '0')
+      syncSettingsPatch({ grayscaleEnabled: enabled })
     },
 
     applyGrayscale() {
@@ -43,12 +43,42 @@ export const useThemeStore = defineStore('theme', {
     },
 
     async syncThemeToCloud(theme: 'light' | 'dark') {
-      try {
-        const client = getConvexClient()
-        await client.mutation(api.settings.upsert, { theme })
-      } catch {
-        // Offline — ignore
+      await syncSettingsPatch({ theme })
+    },
+
+    applyCloudPreferences(settings: {
+      theme?: 'light' | 'dark'
+      grayscaleEnabled?: boolean
+      textZoom?: number
+      hapticEnabled?: boolean
+      tapSoundEnabled?: boolean
+    }) {
+      if (settings.theme) {
+        this.isDarkMode = settings.theme === 'dark'
+        localStorage.setItem('theme', settings.theme)
       }
+      if (typeof settings.grayscaleEnabled === 'boolean') {
+        this.grayscaleEnabled = settings.grayscaleEnabled
+        localStorage.setItem('grayscale', settings.grayscaleEnabled ? '1' : '0')
+      }
+      if (typeof settings.textZoom === 'number') {
+        localStorage.setItem('sfz_text_zoom', String(settings.textZoom))
+      }
+      if (typeof settings.hapticEnabled === 'boolean') {
+        localStorage.setItem('sfz_haptic', String(settings.hapticEnabled))
+      }
+      if (typeof settings.tapSoundEnabled === 'boolean') {
+        localStorage.setItem('sfz_tap_sound', String(settings.tapSoundEnabled))
+      }
+      this.applyTheme()
+      this.applyGrayscale()
+    },
+
+    resetLocalPreferences() {
+      this.isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches
+      this.grayscaleEnabled = false
+      this.applyTheme()
+      this.applyGrayscale()
     },
   }
 })

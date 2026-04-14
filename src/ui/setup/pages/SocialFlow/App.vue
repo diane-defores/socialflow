@@ -37,6 +37,8 @@ import { useI18n } from 'vue-i18n'
 import { useThemeStore } from '@/stores/theme'
 import { useWebviewStore, WEBVIEW_URLS } from '@/stores/webviewState'
 import { useProfilesStore } from '@/stores/profiles'
+import { isAuthenticated } from '@/lib/convexAuth'
+import { hydrateCloudState, resetCloudSyncState } from '@/lib/cloudSync'
 import { useOnboardingStore } from '@/stores/onboarding'
 import { useFriendsFilter } from './composables/useFriendsFilter'
 import { preloadWebviews } from './composables/useWebviewPreload'
@@ -129,6 +131,21 @@ watch(locale, async (newLocale) => {
   invoke('set_locale', { locale: newLocale }).catch(() => {})
 }, { immediate: true })
 
+watch(
+  () => isAuthenticated.value,
+  async (authenticated, wasAuthenticated) => {
+    if (authenticated) {
+      await hydrateCloudState()
+      return
+    }
+
+    if (wasAuthenticated) {
+      resetCloudSyncState()
+    }
+  },
+  { immediate: true },
+)
+
 // When the settings toggle changes, sync the native webview on Android
 watch(() => themeStore.grayscaleEnabled, async (enabled) => {
   if (!isTauri) return
@@ -182,6 +199,9 @@ watch(
 onMounted(async () => {
   themeStore.initTheme()
   profilesStore.ensureDefault()
+  if (isAuthenticated.value) {
+    await hydrateCloudState()
+  }
 
   // Preload top networks off-screen so first click is instant (non-blocking)
   preloadWebviews()

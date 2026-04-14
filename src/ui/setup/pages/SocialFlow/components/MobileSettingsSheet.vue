@@ -269,6 +269,8 @@ import { useThemeStore } from '@/stores/theme'
 import { useOnboardingStore } from '@/stores/onboarding'
 import { useSignupNudge } from '@/composables/useSignupNudge'
 import { signIn, signOut as convexSignOut, isAuthenticated, isConvexConfigured } from '@/lib/convexAuth'
+import { resetCloudSyncState, resetSyncedLocalState } from '@/lib/cloudSync'
+import { syncSettingsPatch } from '@/lib/cloudSettings'
 import { getConvexClient } from '@/lib/convex'
 import { api } from '../../../../../../convex/_generated/api'
 import { useToast } from 'primevue/usetoast'
@@ -383,9 +385,10 @@ async function copySignupError() {
 
 async function handleSignOut() {
   await convexSignOut()
+  resetCloudSyncState()
+  resetSyncedLocalState()
   nudge.hasEmailAccount.value = false
   settingsEmail.value = ''
-  localStorage.removeItem('sfz_email')
   signupPassword.value = ''
   authAction.value = 'signIn'
   toast.add({ severity: 'success', summary: t('account.signed_out_toast'), life: 3000 })
@@ -398,6 +401,7 @@ const tapSoundEnabled = ref(localStorage.getItem('sfz_tap_sound') === 'true')
 function toggleHaptic() {
   hapticEnabled.value = !hapticEnabled.value
   localStorage.setItem('sfz_haptic', String(hapticEnabled.value))
+  syncSettingsPatch({ hapticEnabled: hapticEnabled.value })
   import('@tauri-apps/api/core').then(({ invoke }) => {
     invoke('plugin:android-webview|set_haptic', { enabled: hapticEnabled.value }).catch(() => {})
   }).catch(() => {})
@@ -406,6 +410,7 @@ function toggleHaptic() {
 function toggleTapSound() {
   tapSoundEnabled.value = !tapSoundEnabled.value
   localStorage.setItem('sfz_tap_sound', String(tapSoundEnabled.value))
+  syncSettingsPatch({ tapSoundEnabled: tapSoundEnabled.value })
   import('@tauri-apps/api/core').then(({ invoke }) => {
     invoke('plugin:android-webview|set_tap_sound', { enabled: tapSoundEnabled.value }).catch(() => {})
   }).catch(() => {})
@@ -417,6 +422,7 @@ const textZoomLevel = ref(Number(localStorage.getItem('sfz_text_zoom') ?? '100')
 
 function onTextZoomChange() {
   localStorage.setItem('sfz_text_zoom', String(textZoomLevel.value))
+  syncSettingsPatch({ textZoom: textZoomLevel.value })
   if (isTauri) {
     import('@tauri-apps/api/core').then(({ invoke }) => {
       invoke('set_text_zoom', { level: textZoomLevel.value }).catch(() => {})

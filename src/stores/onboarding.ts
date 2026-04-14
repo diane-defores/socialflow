@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { syncSettingsPatch } from '@/lib/cloudSettings'
 
 export const useOnboardingStore = defineStore('onboarding', {
   state: () => ({
@@ -8,9 +9,11 @@ export const useOnboardingStore = defineStore('onboarding', {
   actions: {
     complete() {
       this.completed = true
+      syncSettingsPatch({ onboardingCompleted: true })
     },
     reset() {
       this.completed = false
+      syncSettingsPatch({ onboardingCompleted: false })
     },
   },
 

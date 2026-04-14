@@ -161,6 +161,37 @@ export const useAccountsStore = defineStore('accounts', {
         // Offline — stay with local state
       }
     },
+
+    replaceFromCloud(
+      cloudAccounts: Array<{ accountId: string; networkId: string; label: string; addedAt: number }>,
+      cloudActive: Array<{ networkId: string; accountId: string }>,
+    ) {
+      this.accounts = cloudAccounts.map((account) => ({
+        id: account.accountId,
+        networkId: account.networkId,
+        label: account.label,
+        addedAt: account.addedAt,
+      }))
+      this.activeAccountId = Object.fromEntries(
+        cloudActive.map((account) => [account.networkId, account.accountId]),
+      )
+    },
+
+    async seedCloud() {
+      for (const account of this.accounts) {
+        await this.syncAccountToCloud(account)
+      }
+      for (const [networkId, accountId] of Object.entries(this.activeAccountId)) {
+        if (accountId) {
+          await this.syncActiveToCloud(networkId, accountId)
+        }
+      }
+    },
+
+    clearLocal() {
+      this.accounts = []
+      this.activeAccountId = {}
+    },
   },
 
   persist: true,

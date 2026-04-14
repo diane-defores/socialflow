@@ -1,5 +1,6 @@
 import messages from '@intlify/unplugin-vue-i18n/messages'
 import { createI18n } from 'vue-i18n'
+import { syncSettingsPatch } from '@/lib/cloudSettings'
 
 const savedLocale = localStorage.getItem('user-locale') ?? 'fr'
 
@@ -11,7 +12,10 @@ export const i18n = createI18n({
   messages,
 })
 
-export function setLocale(locale: string) {
+export function setLocale(locale: string, sync = true) {
   i18n.global.locale.value = locale
   localStorage.setItem('user-locale', locale)
+  if (sync) {
+    syncSettingsPatch({ language: locale })
+  }
 }

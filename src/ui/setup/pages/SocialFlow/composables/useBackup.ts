@@ -4,6 +4,8 @@ import { useFriendsFilterStore } from '@/stores/friendsFilter'
 import { useThemeStore } from '@/stores/theme'
 import { useCustomLinksStore } from '@/stores/customLinks'
 import { useOnboardingStore } from '@/stores/onboarding'
+import { isAuthenticated } from '@/lib/convexAuth'
+import { syncSettingsPatch } from '@/lib/cloudSettings'
 import { setLocale } from '@/utils/i18n'
 
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
@@ -127,6 +129,36 @@ function applyStoreData(json: string) {
   }
 }
 
+async function syncRestoredDataToCloud() {
+  if (!isAuthenticated.value) return
+
+  const profiles = useProfilesStore()
+  const accounts = useAccountsStore()
+  const friends = useFriendsFilterStore()
+  const theme = useThemeStore()
+  const customLinks = useCustomLinksStore()
+  const onboarding = useOnboardingStore()
+
+  await syncSettingsPatch({
+    theme: theme.isDarkMode ? 'dark' : 'light',
+    language: localStorage.getItem('user-locale') ?? 'fr',
+    grayscaleEnabled: theme.grayscaleEnabled,
+    textZoom: Number(localStorage.getItem('sfz_text_zoom') ?? '100'),
+    hapticEnabled: localStorage.getItem('sfz_haptic') !== 'false',
+    tapSoundEnabled: localStorage.getItem('sfz_tap_sound') === 'true',
+    activeProfileId: profiles.activeProfileId || undefined,
+    onboardingCompleted: onboarding.completed,
+    friendsFilterEnabled: friends.enabled,
+  })
+
+  await Promise.all([
+    profiles.seedCloud(),
+    accounts.seedCloud(),
+    customLinks.seedCloud(),
+    friends.seedCloud(),
+  ])
+}
+
 /** Convert a base64 string to Uint8Array. */
 function b64ToBytes(b64: string): Uint8Array {
   const bin = atob(b64)
@@ -209,6 +241,7 @@ export function useBackup() {
     })
 
     applyStoreData(restoredData)
+    await syncRestoredDataToCloud()
   }
 
   return { exportBackup, importBackup, isTauri }

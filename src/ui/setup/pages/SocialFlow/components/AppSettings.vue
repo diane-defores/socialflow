@@ -116,6 +116,7 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { setLocale } from '@/utils/i18n'
+import { syncSettingsPatch } from '@/lib/cloudSettings'
 import { useThemeStore } from '@/stores/theme'
 import { useOnboardingStore } from '@/stores/onboarding'
 import Dialog from 'primevue/dialog'
@@ -151,6 +152,7 @@ const textZoomLevel = ref(Number(localStorage.getItem('sfz_text_zoom') ?? '100')
 
 function onTextZoomChange() {
   localStorage.setItem('sfz_text_zoom', String(textZoomLevel.value))
+  syncSettingsPatch({ textZoom: textZoomLevel.value })
   if (isTauri) {
     import('@tauri-apps/api/core').then(({ invoke }) => {
       invoke('set_text_zoom', { level: textZoomLevel.value }).catch(() => {})

@@ -9,7 +9,10 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as customLinks from "../customLinks.js";
+import type * as friendsFilters from "../friendsFilters.js";
 import type * as http from "../http.js";
+import type * as profiles from "../profiles.js";
 import type * as settings from "../settings.js";
 import type * as socialAccounts from "../socialAccounts.js";
 import type * as users from "../users.js";
@@ -22,7 +25,10 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  customLinks: typeof customLinks;
+  friendsFilters: typeof friendsFilters;
   http: typeof http;
+  profiles: typeof profiles;
   settings: typeof settings;
   socialAccounts: typeof socialAccounts;
   users: typeof users;
