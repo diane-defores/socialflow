@@ -17,6 +17,8 @@ const FIRST_LAUNCH_KEY = "sfz_first_launch";
 const NUDGE_COUNT_KEY = "sfz_nudge_count";
 const NUDGE_LAST_KEY = "sfz_nudge_last";
 const NUDGE_PAUSED_KEY = "sfz_nudge_paused_until";
+const showNudge = ref(false);
+const hasEmailAccount = ref(false);
 
 function today(): string {
   return new Date().toDateString();
@@ -28,9 +30,6 @@ function daysBetween(dateStr: string, now: Date): number {
 }
 
 export function useSignupNudge() {
-  const showNudge = ref(false);
-  const hasEmailAccount = ref(false);
-
   /** Record the very first launch date (idempotent). */
   function recordFirstLaunch() {
     if (!localStorage.getItem(FIRST_LAUNCH_KEY)) {
