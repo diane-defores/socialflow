@@ -281,6 +281,73 @@ private val DESKTOP_VIEWPORT_SCRIPT = """
 })();
 """.trimIndent()
 
+// Document-start dark-mode bridge. Reads the last preference we stored in page-local
+// storage so new navigations pick the right theme before site JS finishes booting.
+private val DARK_MODE_DOC_START_SCRIPT = """
+(function() {
+  try {
+    function readDark() {
+      try {
+        var stored = localStorage.getItem('__sfzPreferredDark');
+        if (stored === '1') return true;
+        if (stored === '0') return false;
+      } catch (e) {}
+      return false;
+    }
+
+    function install(dark) {
+      try {
+        window.__sfzPreferredDark = dark;
+        var originalMatchMedia = window.__sfzOriginalMatchMedia || window.matchMedia;
+        if (!window.__sfzOriginalMatchMedia && originalMatchMedia) {
+          window.__sfzOriginalMatchMedia = originalMatchMedia;
+        }
+        if (originalMatchMedia) {
+          window.matchMedia = function(query) {
+            if (query && query.indexOf('prefers-color-scheme') !== -1) {
+              var base = originalMatchMedia.call(window, query);
+              var isDarkQuery = query.indexOf('dark') !== -1;
+              var isLightQuery = query.indexOf('light') !== -1;
+              return {
+                matches: isDarkQuery ? dark : (isLightQuery ? !dark : base.matches),
+                media: query,
+                onchange: null,
+                addListener: function() {},
+                removeListener: function() {},
+                addEventListener: function() {},
+                removeEventListener: function() {},
+                dispatchEvent: function() { return false; }
+              };
+            }
+            return originalMatchMedia.call(window, query);
+          };
+        }
+
+        document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+
+        var style = document.getElementById('__sfz-dark-mode-hint');
+        if (!style) {
+          style = document.createElement('style');
+          style.id = '__sfz-dark-mode-hint';
+          (document.head || document.documentElement).appendChild(style);
+        }
+        style.textContent = dark
+          ? ':root{color-scheme:dark !important;} html,body{background:#0f172a !important;}'
+          : ':root{color-scheme:light !important;}';
+      } catch (e) {}
+    }
+
+    install(readDark());
+    var attempts = 0;
+    var timer = setInterval(function() {
+      install(readDark());
+      attempts += 1;
+      if (attempts >= 12) clearInterval(timer);
+    }, 250);
+  } catch (e) {}
+})();
+""".trimIndent()
+
 // JavaScript injected after every page load to dismiss "open in app" / "get the app" prompts.
 // Strategy: inject persistent CSS to hide known banner elements, then click "Not now" buttons.
 private val DISMISS_APP_BANNERS_SCRIPT = """
@@ -1103,6 +1170,8 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         if (view == null) return
 
         val settings = view.settings
+        val isFacebookView = currentNetworkId == "facebook" ||
+            (view.url?.contains("facebook.com", ignoreCase = true) == true)
 
         try {
             if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
@@ -1113,9 +1182,20 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             }
 
             if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK_STRATEGY)) {
+                val preferredStrategy = if (isFacebookView) {
+                    try {
+                        WebSettingsCompat::class.java
+                            .getField("DARK_STRATEGY_USER_AGENT_DARKENING_ONLY")
+                            .getInt(null)
+                    } catch (_: Exception) {
+                        WebSettingsCompat.DARK_STRATEGY_PREFER_WEB_THEME_OVER_USER_AGENT_DARKENING
+                    }
+                } else {
+                    WebSettingsCompat.DARK_STRATEGY_PREFER_WEB_THEME_OVER_USER_AGENT_DARKENING
+                }
                 WebSettingsCompat.setForceDarkStrategy(
                     settings,
-                    WebSettingsCompat.DARK_STRATEGY_PREFER_WEB_THEME_OVER_USER_AGENT_DARKENING
+                    preferredStrategy
                 )
             }
 
@@ -1130,6 +1210,9 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             (function() {
               try {
                 var dark = ${if (isDarkMode) "true" else "false"};
+                try {
+                  localStorage.setItem('__sfzPreferredDark', dark ? '1' : '0');
+                } catch (e) {}
                 window.__sfzPreferredDark = dark;
                 var originalMatchMedia = window.__sfzOriginalMatchMedia || window.matchMedia;
                 if (!window.__sfzOriginalMatchMedia && originalMatchMedia) {
@@ -1167,11 +1250,41 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                 style.textContent = dark
                   ? ':root{color-scheme:dark !important;} html,body{background:#0f172a !important;}'
                   : ':root{color-scheme:light !important;}';
+
+                var attempts = 0;
+                var timer = setInterval(function() {
+                  try {
+                    document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+                    if (style) {
+                      style.textContent = dark
+                        ? ':root{color-scheme:dark !important;} html,body{background:#0f172a !important;}'
+                        : ':root{color-scheme:light !important;}';
+                    }
+                  } catch (e) {}
+                  attempts += 1;
+                  if (attempts >= ${if (isFacebookView) "12" else "4"}) clearInterval(timer);
+                }, 250);
               } catch (e) {}
             })();
         """.trimIndent()
 
         view.evaluateJavascript(darkModeScript, null)
+    }
+
+    private fun scheduleDarkModeReapply(view: WebView) {
+        val delays = if (currentNetworkId == "facebook") {
+            longArrayOf(250L, 750L, 1500L, 2500L)
+        } else {
+            longArrayOf(350L)
+        }
+
+        for (delay in delays) {
+            view.postDelayed({
+                if (socialWebView == view) {
+                    applyDarkModeToWebView(view)
+                }
+            }, delay)
+        }
     }
 
     // ── Open / navigate ──────────────────────────────────────────────────────
@@ -2548,6 +2661,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         if (useDocStart) {
             WebViewCompat.addDocumentStartJavaScript(webView, STEALTH_SCRIPT, setOf("*"))
             WebViewCompat.addDocumentStartJavaScript(webView, DESKTOP_VIEWPORT_SCRIPT, setOf("*"))
+            WebViewCompat.addDocumentStartJavaScript(webView, DARK_MODE_DOC_START_SCRIPT, setOf("*"))
             // COOKIE_ACCEPT_SCRIPT is injected conditionally in onPageFinished (main frame).
             // COOKIE_IFRAME_SCRIPT runs in ALL frames but skips main frame — handles
             // cross-origin CMP iframes (Google Funding Choices, etc.).
@@ -2708,6 +2822,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                     view.evaluateJavascript(DESKTOP_VIEWPORT_SCRIPT, null)
                 }
                 applyDarkModeToWebView(view)
+                scheduleDarkModeReapply(view)
                 if (isGrayscale) applyGrayscaleToWebView(view)
                 if (isMuted) applyMuteToWebView(view)
                 // Detect Akamai/CDN block pages that return 200 but show "Access Denied"
