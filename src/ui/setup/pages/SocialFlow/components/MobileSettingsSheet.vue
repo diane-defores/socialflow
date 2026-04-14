@@ -24,7 +24,6 @@
             <div class="settings-account-card">
               <div class="settings-account-card-header">
                 <div>
-                  <p class="settings-account-title">{{ $t('account.card_title') }}</p>
                   <p class="settings-account-hint">
                     {{ isSignedIn && nudge.hasEmailAccount.value
                       ? $t('account.signed_in_hint')
@@ -33,6 +32,9 @@
                         : $t('account.auth_hint') }}
                   </p>
                 </div>
+              </div>
+
+              <div class="settings-account-actions-row">
                 <span
                   class="settings-account-status"
                   :class="{ connected: isSignedIn && nudge.hasEmailAccount.value }"
@@ -41,21 +43,20 @@
                     ? $t('account.connected_status')
                     : $t('account.disconnected_status') }}
                 </span>
+                <button
+                  type="button"
+                  class="settings-sync-toggle"
+                  @click="syncInfoExpanded = !syncInfoExpanded"
+                >
+                  <span>
+                    {{ syncInfoExpanded ? $t('account.sync_less') : $t('account.sync_more') }}
+                  </span>
+                  <i
+                    class="pi"
+                    :class="syncInfoExpanded ? 'pi-chevron-up' : 'pi-chevron-down'"
+                  />
+                </button>
               </div>
-
-              <button
-                type="button"
-                class="settings-sync-toggle"
-                @click="syncInfoExpanded = !syncInfoExpanded"
-              >
-                <span>
-                  {{ syncInfoExpanded ? $t('account.sync_less') : $t('account.sync_more') }}
-                </span>
-                <i
-                  class="pi"
-                  :class="syncInfoExpanded ? 'pi-chevron-up' : 'pi-chevron-down'"
-                />
-              </button>
 
               <div
                 v-if="syncInfoExpanded"
@@ -164,10 +165,7 @@
               </template>
 
               <div class="settings-backup-section">
-                <div class="settings-backup-header">
-                  <p class="settings-backup-title">{{ $t('backup.section_title') }}</p>
-                  <p class="settings-backup-hint">{{ $t('backup.inline_hint') }}</p>
-                </div>
+                <p class="settings-backup-hint">{{ $t('backup.inline_hint') }}</p>
                 <BackupRestore :show-info="false" />
               </div>
             </div>
@@ -585,17 +583,7 @@ function replayOnboarding() {
 }
 
 .settings-account-card-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.settings-account-title {
-  margin: 0 0 0.25rem;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--text-color);
+  display: block;
 }
 
 .settings-account-status {
@@ -611,6 +599,13 @@ function replayOnboarding() {
   white-space: nowrap;
 }
 
+.settings-account-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
 .settings-account-status.connected {
   background: color-mix(in srgb, var(--primary-color) 14%, transparent);
   color: var(--primary-color);
@@ -621,7 +616,6 @@ function replayOnboarding() {
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
-  align-self: flex-start;
   padding: 0;
   border: none;
   border-radius: 999px;
@@ -672,7 +666,7 @@ function replayOnboarding() {
 .settings-signup-form {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.55rem;
 }
 
 .settings-auth-actions {
@@ -696,8 +690,8 @@ function replayOnboarding() {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  margin-top: 0.25rem;
-  min-height: 2.8rem;
+  margin-top: 0;
+  min-height: 2.7rem;
 }
 
 .settings-signup-form .nudge-cta:disabled {
@@ -766,22 +760,9 @@ function replayOnboarding() {
 .settings-backup-section {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.6rem;
   padding-top: 0.05rem;
   border-top: 1px solid rgba(148, 163, 184, 0.18);
-}
-
-.settings-backup-header {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.settings-backup-title {
-  margin: 0;
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--text-color);
 }
 
 .settings-backup-hint {
@@ -918,22 +899,18 @@ function replayOnboarding() {
 }
 
 @media (max-width: 420px) {
-  .settings-account-card-header,
-  .settings-auth-actions {
-    grid-template-columns: 1fr;
-  }
-
-  .settings-account-card-header {
-    display: grid;
-  }
-
-  .settings-account-status {
-    justify-self: start;
-  }
-
   .settings-account-card {
     gap: 0.75rem;
     padding: 0.8rem;
+  }
+
+  .settings-account-actions-row {
+    gap: 0.5rem;
+  }
+
+  .settings-account-status,
+  .settings-sync-toggle {
+    font-size: 0.72rem;
   }
 }
 </style>

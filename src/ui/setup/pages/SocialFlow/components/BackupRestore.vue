@@ -8,11 +8,7 @@
       <p>{{ $t('backup.info_text') }}</p>
     </div>
 
-    <div class="backup-row">
-      <div class="backup-label">
-        <i class="pi pi-download mr-2"></i>
-        <span>{{ $t('backup.export_label') }}</span>
-      </div>
+    <div class="backup-actions">
       <button
         class="backup-btn"
         :disabled="busy"
@@ -21,13 +17,6 @@
         <i class="pi pi-lock" />
         {{ $t('backup.export_button') }}
       </button>
-    </div>
-
-    <div class="backup-row">
-      <div class="backup-label">
-        <i class="pi pi-upload mr-2"></i>
-        <span>{{ $t('backup.restore_label') }}</span>
-      </div>
       <button
         class="backup-btn"
         :disabled="busy"
@@ -376,6 +365,12 @@ async function confirm() {
   width: 100%;
 }
 
+.backup-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
 .backup-info {
   display: flex;
   gap: 0.6rem;
@@ -402,31 +397,20 @@ async function confirm() {
   margin: 0;
 }
 
-.backup-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem 0;
-}
-
-.backup-label {
-  display: flex;
-  align-items: center;
-  font-weight: 500;
-  gap: 0.5rem;
-}
-
 .backup-btn {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.4rem;
-  padding: 0.4rem 0.8rem;
-  border-radius: 8px;
+  width: 100%;
+  padding: 0.65rem 0.8rem;
+  border-radius: 10px;
   border: 1px solid var(--surface-border, #ddd);
   background: var(--surface-card, #fff);
   color: var(--text-color, #333);
   cursor: pointer;
   font-size: 0.85rem;
+  font-weight: 600;
   transition: background 0.2s;
 }
 
