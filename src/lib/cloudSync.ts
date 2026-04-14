@@ -1,6 +1,7 @@
 import { getConvexClient } from "@/lib/convex";
 import { isAuthenticated } from "@/lib/convexAuth";
 import { syncSettingsPatch } from "@/lib/cloudSettings";
+import { clearCloudSyncQueue, flushCloudSyncQueue } from "@/lib/cloudSyncQueue";
 import { api } from "../../convex/_generated/api";
 import { useAccountsStore } from "@/stores/accounts";
 import { useProfilesStore } from "@/stores/profiles";
@@ -13,6 +14,7 @@ import { setLocale } from "@/utils/i18n";
 let hydratedUserId: string | null = null;
 let hydratePromise: Promise<void> | null = null;
 const REOPEN_SETTINGS_AFTER_AUTH_KEY = "sfz_reopen_settings_after_auth";
+const AUTH_RELOAD_DELAY_MS = 180;
 
 function applyCloudSettings(settings: any) {
   const themeStore = useThemeStore();
@@ -94,6 +96,8 @@ export async function hydrateCloudState() {
   if (hydratePromise) return hydratePromise;
 
   hydratePromise = (async () => {
+    await flushCloudSyncQueue();
+
     const client = getConvexClient();
     const user = await client.query(api.users.getMe, {});
     if (!user?._id) return;
@@ -179,6 +183,7 @@ export function resetSyncedLocalState() {
   localStorage.removeItem("sfz_haptic");
   localStorage.removeItem("sfz_tap_sound");
   localStorage.removeItem("sfz_text_zoom");
+  clearCloudSyncQueue();
 }
 
 export function consumeReopenSettingsAfterAuth() {
@@ -204,6 +209,9 @@ export async function finalizePasswordSignIn(options?: {
     if (options?.reopenSettings) {
       localStorage.setItem(REOPEN_SETTINGS_AFTER_AUTH_KEY, "1");
     }
-    window.location.reload();
+    document.documentElement.classList.add("sfz-app-reloading");
+    window.setTimeout(() => {
+      window.location.reload();
+    }, AUTH_RELOAD_DELAY_MS);
   }
 }

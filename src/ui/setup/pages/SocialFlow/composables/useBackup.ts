@@ -9,15 +9,30 @@ import { syncSettingsPatch } from '@/lib/cloudSettings'
 import { setLocale } from '@/utils/i18n'
 
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
+const isAndroidTauri = () => isTauri && navigator.userAgent.includes('Android')
 
 /** Gather all persisted store + localStorage data into a single JSON string. */
-function collectStoreData(): string {
+async function collectStoreData(): Promise<string> {
   const profiles = useProfilesStore()
   const accounts = useAccountsStore()
   const friends = useFriendsFilterStore()
   const theme = useThemeStore()
   const customLinks = useCustomLinksStore()
   const onboarding = useOnboardingStore()
+  let androidCookieSnapshot = ''
+
+  if (isAndroidTauri()) {
+    try {
+      const { invoke } = await import('@tauri-apps/api/core')
+      const result = await invoke<{ cookiesJson: string }>(
+        'plugin:android-webview|export_cookies_for_backup',
+        {},
+      )
+      androidCookieSnapshot = result.cookiesJson ?? ''
+    } catch (error) {
+      console.warn('[backup] Failed to export Android cookies snapshot', error)
+    }
+  }
 
   const data = {
     profiles: {
@@ -53,12 +68,15 @@ function collectStoreData(): string {
       sfz_text_zoom: localStorage.getItem('sfz_text_zoom') ?? '100',
       'kanban-state': localStorage.getItem('kanban-state') ?? '',
     },
+    android: {
+      cookieSnapshot: androidCookieSnapshot,
+    },
   }
   return JSON.stringify(data)
 }
 
 /** Apply restored data to all stores + localStorage. */
-function applyStoreData(json: string) {
+async function applyStoreData(json: string) {
   const data = JSON.parse(json)
 
   if (data.profiles) {
@@ -127,6 +145,17 @@ function applyStoreData(json: string) {
     if (data.localStorage['kanban-state'])
       localStorage.setItem('kanban-state', data.localStorage['kanban-state'])
   }
+
+  if (isAndroidTauri()) {
+    try {
+      const { invoke } = await import('@tauri-apps/api/core')
+      await invoke('plugin:android-webview|import_cookies_from_backup', {
+        cookiesJson: data.android?.cookieSnapshot ?? '',
+      })
+    } catch (error) {
+      console.warn('[backup] Failed to import Android cookies snapshot', error)
+    }
+  }
 }
 
 async function syncRestoredDataToCloud() {
@@ -179,8 +208,8 @@ export function useBackup() {
     if (!isTauri) throw new Error('Export is only available in the desktop/mobile app')
 
     const { invoke } = await import('@tauri-apps/api/core')
-    const storeData = collectStoreData()
-    const isAndroid = navigator.userAgent.includes('Android')
+    const storeData = await collectStoreData()
+    const isAndroid = isAndroidTauri()
 
     // Rust creates the encrypted blob and returns base64
     const b64: string = await invoke('create_backup', { storeData, password })
@@ -212,7 +241,7 @@ export function useBackup() {
     if (!isTauri) throw new Error('Import is only available in the desktop/mobile app')
 
     const { invoke } = await import('@tauri-apps/api/core')
-    const isAndroid = navigator.userAgent.includes('Android')
+    const isAndroid = isAndroidTauri()
 
     let encryptedB64 = ''
 
@@ -240,7 +269,7 @@ export function useBackup() {
       password,
     })
 
-    applyStoreData(restoredData)
+    await applyStoreData(restoredData)
     await syncRestoredDataToCloud()
   }
 

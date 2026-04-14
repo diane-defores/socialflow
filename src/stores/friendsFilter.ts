@@ -1,8 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { syncSettingsPatch } from '@/lib/cloudSettings'
-import { getConvexClient } from '@/lib/convex'
-import { api } from '../../convex/_generated/api'
+import { enqueueFriendsFilterSet, flushCloudSyncQueue } from '@/lib/cloudSyncQueue'
 
 export const useFriendsFilterStore = defineStore('friendsFilter', () => {
   /** Per-network friend names/usernames (case-insensitive match at runtime) */
@@ -37,22 +36,17 @@ export const useFriendsFilterStore = defineStore('friendsFilter', () => {
     cloudFilters: Array<{ networkId: string; names: string[] }>,
     cloudEnabled: boolean,
   ) => {
-    friends.value = Object.fromEntries(
-      cloudFilters.map((filter) => [filter.networkId, filter.names]),
-    )
+    const nextFriends: Record<string, string[]> = {}
+    for (const filter of cloudFilters) {
+      nextFriends[filter.networkId] = filter.names
+    }
+    friends.value = nextFriends
     enabled.value = cloudEnabled
   }
 
   const syncNetworkToCloud = async (networkId: string) => {
-    try {
-      const client = getConvexClient()
-      await client.mutation(api.friendsFilters.setNetwork, {
-        networkId,
-        names: friends.value[networkId] ?? [],
-      })
-    } catch {
-      // Offline or unauthenticated.
-    }
+    enqueueFriendsFilterSet(networkId, friends.value[networkId] ?? [])
+    await flushCloudSyncQueue()
   }
 
   const seedCloud = async () => {
@@ -60,6 +54,7 @@ export const useFriendsFilterStore = defineStore('friendsFilter', () => {
     for (const networkId of Object.keys(friends.value)) {
       await syncNetworkToCloud(networkId)
     }
+    await flushCloudSyncQueue()
   }
 
   const clearLocal = () => {

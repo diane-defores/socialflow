@@ -1,5 +1,4 @@
-import { getConvexClient } from "@/lib/convex";
-import { api } from "../../convex/_generated/api";
+import { enqueueSettingsPatch, flushCloudSyncQueue } from "@/lib/cloudSyncQueue";
 
 export interface CloudSettingsPatch {
   theme?: "light" | "dark";
@@ -15,10 +14,6 @@ export interface CloudSettingsPatch {
 }
 
 export async function syncSettingsPatch(patch: CloudSettingsPatch) {
-  try {
-    const client = getConvexClient();
-    await client.mutation(api.settings.upsert, patch);
-  } catch {
-    // Offline or not authenticated.
-  }
+  enqueueSettingsPatch(patch);
+  await flushCloudSyncQueue();
 }

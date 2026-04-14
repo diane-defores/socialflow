@@ -17,6 +17,8 @@
     "android-webview:default",
     "android-webview:allow-save-backup-to-downloads",
     "android-webview:allow-load-backup-from-downloads",
+    "android-webview:allow-export-cookies-for-backup",
+    "android-webview:allow-import-cookies-from-backup",
     "android-webview:allow-set-haptic",
     "android-webview:allow-set-tap-sound",
     "android-webview:allow-trigger-haptic"

@@ -1,5 +1,11 @@
 import { defineStore } from 'pinia'
 import { getConvexClient } from '@/lib/convex'
+import {
+  enqueueSocialAccountRemove,
+  enqueueSocialAccountSetActive,
+  enqueueSocialAccountUpsert,
+  flushCloudSyncQueue,
+} from '@/lib/cloudSyncQueue'
 import { api } from '../../convex/_generated/api'
 
 export interface Account {
@@ -92,37 +98,25 @@ export const useAccountsStore = defineStore('accounts', {
 
     /** Sync a single account upsert to Convex (fire-and-forget). */
     async syncAccountToCloud(account: Account) {
-      try {
-        const client = getConvexClient()
-        await client.mutation(api.socialAccounts.upsert, {
-          accountId: account.id,
-          networkId: account.networkId,
-          label: account.label,
-          addedAt: account.addedAt,
-        })
-      } catch {
-        // Offline or not auth'd — local state is the source of truth
-      }
+      enqueueSocialAccountUpsert({
+        accountId: account.id,
+        networkId: account.networkId,
+        label: account.label,
+        addedAt: account.addedAt,
+      })
+      await flushCloudSyncQueue()
     },
 
     /** Sync active account pointer to Convex. */
     async syncActiveToCloud(networkId: string, accountId: string) {
-      try {
-        const client = getConvexClient()
-        await client.mutation(api.socialAccounts.setActive, { networkId, accountId })
-      } catch {
-        // Offline — ignore
-      }
+      enqueueSocialAccountSetActive(networkId, accountId)
+      await flushCloudSyncQueue()
     },
 
     /** Remove an account from Convex. */
     async removeAccountFromCloud(accountId: string) {
-      try {
-        const client = getConvexClient()
-        await client.mutation(api.socialAccounts.remove, { accountId })
-      } catch {
-        // Offline — ignore
-      }
+      enqueueSocialAccountRemove(accountId)
+      await flushCloudSyncQueue()
     },
 
     /**
@@ -189,6 +183,7 @@ export const useAccountsStore = defineStore('accounts', {
           await this.syncActiveToCloud(networkId, accountId)
         }
       }
+      await flushCloudSyncQueue()
     },
 
     clearLocal() {

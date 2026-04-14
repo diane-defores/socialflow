@@ -101,6 +101,11 @@ class SaveBackupArgs {
     var fileName: String = ""
 }
 
+@InvokeArg
+class ImportCookiesBackupArgs {
+    var cookiesJson: String = ""
+}
+
 // Lightweight profile data for the popup menu
 private data class ProfileMenuItem(val id: String, val name: String, val emoji: String)
 
@@ -1365,6 +1370,56 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         } catch (e: Exception) {
             pendingBackupInvoke = null
             invoke.reject(e.message ?: "Load backup failed")
+        }
+    }
+
+    @Command
+    fun exportCookiesForBackup(invoke: Invoke) {
+        try {
+            currentAccountId?.let { saveCookiesForSession(it) }
+
+            val cookies = org.json.JSONObject()
+            for ((key, value) in cookiePrefs.all) {
+                if (value is String) {
+                    cookies.put(key, value)
+                }
+            }
+
+            val result = JSObject()
+            result.put("cookiesJson", cookies.toString())
+            invoke.resolve(result)
+        } catch (e: Exception) {
+            invoke.reject("Cookie export failed: ${e.message}")
+        }
+    }
+
+    @Command
+    fun importCookiesFromBackup(invoke: Invoke) {
+        val args = invoke.parseArgs(ImportCookiesBackupArgs::class.java)
+        try {
+            val editor = cookiePrefs.edit()
+            editor.clear()
+
+            val json = args.cookiesJson.trim()
+            if (json.isNotEmpty()) {
+                val cookies = org.json.JSONObject(json)
+                val keys = cookies.keys()
+                while (keys.hasNext()) {
+                    val key = keys.next()
+                    editor.putString(key, cookies.optString(key, ""))
+                }
+            }
+            editor.apply()
+
+            val cm = CookieManager.getInstance()
+            cm.removeAllCookies(null)
+            cm.flush()
+            isLoggedIn = false
+            pagesSinceOpen = 0
+
+            invoke.resolve(JSObject())
+        } catch (e: Exception) {
+            invoke.reject("Cookie import failed: ${e.message}")
         }
     }
 

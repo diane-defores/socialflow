@@ -4,6 +4,44 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>SocialFlow</title>
+    <style>
+      html, body {
+        margin: 0;
+        min-height: 100%;
+        background: #f8fafc;
+      }
+
+      html.dark, html.dark body {
+        background: #0f172a;
+        color-scheme: dark;
+      }
+
+      #app {
+        min-height: 100vh;
+        transition: opacity 180ms ease;
+      }
+
+      html.sfz-app-reloading #app {
+        opacity: 0;
+      }
+    </style>
+    <script>
+      (function () {
+        try {
+          var savedTheme = localStorage.getItem('theme');
+          var isDark = savedTheme
+            ? savedTheme === 'dark'
+            : window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (isDark) {
+            document.documentElement.classList.add('dark');
+          }
+
+          if (localStorage.getItem('grayscale') === '1') {
+            document.documentElement.style.filter = 'grayscale(1)';
+          }
+        } catch (_) {}
+      })();
+    </script>
     <!-- DNS prefetch for social networks — resolves DNS before webviews open -->
     <link rel="dns-prefetch" href="https://x.com" />
     <link rel="dns-prefetch" href="https://facebook.com" />

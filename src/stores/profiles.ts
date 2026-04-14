@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
-import { getConvexClient } from '@/lib/convex'
 import { syncSettingsPatch } from '@/lib/cloudSettings'
-import { api } from '../../convex/_generated/api'
+import { enqueueProfileRemove, enqueueProfileUpsert, flushCloudSyncQueue } from '@/lib/cloudSyncQueue'
 
 export interface Profile {
   id: string
@@ -139,28 +138,20 @@ export const useProfilesStore = defineStore('profiles', {
     },
 
     async syncProfileToCloud(profile: Profile) {
-      try {
-        const client = getConvexClient()
-        await client.mutation(api.profiles.upsert, {
-          profileId: profile.id,
-          name: profile.name,
-          emoji: profile.emoji,
-          avatar: profile.avatar,
-          hiddenNetworks: profile.hiddenNetworks ?? [],
-          createdAt: profile.createdAt,
-        })
-      } catch {
-        // Offline or unauthenticated.
-      }
+      enqueueProfileUpsert({
+        profileId: profile.id,
+        name: profile.name,
+        emoji: profile.emoji,
+        avatar: profile.avatar,
+        hiddenNetworks: profile.hiddenNetworks ?? [],
+        createdAt: profile.createdAt,
+      })
+      await flushCloudSyncQueue()
     },
 
     async removeProfileFromCloud(profileId: string) {
-      try {
-        const client = getConvexClient()
-        await client.mutation(api.profiles.remove, { profileId })
-      } catch {
-        // Offline or unauthenticated.
-      }
+      enqueueProfileRemove(profileId)
+      await flushCloudSyncQueue()
     },
 
     async syncActiveProfileToCloud(profileId?: string) {
@@ -174,6 +165,7 @@ export const useProfilesStore = defineStore('profiles', {
       if (this.activeProfileId) {
         await this.syncActiveProfileToCloud(this.activeProfileId)
       }
+      await flushCloudSyncQueue()
     },
 
     clearLocal() {

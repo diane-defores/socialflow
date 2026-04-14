@@ -11,6 +11,7 @@ import ConfirmationService from 'primevue/confirmationservice'
 import ToastService from 'primevue/toastservice'
 import { getConvexClient } from '@/lib/convex'
 import { setupConvexAuth } from '@/lib/convexAuth'
+import { startCloudSyncQueue } from '@/lib/cloudSyncQueue'
 
 // Styles PrimeVue
 import 'primevue/resources/themes/lara-light-blue/theme.css'
@@ -27,6 +28,7 @@ async function bootstrap() {
     try {
       const client = getConvexClient()
       await setupConvexAuth(client, convexUrl)
+      startCloudSyncQueue()
     } catch {
       // Convex unavailable — app works offline
     }

@@ -1,7 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { getConvexClient } from '@/lib/convex'
-import { api } from '../../convex/_generated/api'
+import {
+  enqueueCustomLinkRemove,
+  enqueueCustomLinkUpsert,
+  flushCloudSyncQueue,
+} from '@/lib/cloudSyncQueue'
 
 export interface CustomLink {
   id: string
@@ -63,35 +66,29 @@ export const useCustomLinksStore = defineStore('customLinks', () => {
   }
 
   const syncLinkToCloud = async (profileId: string, link: CustomLink) => {
-    try {
-      const client = getConvexClient()
-      await client.mutation(api.customLinks.upsert, {
-        linkId: link.id,
-        profileId,
-        label: link.label,
-        url: link.url,
-        icon: link.icon,
-      })
-    } catch {
-      // Offline or unauthenticated.
-    }
+    enqueueCustomLinkUpsert({
+      linkId: link.id,
+      profileId,
+      label: link.label,
+      url: link.url,
+      icon: link.icon,
+    })
+    await flushCloudSyncQueue()
   }
 
   const removeLinkFromCloud = async (linkId: string) => {
-    try {
-      const client = getConvexClient()
-      await client.mutation(api.customLinks.remove, { linkId })
-    } catch {
-      // Offline or unauthenticated.
-    }
+    enqueueCustomLinkRemove(linkId)
+    await flushCloudSyncQueue()
   }
 
   const seedCloud = async () => {
-    for (const [profileId, profileLinks] of Object.entries(links.value)) {
+    for (const profileId in links.value) {
+      const profileLinks = links.value[profileId] ?? []
       for (const link of profileLinks) {
         await syncLinkToCloud(profileId, link)
       }
     }
+    await flushCloudSyncQueue()
   }
 
   const clearLocal = () => {
