@@ -243,6 +243,7 @@
     "created_toast": "Account created successfully!",
     "signed_in_toast": "Signed in successfully!",
     "signed_out_toast": "Signed out successfully.",
+    "restart_after_sign_in": "We’re reloading the app to apply your synced data cleanly.",
     "signed_in_as": "Signed in as",
     "signed_in_hint": "Your account is linked. You can sign out at any time.",
     "sign_out": "Sign out",

@@ -4,7 +4,7 @@
       <div
         v-if="modelValue"
         class="sheet-overlay"
-        @click.self="emit('update:modelValue', false)"
+        @click.self="closeSheet"
       >
         <div class="profile-sheet settings-sheet">
           <div class="sheet-handle" />
@@ -12,7 +12,8 @@
             <span class="sheet-title">{{ $t('common.settings') }}</span>
             <button
               class="sheet-close-btn"
-              @click="emit('update:modelValue', false)"
+              :disabled="postAuthRestarting"
+              @click="closeSheet"
             >
               <i class="pi pi-times" />
             </button>
@@ -136,11 +137,24 @@
                       </button>
                     </div>
                   </div>
+                  <div
+                    v-if="postAuthRestarting"
+                    class="signup-success-card"
+                  >
+                    <p class="signup-success-title">
+                      {{ authAction === 'signUp' ? $t('account.created_toast') : $t('account.signed_in_toast') }}
+                    </p>
+                    <p class="signup-success-text">{{ $t('account.restart_after_sign_in') }}</p>
+                    <div class="signup-success-countdown">
+                      <i class="pi pi-spin pi-spinner" />
+                      <span>{{ $t('backup.import_reloading', { seconds: postAuthCountdown }) }}</span>
+                    </div>
+                  </div>
                   <div class="settings-auth-actions">
                     <button
                       type="submit"
                       class="nudge-cta"
-                      :disabled="signupLoading"
+                      :disabled="signupLoading || postAuthRestarting"
                     >
                       <i
                         v-if="signupLoading && authAction === 'signIn'"
@@ -151,7 +165,7 @@
                     <button
                       type="button"
                       class="nudge-cta secondary-auth-btn"
-                      :disabled="signupLoading"
+                      :disabled="signupLoading || postAuthRestarting"
                       @click="handleAccountAuth('signUp')"
                     >
                       <i
@@ -263,7 +277,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useThemeStore } from '@/stores/theme'
 import { useOnboardingStore } from '@/stores/onboarding'
@@ -298,7 +312,10 @@ const signupLoading = ref(false)
 const syncInfoExpanded = ref(false)
 const signupErrorCopied = ref(false)
 const signupErrorExpanded = ref(false)
+const postAuthRestarting = ref(false)
+const postAuthCountdown = ref(3)
 const SIGNUP_ERROR_PREVIEW_LENGTH = 180
+let postAuthTimer: ReturnType<typeof setInterval> | null = null
 
 const signupErrorNeedsCollapse = computed(() =>
   signupError.value.length > SIGNUP_ERROR_PREVIEW_LENGTH || signupError.value.includes('\n'),
@@ -326,6 +343,12 @@ async function handleAccountAuth(flow: 'signIn' | 'signUp') {
   signupError.value = ''
   signupErrorCopied.value = false
   signupErrorExpanded.value = false
+  postAuthRestarting.value = false
+  postAuthCountdown.value = 3
+  if (postAuthTimer) {
+    clearInterval(postAuthTimer)
+    postAuthTimer = null
+  }
   authAction.value = flow
   signupLoading.value = true
   try {
@@ -352,16 +375,39 @@ async function handleAccountAuth(flow: 'signIn' | 'signUp') {
     toast.add({
       severity: 'success',
       summary: flow === 'signIn' ? t('account.signed_in_toast') : t('account.created_toast'),
-      life: 3000,
+      life: 1800,
     })
     signupPassword.value = ''
-    await finalizePasswordSignIn({ email: normalizedEmail })
+    postAuthRestarting.value = true
+    postAuthCountdown.value = 3
+    postAuthTimer = setInterval(async () => {
+      postAuthCountdown.value -= 1
+      if (postAuthCountdown.value <= 0) {
+        if (postAuthTimer) {
+          clearInterval(postAuthTimer)
+          postAuthTimer = null
+        }
+        await finalizePasswordSignIn({ email: normalizedEmail, reopenSettings: true })
+      }
+    }, 1000)
   } catch (e: unknown) {
     signupError.value = getAuthErrorMessage(e, flow)
   } finally {
     signupLoading.value = false
   }
 }
+
+function closeSheet() {
+  if (postAuthRestarting.value) return
+  emit('update:modelValue', false)
+}
+
+onUnmounted(() => {
+  if (postAuthTimer) {
+    clearInterval(postAuthTimer)
+    postAuthTimer = null
+  }
+})
 
 async function copySignupError() {
   if (!signupError.value) return
@@ -499,6 +545,11 @@ function replayOnboarding() {
 
 .sheet-close-btn:active {
   background: var(--surface-hover);
+}
+
+.sheet-close-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
 /* ─── Settings content ───────────────────────────────────────── */
@@ -726,6 +777,39 @@ function replayOnboarding() {
   border-radius: 12px;
   background: rgba(239, 68, 68, 0.08);
   border: 1px solid rgba(239, 68, 68, 0.18);
+}
+
+.signup-success-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--primary-color) 10%, var(--surface-card) 90%);
+  border: 1px solid color-mix(in srgb, var(--primary-color) 18%, var(--surface-border) 82%);
+}
+
+.signup-success-title {
+  margin: 0;
+  color: var(--text-color);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.signup-success-text {
+  margin: 0;
+  color: var(--text-color-secondary);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.signup-success-countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--text-color-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .nudge-error {

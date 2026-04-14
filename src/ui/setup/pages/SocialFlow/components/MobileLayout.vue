@@ -274,6 +274,7 @@ import MobileProfileSheet from './MobileProfileSheet.vue'
 import MobileSettingsSheet from './MobileSettingsSheet.vue'
 import SignupNudge from './SignupNudge.vue'
 import { useSignupNudge } from '@/composables/useSignupNudge'
+import { consumeReopenSettingsAfterAuth } from '@/lib/cloudSync'
 import ThreadsIcon from './icons/ThreadsIcon.vue'
 import SnapchatIcon from './icons/SnapchatIcon.vue'
 import NextdoorIcon from './icons/NextdoorIcon.vue'
@@ -298,6 +299,10 @@ const nudgeVisible = ref(false)
 const openProfileSheetFromNative = () => { profileSheetVisible.value = true }
 onMounted(async () => {
   window.addEventListener('sfz-show-profile-sheet', openProfileSheetFromNative)
+
+  if (consumeReopenSettingsAfterAuth()) {
+    settingsVisible.value = true
+  }
 
   nudge.recordFirstLaunch()
   await nudge.check()

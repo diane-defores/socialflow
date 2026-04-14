@@ -243,6 +243,7 @@
     "created_toast": "Compte créé avec succès !",
     "signed_in_toast": "Connexion réussie !",
     "signed_out_toast": "Déconnexion réussie.",
+    "restart_after_sign_in": "On recharge l’application pour appliquer vos données synchronisées sans rien perdre.",
     "signed_in_as": "Connecté en tant que",
     "signed_in_hint": "Votre compte est bien relié. Vous pouvez vous déconnecter à tout moment.",
     "sign_out": "Se déconnecter",

@@ -12,6 +12,7 @@ import { setLocale } from "@/utils/i18n";
 
 let hydratedUserId: string | null = null;
 let hydratePromise: Promise<void> | null = null;
+const REOPEN_SETTINGS_AFTER_AUTH_KEY = "sfz_reopen_settings_after_auth";
 
 function applyCloudSettings(settings: any) {
   const themeStore = useThemeStore();
@@ -180,7 +181,19 @@ export function resetSyncedLocalState() {
   localStorage.removeItem("sfz_text_zoom");
 }
 
-export async function finalizePasswordSignIn(options?: { email?: string; reload?: boolean }) {
+export function consumeReopenSettingsAfterAuth() {
+  const shouldReopen = localStorage.getItem(REOPEN_SETTINGS_AFTER_AUTH_KEY) === "1";
+  if (shouldReopen) {
+    localStorage.removeItem(REOPEN_SETTINGS_AFTER_AUTH_KEY);
+  }
+  return shouldReopen;
+}
+
+export async function finalizePasswordSignIn(options?: {
+  email?: string;
+  reload?: boolean;
+  reopenSettings?: boolean;
+}) {
   if (options?.email) {
     localStorage.setItem("sfz_email", options.email);
   }
@@ -188,6 +201,9 @@ export async function finalizePasswordSignIn(options?: { email?: string; reload?
   await hydrateCloudState();
 
   if (options?.reload ?? true) {
+    if (options?.reopenSettings) {
+      localStorage.setItem(REOPEN_SETTINGS_AFTER_AUTH_KEY, "1");
+    }
     window.location.reload();
   }
 }
