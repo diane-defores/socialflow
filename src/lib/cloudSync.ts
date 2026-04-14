@@ -179,3 +179,15 @@ export function resetSyncedLocalState() {
   localStorage.removeItem("sfz_tap_sound");
   localStorage.removeItem("sfz_text_zoom");
 }
+
+export async function finalizePasswordSignIn(options?: { email?: string; reload?: boolean }) {
+  if (options?.email) {
+    localStorage.setItem("sfz_email", options.email);
+  }
+
+  await hydrateCloudState();
+
+  if (options?.reload ?? true) {
+    window.location.reload();
+  }
+}

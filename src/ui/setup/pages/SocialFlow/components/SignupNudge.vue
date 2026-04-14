@@ -177,6 +177,7 @@ import { ref, computed } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useI18n } from 'vue-i18n'
 import { signIn } from '@/lib/convexAuth'
+import { finalizePasswordSignIn } from '@/lib/cloudSync'
 import Dialog from 'primevue/dialog'
 
 const props = defineProps<{ modelValue: boolean }>()
@@ -223,8 +224,10 @@ async function handleSignup() {
   errorExpanded.value = false
   loading.value = true
   try {
+    const normalizedEmail = email.value.trim().toLowerCase()
+    email.value = normalizedEmail
     await signIn('password', {
-      email: email.value,
+      email: normalizedEmail,
       password: password.value,
       flow: 'signUp',
     })
@@ -235,6 +238,7 @@ async function handleSignup() {
     })
     visible.value = false
     emit('account-created')
+    await finalizePasswordSignIn({ email: normalizedEmail })
   } catch (e: any) {
     error.value = e?.message ?? t('account.error_generic')
   } finally {

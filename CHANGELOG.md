@@ -2,6 +2,21 @@
 
 All notable changes to SocialFlow are documented here.
 
+## [2026-04-14]
+
+### Added
+- **Real multi-device Convex sync** — added cloud-backed sync for profiles, active profile, custom links, friends filter, SocialFlow accounts, and key preferences (`theme`, `language`, `grayscale`, `textZoom`, `haptic`, `tapSound`, onboarding state)
+
+### Changed
+- **Cloud sync bootstrap is now real instead of mostly aspirational** — the app now hydrates from Convex on sign-in/startup, uses a cloud-priority policy, and seeds the cloud when a signed-in user starts from a previously local-only device
+- **Backup restore now re-seeds cloud state when signed in** — restoring a local encrypted backup while authenticated now republishes the restored configuration to Convex
+- **Website messaging updated** — FR/EN `features`, `faq`, and `pricing` pages now explain exactly what is synced through the cloud and what remains local-only
+
+### Fixed
+- **Convex sync gap between UI promise and implementation** — profiles, friends filter, custom links, and most user preferences were still local-only despite account-sync messaging; the synchronized scope now matches the product copy much more closely
+- **Accounts cloud reload never happened** — `accounts.loadFromCloud()` existed but was never triggered; auth bootstrap now performs actual cloud hydration
+- **Cross-account leakage risk on shared devices** — signing out now resets the local synchronized state instead of leaving the previous account's cloud-backed config in place
+
 ## [2026-04-13]
 
 ### Added

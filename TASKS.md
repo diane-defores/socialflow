@@ -84,6 +84,10 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [x] `router/guards.ts` — uses `isAuthenticated` from Convex Auth
 - [x] Signup nudge — `useSignupNudge` composable + `SignupNudge.vue` (5 nudges, 10-day cooldown)
 - [x] Account section in Settings drawer — signup form or email display + sign out
+- [x] Convex sync overhaul (2026-04-14) — cloud-backed sync for profiles, active profile, custom links, friends filter, SocialFlow accounts, and key preferences
+- [x] Auth bootstrap now hydrates from Convex on sign-in/startup with cloud-priority behavior (2026-04-14)
+- [x] Backup restore now re-seeds Convex when the user is signed in (2026-04-14)
+- [x] Website FR/EN copy updated to explain exactly what syncs via cloud vs what stays local-only (2026-04-14)
 
 ### Audit: Design (2026-03-07, score B+)
 

@@ -73,9 +73,9 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { signIn } from '@/lib/convexAuth'
+import { finalizePasswordSignIn } from '@/lib/cloudSync'
 
 const router = useRouter()
-
 const showEmailForm = ref(false)
 const isSignUp = ref(false)
 const email = ref('')
@@ -100,12 +100,14 @@ async function handleSignIn() {
   loading.value = true
   error.value = ''
   try {
+    const normalizedEmail = email.value.trim().toLowerCase()
+    email.value = normalizedEmail
     await signIn('password', {
-      email: email.value,
+      email: normalizedEmail,
       password: password.value,
       flow: isSignUp.value ? 'signUp' : 'signIn',
     })
-    router.push('/twitter')
+    await finalizePasswordSignIn({ email: normalizedEmail })
   } catch (e: any) {
     error.value = e?.message ?? 'Sign in failed'
   } finally {

@@ -269,7 +269,7 @@ import { useThemeStore } from '@/stores/theme'
 import { useOnboardingStore } from '@/stores/onboarding'
 import { useSignupNudge } from '@/composables/useSignupNudge'
 import { signIn, signOut as convexSignOut, isAuthenticated, isConvexConfigured } from '@/lib/convexAuth'
-import { resetCloudSyncState, resetSyncedLocalState } from '@/lib/cloudSync'
+import { finalizePasswordSignIn, resetCloudSyncState, resetSyncedLocalState } from '@/lib/cloudSync'
 import { syncSettingsPatch } from '@/lib/cloudSettings'
 import { getConvexClient } from '@/lib/convex'
 import { api } from '../../../../../../convex/_generated/api'
@@ -348,7 +348,6 @@ async function handleAccountAuth(flow: 'signIn' | 'signUp') {
       flow,
     })
     settingsEmail.value = normalizedEmail
-    localStorage.setItem('sfz_email', normalizedEmail)
     nudge.onAccountCreated()
     toast.add({
       severity: 'success',
@@ -356,6 +355,7 @@ async function handleAccountAuth(flow: 'signIn' | 'signUp') {
       life: 3000,
     })
     signupPassword.value = ''
+    await finalizePasswordSignIn({ email: normalizedEmail })
   } catch (e: unknown) {
     signupError.value = getAuthErrorMessage(e, flow)
   } finally {

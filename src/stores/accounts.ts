@@ -172,16 +172,19 @@ export const useAccountsStore = defineStore('accounts', {
         label: account.label,
         addedAt: account.addedAt,
       }))
-      this.activeAccountId = Object.fromEntries(
-        cloudActive.map((account) => [account.networkId, account.accountId]),
-      )
+      const nextActiveAccountId: Record<string, string> = {}
+      for (const account of cloudActive) {
+        nextActiveAccountId[account.networkId] = account.accountId
+      }
+      this.activeAccountId = nextActiveAccountId
     },
 
     async seedCloud() {
       for (const account of this.accounts) {
         await this.syncAccountToCloud(account)
       }
-      for (const [networkId, accountId] of Object.entries(this.activeAccountId)) {
+      for (const networkId in this.activeAccountId) {
+        const accountId = this.activeAccountId[networkId]
         if (accountId) {
           await this.syncActiveToCloud(networkId, accountId)
         }
