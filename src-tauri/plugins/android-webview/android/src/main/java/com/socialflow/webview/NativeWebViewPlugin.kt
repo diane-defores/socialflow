@@ -1294,23 +1294,60 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                     return;
                   }
 
-                  var body = document.body || document.documentElement;
-                  var bg = '';
-                  try {
-                    bg = (getComputedStyle(body).backgroundColor || '').toLowerCase();
-                  } catch (e) {}
-
-                  var looksLight = !bg || bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)';
-                  var match = bg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
-                  if (match) {
+                  function luminanceFromColor(color) {
+                    if (!color) return null;
+                    var match = color.toLowerCase().match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+                    if (!match) return null;
                     var r = parseInt(match[1], 10);
                     var g = parseInt(match[2], 10);
                     var b = parseInt(match[3], 10);
-                    var luminance = (0.2126 * r) + (0.7152 * g) + (0.0722 * b);
-                    looksLight = luminance > 150;
+                    return (0.2126 * r) + (0.7152 * g) + (0.0722 * b);
                   }
 
-                  document.documentElement.classList.toggle('__sfz-facebook-dark-fallback', looksLight);
+                  function firstSolidBg(el) {
+                    var node = el;
+                    while (node && node !== document.documentElement) {
+                      try {
+                        var bg = getComputedStyle(node).backgroundColor || '';
+                        if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') {
+                          return bg;
+                        }
+                      } catch (e) {}
+                      node = node.parentElement;
+                    }
+                    return '';
+                  }
+
+                  var body = document.body || document.documentElement;
+                  var samples = [];
+                  try {
+                    var points = [
+                      [window.innerWidth * 0.5, window.innerHeight * 0.2],
+                      [window.innerWidth * 0.5, window.innerHeight * 0.5],
+                      [window.innerWidth * 0.5, window.innerHeight * 0.8],
+                      [window.innerWidth * 0.2, window.innerHeight * 0.5],
+                      [window.innerWidth * 0.8, window.innerHeight * 0.5]
+                    ];
+                    for (var i = 0; i < points.length; i++) {
+                      var el = document.elementFromPoint(points[i][0], points[i][1]);
+                      var bg = firstSolidBg(el);
+                      var lum = luminanceFromColor(bg);
+                      if (lum != null) samples.push(lum);
+                    }
+                  } catch (e) {}
+
+                  if (!samples.length) {
+                    var bodyBg = '';
+                    try { bodyBg = (getComputedStyle(body).backgroundColor || '').toLowerCase(); } catch (e) {}
+                    var bodyLum = luminanceFromColor(bodyBg);
+                    if (bodyLum != null) samples.push(bodyLum);
+                  }
+
+                  var avg = samples.length
+                    ? samples.reduce(function(sum, value) { return sum + value; }, 0) / samples.length
+                    : 255;
+
+                  document.documentElement.classList.toggle('__sfz-facebook-dark-fallback', avg > 140);
                 }
 
                 style.textContent = dark
