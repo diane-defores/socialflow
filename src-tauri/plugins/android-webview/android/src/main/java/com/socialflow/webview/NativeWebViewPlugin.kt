@@ -2,6 +2,7 @@ package com.socialflow.webview
 
 import android.app.Activity
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
