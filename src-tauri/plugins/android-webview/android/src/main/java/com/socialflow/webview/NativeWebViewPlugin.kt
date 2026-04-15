@@ -288,6 +288,7 @@ private val DESKTOP_VIEWPORT_SCRIPT = """
 private val DARK_MODE_DOC_START_SCRIPT = """
 (function() {
   try {
+    var isFacebook = /(^|\.)facebook\.com$/i.test(location.hostname) && !/\/messages/.test(location.pathname);
     function readDark() {
       try {
         var stored = localStorage.getItem('__sfzPreferredDark');
@@ -334,8 +335,21 @@ private val DARK_MODE_DOC_START_SCRIPT = """
           (document.head || document.documentElement).appendChild(style);
         }
         style.textContent = dark
-          ? ':root{color-scheme:dark !important;} html,body{background:#0f172a !important;}'
+          ? ':root{color-scheme:dark !important;} html,body{background:#0f172a !important;}' +
+            (isFacebook
+              ? 'html.__sfz-facebook-dark-fallback{background:#0f172a !important;filter:invert(1) hue-rotate(180deg) !important;}' +
+                'html.__sfz-facebook-dark-fallback img,' +
+                'html.__sfz-facebook-dark-fallback video,' +
+                'html.__sfz-facebook-dark-fallback picture,' +
+                'html.__sfz-facebook-dark-fallback canvas,' +
+                'html.__sfz-facebook-dark-fallback svg,' +
+                'html.__sfz-facebook-dark-fallback [role=\"img\"],' +
+                'html.__sfz-facebook-dark-fallback [style*=\"background-image\"],' +
+                'html.__sfz-facebook-dark-fallback image{filter:invert(1) hue-rotate(180deg) !important;}'
+              : '')
           : ':root{color-scheme:light !important;}';
+
+        document.documentElement.classList.toggle('__sfz-facebook-dark-fallback', !!(dark && isFacebook));
       } catch (e) {}
     }
 
@@ -686,6 +700,10 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
     // Text zoom level — percentage, 100 = default
     private var textZoomLevel: Int = 100
+
+    // Incremented on navigation so delayed dark-mode reapplications from older pages
+    // don't keep fighting the current Facebook page and cause flashes.
+    private var darkModeReapplyGeneration = 0
 
     // Facebook stays mobile by default; switch to desktop only for story-specific flows.
     private var facebookDesktopOverride = false
@@ -1289,65 +1307,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                     document.documentElement.classList.remove('__sfz-facebook-dark-fallback');
                     return;
                   }
-                  if (!enabled) {
-                    document.documentElement.classList.remove('__sfz-facebook-dark-fallback');
-                    return;
-                  }
-
-                  function luminanceFromColor(color) {
-                    if (!color) return null;
-                    var match = color.toLowerCase().match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
-                    if (!match) return null;
-                    var r = parseInt(match[1], 10);
-                    var g = parseInt(match[2], 10);
-                    var b = parseInt(match[3], 10);
-                    return (0.2126 * r) + (0.7152 * g) + (0.0722 * b);
-                  }
-
-                  function firstSolidBg(el) {
-                    var node = el;
-                    while (node && node !== document.documentElement) {
-                      try {
-                        var bg = getComputedStyle(node).backgroundColor || '';
-                        if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') {
-                          return bg;
-                        }
-                      } catch (e) {}
-                      node = node.parentElement;
-                    }
-                    return '';
-                  }
-
-                  var body = document.body || document.documentElement;
-                  var samples = [];
-                  try {
-                    var points = [
-                      [window.innerWidth * 0.5, window.innerHeight * 0.2],
-                      [window.innerWidth * 0.5, window.innerHeight * 0.5],
-                      [window.innerWidth * 0.5, window.innerHeight * 0.8],
-                      [window.innerWidth * 0.2, window.innerHeight * 0.5],
-                      [window.innerWidth * 0.8, window.innerHeight * 0.5]
-                    ];
-                    for (var i = 0; i < points.length; i++) {
-                      var el = document.elementFromPoint(points[i][0], points[i][1]);
-                      var bg = firstSolidBg(el);
-                      var lum = luminanceFromColor(bg);
-                      if (lum != null) samples.push(lum);
-                    }
-                  } catch (e) {}
-
-                  if (!samples.length) {
-                    var bodyBg = '';
-                    try { bodyBg = (getComputedStyle(body).backgroundColor || '').toLowerCase(); } catch (e) {}
-                    var bodyLum = luminanceFromColor(bodyBg);
-                    if (bodyLum != null) samples.push(bodyLum);
-                  }
-
-                  var avg = samples.length
-                    ? samples.reduce(function(sum, value) { return sum + value; }, 0) / samples.length
-                    : 255;
-
-                  document.documentElement.classList.toggle('__sfz-facebook-dark-fallback', avg > 140);
+                  document.documentElement.classList.toggle('__sfz-facebook-dark-fallback', !!enabled);
                 }
 
                 style.textContent = dark
@@ -1378,15 +1338,16 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     }
 
     private fun scheduleDarkModeReapply(view: WebView) {
+        val generation = darkModeReapplyGeneration
         val delays = if (currentNetworkId == "facebook") {
-            longArrayOf(250L, 750L, 1500L, 2500L)
+            longArrayOf(900L)
         } else {
             longArrayOf(350L)
         }
 
         for (delay in delays) {
             view.postDelayed({
-                if (socialWebView == view) {
+                if (socialWebView == view && generation == darkModeReapplyGeneration) {
                     applyDarkModeToWebView(view)
                     logFacebookDarkState(view, "reapply-${delay}ms")
                 }
@@ -2840,6 +2801,11 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         }
 
         webView.webViewClient = object : WebViewClient() {
+            override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) {
+                super.onPageStarted(view, url, favicon)
+                darkModeReapplyGeneration += 1
+            }
+
             override fun shouldOverrideUrlLoading(view: WebView, request: android.webkit.WebResourceRequest): Boolean {
                 val url = request.url.toString()
                 val scheme = request.url.scheme ?: ""
