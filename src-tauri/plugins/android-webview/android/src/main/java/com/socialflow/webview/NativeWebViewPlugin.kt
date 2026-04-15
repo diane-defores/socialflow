@@ -28,6 +28,8 @@ import android.widget.TextView
 import android.widget.Toast
 import android.view.MotionEvent
 import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.graphics.PathParser
 import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewCompat
@@ -1156,6 +1158,24 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     }
 
     /**
+     * WebView maps prefers-color-scheme to the host app theme on recent Android/WebView
+     * versions. Facebook appears to trust that native signal more than our JS override, so
+     * keep the host activity's night mode aligned with the in-app theme when possible.
+     */
+    private fun applyNativeNightMode() {
+        val appCompatActivity = activity as? AppCompatActivity ?: return
+        val desiredMode = if (isDarkMode) {
+            AppCompatDelegate.MODE_NIGHT_YES
+        } else {
+            AppCompatDelegate.MODE_NIGHT_NO
+        }
+
+        if (appCompatActivity.delegate.localNightMode != desiredMode) {
+            appCompatActivity.delegate.localNightMode = desiredMode
+        }
+    }
+
+    /**
      * Best-effort dark mode for social WebViews.
      *
      * There are two layers here:
@@ -1472,6 +1492,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         val args = invoke.parseArgs(DarkModeArgs::class.java)
         activity.runOnUiThread {
             isDarkMode = args.enabled
+            applyNativeNightMode()
             applyDarkModeToWebView(socialWebView)
             applyDarkModeToBottomBar(bottomBarView)
             applyStatusBarIconColor()
@@ -2632,6 +2653,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     private fun createWebView(): WebView {
         val webView = WebView(activity)
         val settings = webView.settings
+        applyNativeNightMode()
         settings.javaScriptEnabled = true
         settings.domStorageEnabled = true
         settings.databaseEnabled = true
