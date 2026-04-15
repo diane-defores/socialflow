@@ -1230,6 +1230,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             (function() {
               try {
                 var dark = ${if (isDarkMode) "true" else "false"};
+                var isFacebook = /(^|\.)facebook\.com$/i.test(location.hostname) && !/\/messages/.test(location.pathname);
                 try {
                   localStorage.setItem('__sfzPreferredDark', dark ? '1' : '0');
                 } catch (e) {}
@@ -1267,9 +1268,56 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                   style.id = '__sfz-dark-mode-hint';
                   (document.head || document.documentElement).appendChild(style);
                 }
+                function fallbackCss(enabled) {
+                  if (!enabled) return '';
+                  if (!isFacebook) return '';
+                  return [
+                    'html.__sfz-facebook-dark-fallback{background:#0f172a !important;filter:invert(1) hue-rotate(180deg) !important;}',
+                    'html.__sfz-facebook-dark-fallback img,',
+                    'html.__sfz-facebook-dark-fallback video,',
+                    'html.__sfz-facebook-dark-fallback picture,',
+                    'html.__sfz-facebook-dark-fallback canvas,',
+                    'html.__sfz-facebook-dark-fallback svg,',
+                    'html.__sfz-facebook-dark-fallback [role=\"img\"],',
+                    'html.__sfz-facebook-dark-fallback [style*=\"background-image\"],',
+                    'html.__sfz-facebook-dark-fallback image{filter:invert(1) hue-rotate(180deg) !important;}'
+                  ].join('');
+                }
+
+                function applyFacebookFallback(enabled) {
+                  if (!isFacebook) {
+                    document.documentElement.classList.remove('__sfz-facebook-dark-fallback');
+                    return;
+                  }
+                  if (!enabled) {
+                    document.documentElement.classList.remove('__sfz-facebook-dark-fallback');
+                    return;
+                  }
+
+                  var body = document.body || document.documentElement;
+                  var bg = '';
+                  try {
+                    bg = (getComputedStyle(body).backgroundColor || '').toLowerCase();
+                  } catch (e) {}
+
+                  var looksLight = !bg || bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)';
+                  var match = bg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+                  if (match) {
+                    var r = parseInt(match[1], 10);
+                    var g = parseInt(match[2], 10);
+                    var b = parseInt(match[3], 10);
+                    var luminance = (0.2126 * r) + (0.7152 * g) + (0.0722 * b);
+                    looksLight = luminance > 150;
+                  }
+
+                  document.documentElement.classList.toggle('__sfz-facebook-dark-fallback', looksLight);
+                }
+
                 style.textContent = dark
-                  ? ':root{color-scheme:dark !important;} html,body{background:#0f172a !important;}'
-                  : ':root{color-scheme:light !important;}';
+                  ? ':root{color-scheme:dark !important;} html,body{background:#0f172a !important;}' + fallbackCss(true)
+                  : ':root{color-scheme:light !important;}' + fallbackCss(false);
+
+                applyFacebookFallback(dark);
 
                 var attempts = 0;
                 var timer = setInterval(function() {
@@ -1277,9 +1325,10 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                     document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
                     if (style) {
                       style.textContent = dark
-                        ? ':root{color-scheme:dark !important;} html,body{background:#0f172a !important;}'
-                        : ':root{color-scheme:light !important;}';
+                        ? ':root{color-scheme:dark !important;} html,body{background:#0f172a !important;}' + fallbackCss(true)
+                        : ':root{color-scheme:light !important;}' + fallbackCss(false);
                     }
+                    applyFacebookFallback(dark);
                   } catch (e) {}
                   attempts += 1;
                   if (attempts >= ${if (isFacebookView) "12" else "4"}) clearInterval(timer);
