@@ -89,6 +89,7 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [x] Durable Convex sync queue (2026-04-15) — cloud writes are now persisted locally, retried on visibility/focus/network/timer, and flushed before cloud hydration
 - [x] Placeholder default profile stays local-only until customized (2026-04-15) — avoids syncing unwanted `Profile 1` into signed-in accounts
 - [x] Android WebView dark-mode bridge now reaches the web content layer (2026-04-15) — native darkening APIs + `prefers-color-scheme` hinting applied on toggle/page-finish
+- [x] Facebook mobile dark mode stabilization (2026-04-15) — fallback, native night-mode alignment, and redirect-safe reapplication now keep `m.facebook.com` in dark mode on device
 - [x] Backup restore now re-seeds Convex when the user is signed in (2026-04-14)
 - [x] Website FR/EN copy updated to explain exactly what syncs via cloud vs what stays local-only (2026-04-14)
 

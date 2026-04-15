@@ -10,6 +10,7 @@ All notable changes to SocialFlow are documented here.
 
 ### Fixed
 - **Android WebView dark mode reached only the native chrome** — the settings toggle now also pushes dark-mode hints down to the web content layer via Android WebView darkening APIs plus a `prefers-color-scheme`/`color-scheme` bridge, instead of recoloring only the bottom bar and status icons
+- **Facebook mobile ignored dark mode despite the global bridge** — the Android plugin now aligns the host activity night mode, applies a Facebook-specific dark fallback from document start, cancels stale delayed reapplications across redirects, and includes targeted diagnostics so `m.facebook.com` now lands in dark mode instead of snapping back to light
 
 ## [2026-04-14]
 
