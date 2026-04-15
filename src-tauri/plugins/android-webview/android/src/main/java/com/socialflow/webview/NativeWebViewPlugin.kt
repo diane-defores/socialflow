@@ -839,7 +839,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         Log.i(TAG, msg)
         synchronized(debugLog) {
             debugLog.add(line)
-            if (debugLog.size > 200) debugLog.removeAt(0)
+            if (debugLog.size > 400) debugLog.removeAt(0)
         }
     }
 
@@ -1351,8 +1351,68 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             view.postDelayed({
                 if (socialWebView == view) {
                     applyDarkModeToWebView(view)
+                    logFacebookDarkState(view, "reapply-${delay}ms")
                 }
             }, delay)
+        }
+    }
+
+    private fun logFacebookDarkState(view: WebView?, phase: String) {
+        if (view == null) return
+        val url = view.url ?: ""
+        if (!url.contains("facebook.com", ignoreCase = true) || url.contains("/messages")) return
+
+        dbg("[fb-dark] phase=$phase nativeWanted=${if (isDarkMode) "dark" else "light"} url=$url")
+
+        val js = """
+            (function() {
+              try {
+                var html = document.documentElement;
+                var body = document.body || html;
+                var htmlStyle = getComputedStyle(html);
+                var bodyStyle = getComputedStyle(body);
+                var mmDark = false;
+                var mmLight = false;
+                try {
+                  mmDark = !!window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  mmLight = !!window.matchMedia('(prefers-color-scheme: light)').matches;
+                } catch (e) {}
+                var payload = {
+                  href: location.href,
+                  preferredDark: window.__sfzPreferredDark,
+                  storedDark: (function() {
+                    try { return localStorage.getItem('__sfzPreferredDark'); } catch (e) { return 'err'; }
+                  })(),
+                  mmDark: mmDark,
+                  mmLight: mmLight,
+                  htmlColorScheme: html.style.colorScheme || '',
+                  cssColorScheme: htmlStyle.colorScheme || '',
+                  htmlBg: htmlStyle.backgroundColor || '',
+                  bodyBg: bodyStyle.backgroundColor || '',
+                  bodyColor: bodyStyle.color || '',
+                  fallbackClass: html.classList.contains('__sfz-facebook-dark-fallback'),
+                  darkHintPresent: !!document.getElementById('__sfz-dark-mode-hint'),
+                  rootClasses: html.className || ''
+                };
+                return JSON.stringify(payload);
+              } catch (e) {
+                return JSON.stringify({ error: String(e) });
+              }
+            })();
+        """.trimIndent()
+
+        view.evaluateJavascript(js) { result ->
+            val raw = result?.trim()
+            if (raw.isNullOrEmpty() || raw == "null") {
+                dbg("[fb-dark] phase=$phase snapshot=null")
+                return@evaluateJavascript
+            }
+            val decoded = try {
+                org.json.JSONTokener(raw).nextValue()?.toString() ?: raw
+            } catch (_: Exception) {
+                raw.trim('"')
+            }
+            dbg("[fb-dark] phase=$phase snapshot=$decoded")
         }
     }
 
@@ -1541,8 +1601,10 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         val args = invoke.parseArgs(DarkModeArgs::class.java)
         activity.runOnUiThread {
             isDarkMode = args.enabled
+            dbg("[dark] toggle requested=${if (isDarkMode) "dark" else "light"} net=${currentNetworkId ?: "?"}")
             applyNativeNightMode()
             applyDarkModeToWebView(socialWebView)
+            logFacebookDarkState(socialWebView, "toggle")
             applyDarkModeToBottomBar(bottomBarView)
             applyStatusBarIconColor()
         }
@@ -2893,6 +2955,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                     view.evaluateJavascript(DESKTOP_VIEWPORT_SCRIPT, null)
                 }
                 applyDarkModeToWebView(view)
+                logFacebookDarkState(view, "page-finished")
                 scheduleDarkModeReapply(view)
                 if (isGrayscale) applyGrayscaleToWebView(view)
                 if (isMuted) applyMuteToWebView(view)
