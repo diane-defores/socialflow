@@ -259,6 +259,30 @@
     "no_account_hint": "Créez un compte pour synchroniser vos données sur tous vos appareils.",
     "unavailable_hint": "La synchro de compte n'est pas disponible dans cette version — backend Convex non configuré."
   },
+  "auth_sync": {
+    "blocking_kicker": "Synchronisation du compte",
+    "success_kicker": "Application prête",
+    "ready_title": "Tout est en ordre",
+    "ready_message": "Vos données sont en place. Vous pouvez utiliser l’application.",
+    "titles": {
+      "waitingServer": "Connexion au cloud en cours",
+      "dataReceived": "Données reçues",
+      "dataApplied": "Données appliquées",
+      "restarting": "Redémarrage de l’application"
+    },
+    "messages": {
+      "waitingServer": "On attend vos données serveur pour remettre l’application dans le bon état.",
+      "dataReceived": "Les données synchronisées viennent d’arriver depuis le cloud.",
+      "dataApplied": "Vos profils, paramètres et éléments synchronisés ont été appliqués à l’application.",
+      "restarting": "On relance SocialFlow pour repartir proprement avec votre état synchronisé."
+    },
+    "steps": {
+      "waitingServer": "En attente des données serveur",
+      "dataReceived": "Données reçues",
+      "dataApplied": "Données appliquées",
+      "restarting": "Redémarrage de l’application"
+    }
+  },
   "kanban": {
     "todo": "À faire",
     "in_progress": "En cours",

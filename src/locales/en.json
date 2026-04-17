@@ -259,6 +259,30 @@
     "no_account_hint": "Create an account to sync your data across all your devices.",
     "unavailable_hint": "Account sync is unavailable in this build — the Convex backend is not configured."
   },
+  "auth_sync": {
+    "blocking_kicker": "Account sync",
+    "success_kicker": "App ready",
+    "ready_title": "Everything is in order",
+    "ready_message": "Your data is in place. You can use the app now.",
+    "titles": {
+      "waitingServer": "Waiting for cloud data",
+      "dataReceived": "Data received",
+      "dataApplied": "Data applied",
+      "restarting": "Restarting the app"
+    },
+    "messages": {
+      "waitingServer": "We’re waiting for your server data so the app can restore the right state.",
+      "dataReceived": "Your synced data just arrived from the cloud.",
+      "dataApplied": "Your profiles, settings, and synced items have been applied to the app.",
+      "restarting": "We’re reloading SocialFlow so it comes back with your synced state fully applied."
+    },
+    "steps": {
+      "waitingServer": "Waiting for server data",
+      "dataReceived": "Data received",
+      "dataApplied": "Data applied",
+      "restarting": "Restarting the app"
+    }
+  },
   "kanban": {
     "todo": "To do",
     "in_progress": "In progress",

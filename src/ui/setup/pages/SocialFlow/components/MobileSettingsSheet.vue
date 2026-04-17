@@ -12,7 +12,6 @@
             <span class="sheet-title">{{ $t('common.settings') }}</span>
             <button
               class="sheet-close-btn"
-              :disabled="postAuthRestarting"
               @click="closeSheet"
             >
               <i class="pi pi-times" />
@@ -137,24 +136,11 @@
                       </button>
                     </div>
                   </div>
-                  <div
-                    v-if="postAuthRestarting"
-                    class="signup-success-card"
-                  >
-                    <p class="signup-success-title">
-                      {{ authAction === 'signUp' ? $t('account.created_toast') : $t('account.signed_in_toast') }}
-                    </p>
-                    <p class="signup-success-text">{{ $t('account.restart_after_sign_in') }}</p>
-                    <div class="signup-success-countdown">
-                      <i class="pi pi-spin pi-spinner" />
-                      <span>{{ $t('backup.import_reloading', { seconds: postAuthCountdown }) }}</span>
-                    </div>
-                  </div>
                   <div class="settings-auth-actions">
                     <button
                       type="submit"
                       class="nudge-cta"
-                      :disabled="signupLoading || postAuthRestarting"
+                      :disabled="signupLoading"
                     >
                       <i
                         v-if="signupLoading && authAction === 'signIn'"
@@ -165,7 +151,7 @@
                     <button
                       type="button"
                       class="nudge-cta secondary-auth-btn"
-                      :disabled="signupLoading || postAuthRestarting"
+                      :disabled="signupLoading"
                       @click="handleAccountAuth('signUp')"
                     >
                       <i
@@ -277,7 +263,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onUnmounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useThemeStore } from '@/stores/theme'
 import { useOnboardingStore } from '@/stores/onboarding'
@@ -285,6 +271,7 @@ import { useSignupNudge } from '@/composables/useSignupNudge'
 import { signIn, signOut as convexSignOut, isAuthenticated, isConvexConfigured } from '@/lib/convexAuth'
 import { finalizePasswordSignIn, resetCloudSyncState, resetSyncedLocalState } from '@/lib/cloudSync'
 import { syncSettingsPatch } from '@/lib/cloudSettings'
+import { beginPostAuthSyncFeedback, resetPostAuthSyncFeedback } from '@/lib/postAuthSyncFeedback'
 import { getConvexClient } from '@/lib/convex'
 import { api } from '../../../../../../convex/_generated/api'
 import { useToast } from 'primevue/usetoast'
@@ -312,10 +299,7 @@ const signupLoading = ref(false)
 const syncInfoExpanded = ref(false)
 const signupErrorCopied = ref(false)
 const signupErrorExpanded = ref(false)
-const postAuthRestarting = ref(false)
-const postAuthCountdown = ref(3)
 const SIGNUP_ERROR_PREVIEW_LENGTH = 180
-let postAuthTimer: ReturnType<typeof setInterval> | null = null
 
 const signupErrorNeedsCollapse = computed(() =>
   signupError.value.length > SIGNUP_ERROR_PREVIEW_LENGTH || signupError.value.includes('\n'),
@@ -343,12 +327,6 @@ async function handleAccountAuth(flow: 'signIn' | 'signUp') {
   signupError.value = ''
   signupErrorCopied.value = false
   signupErrorExpanded.value = false
-  postAuthRestarting.value = false
-  postAuthCountdown.value = 3
-  if (postAuthTimer) {
-    clearInterval(postAuthTimer)
-    postAuthTimer = null
-  }
   authAction.value = flow
   signupLoading.value = true
   try {
@@ -365,6 +343,7 @@ async function handleAccountAuth(flow: 'signIn' | 'signUp') {
       }
     }
 
+    beginPostAuthSyncFeedback()
     await signIn('password', {
       email: normalizedEmail,
       password: signupPassword.value,
@@ -378,19 +357,9 @@ async function handleAccountAuth(flow: 'signIn' | 'signUp') {
       life: 1800,
     })
     signupPassword.value = ''
-    postAuthRestarting.value = true
-    postAuthCountdown.value = 3
-    postAuthTimer = setInterval(async () => {
-      postAuthCountdown.value -= 1
-      if (postAuthCountdown.value <= 0) {
-        if (postAuthTimer) {
-          clearInterval(postAuthTimer)
-          postAuthTimer = null
-        }
-        await finalizePasswordSignIn({ email: normalizedEmail, reopenSettings: true })
-      }
-    }, 1000)
+    await finalizePasswordSignIn({ email: normalizedEmail, reopenSettings: true })
   } catch (e: unknown) {
+    resetPostAuthSyncFeedback()
     signupError.value = getAuthErrorMessage(e, flow)
   } finally {
     signupLoading.value = false
@@ -398,16 +367,8 @@ async function handleAccountAuth(flow: 'signIn' | 'signUp') {
 }
 
 function closeSheet() {
-  if (postAuthRestarting.value) return
   emit('update:modelValue', false)
 }
-
-onUnmounted(() => {
-  if (postAuthTimer) {
-    clearInterval(postAuthTimer)
-    postAuthTimer = null
-  }
-})
 
 async function copySignupError() {
   if (!signupError.value) return
@@ -777,39 +738,6 @@ function replayOnboarding() {
   border-radius: 12px;
   background: rgba(239, 68, 68, 0.08);
   border: 1px solid rgba(239, 68, 68, 0.18);
-}
-
-.signup-success-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-  padding: 0.8rem 0.9rem;
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--primary-color) 10%, var(--surface-card) 90%);
-  border: 1px solid color-mix(in srgb, var(--primary-color) 18%, var(--surface-border) 82%);
-}
-
-.signup-success-title {
-  margin: 0;
-  color: var(--text-color);
-  font-size: 0.84rem;
-  font-weight: 700;
-}
-
-.signup-success-text {
-  margin: 0;
-  color: var(--text-color-secondary);
-  font-size: 0.78rem;
-  line-height: 1.45;
-}
-
-.signup-success-countdown {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  color: var(--text-color-secondary);
-  font-size: 0.78rem;
-  font-weight: 600;
 }
 
 .nudge-error {

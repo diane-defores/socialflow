@@ -10,11 +10,18 @@ import { useFriendsFilterStore } from "@/stores/friendsFilter";
 import { useThemeStore } from "@/stores/theme";
 import { useOnboardingStore } from "@/stores/onboarding";
 import { setLocale } from "@/utils/i18n";
+import {
+  advancePostAuthSyncStage,
+  beginPostAuthSyncFeedback,
+  queuePostAuthReadyNotice,
+  resetPostAuthSyncFeedback,
+  showPostAuthReadyFeedback,
+} from "@/lib/postAuthSyncFeedback";
 
 let hydratedUserId: string | null = null;
 let hydratePromise: Promise<void> | null = null;
 const REOPEN_SETTINGS_AFTER_AUTH_KEY = "sfz_reopen_settings_after_auth";
-const AUTH_RELOAD_DELAY_MS = 180;
+const AUTH_RELOAD_DELAY_MS = 650;
 
 function applyCloudSettings(settings: any) {
   const themeStore = useThemeStore();
@@ -118,6 +125,7 @@ export async function hydrateCloudState() {
       client.query(api.socialAccounts.list, {}),
       client.query(api.socialAccounts.listActive, {}),
     ]);
+    await advancePostAuthSyncStage("dataReceived");
 
     const profilesStore = useProfilesStore();
     const customLinksStore = useCustomLinksStore();
@@ -147,6 +155,7 @@ export async function hydrateCloudState() {
       socialAccounts,
       activeAccounts,
     });
+    await advancePostAuthSyncStage("dataApplied");
 
     hydratedUserId = user._id;
   })().finally(() => {
@@ -159,6 +168,7 @@ export async function hydrateCloudState() {
 export function resetCloudSyncState() {
   hydratedUserId = null;
   hydratePromise = null;
+  resetPostAuthSyncFeedback();
 }
 
 export function resetSyncedLocalState() {
@@ -199,19 +209,30 @@ export async function finalizePasswordSignIn(options?: {
   reload?: boolean;
   reopenSettings?: boolean;
 }) {
+  beginPostAuthSyncFeedback();
+
   if (options?.email) {
     localStorage.setItem("sfz_email", options.email);
   }
 
-  await hydrateCloudState();
+  try {
+    await hydrateCloudState();
 
-  if (options?.reload ?? true) {
-    if (options?.reopenSettings) {
-      localStorage.setItem(REOPEN_SETTINGS_AFTER_AUTH_KEY, "1");
+    if (options?.reload ?? true) {
+      if (options?.reopenSettings) {
+        localStorage.setItem(REOPEN_SETTINGS_AFTER_AUTH_KEY, "1");
+      }
+      await advancePostAuthSyncStage("restarting");
+      queuePostAuthReadyNotice();
+      window.setTimeout(() => {
+        window.location.reload();
+      }, AUTH_RELOAD_DELAY_MS);
+      return;
     }
-    document.documentElement.classList.add("sfz-app-reloading");
-    window.setTimeout(() => {
-      window.location.reload();
-    }, AUTH_RELOAD_DELAY_MS);
+
+    showPostAuthReadyFeedback();
+  } catch (error) {
+    resetPostAuthSyncFeedback();
+    throw error;
   }
 }

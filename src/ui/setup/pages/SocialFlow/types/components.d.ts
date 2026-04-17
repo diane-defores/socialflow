@@ -41,6 +41,7 @@ declare module 'vue' {
     NextdoorIcon: typeof import('./../components/icons/NextdoorIcon.vue')['default']
     OnboardingFlow: typeof import('./../components/OnboardingFlow.vue')['default']
     Password: typeof import('primevue/password')['default']
+    PostAuthSyncOverlay: typeof import('./../components/PostAuthSyncOverlay.vue')['default']
     ProfileSwitcher: typeof import('./../components/ProfileSwitcher.vue')['default']
     ProgressSpinner: typeof import('primevue/progressspinner')['default']
     QuoraIcon: typeof import('./../components/icons/QuoraIcon.vue')['default']

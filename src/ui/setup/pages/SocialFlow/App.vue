@@ -28,6 +28,8 @@
       @dismiss="nudge.dismiss()"
       @account-created="nudge.onAccountCreated()"
     />
+
+    <PostAuthSyncOverlay />
   </div>
 </template>
 
@@ -39,6 +41,7 @@ import { useWebviewStore, WEBVIEW_URLS } from '@/stores/webviewState'
 import { useProfilesStore } from '@/stores/profiles'
 import { isAuthenticated } from '@/lib/convexAuth'
 import { hydrateCloudState, resetCloudSyncState } from '@/lib/cloudSync'
+import { restorePostAuthReadyFeedback } from '@/lib/postAuthSyncFeedback'
 import { useOnboardingStore } from '@/stores/onboarding'
 import { useFriendsFilter } from './composables/useFriendsFilter'
 import { preloadWebviews } from './composables/useWebviewPreload'
@@ -48,6 +51,7 @@ import AppSidebar from './components/AppSidebar.vue'
 import AppRightSidebar from './components/AppRightSidebar.vue'
 import NetworkWebviewHost from './components/NetworkWebviewHost.vue'
 import MobileLayout from './components/MobileLayout.vue'
+import PostAuthSyncOverlay from './components/PostAuthSyncOverlay.vue'
 import SignupNudge from './components/SignupNudge.vue'
 import OnboardingFlow from './components/OnboardingFlow.vue'
 
@@ -64,6 +68,7 @@ const themeStore = useThemeStore()
 const webviewStore = useWebviewStore()
 const profilesStore = useProfilesStore()
 const onboardingStore = useOnboardingStore()
+restorePostAuthReadyFeedback()
 useFriendsFilter() // Activates watchers: injects filter into webviews when settings change
 
 // Mobile detection — reactive on window resize

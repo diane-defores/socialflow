@@ -74,6 +74,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { signIn } from '@/lib/convexAuth'
 import { finalizePasswordSignIn } from '@/lib/cloudSync'
+import { beginPostAuthSyncFeedback, resetPostAuthSyncFeedback } from '@/lib/postAuthSyncFeedback'
 
 const router = useRouter()
 const showEmailForm = ref(false)
@@ -102,6 +103,7 @@ async function handleSignIn() {
   try {
     const normalizedEmail = email.value.trim().toLowerCase()
     email.value = normalizedEmail
+    beginPostAuthSyncFeedback()
     await signIn('password', {
       email: normalizedEmail,
       password: password.value,
@@ -109,6 +111,7 @@ async function handleSignIn() {
     })
     await finalizePasswordSignIn({ email: normalizedEmail })
   } catch (e: any) {
+    resetPostAuthSyncFeedback()
     error.value = e?.message ?? 'Sign in failed'
   } finally {
     loading.value = false
