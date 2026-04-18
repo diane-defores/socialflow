@@ -199,7 +199,7 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [x] 🟠 `networkAccessGuard` removed — was a no-op with dead `roles` meta
 - [x] 🟠 `@vueuse/core` version conflict fixed — deduplicated to `^12.3.0` in deps only
 - [x] 🟡 MobileLayout.vue split — 1972→956 lines; extracted MobileProfileSheet + MobileSettingsSheet
-- [ ] 🟡 Duplicate stores — `src/stores/socialNetworks.ts` vs `src/ui/.../stores/socialNetworks.ts`
+- [x] 🟡 Repo structure audit — architecture reelle documentee dans `docs/repo-architecture-audit.md`; confirme: pas de duplicate `socialNetworks.ts`, le drift restant concerne surtout les reliquats `services`, `types`, `feed/common`, et `mockData` (2026-04-18)
 - [ ] 🟡 Zero test coverage — no test framework, no test files, no CI test step
 - [x] 🟡 `.env.example` created with VITE_CONVEX_URL, VITE_GMAIL_CLIENT_ID, VITE_GMAIL_API_KEY
 - [x] 🟡 Hardcoded French in kanban stores → i18n keys (`kanban.todo`, etc.) + locale entries
@@ -252,6 +252,13 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [ ] Subscription gating (Polar.sh / Stripe) — `subscriptions` table already in schema
 - [ ] In-app plan management UI (current plan, upgrade CTA)
 - [ ] `sign-up` route with Clerk `<SignUp />` component
+
+### Repo Hygiene
+
+- [ ] Supprimer les copies mortes sous `src/ui/setup/pages/SocialFlow/` (`services/*`, `config/gmail.ts`, `stores/mockData/gmailMock.ts`) apres verification finale des imports
+- [ ] Sortir les types metier partages (`Email`, etc.) de `src/ui/setup/pages/SocialFlow/types` pour eviter les imports croises depuis `src/stores/*`
+- [ ] Choisir une seule source de verite pour `components/feed`, `components/common`, `utils/dateFormatter.ts` et `stores/mockData/facebookMock.ts`, puis supprimer l'autre branche
+- [ ] Auditer les shells extension `src/ui/*` avant toute suppression des composants racine `src/components/AppHeader.vue`, `AppSidebar.vue`, `AppRightSidebar.vue`
 
 ### Build Notes
 - Dev environment: aarch64-linux, Ubuntu GLIBC 2.39

@@ -6,19 +6,31 @@
         class="sheet-overlay"
         @click.self="closeSheet"
       >
-        <div class="profile-sheet">
-          <!-- Handle -->
-          <div class="sheet-handle" />
+        <div
+          ref="sheetRef"
+          class="profile-sheet"
+          :style="sheetStyle"
+        >
+          <div
+            class="sheet-drag-zone"
+            @pointerdown="onDragStart"
+            @pointermove="onDragMove"
+            @pointerup="onDragEnd"
+            @pointercancel="onDragCancel"
+          >
+            <!-- Handle -->
+            <div class="sheet-handle" />
 
-          <!-- Header -->
-          <div class="sheet-header">
-            <span class="sheet-title">{{ $t('profiles.title') }}</span>
-            <button
-              class="sheet-close-btn"
-              @click="closeSheet"
-            >
-              <i class="pi pi-times" />
-            </button>
+            <!-- Header -->
+            <div class="sheet-header">
+              <span class="sheet-title">{{ $t('profiles.title') }}</span>
+              <button
+                class="sheet-close-btn"
+                @click="closeSheet"
+              >
+                <i class="pi pi-times" />
+              </button>
+            </div>
           </div>
 
           <!-- Profile list -->
@@ -229,7 +241,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick, onUnmounted, watch } from 'vue'
 import { useProfilesStore } from '@/stores/profiles'
 import { useWebviewStore, WEBVIEW_URLS } from '@/stores/webviewState'
 import type { Profile } from '@/stores/profiles'
@@ -309,6 +321,99 @@ function closeSheet() {
   cancelAdd()
 }
 
+const sheetRef = ref<HTMLElement | null>(null)
+const dragOffset = ref(0)
+const isDragging = ref(false)
+const activePointerId = ref<number | null>(null)
+const dragStartY = ref(0)
+const dragStartTime = ref(0)
+let dragResetTimer: number | null = null
+
+const sheetStyle = computed(() => ({
+  '--sheet-drag-offset': `${dragOffset.value}px`,
+  transition: isDragging.value ? 'none' : 'transform 250ms ease',
+}))
+
+function clearDragResetTimer() {
+  if (dragResetTimer !== null) {
+    window.clearTimeout(dragResetTimer)
+    dragResetTimer = null
+  }
+}
+
+function scheduleDragReset() {
+  clearDragResetTimer()
+  dragResetTimer = window.setTimeout(() => {
+    dragOffset.value = 0
+    isDragging.value = false
+    activePointerId.value = null
+  }, 250)
+}
+
+function getDismissThreshold() {
+  const sheetHeight = sheetRef.value?.offsetHeight ?? window.innerHeight * 0.5
+  return Math.min(140, Math.max(72, sheetHeight * 0.2))
+}
+
+function shouldIgnoreDragStart(target: EventTarget | null) {
+  if (!(target instanceof Element)) return false
+  return Boolean(target.closest('button, a, input, textarea, select, label, [role="button"], [data-no-sheet-drag]'))
+}
+
+function onDragStart(event: PointerEvent) {
+  if (!props.modelValue || !event.isPrimary) return
+  if (event.pointerType === 'mouse' && event.button !== 0) return
+  if (shouldIgnoreDragStart(event.target)) return
+
+  isDragging.value = true
+  activePointerId.value = event.pointerId
+  dragStartY.value = event.clientY
+  dragStartTime.value = event.timeStamp || performance.now()
+  dragOffset.value = 0
+  clearDragResetTimer()
+
+  ;(event.currentTarget as HTMLElement | null)?.setPointerCapture?.(event.pointerId)
+}
+
+function onDragMove(event: PointerEvent) {
+  if (!isDragging.value || event.pointerId !== activePointerId.value) return
+
+  const nextOffset = Math.max(0, event.clientY - dragStartY.value)
+  dragOffset.value = nextOffset
+
+  if (nextOffset > 0) {
+    event.preventDefault()
+  }
+}
+
+function finishDrag(event?: PointerEvent) {
+  if (!isDragging.value) return
+  if (event && event.pointerId !== activePointerId.value) return
+
+  const elapsed = Math.max(1, (event?.timeStamp || performance.now()) - dragStartTime.value)
+  const velocity = dragOffset.value / elapsed
+  const shouldClose = dragOffset.value >= getDismissThreshold() || velocity >= 0.6
+
+  isDragging.value = false
+  activePointerId.value = null
+
+  if (shouldClose) {
+    closeSheet()
+    scheduleDragReset()
+    return
+  }
+
+  dragOffset.value = 0
+}
+
+function onDragEnd(event: PointerEvent) {
+  finishDrag(event)
+}
+
+function onDragCancel(event: PointerEvent) {
+  finishDrag(event)
+}
+
 function selectProfile(profileId: string) {
   profilesStore.setActive(profileId)
   closeSheet()
@@ -373,6 +478,23 @@ function handleAvatarChange(event: Event) {
   reader.readAsDataURL(file)
   ;(event.target as HTMLInputElement).value = ''
 }
+
+watch(() => props.modelValue, (open) => {
+  clearDragResetTimer()
+
+  if (open) {
+    dragOffset.value = 0
+    isDragging.value = false
+    activePointerId.value = null
+    return
+  }
+
+  scheduleDragReset()
+})
+
+onUnmounted(() => {
+  clearDragResetTimer()
+})
 </script>
 
 <style scoped>
@@ -396,6 +518,7 @@ function handleAvatarChange(event: Event) {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  transform: translateY(var(--sheet-drag-offset, 0px));
 }
 
 .sheet-handle {
@@ -405,6 +528,12 @@ function handleAvatarChange(event: Event) {
   border-radius: 2px;
   margin: 0.75rem auto 0;
   flex-shrink: 0;
+}
+
+.sheet-drag-zone {
+  flex-shrink: 0;
+  touch-action: none;
+  user-select: none;
 }
 
 .sheet-header {
@@ -711,7 +840,7 @@ function handleAvatarChange(event: Event) {
 
 .sheet-enter-from .profile-sheet,
 .sheet-leave-to .profile-sheet {
-  transform: translateY(100%);
+  transform: translateY(calc(100% + var(--sheet-drag-offset, 0px)));
 }
 
 @media (prefers-reduced-motion: reduce) {
