@@ -1,7 +1,11 @@
 import { getConvexClient } from "@/lib/convex";
 import { isAuthenticated } from "@/lib/convexAuth";
 import { syncSettingsPatch } from "@/lib/cloudSettings";
-import { clearCloudSyncQueue, flushCloudSyncQueue } from "@/lib/cloudSyncQueue";
+import {
+  clearCloudSyncQueue,
+  flushCloudSyncQueue,
+  hasPendingCloudSync,
+} from "@/lib/cloudSyncQueue";
 import { api } from "../../convex/_generated/api";
 import { useAccountsStore } from "@/stores/accounts";
 import { useProfilesStore } from "@/stores/profiles";
@@ -61,6 +65,33 @@ function isCloudSnapshotEmpty(snapshot: CloudSnapshot) {
     && snapshot.friendsFilters.length === 0
     && snapshot.socialAccounts.length === 0
     && snapshot.activeAccounts.length === 0;
+}
+
+async function fetchCloudSnapshot(client: ReturnType<typeof getConvexClient>): Promise<CloudSnapshot> {
+  const [
+    settings,
+    profiles,
+    customLinks,
+    friendsFilters,
+    socialAccounts,
+    activeAccounts,
+  ] = await Promise.all([
+    client.query(api.settings.get, {}),
+    client.query(api.profiles.list, {}),
+    client.query(api.customLinks.list, {}),
+    client.query(api.friendsFilters.list, {}),
+    client.query(api.socialAccounts.list, {}),
+    client.query(api.socialAccounts.listActive, {}),
+  ]);
+
+  return {
+    settings,
+    profiles,
+    customLinks,
+    friendsFilters,
+    socialAccounts,
+    activeAccounts,
+  };
 }
 
 function applyCloudSettings(settings: any) {
@@ -189,35 +220,11 @@ export async function hydrateCloudState(options?: {
     const isAnonymousUser = user.isAnonymous === true;
     const canReuseLocalState = isAnonymousUser || rememberedUserId === user._id;
 
-    if (canReuseLocalState) {
-      await flushCloudSyncQueue();
-    } else {
+    if (!canReuseLocalState) {
       clearCloudSyncQueue();
     }
 
-    const [
-      settings,
-      profiles,
-      customLinks,
-      friendsFilters,
-      socialAccounts,
-      activeAccounts,
-    ] = await Promise.all([
-      client.query(api.settings.get, {}),
-      client.query(api.profiles.list, {}),
-      client.query(api.customLinks.list, {}),
-      client.query(api.friendsFilters.list, {}),
-      client.query(api.socialAccounts.list, {}),
-      client.query(api.socialAccounts.listActive, {}),
-    ]);
-    const snapshot: CloudSnapshot = {
-      settings,
-      profiles,
-      customLinks,
-      friendsFilters,
-      socialAccounts,
-      activeAccounts,
-    };
+    let snapshot = await fetchCloudSnapshot(client);
 
     await advancePostAuthSyncStage("dataReceived");
 
@@ -225,8 +232,22 @@ export async function hydrateCloudState(options?: {
       canReuseLocalState || options?.allowLocalSeedIfEmpty === true;
 
     if (isCloudSnapshotEmpty(snapshot) && shouldKeepLocalIfCloudEmpty) {
-      await seedCloudFromLocalIfEmpty(snapshot);
+      if (canReuseLocalState && hasPendingCloudSync()) {
+        await flushCloudSyncQueue();
+        snapshot = await fetchCloudSnapshot(client);
+      }
+
+      if (isCloudSnapshotEmpty(snapshot)) {
+        await seedCloudFromLocalIfEmpty(snapshot);
+      } else {
+        clearCloudSyncQueue();
+        applyCloudSnapshot(snapshot);
+      }
     } else {
+      // Cloud wins whenever it already has data. Dropping the local durable queue
+      // here prevents stale pre-auth/Profile 1 writes from being replayed back
+      // into Convex just before hydration.
+      clearCloudSyncQueue();
       if (!canReuseLocalState) {
         clearCloudBackedLocalState();
       }

@@ -119,10 +119,14 @@ const steps = computed(() =>
   --sync-card-bg-end: rgba(248, 250, 252, 0.94);
   --sync-card-border: rgba(255, 255, 255, 0.58);
   --sync-card-shadow: 0 28px 70px rgba(15, 23, 42, 0.22);
+  --sync-card-glow: rgba(59, 130, 246, 0.12);
   --sync-icon-bg: color-mix(in srgb, var(--primary-color) 14%, white 86%);
   --sync-step-bg: color-mix(in srgb, var(--surface-card) 88%, var(--surface-ground) 12%);
   --sync-step-done-bg: color-mix(in srgb, var(--primary-color) 6%, var(--surface-card) 94%);
   --sync-step-current-bg: color-mix(in srgb, var(--primary-color) 10%, var(--surface-card) 90%);
+  --sync-step-border: var(--surface-border);
+  --sync-step-current-border: color-mix(in srgb, var(--primary-color) 30%, var(--surface-border) 70%);
+  --sync-step-done-border: color-mix(in srgb, var(--primary-color) 20%, var(--surface-border) 80%);
   position: fixed;
   inset: 0;
   z-index: 10050;
@@ -140,6 +144,7 @@ const steps = computed(() =>
 }
 
 .sync-card {
+  position: relative;
   width: min(100%, 26rem);
   max-height: min(34rem, calc(100dvh - 2.5rem));
   overflow: auto;
@@ -148,21 +153,28 @@ const steps = computed(() =>
   border-radius: 24px;
   border: 1px solid var(--sync-card-border);
   background:
+    radial-gradient(circle at top right, var(--sync-card-glow), transparent 42%),
     linear-gradient(180deg, var(--sync-card-bg-start), var(--sync-card-bg-end));
   box-shadow: var(--sync-card-shadow);
+  color: var(--text-color);
 }
 
-:global(html.dark) .sync-overlay {
+:global(html.dark) .sync-overlay,
+:global(.dark) .sync-overlay {
   --sync-backdrop-tint: rgba(91, 168, 245, 0.22);
   --sync-backdrop-base: rgba(2, 6, 23, 0.68);
   --sync-card-bg-start: rgba(24, 24, 27, 0.96);
   --sync-card-bg-end: rgba(9, 9, 11, 0.94);
   --sync-card-border: rgba(82, 82, 91, 0.76);
   --sync-card-shadow: 0 28px 70px rgba(2, 6, 23, 0.56);
+  --sync-card-glow: rgba(91, 168, 245, 0.16);
   --sync-icon-bg: color-mix(in srgb, var(--primary-color) 22%, rgba(9, 9, 11, 0.94) 78%);
   --sync-step-bg: color-mix(in srgb, var(--surface-card) 84%, rgba(255, 255, 255, 0.02) 16%);
   --sync-step-done-bg: color-mix(in srgb, var(--primary-color) 10%, var(--surface-card) 90%);
   --sync-step-current-bg: color-mix(in srgb, var(--primary-color) 14%, var(--surface-card) 86%);
+  --sync-step-border: color-mix(in srgb, var(--surface-border) 88%, rgba(255, 255, 255, 0.03) 12%);
+  --sync-step-current-border: color-mix(in srgb, var(--primary-color) 38%, var(--surface-border) 62%);
+  --sync-step-done-border: color-mix(in srgb, var(--primary-color) 26%, var(--surface-border) 74%);
 }
 
 .sync-card.is-success {
@@ -219,21 +231,22 @@ const steps = computed(() =>
   gap: 0.65rem;
   padding: 0.72rem 0.8rem;
   border-radius: 14px;
-  border: 1px solid var(--surface-border);
+  border: 1px solid var(--sync-step-border);
   background: var(--sync-step-bg);
   color: var(--text-color-secondary);
   font-size: 0.9rem;
   font-weight: 600;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .sync-step.is-current {
-  border-color: color-mix(in srgb, var(--primary-color) 30%, var(--surface-border) 70%);
+  border-color: var(--sync-step-current-border);
   background: var(--sync-step-current-bg);
   color: var(--text-color);
 }
 
 .sync-step.is-done {
-  border-color: color-mix(in srgb, var(--primary-color) 20%, var(--surface-border) 80%);
+  border-color: var(--sync-step-done-border);
   background: var(--sync-step-done-bg);
   color: var(--text-color);
 }

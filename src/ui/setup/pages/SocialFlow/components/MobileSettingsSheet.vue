@@ -693,6 +693,98 @@ onUnmounted(() => {
   transform: translateY(var(--sheet-drag-offset, 0px));
 }
 
+.settings-sheet {
+  --settings-account-card-bg: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface-card) 88%, var(--primary-color) 12%),
+    color-mix(in srgb, var(--surface-card) 94%, var(--surface-ground) 6%)
+  );
+  --settings-account-card-border:
+    color-mix(in srgb, var(--surface-border) 68%, var(--primary-color) 32%);
+  --settings-account-card-shadow: 0 18px 38px rgba(15, 23, 42, 0.08);
+  --settings-account-status-bg: rgba(148, 163, 184, 0.18);
+  --settings-account-status-color: var(--text-color-secondary);
+  --settings-account-status-connected-bg:
+    color-mix(in srgb, var(--primary-color) 14%, rgba(255, 255, 255, 0) 86%);
+  --settings-account-status-connected-color: var(--primary-color);
+  --settings-sync-info-bg: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface-ground) 90%, var(--primary-color) 10%),
+    color-mix(in srgb, var(--surface-card) 88%, var(--surface-ground) 12%)
+  );
+  --settings-sync-info-border:
+    color-mix(in srgb, var(--surface-border) 80%, var(--primary-color) 20%);
+  --settings-sync-warning-icon:
+    color-mix(in srgb, var(--primary-color) 55%, #f59e0b 45%);
+  --settings-cta-gradient-start:
+    color-mix(in srgb, var(--primary-color) 88%, #ffffff 12%);
+  --settings-cta-gradient-end:
+    color-mix(in srgb, #2563eb 72%, var(--primary-color) 28%);
+  --settings-cta-shadow: 0 14px 28px rgba(59, 130, 246, 0.2);
+  --settings-secondary-auth-bg:
+    color-mix(in srgb, var(--primary-color) 10%, var(--surface-card) 90%);
+  --settings-secondary-auth-border:
+    color-mix(in srgb, var(--primary-color) 22%, var(--surface-border) 78%);
+  --settings-danger-bg: rgba(239, 68, 68, 0.04);
+  --settings-danger-border: rgba(239, 68, 68, 0.36);
+  --settings-danger-color: #dc2626;
+  --settings-error-bg: rgba(239, 68, 68, 0.08);
+  --settings-error-border: rgba(239, 68, 68, 0.18);
+  --settings-error-text: #dc2626;
+  --settings-error-btn-bg:
+    color-mix(in srgb, var(--surface-card) 92%, rgba(255, 255, 255, 0.08) 8%);
+  --settings-error-btn-border: rgba(239, 68, 68, 0.2);
+  --settings-error-btn-text: #b91c1c;
+  --settings-backup-divider: rgba(148, 163, 184, 0.18);
+}
+
+:global(html.dark) .settings-sheet,
+:global(.dark) .settings-sheet {
+  --settings-account-card-bg: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface-card) 92%, var(--primary-color) 8%),
+    color-mix(in srgb, var(--surface-card) 96%, #020617 4%)
+  );
+  --settings-account-card-border:
+    color-mix(in srgb, var(--surface-border) 76%, var(--primary-color) 24%);
+  --settings-account-card-shadow: 0 24px 48px rgba(2, 6, 23, 0.38);
+  --settings-account-status-bg: rgba(255, 255, 255, 0.06);
+  --settings-account-status-color:
+    color-mix(in srgb, var(--text-color-secondary) 88%, white 12%);
+  --settings-account-status-connected-bg:
+    color-mix(in srgb, var(--primary-color) 20%, rgba(30, 41, 59, 0.6) 80%);
+  --settings-account-status-connected-color: #93c5fd;
+  --settings-sync-info-bg: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface-ground) 64%, var(--surface-card) 36%),
+    color-mix(in srgb, var(--surface-card) 90%, #020617 10%)
+  );
+  --settings-sync-info-border:
+    color-mix(in srgb, var(--surface-border) 78%, var(--primary-color) 22%);
+  --settings-sync-warning-icon:
+    color-mix(in srgb, #f59e0b 74%, var(--primary-color) 26%);
+  --settings-cta-gradient-start:
+    color-mix(in srgb, var(--primary-color) 92%, white 8%);
+  --settings-cta-gradient-end:
+    color-mix(in srgb, #0ea5e9 72%, var(--primary-color) 28%);
+  --settings-cta-shadow: 0 18px 32px rgba(2, 6, 23, 0.42);
+  --settings-secondary-auth-bg:
+    color-mix(in srgb, var(--surface-card) 86%, var(--primary-color) 14%);
+  --settings-secondary-auth-border:
+    color-mix(in srgb, var(--surface-border) 72%, var(--primary-color) 28%);
+  --settings-danger-bg: rgba(239, 68, 68, 0.1);
+  --settings-danger-border: rgba(248, 113, 113, 0.32);
+  --settings-danger-color: #fca5a5;
+  --settings-error-bg: rgba(127, 29, 29, 0.26);
+  --settings-error-border: rgba(248, 113, 113, 0.22);
+  --settings-error-text: #fecaca;
+  --settings-error-btn-bg:
+    color-mix(in srgb, var(--surface-card) 86%, rgba(248, 113, 113, 0.12) 14%);
+  --settings-error-btn-border: rgba(248, 113, 113, 0.22);
+  --settings-error-btn-text: #fca5a5;
+  --settings-backup-divider: rgba(161, 161, 170, 0.16);
+}
+
 .sheet-handle {
   width: 2.5rem;
   height: 4px;
@@ -868,8 +960,9 @@ onUnmounted(() => {
   padding: 0.9rem;
   margin-bottom: 1rem;
   border-radius: 16px;
-  background: color-mix(in srgb, var(--surface-card) 86%, var(--primary-color) 14%);
-  border: 1px solid color-mix(in srgb, var(--surface-border) 70%, var(--primary-color) 30%);
+  background: var(--settings-account-card-bg);
+  border: 1px solid var(--settings-account-card-border);
+  box-shadow: var(--settings-account-card-shadow);
 }
 
 .settings-account-card-header {
@@ -882,8 +975,8 @@ onUnmounted(() => {
   justify-content: center;
   padding: 0.3rem 0.55rem;
   border-radius: 999px;
-  background: rgba(148, 163, 184, 0.18);
-  color: var(--text-color-secondary);
+  background: var(--settings-account-status-bg);
+  color: var(--settings-account-status-color);
   font-size: 0.72rem;
   font-weight: 700;
   white-space: nowrap;
@@ -897,8 +990,8 @@ onUnmounted(() => {
 }
 
 .settings-account-status.connected {
-  background: color-mix(in srgb, var(--primary-color) 14%, transparent);
-  color: var(--primary-color);
+  background: var(--settings-account-status-connected-bg);
+  color: var(--settings-account-status-connected-color);
 }
 
 .settings-sync-toggle {
@@ -922,8 +1015,8 @@ onUnmounted(() => {
   gap: 0.55rem;
   padding: 0.7rem 0.8rem;
   border-radius: 14px;
-  background: color-mix(in srgb, var(--surface-ground) 88%, var(--primary-color) 12%);
-  border: 1px solid color-mix(in srgb, var(--surface-border) 82%, var(--primary-color) 18%);
+  background: var(--settings-sync-info-bg);
+  border: 1px solid var(--settings-sync-info-border);
 }
 
 .settings-sync-info-row,
@@ -940,7 +1033,7 @@ onUnmounted(() => {
 }
 
 .settings-sync-warning-row i {
-  color: color-mix(in srgb, var(--primary-color) 55%, #f59e0b 45%);
+  color: var(--settings-sync-warning-icon);
   font-size: 0.95rem;
   margin-top: 0.15rem;
 }
@@ -971,7 +1064,11 @@ onUnmounted(() => {
   padding: 0.7rem;
   border: none;
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--primary-color), #7c3aed);
+  background: linear-gradient(
+    135deg,
+    var(--settings-cta-gradient-start),
+    var(--settings-cta-gradient-end)
+  );
   color: #fff;
   font-size: 0.9rem;
   font-weight: 600;
@@ -982,6 +1079,7 @@ onUnmounted(() => {
   gap: 0.5rem;
   margin-top: 0;
   min-height: 2.7rem;
+  box-shadow: var(--settings-cta-shadow);
 }
 
 .settings-signup-form .nudge-cta:disabled {
@@ -989,17 +1087,18 @@ onUnmounted(() => {
 }
 
 .secondary-auth-btn {
-  background: color-mix(in srgb, var(--primary-color) 10%, var(--surface-card) 90%);
+  background: var(--settings-secondary-auth-bg);
   color: var(--primary-color);
-  border: 1px solid color-mix(in srgb, var(--primary-color) 22%, var(--surface-border) 78%);
+  border: 1px solid var(--settings-secondary-auth-border);
   box-shadow: none;
 }
 
 .sign-out-btn {
-  background: transparent;
-  color: #ef4444;
-  border: 1px solid #ef4444;
+  background: var(--settings-danger-bg);
+  color: var(--settings-danger-color);
+  border: 1px solid var(--settings-danger-border);
   margin-top: 0;
+  box-shadow: none;
 }
 
 .signup-error-card {
@@ -1008,13 +1107,13 @@ onUnmounted(() => {
   gap: 0.55rem;
   padding: 0.7rem 0.8rem;
   border-radius: 12px;
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.18);
+  background: var(--settings-error-bg);
+  border: 1px solid var(--settings-error-border);
 }
 
 .nudge-error {
   margin: 0;
-  color: #dc2626;
+  color: var(--settings-error-text);
   font-size: 0.8rem;
   line-height: 1.45;
   white-space: pre-wrap;
@@ -1032,10 +1131,10 @@ onUnmounted(() => {
   align-items: center;
   gap: 0.35rem;
   padding: 0.3rem 0.6rem;
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  border: 1px solid var(--settings-error-btn-border);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--surface-card) 92%, #fff 8%);
-  color: #b91c1c;
+  background: var(--settings-error-btn-bg);
+  color: var(--settings-error-btn-text);
   font-size: 0.76rem;
   font-weight: 600;
   cursor: pointer;
@@ -1052,7 +1151,7 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 0.6rem;
   padding-top: 0.05rem;
-  border-top: 1px solid rgba(148, 163, 184, 0.18);
+  border-top: 1px solid var(--settings-backup-divider);
 }
 
 .settings-backup-hint {

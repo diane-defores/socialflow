@@ -1,4 +1,3 @@
-import { watch } from "vue";
 import { api } from "../../convex/_generated/api";
 import { getConvexClient } from "@/lib/convex";
 import { isAuthenticated, isConvexConfigured } from "@/lib/convexAuth";
@@ -313,16 +312,6 @@ export function startCloudSyncQueue() {
   window.setInterval(() => {
     void flushCloudSyncQueue();
   }, PERIODIC_FLUSH_MS);
-
-  watch(
-    () => isAuthenticated.value,
-    (authenticated) => {
-      if (authenticated) {
-        void flushCloudSyncQueue();
-      }
-    },
-    { immediate: true },
-  );
 }
 
 export function enqueueSettingsPatch(patch: CloudSettingsPatch) {
