@@ -85,6 +85,26 @@ const handleResize = () => { isMobile.value = window.innerWidth <= 768 }
 let unlistenTray: (() => void) | undefined
 
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
+let tauriInvoke: ((command: string, args?: Record<string, unknown>) => Promise<unknown>) | null = null
+
+const ensureTauriInvoke = async () => {
+  if (!isTauri) return null
+  if (tauriInvoke) return tauriInvoke
+  const { invoke } = await import('@tauri-apps/api/core')
+  tauriInvoke = invoke
+  return invoke
+}
+
+const triggerNativeTapFeedback = () => {
+  const invoke = tauriInvoke
+  if (invoke) {
+    invoke('plugin:android-webview|trigger_haptic').catch(() => {})
+    return
+  }
+  ensureTauriInvoke().then((loadedInvoke) => {
+    loadedInvoke?.('plugin:android-webview|trigger_haptic').catch(() => {})
+  }).catch(() => {})
+}
 
 // Event handlers declared at module scope so onUnmounted can remove them
 const onWebviewBack = () => { webviewStore.clearNetwork() }
@@ -137,9 +157,7 @@ const onGlobalTap = (e: Event) => {
   const now = performance.now()
   if (now - lastTapAt < 50) return
   lastTapAt = now
-  import('@tauri-apps/api/core').then(({ invoke }) => {
-    invoke('plugin:android-webview|trigger_haptic').catch(() => {})
-  }).catch(() => {})
+  triggerNativeTapFeedback()
 }
 
 // Sync locale to Android plugin for native UI translations
@@ -249,39 +267,41 @@ onMounted(async () => {
   window.addEventListener('resize', handleResize)
 
   if (isTauri) {
-    const { invoke } = await import('@tauri-apps/api/core')
-    // Edge-to-edge: transparent status bar, content extends to top of screen
-    invoke('setup_display').catch(() => {})
-    // Sync initial dark mode state to native bar
-    invoke('set_dark_mode', { enabled: themeStore.isDarkMode }).catch(() => {})
-    // Sync initial text zoom to native webview
-    const savedZoom = normalizeTextZoomLevel(
-      Number(localStorage.getItem('sfz_text_zoom') ?? String(TEXT_ZOOM_DEFAULT))
-    )
-    localStorage.setItem('sfz_text_zoom', String(savedZoom))
-    if (savedZoom !== TEXT_ZOOM_DEFAULT) {
-      invoke('set_text_zoom', { level: savedZoom }).catch(() => {})
-    }
-    // Sync initial haptic + tap sound preferences to native plugin
-    // (Kotlin defaults to haptic=on, tapSound=off — resync if user changed them)
-    const savedHaptic = localStorage.getItem('sfz_haptic') !== 'false'
-    const savedTapSound = localStorage.getItem('sfz_tap_sound') === 'true'
-    const savedTapSoundVariant = normalizeTapSoundVariant(
-      localStorage.getItem(TAP_SOUND_STORAGE_KEY) ?? DEFAULT_TAP_SOUND_VARIANT
-    )
-    localStorage.setItem(TAP_SOUND_STORAGE_KEY, savedTapSoundVariant)
-    invoke('plugin:android-webview|set_haptic', { enabled: savedHaptic }).catch(() => {})
-    invoke('plugin:android-webview|set_tap_sound_variant', { variant: savedTapSoundVariant }).catch(() => {})
-    if (savedTapSound) {
-      invoke('plugin:android-webview|set_tap_sound', { enabled: true }).catch(() => {})
-    }
+    const invoke = await ensureTauriInvoke()
+    if (invoke) {
+      // Edge-to-edge: transparent status bar, content extends to top of screen
+      invoke('setup_display').catch(() => {})
+      // Sync initial dark mode state to native bar
+      invoke('set_dark_mode', { enabled: themeStore.isDarkMode }).catch(() => {})
+      // Sync initial text zoom to native webview
+      const savedZoom = normalizeTextZoomLevel(
+        Number(localStorage.getItem('sfz_text_zoom') ?? String(TEXT_ZOOM_DEFAULT))
+      )
+      localStorage.setItem('sfz_text_zoom', String(savedZoom))
+      if (savedZoom !== TEXT_ZOOM_DEFAULT) {
+        invoke('set_text_zoom', { level: savedZoom }).catch(() => {})
+      }
+      // Sync initial haptic + tap sound preferences to native plugin
+      // (Kotlin defaults to haptic=on, tapSound=off — resync if user changed them)
+      const savedHaptic = localStorage.getItem('sfz_haptic') !== 'false'
+      const savedTapSound = localStorage.getItem('sfz_tap_sound') === 'true'
+      const savedTapSoundVariant = normalizeTapSoundVariant(
+        localStorage.getItem(TAP_SOUND_STORAGE_KEY) ?? DEFAULT_TAP_SOUND_VARIANT
+      )
+      localStorage.setItem(TAP_SOUND_STORAGE_KEY, savedTapSoundVariant)
+      invoke('plugin:android-webview|set_haptic', { enabled: savedHaptic }).catch(() => {})
+      invoke('plugin:android-webview|set_tap_sound_variant', { variant: savedTapSoundVariant }).catch(() => {})
+      if (savedTapSound) {
+        invoke('plugin:android-webview|set_tap_sound', { enabled: true }).catch(() => {})
+      }
 
-    // Tray events use Rust Emitter.emit() → listen() from @tauri-apps/api/event
-    const { listen } = await import('@tauri-apps/api/event')
-    unlistenTray = await listen<string>('tray:open-network', ({ payload: networkId }) => {
-      profilesStore.ensureDefault()
-      webviewStore.selectNetwork(networkId)
-    })
+      // Tray events use Rust Emitter.emit() → listen() from @tauri-apps/api/event
+      const { listen } = await import('@tauri-apps/api/event')
+      unlistenTray = await listen<string>('tray:open-network', ({ payload: networkId }) => {
+        profilesStore.ensureDefault()
+        webviewStore.selectNetwork(networkId)
+      })
+    }
   }
 
   // Kotlin bottom bar communicates via CustomEvents dispatched on the main Tauri WebView.

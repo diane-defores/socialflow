@@ -318,6 +318,9 @@ private val DARK_MODE_DOC_START_SCRIPT = """
     function isFacebook() {
       return /(^|\.)facebook\.com$/i.test(location.hostname) && !/\/messages|\/reels?(\/|$)/.test(location.pathname);
     }
+    function isLinkedIn() {
+      return /(^|\.)linkedin\.com$/i.test(location.hostname);
+    }
     function readDark() {
       try {
         var stored = localStorage.getItem('__sfzPreferredDark');
@@ -330,6 +333,11 @@ private val DARK_MODE_DOC_START_SCRIPT = """
     function install(dark) {
       try {
         window.__sfzPreferredDark = dark;
+        if (isLinkedIn()) {
+          var linkedInTheme = dark ? 'dark' : 'light';
+          try { localStorage.setItem('mobileWebTheme', linkedInTheme); } catch (e) {}
+          try { sessionStorage.setItem('mobileWebTheme', linkedInTheme); } catch (e) {}
+        }
         var originalMatchMedia = window.__sfzOriginalMatchMedia || window.matchMedia;
         if (!window.__sfzOriginalMatchMedia && originalMatchMedia) {
           window.__sfzOriginalMatchMedia = originalMatchMedia;
@@ -364,8 +372,11 @@ private val DARK_MODE_DOC_START_SCRIPT = """
           (document.head || document.documentElement).appendChild(style);
         }
         var fb = isFacebook();
+        var linkedIn = isLinkedIn();
         style.textContent = dark
-          ? ':root{color-scheme:dark !important;} html,body{background:#0f172a !important;}' +
+          ? (linkedIn
+              ? ':root{color-scheme:dark !important;}'
+              : ':root{color-scheme:dark !important;} html,body{background:#0f172a !important;}') +
             (fb
               ? 'html.__sfz-facebook-dark-fallback{background:#0f172a !important;filter:invert(1) hue-rotate(180deg) !important;}' +
                 'html.__sfz-facebook-dark-fallback img,' +
@@ -1304,9 +1315,17 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                 function isFacebook() {
                   return /(^|\.)facebook\.com$/i.test(location.hostname) && !/\/messages|\/reels?(\/|$)/.test(location.pathname);
                 }
+                function isLinkedIn() {
+                  return /(^|\.)linkedin\.com$/i.test(location.hostname);
+                }
                 try {
                   localStorage.setItem('__sfzPreferredDark', dark ? '1' : '0');
                 } catch (e) {}
+                if (isLinkedIn()) {
+                  var linkedInTheme = dark ? 'dark' : 'light';
+                  try { localStorage.setItem('mobileWebTheme', linkedInTheme); } catch (e) {}
+                  try { sessionStorage.setItem('mobileWebTheme', linkedInTheme); } catch (e) {}
+                }
                 window.__sfzPreferredDark = dark;
                 var originalMatchMedia = window.__sfzOriginalMatchMedia || window.matchMedia;
                 if (!window.__sfzOriginalMatchMedia && originalMatchMedia) {
@@ -1341,6 +1360,11 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                   style.id = '__sfz-dark-mode-hint';
                   (document.head || document.documentElement).appendChild(style);
                 }
+                function baseCss(enabled) {
+                  if (!enabled) return ':root{color-scheme:light !important;}';
+                  if (isLinkedIn()) return ':root{color-scheme:dark !important;}';
+                  return ':root{color-scheme:dark !important;} html,body{background:#0f172a !important;}';
+                }
                 function fallbackCss(enabled) {
                   if (!enabled) return '';
                   if (!isFacebook()) return '';
@@ -1362,9 +1386,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                   document.documentElement.classList.toggle('__sfz-facebook-dark-fallback', !!enabled);
                 }
 
-                style.textContent = dark
-                  ? ':root{color-scheme:dark !important;} html,body{background:#0f172a !important;}' + fallbackCss(true)
-                  : ':root{color-scheme:light !important;}' + fallbackCss(false);
+                style.textContent = baseCss(dark) + fallbackCss(dark);
 
                 applyFacebookFallback(dark);
 
@@ -1372,10 +1394,13 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                 var timer = setInterval(function() {
                   try {
                     document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+                    if (isLinkedIn()) {
+                      var retryLinkedInTheme = dark ? 'dark' : 'light';
+                      try { localStorage.setItem('mobileWebTheme', retryLinkedInTheme); } catch (e) {}
+                      try { sessionStorage.setItem('mobileWebTheme', retryLinkedInTheme); } catch (e) {}
+                    }
                     if (style) {
-                      style.textContent = dark
-                        ? ':root{color-scheme:dark !important;} html,body{background:#0f172a !important;}' + fallbackCss(true)
-                        : ':root{color-scheme:light !important;}' + fallbackCss(false);
+                      style.textContent = baseCss(dark) + fallbackCss(dark);
                     }
                     applyFacebookFallback(dark);
                   } catch (e) {}
@@ -1470,8 +1495,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     private fun logLinkedInDarkState(view: WebView?, phase: String) {
         if (view == null) return
         val url = view.url ?: ""
-        val isLinkedInView = currentNetworkId == "linkedin" ||
-            url.contains("linkedin.com", ignoreCase = true)
+        val isLinkedInView = url.contains("linkedin.com", ignoreCase = true)
         if (!isLinkedInView) return
 
         dbg("[li-dark] phase=$phase nativeWanted=${if (isDarkMode) "dark" else "light"} url=$url")
@@ -2132,10 +2156,16 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         btn.isClickable = true
         btn.isFocusable = true
         btn.isLongClickable = true
+        btn.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> playTapSound()
+            }
+            false
+        }
 
         // Single tap → show/hide popup menu
         btn.setOnClickListener {
-            haptic(btn)
+            if (hapticEnabled) btn.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
             togglePopupMenu(density)
         }
 
@@ -2366,6 +2396,8 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         row.setOnTouchListener { v, event ->
             when (event.action) {
                 android.view.MotionEvent.ACTION_DOWN -> {
+                    if (hapticEnabled) v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                    playTapSound()
                     rippleBg.setColor(if (isDarkMode) Color.parseColor("#2C2C2E") else Color.parseColor("#F2F2F7"))
                     v.invalidate()
                 }
@@ -2409,7 +2441,6 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         row.addView(text)
 
         row.setOnClickListener {
-            haptic(it)
             onClick()
         }
 
@@ -2438,6 +2469,8 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         row.setOnTouchListener { v, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
+                    if (hapticEnabled) v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                    playTapSound()
                     rippleBg.setColor(if (isDarkMode) Color.parseColor("#2C2C2E") else Color.parseColor("#F2F2F7"))
                     v.invalidate()
                 }
@@ -2508,7 +2541,6 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         row.addView(text)
 
         row.setOnClickListener {
-            haptic(it)
             onClick()
         }
 
