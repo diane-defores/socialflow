@@ -183,7 +183,6 @@ private val NETWORKS = listOf(
     NetworkInfo("threads",   "\ue9d8", Color.parseColor("#000000"), "https://threads.net"),
     NetworkInfo("discord",   "\ue9c0", Color.parseColor("#5865F2"), "https://discord.com/app"),
     NetworkInfo("reddit",    "\ue9e8", Color.parseColor("#FF4500"), "https://reddit.com"),
-    NetworkInfo("messenger", "\ue97e", Color.parseColor("#0099FF"), "https://www.facebook.com/messages"),
     NetworkInfo("snapchat",  "\ue96c", Color.parseColor("#FFFC00"), "https://www.snapchat.com/web/"),
     NetworkInfo("quora",     "\ue959", Color.parseColor("#A82400"), "https://www.quora.com"),
     NetworkInfo("pinterest", "\uea09", Color.parseColor("#E60023"), "https://www.pinterest.com"),
@@ -196,7 +195,6 @@ private val NETWORKS = listOf(
 private val SVG_ICONS = mapOf(
     "threads" to "M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.472 12.01v-.017c.03-3.579.879-6.43 2.525-8.482C5.845 1.205 8.6.024 12.18 0h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-1.104-3.96-3.898-5.984-8.304-6.015-2.91.022-5.11.936-6.54 2.717C4.307 6.504 3.616 8.914 3.589 12c.027 3.086.718 5.496 2.057 7.164 1.43 1.783 3.631 2.698 6.54 2.717 2.623-.02 4.358-.631 5.8-2.045 1.647-1.613 1.618-3.593 1.09-4.798-.31-.71-.873-1.3-1.634-1.75-.192 1.352-.622 2.446-1.284 3.272-.886 1.102-2.14 1.704-3.73 1.79-1.202.065-2.361-.218-3.259-.801-1.063-.689-1.685-1.74-1.752-2.964-.065-1.19.408-2.285 1.33-3.082.88-.76 2.119-1.207 3.583-1.291a13.853 13.853 0 0 1 3.02.142c-.126-.742-.375-1.332-.75-1.757-.513-.586-1.308-.883-2.359-.89h-.029c-.844 0-1.992.232-2.721 1.32L7.734 7.847c.98-1.454 2.568-2.256 4.478-2.256h.044c3.194.02 5.097 1.975 5.287 5.388.108.046.216.094.321.142 1.49.7 2.58 1.761 3.154 3.07.797 1.82.871 4.79-1.548 7.158-1.85 1.81-4.094 2.628-7.277 2.65Zm1.003-11.69c-.242 0-.487.007-.739.021-1.836.103-2.98.946-2.916 2.143.067 1.256 1.452 1.839 2.784 1.767 1.224-.065 2.818-.543 3.086-3.71a10.5 10.5 0 0 0-2.215-.221z",
     "snapchat" to "M12.206.793c.99 0 4.347.276 5.93 3.821.529 1.193.403 3.219.299 4.847l-.003.06c-.012.18-.022.345-.03.51.075.045.203.09.401.09.3-.016.659-.12 1.033-.301.165-.088.344-.104.464-.104.182 0 .359.029.509.09.45.149.734.479.734.838.015.449-.39.839-1.213 1.168-.089.029-.209.075-.344.119-.45.135-1.139.36-1.333.81-.09.224-.061.524.12.868l.015.015c.06.136 1.526 3.475 4.791 4.014.255.044.435.27.42.509 0 .075-.015.149-.045.225-.24.569-1.273.988-3.146 1.271-.059.091-.12.375-.164.57-.029.179-.074.36-.134.553-.076.271-.27.405-.555.405h-.03c-.135 0-.313-.031-.538-.074-.36-.075-.765-.135-1.273-.135-.3 0-.599.015-.913.074-.6.104-1.123.464-1.723.884-.853.599-1.826 1.288-3.294 1.288-.06 0-.119-.015-.18-.015h-.149c-1.468 0-2.427-.675-3.279-1.288-.599-.42-1.107-.779-1.707-.884-.314-.045-.629-.074-.928-.074-.54 0-.958.089-1.272.149-.211.043-.391.074-.54.074-.374 0-.523-.224-.583-.42-.061-.192-.09-.389-.135-.567-.046-.181-.105-.494-.166-.57-1.918-.222-2.95-.642-3.189-1.226-.031-.063-.052-.15-.055-.225-.015-.243.165-.465.42-.509 3.264-.54 4.73-3.879 4.791-4.02l.016-.029c.18-.345.224-.645.119-.869-.195-.434-.884-.658-1.332-.809-.121-.029-.24-.074-.346-.119-1.107-.435-1.257-.93-1.197-1.273.09-.479.674-.793 1.168-.793.146 0 .27.029.383.074.42.194.789.3 1.104.3.234 0 .384-.06.465-.105l-.046-.569c-.098-1.626-.225-3.651.307-4.837C7.392 1.077 10.739.807 11.727.807l.419-.015h.06z",
-    "messenger" to "M12 0C5.24 0 0 4.952 0 11.64c0 3.499 1.434 6.521 3.769 8.61a.96.96 0 0 1 .323.683l.065 2.135a.96.96 0 0 0 1.347.85l2.381-1.053a.96.96 0 0 1 .641-.046A13 13 0 0 0 12 23.28c6.76 0 12-4.952 12-11.64S18.76 0 12 0m6.806 7.44c.522-.03.971.567.63 1.094l-4.178 6.457a.707.707 0 0 1-.977.208l-3.87-2.504a.44.44 0 0 0-.49.007l-4.363 3.01c-.637.438-1.415-.317-.995-.966l4.179-6.457a.706.706 0 0 1 .977-.21l3.87 2.505c.15.097.344.094.491-.007l4.362-3.008a.7.7 0 0 1 .364-.13",
     "quora" to "M7.3799.9483A11.9628 11.9628 0 0 1 21.248 19.5397l2.4096 2.4225c.7322.7362.21 1.9905-.8272 1.9905l-10.7105.01a12.52 12.52 0 0 1-.304 0h-.02A11.9628 11.9628 0 0 1 7.3818.9503Zm7.3217 4.428a7.1717 7.1717 0 1 0-5.4873 13.2512 7.1717 7.1717 0 0 0 5.4883-13.2511Z",
 )
 
@@ -293,7 +291,7 @@ private val STEALTH_SCRIPT = """
 // For desktop-UA networks: force a wide viewport so the desktop layout fits on a mobile screen.
 // Without this, sites with <meta viewport width=device-width> render desktop CSS at phone width
 // (~360px), making everything appear 3-4x zoomed in. Setting width=980 lets loadWithOverviewMode
-// zoom out the page to fit. Messenger gets 500px for better readability.
+// zoom out the page to fit.
 private val DESKTOP_VIEWPORT_SCRIPT = """
 (function(){
   if (!/Windows NT 10\.0.*Chrome\/136/.test(navigator.userAgent)) return;
@@ -303,10 +301,7 @@ private val DESKTOP_VIEWPORT_SCRIPT = """
     meta.name = 'viewport';
     (document.head || document.documentElement).appendChild(meta);
   }
-  // Narrower viewport for Messenger — 500px makes text readable on mobile
-  // instead of the default 980px which renders everything tiny
-  var w = /facebook\.com\/messages/.test(window.location.href) ? 500 : 980;
-  meta.setAttribute('content', 'width=' + w + ', shrink-to-fit=yes');
+  meta.setAttribute('content', 'width=980, shrink-to-fit=yes');
 })();
 """.trimIndent()
 
@@ -862,7 +857,6 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     private val AUTH_COOKIES = mapOf(
         "instagram" to listOf("sessionid", "ds_user_id"),
         "facebook"  to listOf("c_user"),
-        "messenger" to listOf("c_user"),
         "twitter"   to listOf("auth_token", "ct0"),
         "tiktok"    to listOf("sessionid", "sid_tt"),
         "pinterest"  to listOf("_auth", "_pinterest_sess"),
@@ -3173,53 +3167,8 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         "pinterest" to "https://www.pinterest.com/login/",
     )
 
-    /**
-     * Switch the current webview from Facebook to the Messenger tab.
-     * Handles cookie isolation, UA switch (desktop for Messenger), and bottom bar update.
-     */
-    private fun switchToMessenger(view: WebView) {
-        val messengerUrl = NETWORKS.find { it.id == "messenger" }?.url ?: "https://www.facebook.com/messages"
-        currentAccountId?.let { oldKey ->
-            saveCookiesForSession(oldKey)
-            val profilePrefix = oldKey.substringBeforeLast("-")
-            val newKey = "$profilePrefix-messenger"
-            restoreCookiesForSession(newKey)
-            currentAccountId = newKey
-        }
-        initialBackIndex = -1
-        isLoggedIn = false; pagesSinceOpen = 0
-        applyUaForNetwork("messenger")
-        view.loadUrl(messengerUrl)
-        currentNetworkId = "messenger"
-        incrementUsage("messenger")
-        updateBottomBarActiveNetwork("messenger")
-    }
-
-    /**
-     * Switch the current webview from Messenger back to the Facebook tab.
-     * Mirror of switchToMessenger — handles cookies, UA, and bottom bar.
-     */
-    private fun switchToFacebook(view: WebView) {
-        val facebookUrl = NETWORKS.find { it.id == "facebook" }?.url ?: "https://facebook.com"
-        currentAccountId?.let { oldKey ->
-            saveCookiesForSession(oldKey)
-            val profilePrefix = oldKey.substringBeforeLast("-")
-            val newKey = "$profilePrefix-facebook"
-            restoreCookiesForSession(newKey)
-            currentAccountId = newKey
-        }
-        initialBackIndex = -1
-        isLoggedIn = false; pagesSinceOpen = 0
-        facebookDesktopOverride = false
-        applyUaForNetwork("facebook", facebookUrl)
-        view.loadUrl(facebookUrl)
-        currentNetworkId = "facebook"
-        incrementUsage("facebook")
-        updateBottomBarActiveNetwork("facebook")
-    }
-
     // Networks that require a desktop UA (their web app blocks mobile browsers).
-    private val DESKTOP_UA_NETWORKS = setOf("whatsapp", "telegram", "discord", "messenger", "snapchat")
+    private val DESKTOP_UA_NETWORKS = setOf("whatsapp", "telegram", "discord", "snapchat")
     private val DESKTOP_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
     private lateinit var mobileUa: String
 
@@ -3332,25 +3281,6 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                         dbg("[nav] app-store redirect blocked with no fallback")
                         return true  // block even if no login URL known
                     }
-                    // Facebook tab → messages: switch to Messenger tab instead of loading
-                    // in-webview (mobile UA shows "Download Messenger" loop)
-                    if (currentNetworkId == "facebook") {
-                        if ((host.contains("facebook.com") && path.startsWith("/messages")) || host.contains("messenger.com")) {
-                            Log.i(TAG, "Facebook→Messenger redirect intercepted → switching to Messenger tab")
-                            dbg("[nav] facebook→messenger intercepted")
-                            switchToMessenger(view)
-                            return true
-                        }
-                    }
-                    // Messenger tab → Facebook feed: switch to Facebook tab
-                    if (currentNetworkId == "messenger" && host.contains("facebook.com")) {
-                        if (!path.startsWith("/messages")) {
-                            Log.i(TAG, "Messenger→Facebook redirect intercepted → switching to Facebook tab")
-                            dbg("[nav] messenger→facebook intercepted")
-                            switchToFacebook(view)
-                            return true
-                        }
-                    }
                     return false
                 }
 
@@ -3359,13 +3289,6 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                     val retryUrl = android.net.Uri.parse(url).getQueryParameter("retry") ?: return true
                     dbg("[nav] clear-cookies action retry=$retryUrl")
                     clearCookiesAndRetry(view, retryUrl)
-                    return true
-                }
-
-                // fb-messenger:// deep link → switch to Messenger tab (desktop UA)
-                if (scheme == "fb-messenger") {
-                    dbg("[nav] fb-messenger deep link intercepted")
-                    switchToMessenger(view)
                     return true
                 }
 

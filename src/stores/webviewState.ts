@@ -11,7 +11,6 @@ export const WEBVIEW_URLS: Record<string, string> = {
   threads: 'https://threads.net',
   discord: 'https://discord.com/app',
   reddit: 'https://reddit.com',
-  messenger: 'https://www.facebook.com/messages',
   snapchat: 'https://web.snapchat.com',
   quora: 'https://www.quora.com',
   pinterest: 'https://www.pinterest.com',

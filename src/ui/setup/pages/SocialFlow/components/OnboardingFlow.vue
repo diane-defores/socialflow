@@ -213,7 +213,6 @@ const NETWORKS = [
   { id: 'threads', label: 'Threads', icon: 'pi pi-at', color: '#000000' },
   { id: 'discord', label: 'Discord', icon: 'pi pi-discord', color: '#5865F2' },
   { id: 'reddit', label: 'Reddit', icon: 'pi pi-reddit', color: '#FF4500' },
-  { id: 'messenger', label: 'Messenger', icon: 'pi pi-comments', color: '#0084FF' },
   { id: 'snapchat', label: 'Snapchat', icon: 'pi pi-camera', color: '#FFFC00' },
   // { id: 'whatsapp', label: 'WhatsApp', icon: 'pi pi-whatsapp', color: '#25D366' }, // disabled 2026-04-12 — see docs/whatsapp-web-integration.md
   { id: 'telegram', label: 'Telegram', icon: 'pi pi-telegram', color: '#26A5E4' },

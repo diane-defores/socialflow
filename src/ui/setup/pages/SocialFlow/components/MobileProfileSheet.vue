@@ -159,11 +159,6 @@
                   size="0.9rem"
                   class="clear-cookie-icon"
                 />
-                <MessengerIcon
-                  v-else-if="nw.id === 'messenger'"
-                  size="0.9rem"
-                  class="clear-cookie-icon"
-                />
                 <QuoraIcon
                   v-else-if="nw.id === 'quora'"
                   size="0.9rem"
@@ -248,7 +243,6 @@ import type { Profile } from '@/stores/profiles'
 import ThreadsIcon from './icons/ThreadsIcon.vue'
 import SnapchatIcon from './icons/SnapchatIcon.vue'
 import NextdoorIcon from './icons/NextdoorIcon.vue'
-import MessengerIcon from './icons/MessengerIcon.vue'
 import QuoraIcon from './icons/QuoraIcon.vue'
 
 const props = defineProps<{ modelValue: boolean }>()
@@ -279,14 +273,14 @@ const webviewNetworks = computed(() => {
   const iconMap: Record<string, string> = {
     twitter: 'pi pi-twitter', facebook: 'pi pi-facebook', instagram: 'pi pi-instagram',
     linkedin: 'pi pi-linkedin', tiktok: 'pi pi-tiktok', threads: 'pi pi-at',
-    discord: 'pi pi-discord', reddit: 'pi pi-reddit', messenger: 'pi pi-comments',
+    discord: 'pi pi-discord', reddit: 'pi pi-reddit',
     snapchat: 'pi pi-camera', quora: 'pi pi-question-circle', pinterest: 'pi pi-pinterest',
     whatsapp: 'pi pi-whatsapp', telegram: 'pi pi-telegram', nextdoor: 'pi pi-map-marker',
   }
   const labelMap: Record<string, string> = {
     twitter: 'Twitter / X', facebook: 'Facebook', instagram: 'Instagram',
     linkedin: 'LinkedIn', tiktok: 'TikTok', threads: 'Threads',
-    discord: 'Discord', reddit: 'Reddit', messenger: 'Messenger',
+    discord: 'Discord', reddit: 'Reddit',
     snapchat: 'Snapchat', quora: 'Quora', pinterest: 'Pinterest',
     whatsapp: 'WhatsApp', telegram: 'Telegram', nextdoor: 'Nextdoor',
   }

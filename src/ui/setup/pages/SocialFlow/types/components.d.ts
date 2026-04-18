@@ -31,7 +31,6 @@ declare module 'vue' {
     LinkedInView: typeof import('./../components/networks/LinkedInView.vue')['default']
     LoadingSpinner: typeof import('./../../../../../components/state/LoadingSpinner.vue')['default']
     LocaleSwitch: typeof import('./../../../../../components/LocaleSwitch.vue')['default']
-    MessengerIcon: typeof import('./../components/icons/MessengerIcon.vue')['default']
     MobileLayout: typeof import('./../components/MobileLayout.vue')['default']
     MobileProfileSheet: typeof import('./../components/MobileProfileSheet.vue')['default']
     MobileSettingsSheet: typeof import('./../components/MobileSettingsSheet.vue')['default']

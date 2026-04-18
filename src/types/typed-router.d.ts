@@ -46,7 +46,6 @@ declare module 'vue-router/auto-routes' {
     '/setup/SocialFlow/components/feed/SocialComment': RouteRecordInfo<'/setup/SocialFlow/components/feed/SocialComment', '/setup/SocialFlow/components/feed/SocialComment', Record<never, never>, Record<never, never>>,
     '/setup/SocialFlow/components/feed/SocialPost': RouteRecordInfo<'/setup/SocialFlow/components/feed/SocialPost', '/setup/SocialFlow/components/feed/SocialPost', Record<never, never>, Record<never, never>>,
     '/setup/SocialFlow/components/FriendsPanel': RouteRecordInfo<'/setup/SocialFlow/components/FriendsPanel', '/setup/SocialFlow/components/FriendsPanel', Record<never, never>, Record<never, never>>,
-    '/setup/SocialFlow/components/icons/MessengerIcon': RouteRecordInfo<'/setup/SocialFlow/components/icons/MessengerIcon', '/setup/SocialFlow/components/icons/MessengerIcon', Record<never, never>, Record<never, never>>,
     '/setup/SocialFlow/components/icons/NextdoorIcon': RouteRecordInfo<'/setup/SocialFlow/components/icons/NextdoorIcon', '/setup/SocialFlow/components/icons/NextdoorIcon', Record<never, never>, Record<never, never>>,
     '/setup/SocialFlow/components/icons/QuoraIcon': RouteRecordInfo<'/setup/SocialFlow/components/icons/QuoraIcon', '/setup/SocialFlow/components/icons/QuoraIcon', Record<never, never>, Record<never, never>>,
     '/setup/SocialFlow/components/icons/SnapchatIcon': RouteRecordInfo<'/setup/SocialFlow/components/icons/SnapchatIcon', '/setup/SocialFlow/components/icons/SnapchatIcon', Record<never, never>, Record<never, never>>,

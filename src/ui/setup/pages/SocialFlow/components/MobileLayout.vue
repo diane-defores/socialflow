@@ -144,11 +144,6 @@
                 size="1.35rem"
                 color="#fff"
               />
-              <MessengerIcon
-                v-else-if="item.route === '/messenger'"
-                size="1.35rem"
-                color="#fff"
-              />
               <QuoraIcon
                 v-else-if="item.route === '/quora'"
                 size="1.35rem"
@@ -278,7 +273,6 @@ import { consumeReopenSettingsAfterAuth } from '@/lib/cloudSync'
 import ThreadsIcon from './icons/ThreadsIcon.vue'
 import SnapchatIcon from './icons/SnapchatIcon.vue'
 import NextdoorIcon from './icons/NextdoorIcon.vue'
-import MessengerIcon from './icons/MessengerIcon.vue'
 import QuoraIcon from './icons/QuoraIcon.vue'
 
 const router = useRouter()
@@ -415,14 +409,13 @@ const menuItems = ref<MenuItem[]>([
   { id: 6, label: 'Threads', icon: 'pi pi-at', route: '/threads' },
   { id: 7, label: 'Discord', icon: 'pi pi-discord', route: '/discord' },
   { id: 8, label: 'Reddit', icon: 'pi pi-reddit', route: '/reddit' },
-  { id: 9, label: 'Messenger', icon: 'pi pi-comments', route: '/messenger' },
-  { id: 10, label: 'Snapchat', icon: 'pi pi-camera', route: '/snapchat' },
-  { id: 11, label: 'Quora', icon: 'pi pi-question-circle', route: '/quora' },
-  { id: 12, label: 'Pinterest', icon: 'pi pi-pinterest', route: '/pinterest' },
+  { id: 9, label: 'Snapchat', icon: 'pi pi-camera', route: '/snapchat' },
+  { id: 10, label: 'Quora', icon: 'pi pi-question-circle', route: '/quora' },
+  { id: 11, label: 'Pinterest', icon: 'pi pi-pinterest', route: '/pinterest' },
   // { id: 13, label: 'WhatsApp', icon: 'pi pi-whatsapp', route: '/whatsapp' }, // disabled 2026-04-12 — see docs/whatsapp-web-integration.md
-  { id: 14, label: 'Telegram', icon: 'pi pi-telegram', route: '/telegram' },
-  { id: 15, label: 'Nextdoor', icon: 'pi pi-map-marker', route: '/nextdoor' },
-  { id: 16, label: 'Kanban', icon: 'pi pi-th-large', route: '/kanban' },
+  { id: 12, label: 'Telegram', icon: 'pi pi-telegram', route: '/telegram' },
+  { id: 13, label: 'Nextdoor', icon: 'pi pi-map-marker', route: '/nextdoor' },
+  { id: 14, label: 'Kanban', icon: 'pi pi-th-large', route: '/kanban' },
 ])
 
 const networkColors: Record<number, string> = {
@@ -434,14 +427,12 @@ const networkColors: Record<number, string> = {
   6:  '#000000',
   7:  '#5865F2',
   8:  '#FF4500',
-  9:  '#0084FF',
-  10: '#FFFC00',
-  11: '#B92B27',
-  12: '#E60023',
-  13: '#25D366',
-  14: '#0088cc',
-  15: '#8ED500',
-  16: '#6366F1',
+  9:  '#FFFC00',
+  10: '#B92B27',
+  11: '#E60023',
+  12: '#0088cc',
+  13: '#8ED500',
+  14: '#6366F1',
 }
 
 const isNetworkActive = (item: MenuItem) =>
