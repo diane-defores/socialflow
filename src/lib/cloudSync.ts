@@ -17,11 +17,51 @@ import {
   resetPostAuthSyncFeedback,
   showPostAuthReadyFeedback,
 } from "@/lib/postAuthSyncFeedback";
+import type { ThemeMode } from "@/utils/themeAuto";
+import { normalizeTapSoundVariant } from "@/ui/setup/pages/SocialFlow/utils/tapSound";
+
+type CloudSnapshot = {
+  settings: any;
+  profiles: any[];
+  customLinks: any[];
+  friendsFilters: any[];
+  socialAccounts: any[];
+  activeAccounts: any[];
+};
 
 let hydratedUserId: string | null = null;
 let hydratePromise: Promise<void> | null = null;
 const REOPEN_SETTINGS_AFTER_AUTH_KEY = "sfz_reopen_settings_after_auth";
+const CLOUD_SYNC_USER_ID_KEY = "sfz_cloud_sync_user_id";
 const AUTH_RELOAD_DELAY_MS = 3000;
+
+function canUseStorage() {
+  return typeof window !== "undefined" && typeof localStorage !== "undefined";
+}
+
+function getRememberedCloudUserId() {
+  if (!canUseStorage()) return null;
+  return localStorage.getItem(CLOUD_SYNC_USER_ID_KEY);
+}
+
+function rememberCloudUserId(userId: string) {
+  if (!canUseStorage()) return;
+  localStorage.setItem(CLOUD_SYNC_USER_ID_KEY, userId);
+}
+
+function clearRememberedCloudUserId() {
+  if (!canUseStorage()) return;
+  localStorage.removeItem(CLOUD_SYNC_USER_ID_KEY);
+}
+
+function isCloudSnapshotEmpty(snapshot: CloudSnapshot) {
+  return !snapshot.settings
+    && snapshot.profiles.length === 0
+    && snapshot.customLinks.length === 0
+    && snapshot.friendsFilters.length === 0
+    && snapshot.socialAccounts.length === 0
+    && snapshot.activeAccounts.length === 0;
+}
 
 function applyCloudSettings(settings: any) {
   const themeStore = useThemeStore();
@@ -52,14 +92,48 @@ function applyCloudSettings(settings: any) {
   return true;
 }
 
-async function seedCloudFromLocalIfEmpty(snapshot: {
-  settings: any;
-  profiles: any[];
-  customLinks: any[];
-  friendsFilters: any[];
-  socialAccounts: any[];
-  activeAccounts: any[];
-}) {
+function clearCloudBackedLocalState() {
+  const profilesStore = useProfilesStore();
+  const accountsStore = useAccountsStore();
+  const customLinksStore = useCustomLinksStore();
+  const friendsStore = useFriendsFilterStore();
+  const themeStore = useThemeStore();
+  const onboardingStore = useOnboardingStore();
+
+  profilesStore.clearLocal();
+  accountsStore.clearLocal();
+  customLinksStore.clearLocal();
+  friendsStore.clearLocal();
+  themeStore.resetLocalPreferences();
+  onboardingStore.completed = false;
+
+  localStorage.removeItem("user-locale");
+  localStorage.removeItem("theme");
+  localStorage.removeItem("grayscale");
+  localStorage.removeItem("sfz_haptic");
+  localStorage.removeItem("sfz_tap_sound");
+  localStorage.removeItem("sfz_tap_sound_variant");
+  localStorage.removeItem("sfz_text_zoom");
+  clearCloudSyncQueue();
+}
+
+function applyCloudSnapshot(snapshot: CloudSnapshot) {
+  const profilesStore = useProfilesStore();
+  const customLinksStore = useCustomLinksStore();
+  const friendsStore = useFriendsFilterStore();
+  const accountsStore = useAccountsStore();
+
+  applyCloudSettings(snapshot.settings);
+  profilesStore.replaceFromCloud(snapshot.profiles, snapshot.settings?.activeProfileId);
+  customLinksStore.replaceFromCloud(snapshot.customLinks);
+  friendsStore.replaceFromCloud(
+    snapshot.friendsFilters,
+    snapshot.settings?.friendsFilterEnabled ?? false,
+  );
+  accountsStore.replaceFromCloud(snapshot.socialAccounts, snapshot.activeAccounts);
+}
+
+async function seedCloudFromLocalIfEmpty(snapshot: CloudSnapshot) {
   const profilesStore = useProfilesStore();
   const customLinksStore = useCustomLinksStore();
   const friendsStore = useFriendsFilterStore();
@@ -69,12 +143,13 @@ async function seedCloudFromLocalIfEmpty(snapshot: {
 
   if (!snapshot.settings) {
     await syncSettingsPatch({
-      theme: themeStore.isDarkMode ? "dark" : "light",
+      theme: themeStore.themeMode as ThemeMode,
       language: localStorage.getItem("user-locale") ?? "fr",
       grayscaleEnabled: themeStore.grayscaleEnabled,
       textZoom: Number(localStorage.getItem("sfz_text_zoom") ?? "100"),
       hapticEnabled: localStorage.getItem("sfz_haptic") !== "false",
       tapSoundEnabled: localStorage.getItem("sfz_tap_sound") === "true",
+      tapSoundVariant: normalizeTapSoundVariant(localStorage.getItem("sfz_tap_sound_variant")),
       activeProfileId: profilesStore.activeProfileId || undefined,
       onboardingCompleted: onboardingStore.completed,
       friendsFilterEnabled: friendsStore.enabled,
@@ -98,17 +173,27 @@ async function seedCloudFromLocalIfEmpty(snapshot: {
   }
 }
 
-export async function hydrateCloudState() {
+export async function hydrateCloudState(options?: {
+  allowLocalSeedIfEmpty?: boolean;
+}) {
   if (!isAuthenticated.value) return;
   if (hydratePromise) return hydratePromise;
 
   hydratePromise = (async () => {
-    await flushCloudSyncQueue();
-
     const client = getConvexClient();
     const user = await client.query(api.users.getMe, {});
     if (!user?._id) return;
     if (hydratedUserId === user._id) return;
+
+    const rememberedUserId = getRememberedCloudUserId();
+    const isAnonymousUser = user.isAnonymous === true;
+    const canReuseLocalState = isAnonymousUser || rememberedUserId === user._id;
+
+    if (canReuseLocalState) {
+      await flushCloudSyncQueue();
+    } else {
+      clearCloudSyncQueue();
+    }
 
     const [
       settings,
@@ -125,39 +210,32 @@ export async function hydrateCloudState() {
       client.query(api.socialAccounts.list, {}),
       client.query(api.socialAccounts.listActive, {}),
     ]);
-    await advancePostAuthSyncStage("dataReceived");
-
-    const profilesStore = useProfilesStore();
-    const customLinksStore = useCustomLinksStore();
-    const friendsStore = useFriendsFilterStore();
-    const accountsStore = useAccountsStore();
-
-    const hadCloudSettings = applyCloudSettings(settings);
-
-    if (profiles.length > 0) {
-      profilesStore.replaceFromCloud(profiles, settings?.activeProfileId);
-    }
-    if (customLinks.length > 0) {
-      customLinksStore.replaceFromCloud(customLinks);
-    }
-    if (friendsFilters.length > 0 || hadCloudSettings) {
-      friendsStore.replaceFromCloud(friendsFilters, settings?.friendsFilterEnabled ?? false);
-    }
-    if (socialAccounts.length > 0 || activeAccounts.length > 0) {
-      accountsStore.replaceFromCloud(socialAccounts, activeAccounts);
-    }
-
-    await seedCloudFromLocalIfEmpty({
+    const snapshot: CloudSnapshot = {
       settings,
       profiles,
       customLinks,
       friendsFilters,
       socialAccounts,
       activeAccounts,
-    });
+    };
+
+    await advancePostAuthSyncStage("dataReceived");
+
+    const shouldKeepLocalIfCloudEmpty =
+      canReuseLocalState || options?.allowLocalSeedIfEmpty === true;
+
+    if (isCloudSnapshotEmpty(snapshot) && shouldKeepLocalIfCloudEmpty) {
+      await seedCloudFromLocalIfEmpty(snapshot);
+    } else {
+      if (!canReuseLocalState) {
+        clearCloudBackedLocalState();
+      }
+      applyCloudSnapshot(snapshot);
+    }
     await advancePostAuthSyncStage("dataApplied");
 
     hydratedUserId = user._id;
+    rememberCloudUserId(user._id);
   })().finally(() => {
     hydratePromise = null;
   });
@@ -172,28 +250,10 @@ export function resetCloudSyncState() {
 }
 
 export function resetSyncedLocalState() {
-  const profilesStore = useProfilesStore();
-  const accountsStore = useAccountsStore();
-  const customLinksStore = useCustomLinksStore();
-  const friendsStore = useFriendsFilterStore();
-  const themeStore = useThemeStore();
-  const onboardingStore = useOnboardingStore();
-
-  profilesStore.clearLocal();
-  accountsStore.clearLocal();
-  customLinksStore.clearLocal();
-  friendsStore.clearLocal();
-  themeStore.resetLocalPreferences();
-  onboardingStore.reset();
+  clearCloudBackedLocalState();
 
   localStorage.removeItem("sfz_email");
-  localStorage.removeItem("user-locale");
-  localStorage.removeItem("theme");
-  localStorage.removeItem("grayscale");
-  localStorage.removeItem("sfz_haptic");
-  localStorage.removeItem("sfz_tap_sound");
-  localStorage.removeItem("sfz_text_zoom");
-  clearCloudSyncQueue();
+  clearRememberedCloudUserId();
 }
 
 export function consumeReopenSettingsAfterAuth() {
@@ -206,6 +266,7 @@ export function consumeReopenSettingsAfterAuth() {
 
 export async function finalizePasswordSignIn(options?: {
   email?: string;
+  flow?: "signIn" | "signUp";
   reload?: boolean;
   reopenSettings?: boolean;
 }) {
@@ -216,7 +277,9 @@ export async function finalizePasswordSignIn(options?: {
   }
 
   try {
-    await hydrateCloudState();
+    await hydrateCloudState({
+      allowLocalSeedIfEmpty: options?.flow === "signUp",
+    });
 
     if (options?.reload ?? true) {
       if (options?.reopenSettings) {

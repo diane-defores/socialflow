@@ -49,11 +49,22 @@
     "language": "Langue",
     "haptic_feedback": "Vibrations",
     "tap_sound": "Son des boutons",
-    "text_zoom": "Taille du texte"
+    "tap_sound_variant": "Style du son",
+    "tap_sound_variant_classic": "Classique",
+    "tap_sound_variant_soft": "Doux",
+    "tap_sound_variant_pop": "Pop",
+    "text_zoom": "Taille du texte des réseaux"
   },
   "theme": {
     "dark_mode": "Mode sombre",
-    "focus_mode": "Mode focus (niveaux de gris)"
+    "focus_mode": "Mode focus (niveaux de gris)",
+    "mode_label": "Apparence",
+    "light": "Clair",
+    "dark": "Sombre",
+    "auto": "Auto",
+    "auto_helper": "Suit le cycle jour/nuit selon votre position si elle est autorisée, sinon",
+    "auto_source_sun": "coucher et lever du soleil.",
+    "auto_source_system": "le thème système."
   },
   "backup": {
     "section_title": "Sauvegarde",

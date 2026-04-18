@@ -29,12 +29,27 @@
       <div class="setting-item">
         <div class="setting-label">
           <i class="pi pi-moon mr-2"></i>
-          <span>{{ $t('theme.dark_mode') }}</span>
+          <span>{{ $t('theme.mode_label') }}</span>
         </div>
-        <InputSwitch
-          v-model="isDarkMode"
-          @change="toggleTheme"
-        />
+        <div class="theme-mode-group">
+          <button
+            v-for="mode in themeModes"
+            :key="mode.value"
+            type="button"
+            class="theme-mode-btn"
+            :class="{ active: themeStore.themeMode === mode.value }"
+            @click="setThemeMode(mode.value)"
+          >
+            {{ $t(mode.labelKey) }}
+          </button>
+        </div>
+      </div>
+
+      <div
+        v-if="themeStore.themeMode === 'auto'"
+        class="theme-mode-hint"
+      >
+        {{ autoThemeHint }}
       </div>
 
       <Divider />
@@ -92,9 +107,9 @@
         v-model.number="textZoomLevel"
         type="range"
         class="text-zoom-slider"
-        :min="75"
-        :max="200"
-        :step="25"
+        :min="TEXT_ZOOM_MIN"
+        :max="TEXT_ZOOM_MAX"
+        :step="TEXT_ZOOM_STEP"
         @change="onTextZoomChange"
       />
 
@@ -113,18 +128,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { setLocale } from '@/utils/i18n'
 import { syncSettingsPatch } from '@/lib/cloudSettings'
+import {
+  TEXT_ZOOM_DEFAULT,
+  TEXT_ZOOM_MAX,
+  TEXT_ZOOM_MIN,
+  TEXT_ZOOM_STEP,
+  normalizeTextZoomLevel,
+} from '../utils/textZoom'
 import { useThemeStore } from '@/stores/theme'
 import { useOnboardingStore } from '@/stores/onboarding'
 import Dialog from 'primevue/dialog'
-import InputSwitch from 'primevue/inputswitch'
 import Divider from 'primevue/divider'
 import BackupRestore from './BackupRestore.vue'
+import type { ThemeMode } from '@/utils/themeAuto'
 
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 
 const visible = ref(false)
 const notifications = ref(true)
@@ -132,10 +154,21 @@ const currentLocale = ref(locale.value)
 
 const themeStore = useThemeStore()
 const onboardingStore = useOnboardingStore()
-const isDarkMode = ref(themeStore.isDarkMode)
+const themeModes: Array<{ value: ThemeMode; labelKey: string }> = [
+  { value: 'light', labelKey: 'theme.light' },
+  { value: 'dark', labelKey: 'theme.dark' },
+  { value: 'auto', labelKey: 'theme.auto' },
+]
 
-const toggleTheme = () => {
-  themeStore.toggleTheme()
+const autoThemeHint = computed(() => {
+  const sourceKey = themeStore.autoThemeSource === 'sun'
+    ? 'theme.auto_source_sun'
+    : 'theme.auto_source_system'
+  return `${t('theme.auto_helper')} ${t(sourceKey)}`
+})
+
+function setThemeMode(mode: ThemeMode) {
+  void themeStore.setThemeMode(mode, { allowPrompt: mode === 'auto' })
 }
 
 function onLocaleChange() {
@@ -148,9 +181,15 @@ function replayOnboarding() {
 }
 
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
-const textZoomLevel = ref(Number(localStorage.getItem('sfz_text_zoom') ?? '100'))
+const storedTextZoom = Number(localStorage.getItem('sfz_text_zoom') ?? String(TEXT_ZOOM_DEFAULT))
+const textZoomLevel = ref(normalizeTextZoomLevel(storedTextZoom))
+
+if (textZoomLevel.value !== storedTextZoom) {
+  localStorage.setItem('sfz_text_zoom', String(textZoomLevel.value))
+}
 
 function onTextZoomChange() {
+  textZoomLevel.value = normalizeTextZoomLevel(textZoomLevel.value)
   localStorage.setItem('sfz_text_zoom', String(textZoomLevel.value))
   syncSettingsPatch({ textZoom: textZoomLevel.value })
   if (isTauri) {
@@ -216,6 +255,39 @@ defineExpose({
   cursor: pointer;
 }
 
+.theme-mode-group {
+  display: inline-flex;
+  gap: 0.35rem;
+  padding: 0.2rem;
+  border-radius: 12px;
+  border: 1px solid var(--surface-border, #ddd);
+  background: var(--surface-ground, #f6f6f6);
+}
+
+.theme-mode-btn {
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-color-secondary, #666);
+  padding: 0.42rem 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.theme-mode-btn.active {
+  background: var(--surface-card, #fff);
+  color: var(--primary-color, #6366f1);
+}
+
+.theme-mode-hint {
+  margin: -0.45rem 0 0.9rem;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--text-color-secondary, #666);
+}
+
 .text-zoom-value {
   font-size: 0.85rem;
   color: var(--primary-color);
@@ -246,5 +318,15 @@ defineExpose({
   background: #313244;
   border-color: #45475a;
   color: #cdd6f4;
+}
+
+:global(.dark) .theme-mode-group {
+  background: #1f2432;
+  border-color: #45475a;
+}
+
+:global(.dark) .theme-mode-btn.active {
+  background: #313244;
+  color: #89b4fa;
 }
 </style>

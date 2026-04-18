@@ -109,7 +109,10 @@ async function handleSignIn() {
       password: password.value,
       flow: isSignUp.value ? 'signUp' : 'signIn',
     })
-    await finalizePasswordSignIn({ email: normalizedEmail })
+    await finalizePasswordSignIn({
+      email: normalizedEmail,
+      flow: isSignUp.value ? 'signUp' : 'signIn',
+    })
   } catch (e: any) {
     resetPostAuthSyncFeedback()
     error.value = e?.message ?? 'Sign in failed'

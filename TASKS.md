@@ -242,6 +242,7 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 
 - [x] Onboarding première installation — guide pas-à-pas au premier lancement (présentation des fonctionnalités, configuration du profil, choix des réseaux)
 - [x] Onboarding relançable depuis les paramètres — bouton "Revoir le tutoriel" dans Settings, même contenu que le premier lancement + explications complètes de toutes les fonctionnalités
+- [ ] 🔄 Android webviews — fermer le menu popup de la barre basse au tap/clic extérieur, comme un menu natif classique
 
 ### UX — Auto-login
 

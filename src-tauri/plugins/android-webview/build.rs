@@ -5,6 +5,8 @@ const COMMANDS: &[&str] = &[
     "import_cookies_from_backup",
     "set_haptic",
     "set_tap_sound",
+    "set_tap_sound_variant",
+    "preview_tap_sound",
     "trigger_haptic",
 ];
 

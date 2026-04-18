@@ -7,6 +7,8 @@ import { useOnboardingStore } from '@/stores/onboarding'
 import { isAuthenticated } from '@/lib/convexAuth'
 import { syncSettingsPatch } from '@/lib/cloudSettings'
 import { setLocale } from '@/utils/i18n'
+import type { ThemeMode } from '@/utils/themeAuto'
+import { normalizeTapSoundVariant } from '../utils/tapSound'
 
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
 const isAndroidTauri = () => isTauri && navigator.userAgent.includes('Android')
@@ -48,6 +50,7 @@ async function collectStoreData(): Promise<string> {
       enabled: friends.enabled,
     },
     theme: {
+      themeMode: theme.themeMode,
       isDarkMode: theme.isDarkMode,
       grayscaleEnabled: theme.grayscaleEnabled,
     },
@@ -62,9 +65,11 @@ async function collectStoreData(): Promise<string> {
       sfz_email: localStorage.getItem('sfz_email') ?? '',
       'user-locale': localStorage.getItem('user-locale') ?? 'fr',
       theme: localStorage.getItem('theme') ?? 'light',
+      'theme-resolved': localStorage.getItem('theme-resolved') ?? 'light',
       grayscale: localStorage.getItem('grayscale') ?? '0',
       sfz_haptic: localStorage.getItem('sfz_haptic') ?? 'true',
       sfz_tap_sound: localStorage.getItem('sfz_tap_sound') ?? 'false',
+      sfz_tap_sound_variant: localStorage.getItem('sfz_tap_sound_variant') ?? 'classic',
       sfz_text_zoom: localStorage.getItem('sfz_text_zoom') ?? '100',
       'kanban-state': localStorage.getItem('kanban-state') ?? '',
     },
@@ -104,11 +109,18 @@ async function applyStoreData(json: string) {
   if (data.theme) {
     const store = useThemeStore()
     store.$patch({
+      themeMode: data.theme.themeMode ?? ((data.theme.isDarkMode ?? false) ? 'dark' : 'light'),
       isDarkMode: data.theme.isDarkMode ?? false,
       grayscaleEnabled: data.theme.grayscaleEnabled ?? false,
     })
     store.applyTheme()
     store.applyGrayscale()
+    store.persistResolvedTheme()
+    if (store.themeMode === 'auto') {
+      void store.refreshAutoTheme({ allowPrompt: false })
+    } else {
+      store.stopAutoThemeSync()
+    }
   }
 
   if (data.customLinks) {
@@ -134,12 +146,16 @@ async function applyStoreData(json: string) {
     }
     if (data.localStorage.theme)
       localStorage.setItem('theme', data.localStorage.theme)
+    if (data.localStorage['theme-resolved'])
+      localStorage.setItem('theme-resolved', data.localStorage['theme-resolved'])
     if (data.localStorage.grayscale)
       localStorage.setItem('grayscale', data.localStorage.grayscale)
     if (data.localStorage.sfz_haptic)
       localStorage.setItem('sfz_haptic', data.localStorage.sfz_haptic)
     if (data.localStorage.sfz_tap_sound)
       localStorage.setItem('sfz_tap_sound', data.localStorage.sfz_tap_sound)
+    if (data.localStorage.sfz_tap_sound_variant)
+      localStorage.setItem('sfz_tap_sound_variant', data.localStorage.sfz_tap_sound_variant)
     if (data.localStorage.sfz_text_zoom)
       localStorage.setItem('sfz_text_zoom', data.localStorage.sfz_text_zoom)
     if (data.localStorage['kanban-state'])
@@ -169,12 +185,13 @@ async function syncRestoredDataToCloud() {
   const onboarding = useOnboardingStore()
 
   await syncSettingsPatch({
-    theme: theme.isDarkMode ? 'dark' : 'light',
+    theme: theme.themeMode as ThemeMode,
     language: localStorage.getItem('user-locale') ?? 'fr',
     grayscaleEnabled: theme.grayscaleEnabled,
     textZoom: Number(localStorage.getItem('sfz_text_zoom') ?? '100'),
     hapticEnabled: localStorage.getItem('sfz_haptic') !== 'false',
     tapSoundEnabled: localStorage.getItem('sfz_tap_sound') === 'true',
+    tapSoundVariant: normalizeTapSoundVariant(localStorage.getItem('sfz_tap_sound_variant')),
     activeProfileId: profiles.activeProfileId || undefined,
     onboardingCompleted: onboarding.completed,
     friendsFilterEnabled: friends.enabled,

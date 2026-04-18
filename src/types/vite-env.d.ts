@@ -9,3 +9,10 @@ declare const __DISPLAY_NAME__: string
 declare const __CHANGELOG__: string
 declare const __GIT_COMMIT__: string
 declare const __GITHUB_URL__: string
+
+interface Window {
+  __sfzAutoThemeTimeout: number | null
+  __sfzAutoThemeMedia: MediaQueryList | null
+  __sfzAutoThemeMediaListener: ((event: MediaQueryListEvent) => void) | null
+  __sfzAutoThemeVisibilityListener: (() => void) | null
+}

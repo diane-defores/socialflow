@@ -325,6 +325,7 @@ const sheetRef = ref<HTMLElement | null>(null)
 const dragOffset = ref(0)
 const isDragging = ref(false)
 const activePointerId = ref<number | null>(null)
+const dragTargetRef = ref<HTMLElement | null>(null)
 const dragStartY = ref(0)
 const dragStartTime = ref(0)
 let dragResetTimer: number | null = null
@@ -347,6 +348,7 @@ function scheduleDragReset() {
     dragOffset.value = 0
     isDragging.value = false
     activePointerId.value = null
+    dragTargetRef.value = null
   }, 250)
 }
 
@@ -360,6 +362,19 @@ function shouldIgnoreDragStart(target: EventTarget | null) {
   return Boolean(target.closest('button, a, input, textarea, select, label, [role="button"], [data-no-sheet-drag]'))
 }
 
+function detachWindowDragListeners() {
+  window.removeEventListener('pointermove', onWindowDragMove)
+  window.removeEventListener('pointerup', onWindowDragEnd)
+  window.removeEventListener('pointercancel', onWindowDragCancel)
+}
+
+function attachWindowDragListeners() {
+  detachWindowDragListeners()
+  window.addEventListener('pointermove', onWindowDragMove, { passive: false })
+  window.addEventListener('pointerup', onWindowDragEnd)
+  window.addEventListener('pointercancel', onWindowDragCancel)
+}
+
 function onDragStart(event: PointerEvent) {
   if (!props.modelValue || !event.isPrimary) return
   if (event.pointerType === 'mouse' && event.button !== 0) return
@@ -367,12 +382,14 @@ function onDragStart(event: PointerEvent) {
 
   isDragging.value = true
   activePointerId.value = event.pointerId
+  dragTargetRef.value = event.currentTarget as HTMLElement | null
   dragStartY.value = event.clientY
   dragStartTime.value = event.timeStamp || performance.now()
   dragOffset.value = 0
   clearDragResetTimer()
+  attachWindowDragListeners()
 
-  ;(event.currentTarget as HTMLElement | null)?.setPointerCapture?.(event.pointerId)
+  dragTargetRef.value?.setPointerCapture?.(event.pointerId)
 }
 
 function onDragMove(event: PointerEvent) {
@@ -390,12 +407,19 @@ function finishDrag(event?: PointerEvent) {
   if (!isDragging.value) return
   if (event && event.pointerId !== activePointerId.value) return
 
+  const pointerId = activePointerId.value
+  if (pointerId !== null && dragTargetRef.value?.hasPointerCapture?.(pointerId)) {
+    dragTargetRef.value.releasePointerCapture(pointerId)
+  }
+
   const elapsed = Math.max(1, (event?.timeStamp || performance.now()) - dragStartTime.value)
   const velocity = dragOffset.value / elapsed
   const shouldClose = dragOffset.value >= getDismissThreshold() || velocity >= 0.6
 
+  detachWindowDragListeners()
   isDragging.value = false
   activePointerId.value = null
+  dragTargetRef.value = null
 
   if (shouldClose) {
     closeSheet()
@@ -412,6 +436,18 @@ function onDragEnd(event: PointerEvent) {
 
 function onDragCancel(event: PointerEvent) {
   finishDrag(event)
+}
+
+function onWindowDragMove(event: PointerEvent) {
+  onDragMove(event)
+}
+
+function onWindowDragEnd(event: PointerEvent) {
+  onDragEnd(event)
+}
+
+function onWindowDragCancel(event: PointerEvent) {
+  onDragCancel(event)
 }
 
 function selectProfile(profileId: string) {
@@ -481,11 +517,13 @@ function handleAvatarChange(event: Event) {
 
 watch(() => props.modelValue, (open) => {
   clearDragResetTimer()
+  detachWindowDragListeners()
 
   if (open) {
     dragOffset.value = 0
     isDragging.value = false
     activePointerId.value = null
+    dragTargetRef.value = null
     return
   }
 
@@ -493,6 +531,7 @@ watch(() => props.modelValue, (open) => {
 })
 
 onUnmounted(() => {
+  detachWindowDragListeners()
   clearDragResetTimer()
 })
 </script>

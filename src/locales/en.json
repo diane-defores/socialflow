@@ -49,11 +49,22 @@
     "language": "Language",
     "haptic_feedback": "Haptic feedback",
     "tap_sound": "Button sounds",
-    "text_zoom": "Text size"
+    "tap_sound_variant": "Sound style",
+    "tap_sound_variant_classic": "Classic",
+    "tap_sound_variant_soft": "Soft",
+    "tap_sound_variant_pop": "Pop",
+    "text_zoom": "Network text size"
   },
   "theme": {
     "dark_mode": "Dark mode",
-    "focus_mode": "Focus mode (grayscale)"
+    "focus_mode": "Focus mode (grayscale)",
+    "mode_label": "Appearance",
+    "light": "Light",
+    "dark": "Dark",
+    "auto": "Auto",
+    "auto_helper": "Follows the day/night cycle from your location when allowed, otherwise",
+    "auto_source_sun": "sunrise and sunset.",
+    "auto_source_system": "the system theme."
   },
   "backup": {
     "section_title": "Backup",

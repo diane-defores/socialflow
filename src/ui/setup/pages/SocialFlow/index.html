@@ -29,9 +29,14 @@
       (function () {
         try {
           var savedTheme = localStorage.getItem('theme');
-          var isDark = savedTheme
-            ? savedTheme === 'dark'
-            : window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var resolvedTheme = localStorage.getItem('theme-resolved');
+          var isDark = savedTheme === 'auto'
+            ? resolvedTheme
+              ? resolvedTheme === 'dark'
+              : window.matchMedia('(prefers-color-scheme: dark)').matches
+            : savedTheme
+              ? savedTheme === 'dark'
+              : window.matchMedia('(prefers-color-scheme: dark)').matches;
           if (isDark) {
             document.documentElement.classList.add('dark');
           }

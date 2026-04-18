@@ -21,6 +21,8 @@
     "android-webview:allow-import-cookies-from-backup",
     "android-webview:allow-set-haptic",
     "android-webview:allow-set-tap-sound",
+    "android-webview:allow-set-tap-sound-variant",
+    "android-webview:allow-preview-tap-sound",
     "android-webview:allow-trigger-haptic"
   ]
 }

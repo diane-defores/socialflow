@@ -1,13 +1,15 @@
 import { enqueueSettingsPatch, flushCloudSyncQueue } from "@/lib/cloudSyncQueue";
+import type { ThemeMode } from "@/utils/themeAuto";
 
 export interface CloudSettingsPatch {
-  theme?: "light" | "dark";
+  theme?: ThemeMode;
   language?: string;
   sidebarVisible?: boolean;
   grayscaleEnabled?: boolean;
   textZoom?: number;
   hapticEnabled?: boolean;
   tapSoundEnabled?: boolean;
+  tapSoundVariant?: "classic" | "soft" | "pop";
   activeProfileId?: string;
   onboardingCompleted?: boolean;
   friendsFilterEnabled?: boolean;

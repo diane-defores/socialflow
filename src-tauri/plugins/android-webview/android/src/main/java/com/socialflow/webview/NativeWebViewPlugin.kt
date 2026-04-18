@@ -3,7 +3,9 @@ package com.socialflow.webview
 import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.graphics.Outline
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
@@ -13,6 +15,7 @@ import android.media.AudioAttributes
 import android.media.SoundPool
 import android.view.HapticFeedbackConstants
 import android.view.View
+import android.view.ViewOutlineProvider
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.webkit.CookieManager
@@ -23,6 +26,7 @@ import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import android.widget.HorizontalScrollView
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.TextView
@@ -41,8 +45,20 @@ import app.tauri.annotation.TauriPlugin
 import app.tauri.plugin.Invoke
 import app.tauri.plugin.JSObject
 import app.tauri.plugin.Plugin
+import java.net.URL
 
 private const val TAG = "SFZ"
+private const val TEXT_ZOOM_MIN = 75
+private const val TEXT_ZOOM_MAX = 200
+private const val TEXT_ZOOM_STEP = 5
+private const val TEXT_ZOOM_DEFAULT = 100
+private const val TEXT_ZOOM_RANGE_STEPS = (TEXT_ZOOM_MAX - TEXT_ZOOM_MIN) / TEXT_ZOOM_STEP
+private const val DEFAULT_TAP_SOUND_VARIANT = "classic"
+private val TAP_SOUND_ASSETS = mapOf(
+    "classic" to "sounds/click.wav",
+    "soft" to "sounds/soft.wav",
+    "pop" to "sounds/pop.wav",
+)
 
 @InvokeArg
 class OpenWebViewArgs {
@@ -69,6 +85,11 @@ class DarkModeArgs {
 @InvokeArg
 class TextZoomArgs {
     var level: Int = 100
+}
+
+@InvokeArg
+class TapSoundVariantArgs {
+    var variant: String = DEFAULT_TAP_SOUND_VARIANT
 }
 
 @InvokeArg
@@ -111,7 +132,12 @@ class ImportCookiesBackupArgs {
 }
 
 // Lightweight profile data for the popup menu
-private data class ProfileMenuItem(val id: String, val name: String, val emoji: String)
+private data class ProfileMenuItem(
+    val id: String,
+    val name: String,
+    val emoji: String,
+    val avatar: String? = null
+)
 
 // ── i18n ──────────────────────────────────────────────────────────────────────
 private object Strings {
@@ -124,7 +150,7 @@ private object Strings {
         "grayscale_off" to mapOf("fr" to "Niveaux de gris", "en" to "Grayscale"),
         "dark_mode_on" to mapOf("fr" to "Mode clair", "en" to "Light mode"),
         "dark_mode_off" to mapOf("fr" to "Mode sombre", "en" to "Dark mode"),
-        "text_zoom" to mapOf("fr" to "Taille du texte", "en" to "Text size"),
+        "text_zoom" to mapOf("fr" to "Taille du texte des réseaux", "en" to "Network text size"),
         // Blocked page
         "blocked_title" to mapOf("fr" to "Accès bloqué par", "en" to "Access blocked by"),
         "blocked_message" to mapOf(
@@ -289,7 +315,9 @@ private val DESKTOP_VIEWPORT_SCRIPT = """
 private val DARK_MODE_DOC_START_SCRIPT = """
 (function() {
   try {
-    var isFacebook = /(^|\.)facebook\.com$/i.test(location.hostname) && !/\/messages/.test(location.pathname);
+    function isFacebook() {
+      return /(^|\.)facebook\.com$/i.test(location.hostname) && !/\/messages|\/reels?(\/|$)/.test(location.pathname);
+    }
     function readDark() {
       try {
         var stored = localStorage.getItem('__sfzPreferredDark');
@@ -335,22 +363,20 @@ private val DARK_MODE_DOC_START_SCRIPT = """
           style.id = '__sfz-dark-mode-hint';
           (document.head || document.documentElement).appendChild(style);
         }
+        var fb = isFacebook();
         style.textContent = dark
           ? ':root{color-scheme:dark !important;} html,body{background:#0f172a !important;}' +
-            (isFacebook
+            (fb
               ? 'html.__sfz-facebook-dark-fallback{background:#0f172a !important;filter:invert(1) hue-rotate(180deg) !important;}' +
                 'html.__sfz-facebook-dark-fallback img,' +
                 'html.__sfz-facebook-dark-fallback video,' +
-                'html.__sfz-facebook-dark-fallback picture,' +
                 'html.__sfz-facebook-dark-fallback canvas,' +
-                'html.__sfz-facebook-dark-fallback svg,' +
                 'html.__sfz-facebook-dark-fallback [role=\"img\"],' +
-                'html.__sfz-facebook-dark-fallback [style*=\"background-image\"],' +
                 'html.__sfz-facebook-dark-fallback image{filter:invert(1) hue-rotate(180deg) !important;}'
               : '')
           : ':root{color-scheme:light !important;}';
 
-        document.documentElement.classList.toggle('__sfz-facebook-dark-fallback', !!(dark && isFacebook));
+        document.documentElement.classList.toggle('__sfz-facebook-dark-fallback', !!(dark && fb));
       } catch (e) {}
     }
 
@@ -691,16 +717,17 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     private var hapticEnabled = true
 
     // Tap sound — controlled from Vue settings, defaults to off.
-    // We use SoundPool with a bundled click.wav rather than view.playSoundEffect()
+    // We use SoundPool with bundled assets rather than view.playSoundEffect()
     // because the latter respects the system "Touch sounds" setting, which is
     // off by default on most Android devices.
     private var tapSoundEnabled = false
+    private var tapSoundVariant = DEFAULT_TAP_SOUND_VARIANT
     private var soundPool: SoundPool? = null
-    private var clickSoundId: Int = 0
-    private var clickSoundLoaded: Boolean = false
+    private val tapSoundIds = mutableMapOf<String, Int>()
+    private val loadedTapSoundIds = mutableSetOf<Int>()
 
     // Text zoom level — percentage, 100 = default
-    private var textZoomLevel: Int = 100
+    private var textZoomLevel: Int = TEXT_ZOOM_DEFAULT
 
     // Incremented on navigation so delayed dark-mode reapplications from older pages
     // don't keep fighting the current Facebook page and cause flashes.
@@ -718,13 +745,16 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
     private fun haptic(view: View, type: Int = HapticFeedbackConstants.KEYBOARD_TAP) {
         if (hapticEnabled) view.performHapticFeedback(type)
-        if (tapSoundEnabled) playClickSound()
+        playTapSound()
     }
 
-    private fun playClickSound() {
+    private fun playTapSound(ignoreEnabled: Boolean = false) {
+        if (!ignoreEnabled && !tapSoundEnabled) return
         val pool = soundPool ?: return
-        if (!clickSoundLoaded) return
-        pool.play(clickSoundId, 1.0f, 1.0f, 1, 0, 1.0f)
+        val normalizedVariant = normalizeTapSoundVariant(tapSoundVariant)
+        val soundId = tapSoundIds[normalizedVariant] ?: tapSoundIds[DEFAULT_TAP_SOUND_VARIANT] ?: return
+        if (!loadedTapSoundIds.contains(soundId)) return
+        pool.play(soundId, 1.0f, 1.0f, 1, 0, 1.0f)
     }
 
     private fun initSoundPool() {
@@ -737,16 +767,21 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             .setMaxStreams(2)
             .setAudioAttributes(attrs)
             .build()
-        pool.setOnLoadCompleteListener { _, _, status ->
-            clickSoundLoaded = (status == 0)
-            if (status != 0) Log.w(TAG, "click.wav failed to load (status=$status)")
+        pool.setOnLoadCompleteListener { _, sampleId, status ->
+            if (status == 0) {
+                loadedTapSoundIds.add(sampleId)
+            } else {
+                Log.w(TAG, "tap sound failed to load (sampleId=$sampleId status=$status)")
+            }
         }
-        try {
-            val afd = activity.assets.openFd("sounds/click.wav")
-            clickSoundId = pool.load(afd, 1)
-            afd.close()
-        } catch (e: Exception) {
-            Log.w(TAG, "Could not load click.wav from assets", e)
+        for ((variant, assetPath) in TAP_SOUND_ASSETS) {
+            try {
+                val afd = activity.assets.openFd(assetPath)
+                tapSoundIds[variant] = pool.load(afd, 1)
+                afd.close()
+            } catch (e: Exception) {
+                Log.w(TAG, "Could not load tap sound asset: $assetPath", e)
+            }
         }
         soundPool = pool
     }
@@ -1197,13 +1232,30 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     /**
      * Best-effort dark mode for social WebViews.
      *
-     * There are two layers here:
-     * 1. Native WebView darkening APIs (when supported by the Android System WebView)
-     * 2. A JS hint layer for sites that consult prefers-color-scheme / color-scheme
+     * Read this as a 3-tier stack, from best to worst:
      *
-     * This cannot guarantee every social site will obey, because many of them
-     * store theme choice server-side or in site-local storage/cookies, but it
-     * gives us a real, explicit signal instead of only recoloring the native chrome.
+     * 1. Site-native dark theme
+     *    The site itself switches to its own dark design system. This is the target state,
+     *    because the result uses the network's real tokens, assets, and contrast rules.
+     *    We try to encourage this with:
+     *    - host activity night mode (`applyNativeNightMode()`)
+     *    - WebView strategy "prefer web theme over UA darkening"
+     *    - JS hints for `prefers-color-scheme` and `color-scheme`
+     *
+     * 2. WebView / Android darkening
+     *    If the site ignores our theme signals, Android System WebView may still recolor
+     *    the page via FORCE_DARK / algorithmic darkening. This is generic and often less
+     *    accurate than the site's real dark mode.
+     *
+     * 3. Network-specific custom fallback
+     *    Only used when (1) and (2) are not sufficient for a specific network. Today this
+     *    exists only for Facebook via `__sfz-facebook-dark-fallback`.
+     *
+     * Current implication for debugging:
+     * - Facebook may end up in tier 3.
+     * - LinkedIn has no custom fallback in our code. If LinkedIn looks wrong, it is usually
+     *   either refusing our generic theme hints (tier 1 failed) or falling back to WebView's
+     *   algorithmic darkening (tier 2).
      */
     private fun applyDarkModeToWebView(view: WebView?) {
         if (view == null) return
@@ -1249,7 +1301,9 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             (function() {
               try {
                 var dark = ${if (isDarkMode) "true" else "false"};
-                var isFacebook = /(^|\.)facebook\.com$/i.test(location.hostname) && !/\/messages/.test(location.pathname);
+                function isFacebook() {
+                  return /(^|\.)facebook\.com$/i.test(location.hostname) && !/\/messages|\/reels?(\/|$)/.test(location.pathname);
+                }
                 try {
                   localStorage.setItem('__sfzPreferredDark', dark ? '1' : '0');
                 } catch (e) {}
@@ -1289,22 +1343,19 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                 }
                 function fallbackCss(enabled) {
                   if (!enabled) return '';
-                  if (!isFacebook) return '';
+                  if (!isFacebook()) return '';
                   return [
                     'html.__sfz-facebook-dark-fallback{background:#0f172a !important;filter:invert(1) hue-rotate(180deg) !important;}',
                     'html.__sfz-facebook-dark-fallback img,',
                     'html.__sfz-facebook-dark-fallback video,',
-                    'html.__sfz-facebook-dark-fallback picture,',
                     'html.__sfz-facebook-dark-fallback canvas,',
-                    'html.__sfz-facebook-dark-fallback svg,',
                     'html.__sfz-facebook-dark-fallback [role=\"img\"],',
-                    'html.__sfz-facebook-dark-fallback [style*=\"background-image\"],',
                     'html.__sfz-facebook-dark-fallback image{filter:invert(1) hue-rotate(180deg) !important;}'
                   ].join('');
                 }
 
                 function applyFacebookFallback(enabled) {
-                  if (!isFacebook) {
+                  if (!isFacebook()) {
                     document.documentElement.classList.remove('__sfz-facebook-dark-fallback');
                     return;
                   }
@@ -1351,6 +1402,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                 if (socialWebView == view && generation == darkModeReapplyGeneration) {
                     applyDarkModeToWebView(view)
                     logFacebookDarkState(view, "reapply-${delay}ms")
+                    logLinkedInDarkState(view, "reapply-${delay}ms")
                 }
             }, delay)
         }
@@ -1412,6 +1464,106 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                 raw.trim('"')
             }
             dbg("[fb-dark] phase=$phase snapshot=$decoded")
+        }
+    }
+
+    private fun logLinkedInDarkState(view: WebView?, phase: String) {
+        if (view == null) return
+        val url = view.url ?: ""
+        val isLinkedInView = currentNetworkId == "linkedin" ||
+            url.contains("linkedin.com", ignoreCase = true)
+        if (!isLinkedInView) return
+
+        dbg("[li-dark] phase=$phase nativeWanted=${if (isDarkMode) "dark" else "light"} url=$url")
+
+        val js = """
+            (function() {
+              try {
+                var html = document.documentElement;
+                var body = document.body || html;
+                var htmlStyle = getComputedStyle(html);
+                var bodyStyle = getComputedStyle(body);
+                var mmDark = false;
+                var mmLight = false;
+                try {
+                  mmDark = !!window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  mmLight = !!window.matchMedia('(prefers-color-scheme: light)').matches;
+                } catch (e) {}
+
+                var storageMatches = [];
+                try {
+                  for (var i = 0; i < localStorage.length; i++) {
+                    var key = localStorage.key(i);
+                    if (!key || !/(theme|dark|appearance|color)/i.test(key)) continue;
+                    var value = '';
+                    try {
+                      value = String(localStorage.getItem(key) || '');
+                    } catch (e) {
+                      value = '[read-error]';
+                    }
+                    storageMatches.push({
+                      key: key,
+                      value: value.slice(0, 180)
+                    });
+                  }
+                } catch (e) {
+                  storageMatches = [{ error: String(e) }];
+                }
+
+                var cookieMatches = [];
+                try {
+                  var cookies = document.cookie ? document.cookie.split(';') : [];
+                  for (var j = 0; j < cookies.length; j++) {
+                    var cookie = cookies[j].trim();
+                    if (/(theme|dark|appearance|color)/i.test(cookie)) {
+                      cookieMatches.push(cookie.slice(0, 180));
+                    }
+                  }
+                } catch (e) {
+                  cookieMatches = ['[read-error] ' + String(e)];
+                }
+
+                var payload = {
+                  href: location.href,
+                  preferredDark: window.__sfzPreferredDark,
+                  storedDark: (function() {
+                    try { return localStorage.getItem('__sfzPreferredDark'); } catch (e) { return 'err'; }
+                  })(),
+                  mmDark: mmDark,
+                  mmLight: mmLight,
+                  htmlColorScheme: html.style.colorScheme || '',
+                  cssColorScheme: htmlStyle.colorScheme || '',
+                  htmlBg: htmlStyle.backgroundColor || '',
+                  bodyBg: bodyStyle.backgroundColor || '',
+                  bodyColor: bodyStyle.color || '',
+                  htmlClasses: html.className || '',
+                  bodyClasses: body.className || '',
+                  hasHtmlDarkClass: html.classList.contains('dark'),
+                  hasBodyDarkClass: body.classList.contains('dark'),
+                  darkNodeCount: document.querySelectorAll('.dark, [data-theme="dark"], [data-color-scheme="dark"]').length,
+                  darkHintPresent: !!document.getElementById('__sfz-dark-mode-hint'),
+                  storageMatches: storageMatches,
+                  cookieMatches: cookieMatches
+                };
+                return JSON.stringify(payload);
+              } catch (e) {
+                return JSON.stringify({ error: String(e) });
+              }
+            })();
+        """.trimIndent()
+
+        view.evaluateJavascript(js) { result ->
+            val raw = result?.trim()
+            if (raw.isNullOrEmpty() || raw == "null") {
+                dbg("[li-dark] phase=$phase snapshot=null")
+                return@evaluateJavascript
+            }
+            val decoded = try {
+                org.json.JSONTokener(raw).nextValue()?.toString() ?: raw
+            } catch (_: Exception) {
+                raw.trim('"')
+            }
+            dbg("[li-dark] phase=$phase snapshot=$decoded")
         }
     }
 
@@ -1604,6 +1756,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             applyNativeNightMode()
             applyDarkModeToWebView(socialWebView)
             logFacebookDarkState(socialWebView, "toggle")
+            logLinkedInDarkState(socialWebView, "toggle")
             applyDarkModeToBottomBar(bottomBarView)
             applyStatusBarIconColor()
         }
@@ -1635,6 +1788,21 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         invoke.resolve(JSObject())
     }
 
+    @Command
+    fun setTapSoundVariant(invoke: Invoke) {
+        val args = invoke.parseArgs(TapSoundVariantArgs::class.java)
+        tapSoundVariant = normalizeTapSoundVariant(args.variant)
+        invoke.resolve(JSObject())
+    }
+
+    @Command
+    fun previewTapSound(invoke: Invoke) {
+        activity.runOnUiThread {
+            playTapSound(ignoreEnabled = true)
+        }
+        invoke.resolve(JSObject())
+    }
+
     // Trigger haptic + tap sound from Vue-side buttons.
     // Gating respects the same hapticEnabled / tapSoundEnabled flags as the native bottom bar.
     @Command
@@ -1650,7 +1818,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     fun setTextZoom(invoke: Invoke) {
         val args = invoke.parseArgs(TextZoomArgs::class.java)
         activity.runOnUiThread {
-            textZoomLevel = args.level
+            textZoomLevel = normalizeTextZoomLevel(args.level)
             socialWebView?.settings?.textZoom = textZoomLevel
             applyTextZoomToWebView(socialWebView)
         }
@@ -1777,7 +1945,8 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                 list.add(ProfileMenuItem(
                     id = obj.getString("id"),
                     name = obj.getString("name"),
-                    emoji = obj.optString("emoji", "")
+                    emoji = obj.optString("emoji", ""),
+                    avatar = obj.optString("avatar", "").takeIf { it.isNotBlank() }
                 ))
             }
             activity.runOnUiThread {
@@ -1947,6 +2116,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         return divider
     }
 
+    private var popupMenuOverlayView: FrameLayout? = null
     private var popupMenuView: LinearLayout? = null
 
     private fun buildHomeButton(density: Float): TextView {
@@ -1989,15 +2159,27 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
     }
 
     private fun dismissPopupMenu() {
-        popupMenuView?.let { menu ->
-            (menu.parent as? ViewGroup)?.removeView(menu)
+        popupMenuOverlayView?.let { overlay ->
+            (overlay.parent as? ViewGroup)?.removeView(overlay)
         }
+        popupMenuOverlayView = null
         popupMenuView = null
     }
 
     private fun showPopupMenu(density: Float) {
         val root = socialRoot ?: return
         val bar = bottomBarView ?: return
+
+        val overlay = FrameLayout(activity)
+        overlay.layoutParams = FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+        overlay.isClickable = true
+        overlay.isFocusable = true
+        overlay.setOnClickListener {
+            dismissPopupMenu()
+        }
 
         val menu = LinearLayout(activity)
         menu.orientation = LinearLayout.VERTICAL
@@ -2016,6 +2198,9 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         menuParams.leftMargin = (8 * density).toInt()
         menuParams.bottomMargin = bar.layoutParams.height + (8 * density).toInt()
         menu.layoutParams = menuParams
+        menu.isClickable = true
+        menu.isFocusable = true
+        menu.setOnClickListener { }
 
         // ── Menu items ──
 
@@ -2033,8 +2218,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
 
             for (profile in menuProfiles) {
                 val isActive = profile.id == activeProfileId
-                val label = "${profile.emoji}  ${profile.name}"
-                menu.addView(buildPopupMenuItem(density, "\ue939", label, dimmed = !isActive) {
+                menu.addView(buildProfilePopupMenuItem(density, profile, dimmed = !isActive) {
                     dismissPopupMenu()
                     dispatchToVue("sfz-switch-profile", """{"profileId": "${profile.id}"}""")
                 })
@@ -2056,7 +2240,9 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         val muteIcon = if (isMuted) "\ue978" else "\ue977"
         menu.addView(buildPopupMenuItem(density, muteIcon, muteLabel) {
             isMuted = !isMuted
+            tapSoundEnabled = !isMuted
             applyMuteToWebView(socialWebView)
+            dispatchToVue("sfz-tap-sound-changed", """{"enabled": $tapSoundEnabled}""")
             dismissPopupMenu()
         })
 
@@ -2090,7 +2276,9 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             dismissPopupMenu()
         })
 
-        root.addView(menu)
+        overlay.addView(menu)
+        root.addView(overlay)
+        popupMenuOverlayView = overlay
         popupMenuView = menu
     }
 
@@ -2127,15 +2315,16 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         wrap.addView(topRow)
 
         val slider = SeekBar(activity)
-        slider.max = 5
-        slider.progress = (((textZoomLevel.coerceIn(75, 200) - 75) / 25)).coerceIn(0, 5)
+        slider.max = TEXT_ZOOM_RANGE_STEPS
+        slider.progress = ((normalizeTextZoomLevel(textZoomLevel) - TEXT_ZOOM_MIN) / TEXT_ZOOM_STEP)
+            .coerceIn(0, TEXT_ZOOM_RANGE_STEPS)
         slider.layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
         )
         slider.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                val level = 75 + (progress * 25)
+                val level = normalizeTextZoomLevel(TEXT_ZOOM_MIN + (progress * TEXT_ZOOM_STEP))
                 value.text = "$level%"
                 if (!fromUser || level == textZoomLevel) return
                 textZoomLevel = level
@@ -2227,30 +2416,198 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         return row
     }
 
+    private fun buildProfilePopupMenuItem(
+        density: Float,
+        profile: ProfileMenuItem,
+        dimmed: Boolean = false,
+        onClick: () -> Unit
+    ): LinearLayout {
+        val row = LinearLayout(activity)
+        row.orientation = LinearLayout.HORIZONTAL
+        row.gravity = Gravity.CENTER_VERTICAL
+        val rowPadH = (12 * density).toInt()
+        val rowPadV = (11 * density).toInt()
+        row.setPadding(rowPadH, rowPadV, rowPadH, rowPadV)
+        row.isClickable = true
+        row.isFocusable = true
+
+        val rippleBg = GradientDrawable()
+        rippleBg.cornerRadius = 10 * density
+        rippleBg.setColor(Color.TRANSPARENT)
+        row.background = rippleBg
+        row.setOnTouchListener { v, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    rippleBg.setColor(if (isDarkMode) Color.parseColor("#2C2C2E") else Color.parseColor("#F2F2F7"))
+                    v.invalidate()
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    rippleBg.setColor(Color.TRANSPARENT)
+                    v.invalidate()
+                }
+            }
+            false
+        }
+
+        val textColor = if (isDarkMode) Color.parseColor("#E0E0E0") else Color.parseColor("#1C1C1E")
+        val dimColor = if (isDarkMode) Color.parseColor("#9A9AB0") else Color.parseColor("#ADB5BD")
+        val avatarSize = (28 * density).toInt()
+
+        val avatarFrame = FrameLayout(activity)
+        avatarFrame.layoutParams = LinearLayout.LayoutParams(avatarSize, avatarSize)
+        avatarFrame.alpha = if (dimmed) 0.72f else 1f
+        avatarFrame.clipToOutline = true
+        avatarFrame.outlineProvider = object : ViewOutlineProvider() {
+            override fun getOutline(view: View, outline: Outline) {
+                outline.setOval(0, 0, view.width, view.height)
+            }
+        }
+
+        val avatarBg = GradientDrawable()
+        avatarBg.shape = GradientDrawable.OVAL
+        avatarBg.setColor(if (isDarkMode) Color.parseColor("#2C2C2E") else Color.parseColor("#E5E5EA"))
+        avatarFrame.background = avatarBg
+
+        val avatarImage = ImageView(activity)
+        avatarImage.layoutParams = FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT,
+        )
+        avatarImage.scaleType = ImageView.ScaleType.CENTER_CROP
+        avatarImage.visibility = View.GONE
+        avatarFrame.addView(avatarImage)
+
+        val avatarText = TextView(activity)
+        avatarText.layoutParams = FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT,
+        )
+        avatarText.gravity = Gravity.CENTER
+        avatarText.textSize = 13f
+        avatarText.setTextColor(if (dimmed) dimColor else textColor)
+        avatarText.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+        avatarText.text = profile.emoji.ifBlank { "👤" }
+        avatarFrame.addView(avatarText)
+
+        bindProfileAvatar(profile, avatarImage, avatarText)
+        row.addView(avatarFrame)
+
+        val spacer = View(activity)
+        spacer.layoutParams = LinearLayout.LayoutParams((10 * density).toInt(), 1)
+        row.addView(spacer)
+
+        val text = TextView(activity)
+        text.text = profile.name
+        text.textSize = 14f
+        text.setTextColor(if (dimmed) dimColor else textColor)
+        text.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+        text.layoutParams = LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+        row.addView(text)
+
+        row.setOnClickListener {
+            haptic(it)
+            onClick()
+        }
+
+        return row
+    }
+
+    private fun bindProfileAvatar(profile: ProfileMenuItem, avatarImage: ImageView, avatarText: TextView) {
+        val avatar = profile.avatar ?: return
+        avatarImage.tag = avatar
+
+        if (avatar.startsWith("data:")) {
+            decodeAvatarBitmap(avatar)?.let { bitmap ->
+                avatarImage.setImageBitmap(bitmap)
+                avatarImage.visibility = View.VISIBLE
+                avatarText.visibility = View.GONE
+            }
+            return
+        }
+
+        if (avatar.startsWith("http://") || avatar.startsWith("https://")) {
+            Thread {
+                val bitmap = decodeAvatarBitmap(avatar)
+                if (bitmap != null) {
+                    activity.runOnUiThread {
+                        if (avatarImage.tag == avatar) {
+                            avatarImage.setImageBitmap(bitmap)
+                            avatarImage.visibility = View.VISIBLE
+                            avatarText.visibility = View.GONE
+                        }
+                    }
+                }
+            }.start()
+        }
+    }
+
+    private fun decodeAvatarBitmap(avatar: String): Bitmap? {
+        return try {
+            when {
+                avatar.startsWith("data:") -> {
+                    val base64 = avatar.substringAfter("base64,", "")
+                    if (base64.isBlank()) null else {
+                        val bytes = android.util.Base64.decode(base64, android.util.Base64.DEFAULT)
+                        BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                    }
+                }
+                avatar.startsWith("http://") || avatar.startsWith("https://") -> {
+                    URL(avatar).openStream().use { input ->
+                        BitmapFactory.decodeStream(input)
+                    }
+                }
+                else -> null
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     private fun applyTextZoomToWebView(view: WebView?) {
         val wv = view ?: return
-        wv.settings.textZoom = textZoomLevel
-        val level = textZoomLevel.coerceIn(75, 200)
+        val level = normalizeTextZoomLevel(textZoomLevel)
+        wv.settings.textZoom = level
         val js = """
             (function() {
               var level = $level;
               var percent = level + '%';
-              document.documentElement.style.setProperty('-webkit-text-size-adjust', percent);
+              var isFacebook = /facebook\.com/.test(location.host);
+              var textAdjustPercent = isFacebook ? '100%' : percent;
+              document.documentElement.style.setProperty('-webkit-text-size-adjust', textAdjustPercent);
               if (document.body) {
-                document.body.style.setProperty('-webkit-text-size-adjust', percent);
+                document.body.style.setProperty('-webkit-text-size-adjust', textAdjustPercent);
               }
-              if (/facebook\.com/.test(location.host)) {
+              if (isFacebook) {
                 var nodes = document.querySelectorAll('body, div, span, a, p, h1, h2, h3, h4, h5, h6');
                 for (var i = 0; i < nodes.length; i++) {
                   var el = nodes[i];
-                  var style = window.getComputedStyle(el);
-                  var size = parseFloat(style.fontSize || '0');
-                  if (!size || size < 10 || size > 40) continue;
-                  if (el.dataset.sfzZoomBase !== undefined) continue;
-                  el.dataset.sfzZoomBase = String(size);
+                  if (el.dataset.sfzZoomInlineFontSize === undefined) {
+                    el.dataset.sfzZoomInlineFontSize = el.style.getPropertyValue('font-size') || '';
+                    el.dataset.sfzZoomInlineFontPriority = el.style.getPropertyPriority('font-size') || '';
+                  }
+                  var inlineFontSize = el.dataset.sfzZoomInlineFontSize || '';
+                  var inlinePriority = el.dataset.sfzZoomInlineFontPriority || '';
+                  if (inlineFontSize) {
+                    el.style.setProperty('font-size', inlineFontSize, inlinePriority);
+                  } else {
+                    el.style.removeProperty('font-size');
+                  }
                 }
                 for (var j = 0; j < nodes.length; j++) {
-                  var node = nodes[j];
+                  var baseNode = nodes[j];
+                  var baseStyle = window.getComputedStyle(baseNode);
+                  var baseSize = parseFloat(baseStyle.fontSize || '0');
+                  if (!baseSize || baseSize < 10 || baseSize > 40) continue;
+                  baseNode.dataset.sfzZoomBase = String(baseSize);
+                }
+                if (level === 100) {
+                  return;
+                }
+                for (var k = 0; k < nodes.length; k++) {
+                  var node = nodes[k];
                   var base = parseFloat(node.dataset.sfzZoomBase || '0');
                   if (!base) continue;
                   node.style.fontSize = (base * level / 100) + 'px';
@@ -2259,6 +2616,21 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             })();
         """.trimIndent()
         wv.evaluateJavascript(js, null)
+    }
+
+    private fun normalizeTextZoomLevel(level: Int): Int {
+        val clamped = level.coerceIn(TEXT_ZOOM_MIN, TEXT_ZOOM_MAX)
+        val offset = clamped - TEXT_ZOOM_MIN
+        val snapped = ((offset + (TEXT_ZOOM_STEP / 2)) / TEXT_ZOOM_STEP) * TEXT_ZOOM_STEP
+        return (TEXT_ZOOM_MIN + snapped).coerceIn(TEXT_ZOOM_MIN, TEXT_ZOOM_MAX)
+    }
+
+    private fun normalizeTapSoundVariant(variant: String?): String {
+        return if (variant != null && TAP_SOUND_ASSETS.containsKey(variant)) {
+            variant
+        } else {
+            DEFAULT_TAP_SOUND_VARIANT
+        }
     }
 
     /**
@@ -2891,6 +3263,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             override fun onPageFinished(view: WebView, url: String) {
                 super.onPageFinished(view, url)
                 dbg("[page] finished net=${currentNetworkId ?: "?"} ua=${if (shouldUseDesktopUa(currentNetworkId, url)) "desktop" else "mobile"} url=$url")
+                applyTextZoomToWebView(view)
                 // Fallback: inject scripts here only if addDocumentStartJavaScript wasn't available
                 if (!useDocStart) {
                     view.evaluateJavascript(STEALTH_SCRIPT, null)
@@ -2960,6 +3333,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                 }
                 applyDarkModeToWebView(view)
                 logFacebookDarkState(view, "page-finished")
+                logLinkedInDarkState(view, "page-finished")
                 scheduleDarkModeReapply(view)
                 if (isGrayscale) applyGrayscaleToWebView(view)
                 if (isMuted) applyMuteToWebView(view)

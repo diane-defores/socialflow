@@ -41,10 +41,17 @@ import { useWebviewStore, WEBVIEW_URLS } from '@/stores/webviewState'
 import { useProfilesStore } from '@/stores/profiles'
 import { isAuthenticated } from '@/lib/convexAuth'
 import { hydrateCloudState, resetCloudSyncState } from '@/lib/cloudSync'
+import { syncSettingsPatch } from '@/lib/cloudSettings'
 import { restorePostAuthReadyFeedback } from '@/lib/postAuthSyncFeedback'
 import { useOnboardingStore } from '@/stores/onboarding'
 import { useFriendsFilter } from './composables/useFriendsFilter'
+import {
+  DEFAULT_TAP_SOUND_VARIANT,
+  TAP_SOUND_STORAGE_KEY,
+  normalizeTapSoundVariant,
+} from './utils/tapSound'
 import { preloadWebviews } from './composables/useWebviewPreload'
+import { TEXT_ZOOM_DEFAULT, normalizeTextZoomLevel } from './utils/textZoom'
 import { useSignupNudge } from '@/composables/useSignupNudge'
 import AppHeader from './components/AppHeader.vue'
 import AppSidebar from './components/AppSidebar.vue'
@@ -103,9 +110,15 @@ const onSwitchProfile = ((e: CustomEvent) => {
 }) as unknown as (e: Event) => void
 const onToggleDarkMode = () => { themeStore.toggleTheme() }
 const onNativeTextZoomChanged = ((e: CustomEvent) => {
-  const level = Number(e.detail?.level)
+  const level = normalizeTextZoomLevel(Number(e.detail?.level))
   if (!Number.isFinite(level)) return
   localStorage.setItem('sfz_text_zoom', String(level))
+}) as unknown as (e: Event) => void
+const onNativeTapSoundChanged = ((e: CustomEvent) => {
+  const enabled = e.detail?.enabled
+  if (typeof enabled !== 'boolean') return
+  localStorage.setItem('sfz_tap_sound', String(enabled))
+  syncSettingsPatch({ tapSoundEnabled: enabled }).catch(() => {})
 }) as unknown as (e: Event) => void
 
 // Global tap feedback — delegated to the native plugin so it honors
@@ -166,16 +179,29 @@ watch(() => themeStore.isDarkMode, async (enabled) => {
 })
 
 // Sync profile list to Android popup menu whenever profiles or active profile changes.
-// Use a lightweight computed fingerprint instead of deep: true (avoids traversing base64 avatars).
+// Keep the watcher shallow, but include a small avatar signature so the native menu refreshes after avatar edits.
+const nativeProfilesPayload = computed(() =>
+  profilesStore.profiles.map(p => ({
+    id: p.id,
+    name: p.name,
+    emoji: p.emoji,
+    avatar: p.avatar,
+  }))
+)
 const profilesFingerprint = computed(() =>
-  profilesStore.profiles.map(p => `${p.id}:${p.name}:${p.emoji}`).join('|')
+  nativeProfilesPayload.value
+    .map((p) => {
+      const avatarSig = p.avatar ? `${p.avatar.length}:${p.avatar.slice(-32)}` : ''
+      return `${p.id}:${p.name}:${p.emoji}:${avatarSig}`
+    })
+    .join('|')
 )
 watch(
   [profilesFingerprint, () => profilesStore.activeProfileId],
   async ([_, activeId]) => {
     if (!isTauri) return
     const { invoke } = await import('@tauri-apps/api/core')
-    const profilesJson = JSON.stringify(profilesStore.profiles.map(p => ({ id: p.id, name: p.name, emoji: p.emoji })))
+    const profilesJson = JSON.stringify(nativeProfilesPayload.value)
     invoke('set_profiles', { profilesJson, activeProfileId: activeId }).catch(() => {})
   },
   { immediate: true },
@@ -229,15 +255,23 @@ onMounted(async () => {
     // Sync initial dark mode state to native bar
     invoke('set_dark_mode', { enabled: themeStore.isDarkMode }).catch(() => {})
     // Sync initial text zoom to native webview
-    const savedZoom = Number(localStorage.getItem('sfz_text_zoom') ?? '100')
-    if (savedZoom !== 100) {
+    const savedZoom = normalizeTextZoomLevel(
+      Number(localStorage.getItem('sfz_text_zoom') ?? String(TEXT_ZOOM_DEFAULT))
+    )
+    localStorage.setItem('sfz_text_zoom', String(savedZoom))
+    if (savedZoom !== TEXT_ZOOM_DEFAULT) {
       invoke('set_text_zoom', { level: savedZoom }).catch(() => {})
     }
     // Sync initial haptic + tap sound preferences to native plugin
     // (Kotlin defaults to haptic=on, tapSound=off — resync if user changed them)
     const savedHaptic = localStorage.getItem('sfz_haptic') !== 'false'
     const savedTapSound = localStorage.getItem('sfz_tap_sound') === 'true'
+    const savedTapSoundVariant = normalizeTapSoundVariant(
+      localStorage.getItem(TAP_SOUND_STORAGE_KEY) ?? DEFAULT_TAP_SOUND_VARIANT
+    )
+    localStorage.setItem(TAP_SOUND_STORAGE_KEY, savedTapSoundVariant)
     invoke('plugin:android-webview|set_haptic', { enabled: savedHaptic }).catch(() => {})
+    invoke('plugin:android-webview|set_tap_sound_variant', { variant: savedTapSoundVariant }).catch(() => {})
     if (savedTapSound) {
       invoke('plugin:android-webview|set_tap_sound', { enabled: true }).catch(() => {})
     }
@@ -259,6 +293,7 @@ onMounted(async () => {
   window.addEventListener('sfz-switch-profile', onSwitchProfile)
   window.addEventListener('sfz-toggle-dark-mode', onToggleDarkMode)
   window.addEventListener('sfz-text-zoom-changed', onNativeTextZoomChanged)
+  window.addEventListener('sfz-tap-sound-changed', onNativeTapSoundChanged)
 
   // Global haptic/sound feedback for Vue-side buttons.
   // Delegated pointerdown → native plugin respects user's haptic + tap_sound prefs.
@@ -276,6 +311,7 @@ onUnmounted(() => {
   window.removeEventListener('sfz-switch-profile', onSwitchProfile)
   window.removeEventListener('sfz-toggle-dark-mode', onToggleDarkMode)
   window.removeEventListener('sfz-text-zoom-changed', onNativeTextZoomChanged)
+  window.removeEventListener('sfz-tap-sound-changed', onNativeTapSoundChanged)
   document.removeEventListener('pointerdown', onGlobalTap, true)
   unlistenTray?.()
 })

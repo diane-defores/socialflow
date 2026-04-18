@@ -240,7 +240,10 @@ async function handleSignup() {
     })
     visible.value = false
     emit('account-created')
-    await finalizePasswordSignIn({ email: normalizedEmail })
+    await finalizePasswordSignIn({
+      email: normalizedEmail,
+      flow: 'signUp',
+    })
   } catch (e: any) {
     resetPostAuthSyncFeedback()
     error.value = e?.message ?? t('account.error_generic')

@@ -188,16 +188,27 @@
             <div class="settings-toggle-row">
               <span class="settings-toggle-label">
                 <i class="pi pi-moon" />
-                {{ $t('theme.dark_mode') }}
+                {{ $t('theme.mode_label') }}
               </span>
+            </div>
+            <div class="settings-theme-mode-group">
               <button
-                class="friends-toggle-pill"
-                :class="{ enabled: themeStore.isDarkMode }"
-                @click="themeStore.toggleTheme()"
+                v-for="mode in themeModes"
+                :key="mode.value"
+                type="button"
+                class="settings-theme-mode-btn"
+                :class="{ active: themeStore.themeMode === mode.value }"
+                @click="setThemeMode(mode.value)"
               >
-                <span class="toggle-thumb" />
+                {{ $t(mode.labelKey) }}
               </button>
             </div>
+            <p
+              v-if="themeStore.themeMode === 'auto'"
+              class="settings-theme-hint"
+            >
+              {{ autoThemeHint }}
+            </p>
 
             <div class="settings-toggle-row">
               <span class="settings-toggle-label">
@@ -240,6 +251,25 @@
                 <span class="toggle-thumb" />
               </button>
             </div>
+            <div class="settings-sound-variant-row">
+              <span class="settings-label settings-sound-variant-label">
+                <i class="pi pi-sliders-h" />
+                {{ $t('settings.tap_sound_variant') }}
+              </span>
+              <div class="settings-sound-variant-options">
+                <button
+                  v-for="option in TAP_SOUND_VARIANTS"
+                  :key="option.value"
+                  type="button"
+                  class="settings-sound-variant-btn"
+                  :class="{ active: tapSoundVariant === option.value, disabled: !tapSoundEnabled }"
+                  :disabled="!tapSoundEnabled"
+                  @click="selectTapSoundVariant(option.value)"
+                >
+                  {{ $t(option.labelKey) }}
+                </button>
+              </div>
+            </div>
 
             <!-- Text zoom -->
             <div class="settings-toggle-row">
@@ -253,9 +283,9 @@
               v-model.number="textZoomLevel"
               type="range"
               class="text-zoom-slider"
-              min="75"
-              max="200"
-              step="25"
+              :min="TEXT_ZOOM_MIN"
+              :max="TEXT_ZOOM_MAX"
+              :step="TEXT_ZOOM_STEP"
               @change="onTextZoomChange"
             />
 
@@ -275,7 +305,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useThemeStore } from '@/stores/theme'
 import { useOnboardingStore } from '@/stores/onboarding'
@@ -287,7 +317,22 @@ import { beginPostAuthSyncFeedback, resetPostAuthSyncFeedback } from '@/lib/post
 import { getConvexClient } from '@/lib/convex'
 import { api } from '../../../../../../convex/_generated/api'
 import { useToast } from 'primevue/usetoast'
+import {
+  DEFAULT_TAP_SOUND_VARIANT,
+  TAP_SOUND_STORAGE_KEY,
+  TAP_SOUND_VARIANTS,
+  type TapSoundVariant,
+  normalizeTapSoundVariant,
+} from '../utils/tapSound'
+import {
+  TEXT_ZOOM_DEFAULT,
+  TEXT_ZOOM_MAX,
+  TEXT_ZOOM_MIN,
+  TEXT_ZOOM_STEP,
+  normalizeTextZoomLevel,
+} from '../utils/textZoom'
 import BackupRestore from './BackupRestore.vue'
+import type { ThemeMode } from '@/utils/themeAuto'
 
 const props = defineProps<{ modelValue: boolean }>()
 const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>()
@@ -298,6 +343,21 @@ const onboardingStore = useOnboardingStore()
 const toast = useToast()
 const nudge = useSignupNudge()
 const isSignedIn = isAuthenticated
+const themeModes: Array<{ value: ThemeMode; labelKey: string }> = [
+  { value: 'light', labelKey: 'theme.light' },
+  { value: 'dark', labelKey: 'theme.dark' },
+  { value: 'auto', labelKey: 'theme.auto' },
+]
+const autoThemeHint = computed(() => {
+  const sourceKey = themeStore.autoThemeSource === 'sun'
+    ? 'theme.auto_source_sun'
+    : 'theme.auto_source_system'
+  return `${t('theme.auto_helper')} ${t(sourceKey)}`
+})
+
+function setThemeMode(mode: ThemeMode) {
+  void themeStore.setThemeMode(mode, { allowPrompt: mode === 'auto' })
+}
 
 // ─── Settings state ──────────────────────────────────────────
 const settingsEmail = ref(localStorage.getItem('sfz_email') ?? '')
@@ -369,7 +429,11 @@ async function handleAccountAuth(flow: 'signIn' | 'signUp') {
       life: 1800,
     })
     signupPassword.value = ''
-    await finalizePasswordSignIn({ email: normalizedEmail, reopenSettings: true })
+    await finalizePasswordSignIn({
+      email: normalizedEmail,
+      flow,
+      reopenSettings: true,
+    })
   } catch (e: unknown) {
     resetPostAuthSyncFeedback()
     signupError.value = getAuthErrorMessage(e, flow)
@@ -509,6 +573,18 @@ async function handleSignOut() {
 // ─── Haptic & tap sound ─────────────────────────────────────
 const hapticEnabled = ref(localStorage.getItem('sfz_haptic') !== 'false')
 const tapSoundEnabled = ref(localStorage.getItem('sfz_tap_sound') === 'true')
+const tapSoundVariant = ref<TapSoundVariant>(
+  normalizeTapSoundVariant(localStorage.getItem(TAP_SOUND_STORAGE_KEY) ?? DEFAULT_TAP_SOUND_VARIANT)
+)
+const onNativeTapSoundChanged = ((e: CustomEvent) => {
+  const enabled = e.detail?.enabled
+  if (typeof enabled !== 'boolean') return
+  tapSoundEnabled.value = enabled
+}) as unknown as (e: Event) => void
+
+if (tapSoundVariant.value !== localStorage.getItem(TAP_SOUND_STORAGE_KEY)) {
+  localStorage.setItem(TAP_SOUND_STORAGE_KEY, tapSoundVariant.value)
+}
 
 function toggleHaptic() {
   hapticEnabled.value = !hapticEnabled.value
@@ -528,11 +604,29 @@ function toggleTapSound() {
   }).catch(() => {})
 }
 
+function selectTapSoundVariant(variant: TapSoundVariant) {
+  tapSoundVariant.value = normalizeTapSoundVariant(variant)
+  localStorage.setItem(TAP_SOUND_STORAGE_KEY, tapSoundVariant.value)
+  syncSettingsPatch({ tapSoundVariant: tapSoundVariant.value })
+  import('@tauri-apps/api/core').then(({ invoke }) => {
+    invoke('plugin:android-webview|set_tap_sound_variant', { variant: tapSoundVariant.value }).catch(() => {})
+    if (tapSoundEnabled.value) {
+      invoke('plugin:android-webview|preview_tap_sound').catch(() => {})
+    }
+  }).catch(() => {})
+}
+
 // ─── Text zoom ──────────────────────────────────────────────
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
-const textZoomLevel = ref(Number(localStorage.getItem('sfz_text_zoom') ?? '100'))
+const storedTextZoom = Number(localStorage.getItem('sfz_text_zoom') ?? String(TEXT_ZOOM_DEFAULT))
+const textZoomLevel = ref(normalizeTextZoomLevel(storedTextZoom))
+
+if (textZoomLevel.value !== storedTextZoom) {
+  localStorage.setItem('sfz_text_zoom', String(textZoomLevel.value))
+}
 
 function onTextZoomChange() {
+  textZoomLevel.value = normalizeTextZoomLevel(textZoomLevel.value)
   localStorage.setItem('sfz_text_zoom', String(textZoomLevel.value))
   syncSettingsPatch({ textZoom: textZoomLevel.value })
   if (isTauri) {
@@ -551,6 +645,11 @@ watch(() => props.modelValue, (open) => {
   clearDragResetTimer()
 
   if (open) {
+    hapticEnabled.value = localStorage.getItem('sfz_haptic') !== 'false'
+    tapSoundEnabled.value = localStorage.getItem('sfz_tap_sound') === 'true'
+    tapSoundVariant.value = normalizeTapSoundVariant(
+      localStorage.getItem(TAP_SOUND_STORAGE_KEY) ?? DEFAULT_TAP_SOUND_VARIANT
+    )
     dragOffset.value = 0
     isDragging.value = false
     activePointerId.value = null
@@ -560,7 +659,12 @@ watch(() => props.modelValue, (open) => {
   scheduleDragReset()
 })
 
+onMounted(() => {
+  window.addEventListener('sfz-tap-sound-changed', onNativeTapSoundChanged)
+})
+
 onUnmounted(() => {
+  window.removeEventListener('sfz-tap-sound-changed', onNativeTapSoundChanged)
   clearDragResetTimer()
 })
 </script>
@@ -674,6 +778,45 @@ onUnmounted(() => {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-color-secondary);
+}
+
+.settings-sound-variant-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin: -0.2rem 0 0.8rem;
+}
+
+.settings-sound-variant-label {
+  margin-bottom: 0;
+}
+
+.settings-sound-variant-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.settings-sound-variant-btn {
+  min-height: 2.4rem;
+  padding: 0.55rem 0.6rem;
+  border-radius: 12px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface-ground);
+  color: var(--text-color);
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: border-color 0.15s, background-color 0.15s, color 0.15s, opacity 0.15s;
+}
+
+.settings-sound-variant-btn.active {
+  background: color-mix(in srgb, var(--primary-color) 12%, var(--surface-card) 88%);
+  border-color: color-mix(in srgb, var(--primary-color) 42%, var(--surface-border) 58%);
+  color: var(--primary-color);
+}
+
+.settings-sound-variant-btn.disabled {
+  opacity: 0.45;
 }
 
 .settings-field {
@@ -929,6 +1072,38 @@ onUnmounted(() => {
 
 .settings-toggle-row:last-child {
   border-bottom: none;
+}
+
+.settings-theme-mode-group {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin: -0.15rem 0 0.8rem;
+}
+
+.settings-theme-mode-btn {
+  min-height: 2.45rem;
+  padding: 0.55rem 0.6rem;
+  border-radius: 12px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface-ground);
+  color: var(--text-color-secondary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  transition: border-color 0.15s, background-color 0.15s, color 0.15s;
+}
+
+.settings-theme-mode-btn.active {
+  background: color-mix(in srgb, var(--primary-color) 12%, var(--surface-card) 88%);
+  border-color: color-mix(in srgb, var(--primary-color) 42%, var(--surface-border) 58%);
+  color: var(--primary-color);
+}
+
+.settings-theme-hint {
+  margin: -0.3rem 0 0.8rem;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--text-color-secondary);
 }
 
 .settings-toggle-label {

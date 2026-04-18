@@ -36,7 +36,7 @@
             class="pi pi-th-large"
             style="font-size:0.65rem; margin-right:0.3rem;"
           />
-          {{ visibleMenuItems.length }} {{ $t('profile.networks_count', { count: visibleMenuItems.length }) }} · {{ $t('profile.tap_to_manage') }}
+          {{ $t('profile.networks_count', { count: visibleMenuItems.length }) }} · {{ $t('profile.tap_to_manage') }}
         </span>
         <div class="profile-pills">
           <span
