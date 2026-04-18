@@ -11,8 +11,8 @@ export type PostAuthSyncStage =
 type PostAuthSyncMode = "blocking" | "success";
 
 const READY_NOTICE_KEY = "sfz_post_auth_ready_notice_v1";
-const MIN_STAGE_MS = 720;
-const READY_NOTICE_MS = 2200;
+const MIN_STAGE_MS = 1000;
+const READY_NOTICE_MS = 3000;
 
 const state = reactive<{
   visible: boolean;

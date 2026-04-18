@@ -21,7 +21,7 @@ import {
 let hydratedUserId: string | null = null;
 let hydratePromise: Promise<void> | null = null;
 const REOPEN_SETTINGS_AFTER_AUTH_KEY = "sfz_reopen_settings_after_auth";
-const AUTH_RELOAD_DELAY_MS = 650;
+const AUTH_RELOAD_DELAY_MS = 3000;
 
 function applyCloudSettings(settings: any) {
   const themeStore = useThemeStore();
