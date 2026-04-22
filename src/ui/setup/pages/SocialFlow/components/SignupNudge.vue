@@ -91,6 +91,8 @@
   <Dialog
     v-if="!isMobile"
     v-model:visible="visible"
+    class="nudge-dialog"
+    :class="{ 'nudge-dialog--dark': themeStore.isDarkMode }"
     modal
     :closable="true"
     :header="$t('nudge.title')"
@@ -176,6 +178,7 @@
 import { ref, computed } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useI18n } from 'vue-i18n'
+import { useThemeStore } from '@/stores/theme'
 import { signIn } from '@/lib/convexAuth'
 import { finalizePasswordSignIn } from '@/lib/cloudSync'
 import { beginPostAuthSyncFeedback, resetPostAuthSyncFeedback } from '@/lib/postAuthSyncFeedback'
@@ -190,6 +193,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 const toast = useToast()
+const themeStore = useThemeStore()
 
 const visible = computed({
   get: () => props.modelValue,
@@ -453,5 +457,59 @@ async function copyError() {
 .nudge-sheet-enter-from .nudge-sheet,
 .nudge-sheet-leave-to .nudge-sheet {
   transform: translateY(100%);
+}
+
+:deep(.nudge-dialog.p-dialog) {
+  --nudge-dialog-bg: var(--surface-card, #fff);
+  --nudge-dialog-border: color-mix(in srgb, var(--surface-border, #dee2e6) 82%, white 18%);
+  --nudge-dialog-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
+  border: 1px solid var(--nudge-dialog-border);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: var(--nudge-dialog-shadow);
+}
+
+:deep(.nudge-dialog .p-dialog-header),
+:deep(.nudge-dialog .p-dialog-content) {
+  background: var(--nudge-dialog-bg);
+  color: var(--text-color);
+}
+
+:deep(.nudge-dialog .p-dialog-header) {
+  padding: 1rem 1.25rem 0.5rem;
+  border-bottom: 1px solid transparent;
+}
+
+:deep(.nudge-dialog .p-dialog-title) {
+  color: var(--text-color);
+  font-weight: 700;
+}
+
+:deep(.nudge-dialog .p-dialog-header-icon),
+:deep(.nudge-dialog .p-dialog-header-close) {
+  color: var(--text-color-secondary);
+}
+
+:deep(.nudge-dialog .p-dialog-content) {
+  padding: 0 1.25rem 1.25rem;
+}
+
+:deep(.nudge-dialog.nudge-dialog--dark.p-dialog) {
+  --nudge-dialog-bg: linear-gradient(
+    180deg,
+    rgba(24, 24, 27, 0.98),
+    rgba(9, 9, 11, 0.96)
+  );
+  --nudge-dialog-border: rgba(82, 82, 91, 0.72);
+  --nudge-dialog-shadow: 0 28px 70px rgba(2, 6, 23, 0.56);
+}
+
+:deep(.nudge-dialog.nudge-dialog--dark .p-dialog-header) {
+  border-bottom-color: rgba(82, 82, 91, 0.42);
+}
+
+:deep(.nudge-dialog.nudge-dialog--dark .p-dialog-header-icon:hover),
+:deep(.nudge-dialog.nudge-dialog--dark .p-dialog-header-close:hover) {
+  background: rgba(255, 255, 255, 0.06);
 }
 </style>

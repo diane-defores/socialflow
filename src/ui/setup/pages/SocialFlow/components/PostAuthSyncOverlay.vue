@@ -4,6 +4,7 @@
       <div
         v-if="feedback.visible"
         class="sync-overlay"
+        :class="{ 'is-dark': themeStore.isDarkMode }"
         role="alertdialog"
         aria-modal="true"
         aria-live="polite"
@@ -46,12 +47,14 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
+import { useThemeStore } from "@/stores/theme";
 import {
   postAuthSyncFeedback as feedback,
   type PostAuthSyncStage,
 } from "@/lib/postAuthSyncFeedback";
 
 const { t } = useI18n();
+const themeStore = useThemeStore();
 
 const blockingOrder: Array<Exclude<PostAuthSyncStage, "idle" | "ready">> = [
   "waitingServer",
@@ -159,6 +162,7 @@ const steps = computed(() =>
   color: var(--text-color);
 }
 
+.sync-overlay.is-dark,
 :global(html.dark) .sync-overlay,
 :global(.dark) .sync-overlay {
   --sync-backdrop-tint: rgba(91, 168, 245, 0.22);

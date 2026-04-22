@@ -305,6 +305,157 @@ private val DESKTOP_VIEWPORT_SCRIPT = """
 })();
 """.trimIndent()
 
+// Shared helper for LinkedIn's native dark-mode preference bridge.
+// LinkedIn's public help says the preference is saved locally in the browser/device.
+// We therefore patch both storage and cookie access so the site sees a consistent
+// light/dark preference before its own JS finishes booting.
+private val LINKEDIN_THEME_BRIDGE_HELPERS = """
+function linkedInThemeStorageKeys() {
+  return ['mobileWebTheme', 'theme', 'themeMode', 'displayTheme', 'display_mode', 'appearance', 'colorScheme', 'color_scheme', 'darkMode', 'dark_mode', 'isDarkMode'];
+}
+function linkedInThemeCookieKeys() {
+  return ['li_theme', 'mobileWebTheme', 'theme', 'themeMode', 'displayTheme', 'display_mode', 'appearance', 'colorScheme', 'color_scheme', 'isDarkMode'];
+}
+function linkedInThemeValueForKey(key, enabled) {
+  var normalized = String(key || '').toLowerCase();
+  if (normalized === 'isdarkmode' || normalized === 'darkmode' || normalized === 'dark_mode') {
+    return enabled ? 'true' : 'false';
+  }
+  return enabled ? 'dark' : 'light';
+}
+function isLinkedInThemeStorageKey(key) {
+  var normalized = String(key || '').toLowerCase();
+  return /^(mobilewebtheme|theme|thememode|displaytheme|display_mode|appearance|colorscheme|color_scheme|darkmode|dark_mode|isdarkmode)$/.test(normalized);
+}
+function isLinkedInThemeCookieKey(key) {
+  var normalized = String(key || '').toLowerCase();
+  return /^(li_theme|mobilewebtheme|theme|thememode|displaytheme|display_mode|appearance|colorscheme|color_scheme|isdarkmode)$/.test(normalized);
+}
+function patchLinkedInCookies(enabled) {
+  if (!isLinkedIn()) return;
+  try {
+    window.__sfzLinkedInThemeEnabled = !!enabled;
+  } catch (e) {}
+  try {
+    var proto = (window.Document && Document.prototype) ? Document.prototype : null;
+    var descriptor = proto ? Object.getOwnPropertyDescriptor(proto, 'cookie') : null;
+    if (descriptor && !window.__sfzLinkedInCookiePatched) {
+      var originalGetter = descriptor.get;
+      var originalSetter = descriptor.set;
+      Object.defineProperty(proto, 'cookie', {
+        configurable: true,
+        enumerable: descriptor.enumerable,
+        get: function() {
+          var base = '';
+          try { base = String(originalGetter.call(this) || ''); } catch (e) {}
+          var extras = [];
+          var keys = linkedInThemeCookieKeys();
+          for (var i = 0; i < keys.length; i++) {
+            var name = keys[i];
+            var escaped = name.replace(/[.*+?^$()|[\]\\]/g, '\\$&');
+            if (!(new RegExp('(?:^|;\\s*)' + escaped + '=')).test(base)) {
+              extras.push(name + '=' + linkedInThemeValueForKey(name, window.__sfzLinkedInThemeEnabled));
+            }
+          }
+          if (!extras.length) return base;
+          return base ? base + '; ' + extras.join('; ') : extras.join('; ');
+        },
+        set: function(rawValue) {
+          var nextValue = String(rawValue || '');
+          try {
+            var separatorIndex = nextValue.indexOf(';');
+            var firstPart = separatorIndex === -1 ? nextValue : nextValue.slice(0, separatorIndex);
+            var eqIndex = firstPart.indexOf('=');
+            if (eqIndex !== -1) {
+              var rawName = firstPart.slice(0, eqIndex).trim();
+              var name = decodeURIComponent(rawName);
+              if (isLinkedInThemeCookieKey(name)) {
+                var normalized = encodeURIComponent(name) + '=' + encodeURIComponent(linkedInThemeValueForKey(name, window.__sfzLinkedInThemeEnabled));
+                nextValue = normalized + (separatorIndex === -1 ? '' : nextValue.slice(separatorIndex));
+              }
+            }
+          } catch (e) {}
+          return originalSetter.call(this, nextValue);
+        }
+      });
+      window.__sfzLinkedInCookiePatched = true;
+    }
+  } catch (e) {}
+  try {
+    var cookieKeys = linkedInThemeCookieKeys();
+    for (var j = 0; j < cookieKeys.length; j++) {
+      var cookieName = cookieKeys[j];
+      var cookieValue = linkedInThemeValueForKey(cookieName, enabled);
+      try { document.cookie = encodeURIComponent(cookieName) + '=' + encodeURIComponent(cookieValue) + '; path=/; domain=.linkedin.com; SameSite=Lax'; } catch (e) {}
+      try { document.cookie = encodeURIComponent(cookieName) + '=' + encodeURIComponent(cookieValue) + '; path=/; SameSite=Lax'; } catch (e) {}
+    }
+  } catch (e) {}
+}
+function forceLinkedInTheme(enabled) {
+  if (!isLinkedIn()) return;
+  try {
+    window.__sfzLinkedInThemeEnabled = !!enabled;
+    window.__sfzLinkedInThemeValue = enabled ? 'dark' : 'light';
+    function patchStorage(storage) {
+      if (!storage) return;
+      try {
+        var proto = Object.getPrototypeOf(storage);
+        if (proto && !proto.__sfzLinkedInThemePatched) {
+          var originalGetItem = proto.getItem;
+          var originalSetItem = proto.setItem;
+          var originalRemoveItem = proto.removeItem;
+          proto.getItem = function(key) {
+            if (isLinkedInThemeStorageKey(key)) {
+              return linkedInThemeValueForKey(key, window.__sfzLinkedInThemeEnabled);
+            }
+            return originalGetItem.apply(this, arguments);
+          };
+          proto.setItem = function(key, value) {
+            if (isLinkedInThemeStorageKey(key)) {
+              return originalSetItem.call(this, key, linkedInThemeValueForKey(key, window.__sfzLinkedInThemeEnabled));
+            }
+            return originalSetItem.apply(this, arguments);
+          };
+          proto.removeItem = function(key) {
+            if (isLinkedInThemeStorageKey(key)) {
+              return originalSetItem.call(this, key, linkedInThemeValueForKey(key, window.__sfzLinkedInThemeEnabled));
+            }
+            return originalRemoveItem.apply(this, arguments);
+          };
+          proto.__sfzLinkedInThemePatched = true;
+        }
+      } catch (e) {}
+      try {
+        var storageKeys = linkedInThemeStorageKeys();
+        for (var i = 0; i < storageKeys.length; i++) {
+          (function(propKey) {
+            try {
+              Object.defineProperty(storage, propKey, {
+                configurable: true,
+                get: function() {
+                  return linkedInThemeValueForKey(propKey, window.__sfzLinkedInThemeEnabled);
+                },
+                set: function(_) {
+                  try {
+                    storage.setItem(propKey, linkedInThemeValueForKey(propKey, window.__sfzLinkedInThemeEnabled));
+                  } catch (e) {}
+                }
+              });
+            } catch (e) {}
+            try {
+              storage.setItem(propKey, linkedInThemeValueForKey(propKey, enabled));
+            } catch (e) {}
+          })(storageKeys[i]);
+        }
+      } catch (e) {}
+    }
+    patchStorage(window.localStorage);
+    patchStorage(window.sessionStorage);
+    patchLinkedInCookies(enabled);
+  } catch (e) {}
+}
+""".trimIndent()
+
 // Document-start dark-mode bridge. Reads the last preference we stored in page-local
 // storage so new navigations pick the right theme before site JS finishes booting.
 private val DARK_MODE_DOC_START_SCRIPT = """
@@ -324,58 +475,7 @@ private val DARK_MODE_DOC_START_SCRIPT = """
       } catch (e) {}
       return false;
     }
-
-    function forceLinkedInTheme(dark) {
-      if (!isLinkedIn()) return;
-      try {
-        window.__sfzLinkedInThemeValue = dark ? 'dark' : 'light';
-        function patchStorage(storage) {
-          if (!storage) return;
-          var forced = window.__sfzLinkedInThemeValue;
-          try {
-            var proto = Object.getPrototypeOf(storage);
-            if (proto && !proto.__sfzLinkedInThemePatched) {
-              var originalGetItem = proto.getItem;
-              var originalSetItem = proto.setItem;
-              var originalRemoveItem = proto.removeItem;
-              proto.getItem = function(key) {
-                if (key === 'mobileWebTheme') return window.__sfzLinkedInThemeValue || forced;
-                return originalGetItem.apply(this, arguments);
-              };
-              proto.setItem = function(key, value) {
-                if (key === 'mobileWebTheme') {
-                  return originalSetItem.call(this, key, window.__sfzLinkedInThemeValue || forced);
-                }
-                return originalSetItem.apply(this, arguments);
-              };
-              proto.removeItem = function(key) {
-                if (key === 'mobileWebTheme') {
-                  return originalSetItem.call(this, key, window.__sfzLinkedInThemeValue || forced);
-                }
-                return originalRemoveItem.apply(this, arguments);
-              };
-              proto.__sfzLinkedInThemePatched = true;
-            }
-          } catch (e) {}
-          try {
-            Object.defineProperty(storage, 'mobileWebTheme', {
-              configurable: true,
-              get: function() {
-                return window.__sfzLinkedInThemeValue || forced;
-              },
-              set: function(_) {
-                try {
-                  storage.setItem('mobileWebTheme', window.__sfzLinkedInThemeValue || forced);
-                } catch (e) {}
-              }
-            });
-          } catch (e) {}
-          try { storage.setItem('mobileWebTheme', window.__sfzLinkedInThemeValue || forced); } catch (e) {}
-        }
-        patchStorage(window.localStorage);
-        patchStorage(window.sessionStorage);
-      } catch (e) {}
-    }
+${LINKEDIN_THEME_BRIDGE_HELPERS}
 
     function install(dark) {
       try {
@@ -1284,6 +1384,37 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         }
     }
 
+    private fun seedLinkedInThemeCookies() {
+        val cookieManager = CookieManager.getInstance()
+        val themeValue = if (isDarkMode) "dark" else "light"
+        val booleanThemeValue = if (isDarkMode) "true" else "false"
+        val cookieValues = linkedMapOf(
+            "li_theme" to themeValue,
+            "mobileWebTheme" to themeValue,
+            "theme" to themeValue,
+            "themeMode" to themeValue,
+            "displayTheme" to themeValue,
+            "display_mode" to themeValue,
+            "appearance" to themeValue,
+            "colorScheme" to themeValue,
+            "color_scheme" to themeValue,
+            "isDarkMode" to booleanThemeValue,
+        )
+        val urls = listOf("https://www.linkedin.com", "https://linkedin.com")
+
+        try {
+            for (url in urls) {
+                for ((name, value) in cookieValues) {
+                    cookieManager.setCookie(url, "$name=$value; Path=/; Domain=.linkedin.com; SameSite=Lax")
+                    cookieManager.setCookie(url, "$name=$value; Path=/; SameSite=Lax")
+                }
+            }
+            cookieManager.flush()
+        } catch (_: Exception) {
+            // Some vendor WebViews reject individual cookie shapes; JS bridge will still run.
+        }
+    }
+
     /**
      * Best-effort dark mode for social WebViews.
      *
@@ -1308,9 +1439,8 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
      *
      * Current implication for debugging:
      * - Facebook may end up in tier 3.
-     * - LinkedIn has no custom fallback in our code. If LinkedIn looks wrong, it is usually
-     *   either refusing our generic theme hints (tier 1 failed) or falling back to WebView's
-     *   algorithmic darkening (tier 2).
+     * - LinkedIn now gets an explicit storage/cookie preference bridge, and we avoid
+     *   WebView algorithmic darkening there so the site can render its own native dark theme.
      */
     private fun applyDarkModeToWebView(view: WebView?) {
         if (view == null) return
@@ -1318,12 +1448,18 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         val settings = view.settings
         val isFacebookView = currentNetworkId == "facebook" ||
             (view.url?.contains("facebook.com", ignoreCase = true) == true)
+        val isLinkedInView = currentNetworkId == "linkedin" ||
+            (view.url?.contains("linkedin.com", ignoreCase = true) == true)
+
+        if (isLinkedInView) {
+            seedLinkedInThemeCookies()
+        }
 
         try {
             if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
                 WebSettingsCompat.setForceDark(
                     settings,
-                    if (isDarkMode) WebSettingsCompat.FORCE_DARK_ON else WebSettingsCompat.FORCE_DARK_OFF
+                    if (isDarkMode && !isLinkedInView) WebSettingsCompat.FORCE_DARK_ON else WebSettingsCompat.FORCE_DARK_OFF
                 )
             }
 
@@ -1346,7 +1482,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
             }
 
             if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
-                WebSettingsCompat.setAlgorithmicDarkeningAllowed(settings, isDarkMode)
+                WebSettingsCompat.setAlgorithmicDarkeningAllowed(settings, isDarkMode && !isLinkedInView)
             }
         } catch (_: Exception) {
             // Older / vendor WebViews may expose a feature flag but still fail at runtime.
@@ -1362,57 +1498,7 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
                 function isLinkedIn() {
                   return /(^|\.)linkedin\.com$/i.test(location.hostname);
                 }
-                function forceLinkedInTheme(enabled) {
-                  if (!isLinkedIn()) return;
-                  try {
-                    window.__sfzLinkedInThemeValue = enabled ? 'dark' : 'light';
-                    function patchStorage(storage) {
-                      if (!storage) return;
-                      var forced = window.__sfzLinkedInThemeValue;
-                      try {
-                        var proto = Object.getPrototypeOf(storage);
-                        if (proto && !proto.__sfzLinkedInThemePatched) {
-                          var originalGetItem = proto.getItem;
-                          var originalSetItem = proto.setItem;
-                          var originalRemoveItem = proto.removeItem;
-                          proto.getItem = function(key) {
-                            if (key === 'mobileWebTheme') return window.__sfzLinkedInThemeValue || forced;
-                            return originalGetItem.apply(this, arguments);
-                          };
-                          proto.setItem = function(key, value) {
-                            if (key === 'mobileWebTheme') {
-                              return originalSetItem.call(this, key, window.__sfzLinkedInThemeValue || forced);
-                            }
-                            return originalSetItem.apply(this, arguments);
-                          };
-                          proto.removeItem = function(key) {
-                            if (key === 'mobileWebTheme') {
-                              return originalSetItem.call(this, key, window.__sfzLinkedInThemeValue || forced);
-                            }
-                            return originalRemoveItem.apply(this, arguments);
-                          };
-                          proto.__sfzLinkedInThemePatched = true;
-                        }
-                      } catch (e) {}
-                      try {
-                        Object.defineProperty(storage, 'mobileWebTheme', {
-                          configurable: true,
-                          get: function() {
-                            return window.__sfzLinkedInThemeValue || forced;
-                          },
-                          set: function(_) {
-                            try {
-                              storage.setItem('mobileWebTheme', window.__sfzLinkedInThemeValue || forced);
-                            } catch (e) {}
-                          }
-                        });
-                      } catch (e) {}
-                      try { storage.setItem('mobileWebTheme', window.__sfzLinkedInThemeValue || forced); } catch (e) {}
-                    }
-                    patchStorage(window.localStorage);
-                    patchStorage(window.sessionStorage);
-                  } catch (e) {}
-                }
+${LINKEDIN_THEME_BRIDGE_HELPERS}
                 try {
                   localStorage.setItem('__sfzPreferredDark', dark ? '1' : '0');
                 } catch (e) {}
@@ -1509,6 +1595,8 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         val generation = darkModeReapplyGeneration
         val delays = if (currentNetworkId == "facebook") {
             longArrayOf(900L)
+        } else if (currentNetworkId == "linkedin") {
+            longArrayOf(350L, 1200L)
         } else {
             longArrayOf(350L)
         }

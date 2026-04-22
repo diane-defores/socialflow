@@ -19,9 +19,10 @@ Dashboard unifié pour gérer tous vos réseaux sociaux depuis une seule interfa
 Une seule codebase Vue.js → 6 plateformes
 
 src/ui/setup/pages/SocialFlow/    # App principale (Vue 3 + PrimeVue + Clerk)
+src/ui/setup/pages/SocialFlow/    # App principale (Vue 3 + PrimeVue)
 ├── main.ts                        # Entry point standalone
 ├── App.vue                        # Layout responsive (mobile/desktop)
-├── router/                        # Vue Router (createWebHistory)
+├── router/                        # Vue Router (createWebHashHistory)
 ├── components/
 │   ├── networks/                  # Vues par réseau social
 │   ├── kanban/                    # Tableau Kanban
@@ -86,7 +87,7 @@ SocialFlow affiche des réseaux sociaux dans des WebViews natives et injecte des
 ## Stack technique
 
 - **Frontend** : Vue 3, PrimeVue, Tailwind CSS, DaisyUI, Pinia
-- **Auth** : Clerk
+- **Auth** : Convex Auth (`@auth/core`, `@convex-dev/auth`)
 - **Backend** : Convex (serverless)
 - **i18n** : vue-i18n
 - **Build** : Vite 5, pnpm
@@ -96,11 +97,11 @@ SocialFlow affiche des réseaux sociaux dans des WebViews natives et injecte des
 ## Variables d'environnement
 
 ```env
-VITE_CLERK_PUBLISHABLE_KEY=   # Auth Clerk
-VITE_SUPABASE_URL=            # Supabase (optionnel)
-VITE_SUPABASE_KEY=            # Supabase (optionnel)
-VITE_GMAIL_CLIENT_ID=         # Gmail API (optionnel)
-VITE_GMAIL_API_KEY=           # Gmail API (optionnel)
+VITE_CONVEX_URL=              # URL Convex (obligatoire en runtime front)
+VITE_GMAIL_CLIENT_ID=         # Google API (optionnel, Gmail)
+VITE_GMAIL_API_KEY=           # Google API (optionnel, Gmail)
+CONVEX_DEPLOYMENT=            # Déploiement Convex (local/dev), si utilisé
+VITE_CONVEX_SITE_URL=         # Site URL Convex (optionnel)
 ```
 
 ## Scripts

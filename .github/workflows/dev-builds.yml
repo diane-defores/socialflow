@@ -22,7 +22,7 @@ permissions:
 jobs:
   android-debug:
     name: Android debug APK (arm64)
-    runs-on: ubuntu-22.04
+    runs-on: blacksmith-2vcpu-ubuntu-2404
     timeout-minutes: 60
 
     steps:
@@ -107,7 +107,7 @@ jobs:
   windows-test:
     if: false  # Paused — no Windows PC to test
     name: Windows test installer
-    runs-on: windows-latest
+    runs-on: blacksmith-2vcpu-windows-2025
     timeout-minutes: 60
 
     steps:

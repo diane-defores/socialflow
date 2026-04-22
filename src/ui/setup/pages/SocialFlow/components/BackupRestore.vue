@@ -1,5 +1,8 @@
 <template>
-  <div class="backup-section">
+  <div
+    class="backup-section"
+    :class="{ 'is-dark': themeStore.isDarkMode }"
+  >
     <div
       v-if="showInfo"
       class="backup-info"
@@ -33,6 +36,7 @@
         <div
           v-if="dialogVisible"
           class="backup-dialog-overlay"
+          :class="{ 'is-dark': themeStore.isDarkMode }"
           @click.self="closeIfIdle"
         >
           <div class="backup-dialog">
@@ -202,6 +206,7 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useThemeStore } from '@/stores/theme'
 import { useBackup } from '../composables/useBackup'
 
 withDefaults(defineProps<{
@@ -212,6 +217,7 @@ withDefaults(defineProps<{
 
 const { t } = useI18n()
 const { exportBackup, importBackup } = useBackup()
+const themeStore = useThemeStore()
 
 const dialogVisible = ref(false)
 const mode = ref<'export' | 'import'>('export')
@@ -362,7 +368,94 @@ async function confirm() {
 
 <style scoped>
 .backup-section {
+  --backup-info-bg: rgba(59, 130, 246, 0.08);
+  --backup-info-border: rgba(59, 130, 246, 0.2);
+  --backup-info-text: var(--text-color, #333);
+  --backup-info-icon: #3b82f6;
+  --backup-btn-bg: var(--surface-card, #fff);
+  --backup-btn-border: var(--surface-border, #ddd);
+  --backup-btn-text: var(--text-color, #333);
+  --backup-btn-hover: var(--surface-hover, #f5f5f5);
   width: 100%;
+}
+
+.backup-dialog-overlay {
+  --backup-overlay-bg: rgba(0, 0, 0, 0.5);
+  --backup-dialog-bg: var(--surface-card, #fff);
+  --backup-dialog-border: color-mix(in srgb, var(--surface-border, #ddd) 82%, white 18%);
+  --backup-dialog-text: var(--text-color, #333);
+  --backup-dialog-muted: color-mix(in srgb, var(--text-color, #333) 72%, transparent);
+  --backup-dialog-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --backup-input-bg: var(--surface-ground, #f8f8f8);
+  --backup-input-border: var(--surface-border, #ddd);
+  --backup-input-text: var(--text-color, #333);
+  --backup-input-placeholder: color-mix(in srgb, var(--text-color-secondary, #666) 78%, transparent);
+  --backup-result-detail-bg: var(--surface-ground, #f5f5f5);
+  --backup-result-detail-text: var(--text-color, #333);
+  --backup-result-tip-bg: rgba(39, 174, 96, 0.08);
+  --backup-result-tip-border: rgba(39, 174, 96, 0.2);
+  --backup-result-tip-text: #27ae60;
+  --backup-result-message: color-mix(in srgb, var(--text-color, #333) 82%, transparent);
+  --backup-result-countdown: color-mix(in srgb, var(--text-color, #333) 72%, transparent);
+  --backup-error-bg: rgba(231, 76, 60, 0.08);
+  --backup-error-border: rgba(231, 76, 60, 0.2);
+  --backup-error-text: #c0392b;
+  --backup-copy-btn-border: rgba(231, 76, 60, 0.3);
+  --backup-copy-btn-text: #c0392b;
+  --backup-copy-btn-hover: rgba(231, 76, 60, 0.08);
+  --backup-cancel-bg: var(--surface-ground, #eee);
+  --backup-cancel-text: var(--text-color, #333);
+  --backup-primary-bg: #3b82f6;
+  --backup-primary-bg-hover: #2563eb;
+  --backup-primary-text: #fff;
+  --backup-toggle-color: color-mix(in srgb, var(--text-color, #333) 62%, transparent);
+  position: fixed;
+  width: 100%;
+}
+
+.backup-section.is-dark,
+.backup-dialog-overlay.is-dark {
+  --backup-info-bg: rgba(91, 168, 245, 0.12);
+  --backup-info-border: rgba(91, 168, 245, 0.28);
+  --backup-info-text: #d4d4d8;
+  --backup-info-icon: #93c5fd;
+  --backup-btn-bg: color-mix(in srgb, var(--surface-card, #18181b) 92%, rgba(91, 168, 245, 0.08) 8%);
+  --backup-btn-border: color-mix(in srgb, var(--surface-border, #27272a) 80%, var(--primary-color) 20%);
+  --backup-btn-text: #e4e4e7;
+  --backup-btn-hover: color-mix(in srgb, var(--surface-card, #18181b) 80%, var(--primary-color) 20%);
+  --backup-overlay-bg: rgba(2, 6, 23, 0.76);
+  --backup-dialog-bg: linear-gradient(
+    180deg,
+    rgba(24, 24, 27, 0.98),
+    rgba(9, 9, 11, 0.96)
+  );
+  --backup-dialog-border: rgba(82, 82, 91, 0.72);
+  --backup-dialog-text: #e4e4e7;
+  --backup-dialog-muted: #a1a1aa;
+  --backup-dialog-shadow: 0 28px 70px rgba(2, 6, 23, 0.56);
+  --backup-input-bg: color-mix(in srgb, var(--surface-card, #18181b) 84%, rgba(255, 255, 255, 0.04) 16%);
+  --backup-input-border: color-mix(in srgb, var(--surface-border, #27272a) 84%, rgba(255, 255, 255, 0.02) 16%);
+  --backup-input-text: #f4f4f5;
+  --backup-input-placeholder: #71717a;
+  --backup-result-detail-bg: color-mix(in srgb, var(--surface-card, #18181b) 88%, rgba(255, 255, 255, 0.04) 12%);
+  --backup-result-detail-text: #d4d4d8;
+  --backup-result-tip-bg: rgba(22, 101, 52, 0.24);
+  --backup-result-tip-border: rgba(74, 222, 128, 0.22);
+  --backup-result-tip-text: #86efac;
+  --backup-result-message: #d4d4d8;
+  --backup-result-countdown: #a1a1aa;
+  --backup-error-bg: rgba(127, 29, 29, 0.28);
+  --backup-error-border: rgba(248, 113, 113, 0.24);
+  --backup-error-text: #fecaca;
+  --backup-copy-btn-border: rgba(248, 113, 113, 0.26);
+  --backup-copy-btn-text: #fca5a5;
+  --backup-copy-btn-hover: rgba(248, 113, 113, 0.14);
+  --backup-cancel-bg: color-mix(in srgb, var(--surface-card, #18181b) 88%, rgba(255, 255, 255, 0.04) 12%);
+  --backup-cancel-text: #e4e4e7;
+  --backup-primary-bg: #5BA8F5;
+  --backup-primary-bg-hover: #3b82f6;
+  --backup-primary-text: #020617;
+  --backup-toggle-color: #a1a1aa;
 }
 
 .backup-actions {
@@ -378,16 +471,16 @@ async function confirm() {
   padding: 0.6rem 0.75rem;
   margin-bottom: 0.75rem;
   border-radius: 8px;
-  background: rgba(59, 130, 246, 0.08);
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  background: var(--backup-info-bg);
+  border: 1px solid var(--backup-info-border);
   font-size: 0.8rem;
   line-height: 1.4;
-  color: var(--text-color, #333);
+  color: var(--backup-info-text);
   opacity: 0.85;
 }
 
 .backup-info .pi-info-circle {
-  color: #3b82f6;
+  color: var(--backup-info-icon);
   font-size: 1rem;
   flex-shrink: 0;
   margin-top: 0.1rem;
@@ -405,17 +498,17 @@ async function confirm() {
   width: 100%;
   padding: 0.65rem 0.8rem;
   border-radius: 10px;
-  border: 1px solid var(--surface-border, #ddd);
-  background: var(--surface-card, #fff);
-  color: var(--text-color, #333);
+  border: 1px solid var(--backup-btn-border);
+  background: var(--backup-btn-bg);
+  color: var(--backup-btn-text);
   cursor: pointer;
   font-size: 0.85rem;
   font-weight: 600;
-  transition: background 0.2s;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
 }
 
 .backup-btn:hover:not(:disabled) {
-  background: var(--surface-hover, #f5f5f5);
+  background: var(--backup-btn-hover);
 }
 
 .backup-btn:disabled {
@@ -425,24 +518,25 @@ async function confirm() {
 
 /* Dialog overlay */
 .backup-dialog-overlay {
-  position: fixed;
   inset: 0;
   z-index: 10000;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--backup-overlay-bg);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1rem;
+  backdrop-filter: blur(10px);
 }
 
 .backup-dialog {
-  background: var(--surface-card, #fff);
-  color: var(--text-color, #333);
+  background: var(--backup-dialog-bg);
+  color: var(--backup-dialog-text);
   border-radius: 12px;
   padding: 1.5rem;
   width: 100%;
   max-width: 420px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--backup-dialog-shadow);
+  border: 1px solid var(--backup-dialog-border);
 }
 
 .backup-dialog h3 {
@@ -453,7 +547,7 @@ async function confirm() {
 .dialog-hint {
   margin: 0 0 1rem;
   font-size: 0.85rem;
-  opacity: 0.7;
+  color: var(--backup-dialog-muted);
 }
 
 .dialog-field {
@@ -466,18 +560,22 @@ async function confirm() {
   font-size: 0.8rem;
   font-weight: 600;
   margin-bottom: 0.25rem;
-  opacity: 0.8;
+  color: var(--backup-dialog-muted);
 }
 
 .dialog-field input {
   width: 100%;
   padding: 0.5rem 2.5rem 0.5rem 0.75rem;
   border-radius: 8px;
-  border: 1px solid var(--surface-border, #ddd);
-  background: var(--surface-ground, #f8f8f8);
-  color: var(--text-color, #333);
+  border: 1px solid var(--backup-input-border);
+  background: var(--backup-input-bg);
+  color: var(--backup-input-text);
   font-size: 0.9rem;
   box-sizing: border-box;
+}
+
+.dialog-field input::placeholder {
+  color: var(--backup-input-placeholder);
 }
 
 .toggle-password {
@@ -487,8 +585,7 @@ async function confirm() {
   background: none;
   border: none;
   cursor: pointer;
-  opacity: 0.5;
-  color: var(--text-color, #333);
+  color: var(--backup-toggle-color);
 }
 
 /* ─── Result screens ─── */
@@ -525,10 +622,11 @@ async function confirm() {
   gap: 0.5rem;
   padding: 0.6rem 0.75rem;
   border-radius: 8px;
-  background: var(--surface-ground, #f5f5f5);
+  background: var(--backup-result-detail-bg);
   margin-bottom: 1rem;
   font-size: 0.8rem;
   word-break: break-all;
+  color: var(--backup-result-detail-text);
 }
 
 .result-detail .pi-file {
@@ -537,7 +635,8 @@ async function confirm() {
 }
 
 .result-path {
-  opacity: 0.8;
+  color: var(--backup-result-detail-text);
+  opacity: 0.88;
 }
 
 .result-instructions {
@@ -568,18 +667,18 @@ async function confirm() {
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
   border-radius: 8px;
-  background: rgba(39, 174, 96, 0.08);
-  border: 1px solid rgba(39, 174, 96, 0.2);
+  background: var(--backup-result-tip-bg);
+  border: 1px solid var(--backup-result-tip-border);
   font-size: 0.78rem;
   margin-bottom: 1rem;
-  color: #27ae60;
+  color: var(--backup-result-tip-text);
 }
 
 .result-message {
   text-align: center;
   font-size: 0.9rem;
   margin: 0 0 1rem;
-  opacity: 0.8;
+  color: var(--backup-result-message);
 }
 
 .result-countdown {
@@ -589,17 +688,17 @@ async function confirm() {
   gap: 0.5rem;
   margin-bottom: 1rem;
   font-size: 0.85rem;
-  opacity: 0.7;
+  color: var(--backup-result-countdown);
 }
 
 .error-box {
   padding: 0.75rem;
   border-radius: 8px;
-  background: rgba(231, 76, 60, 0.08);
-  border: 1px solid rgba(231, 76, 60, 0.2);
+  background: var(--backup-error-bg);
+  border: 1px solid var(--backup-error-border);
   font-size: 0.85rem;
   margin-bottom: 1rem;
-  color: #c0392b;
+  color: var(--backup-error-text);
 }
 
 .error-box p {
@@ -613,16 +712,16 @@ async function confirm() {
   margin-top: 0.5rem;
   padding: 0.3rem 0.6rem;
   border-radius: 6px;
-  border: 1px solid rgba(231, 76, 60, 0.3);
+  border: 1px solid var(--backup-copy-btn-border);
   background: transparent;
-  color: #c0392b;
+  color: var(--backup-copy-btn-text);
   font-size: 0.78rem;
   cursor: pointer;
   transition: background 0.15s;
 }
 
 .copy-error-btn:hover {
-  background: rgba(231, 76, 60, 0.08);
+  background: var(--backup-copy-btn-hover);
 }
 
 /* ─── Actions ─── */
@@ -652,17 +751,17 @@ async function confirm() {
 }
 
 .dialog-btn.cancel {
-  background: var(--surface-ground, #eee);
-  color: var(--text-color, #333);
+  background: var(--backup-cancel-bg);
+  color: var(--backup-cancel-text);
 }
 
 .dialog-btn.primary {
-  background: #3b82f6;
-  color: #fff;
+  background: var(--backup-primary-bg);
+  color: var(--backup-primary-text);
 }
 
 .dialog-btn.primary:hover:not(:disabled) {
-  background: #2563eb;
+  background: var(--backup-primary-bg-hover);
 }
 
 /* Transitions */
@@ -676,31 +775,4 @@ async function confirm() {
   opacity: 0;
 }
 
-:global(.dark) .backup-info {
-  background: rgba(59, 130, 246, 0.1);
-  border-color: rgba(59, 130, 246, 0.25);
-}
-
-:global(.dark) .backup-dialog {
-  background: #1e1e2e;
-  color: #cdd6f4;
-}
-
-:global(.dark) .dialog-field input {
-  background: #313244;
-  border-color: #45475a;
-  color: #cdd6f4;
-}
-
-:global(.dark) .result-detail {
-  background: #313244;
-}
-
-:global(.dark) .error-box {
-  background: rgba(231, 76, 60, 0.12);
-}
-
-:global(.dark) .result-tip {
-  background: rgba(39, 174, 96, 0.12);
-}
 </style>

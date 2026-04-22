@@ -9,6 +9,7 @@
         <div
           ref="sheetRef"
           class="profile-sheet settings-sheet"
+          :class="{ 'is-dark': themeStore.isDarkMode }"
           :style="sheetStyle"
         >
           <div
@@ -738,6 +739,7 @@ onUnmounted(() => {
   --settings-backup-divider: rgba(148, 163, 184, 0.18);
 }
 
+.settings-sheet.is-dark,
 :global(html.dark) .settings-sheet,
 :global(.dark) .settings-sheet {
   --settings-account-card-bg: linear-gradient(
