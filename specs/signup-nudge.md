@@ -1,19 +1,19 @@
 ---
 artifact: spec
 metadata_schema_version: "1.0"
-artifact_version: "0.1.0"
+artifact_version: "1.0.0"
 project: socialflow
 created: "2026-04-25"
-updated: "2026-04-25"
-status: draft
+updated: "2026-04-27"
+status: ready
 source_skill: sf-docs
 scope: feature
-owner: unknown
-confidence: low
+owner: Diane
+confidence: medium
 risk_level: medium
 security_impact: unknown
 docs_impact: yes
-user_story: "unknown (legacy spec migrated to ShipFlow metadata)"
+user_story: "En tant qu'utilisateur anonyme, je veux une invitation non bloquante a creer mon compte pour securiser mes donnees et conserver ma progression."
 linked_systems: []
 depends_on: []
 supersedes: []
@@ -110,3 +110,20 @@ Bottom sheet non-bloquant (mobile) / Dialog (desktop), affiché une fois par jou
 11. Given Settings ouvert + compte existant, then email affiché + bouton déconnexion
 12. Given mode offline (pas de VITE_CONVEX_URL), then pas de nudge
 13. Given compte créé via Settings (pas via nudge), then nudge s'arrête aussi
+
+## Skill Run History
+
+| Date UTC | Skill | Model | Action | Result | Next step |
+|----------|-------|-------|--------|--------|-----------|
+| 2026-04-27 | sf-deps | GPT-5 | Dependency audit | D: `pnpm audit` reports 0 critical, 40 high, 34 moderate, 7 low; direct `vue-i18n` runtime advisory affects localized signup/settings/auth surfaces | Upgrade `vue-i18n` patch first, then remediate compatible build-chain advisories before release |
+| 2026-04-27 | sf-deps | GPT-5 | Dependency fix pass | B-: compatible updates reduce `pnpm audit` from 81 advisories to 8; direct `vue-i18n` runtime advisory fixed | Use `/sf-migrate` for remaining Vite/Rollup/Workbox/vue-tsc/web-ext major-line advisories |
+| 2026-04-27 | sf-ship | GPT-5 | Quick ship | shipped | Use `/sf-migrate` for remaining major-line dependency advisories |
+
+## Current Chantier Flow
+
+- sf-spec: ready
+- sf-ready: unknown
+- sf-start: unknown
+- sf-verify: not run
+- sf-end: not run
+- sf-ship: shipped

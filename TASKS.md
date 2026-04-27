@@ -206,6 +206,18 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [ ] 🟡 Content script injects iframe on ALL pages (`*://*/*`) — performance/privacy concern
 - [ ] 🟡 `accessToken` stored in plain Pinia state — could leak to localStorage if persisted
 
+### Audit: Deps (2026-04-27, score D)
+
+- [x] 🟠 Upgrade `vue-i18n` to `>=11.1.2` and verify FR/EN signup, settings, onboarding, and auth copy; current `11.1.0` is affected by GHSA-p2ph-7g93-hw3m. Fixed to `vue-i18n@11.4.0`; `typecheck:core` passes.
+- [x] 🟠 Remediate build-chain high advisories by updating compatible patch/minor packages first: `vite` to `>=5.4.20`, `sass`/`immutable`, `tailwindcss`/`sucrase`/`glob`, `web-ext` transitive `image-size`, `node-forge`, `tmp`, and related ESLint minimatch/brace-expansion paths. Fixed compatible set; `pnpm audit` now reports 8 remaining advisories.
+- [x] 🟠 Review runtime reachability of `pinia-plugin-persistedstate` transitive `tar` advisories through `@nuxt/kit`/`giget`; if runtime-unused, prefer a dependency version or package choice that removes that server/build tool chain from the shipped app graph. Fixed via compatible `@nuxt/kit` override.
+- [x] 🟡 Add dependency update automation (`.github/dependabot.yml` or Renovate) covering npm/pnpm, GitHub Actions, and Rust/Cargo, with manual review for majors.
+- [x] 🟡 Add a checked-in Node runtime pin (`.nvmrc` or `engines.node`) aligned with CI Node 20/24 policy; local shell currently runs Node 22 while CI uses Node 20.
+- [x] 🟡 Revisit `.npmrc` (`shamefully-hoist=true`, `strict-peer-dependencies=false`) and document why peer/integrity weakening is still required.
+- [ ] 🟡 Declare the project license in `package.json` and `src-tauri/Cargo.toml`; production license summary could not be generated because pnpm reported a missing package index.
+- [ ] 🟠 Remaining `pnpm audit` findings require migration decisions: Rollup 2 via CRX/pluginutils, `serialize-javascript@6` via Workbox, Vite 5/esbuild line, `vue-template-compiler` via old `vue-tsc`, and `uuid@8` via `web-ext`/`node-notifier`.
+- [ ] 🟡 Add `cargo-audit` or `cargo-deny` to CI/local audit workflow; RustSec posture is currently documented but not fully scanner-proven.
+
 ### Bug: Android backup restore fails after reinstall
 
 - [x] 🔴 Backup restore after uninstall/reinstall shows `[object Object]` — fixed: (1) replaced MediaStore query with SAF file picker (bypasses scoped storage ownership), (2) error handler extracts `.message` from Tauri plugin error objects
