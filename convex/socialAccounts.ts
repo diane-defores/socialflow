@@ -1,17 +1,12 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { auth } from "./auth";
-
-async function getAuthUserId(ctx: { db: any; auth: any }) {
-  const userId = await auth.getUserId(ctx);
-  if (!userId) throw new Error("Not authenticated");
-  return userId;
-}
+import { requireAuthUserId } from "./authHelpers";
+import { assertEntityId, assertLabel, assertNetworkId } from "./validators";
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await requireAuthUserId(ctx);
     return await ctx.db
       .query("socialAccounts")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
@@ -27,7 +22,10 @@ export const upsert = mutation({
     addedAt: v.number(),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await requireAuthUserId(ctx);
+    assertEntityId(args.accountId, "accountId");
+    assertNetworkId(args.networkId);
+    assertLabel(args.label);
 
     const existing = await ctx.db
       .query("socialAccounts")
@@ -55,7 +53,8 @@ export const upsert = mutation({
 export const remove = mutation({
   args: { accountId: v.string() },
   handler: async (ctx, { accountId }) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await requireAuthUserId(ctx);
+    assertEntityId(accountId, "accountId");
 
     const account = await ctx.db
       .query("socialAccounts")
@@ -81,7 +80,20 @@ export const remove = mutation({
 export const setActive = mutation({
   args: { networkId: v.string(), accountId: v.string() },
   handler: async (ctx, { networkId, accountId }) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await requireAuthUserId(ctx);
+    assertNetworkId(networkId);
+    assertEntityId(accountId, "accountId");
+    const account = await ctx.db
+      .query("socialAccounts")
+      .withIndex("by_accountId", (q) => q.eq("accountId", accountId))
+      .unique();
+
+    if (!account || account.userId !== userId) {
+      throw new Error("Account not found for current user");
+    }
+    if (account.networkId !== networkId) {
+      throw new Error("Account does not belong to the requested network");
+    }
 
     const existing = await ctx.db
       .query("activeAccounts")
@@ -105,7 +117,7 @@ export const setActive = mutation({
 export const listActive = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await requireAuthUserId(ctx);
     return await ctx.db
       .query("activeAccounts")
       .withIndex("by_userId", (q) => q.eq("userId", userId))

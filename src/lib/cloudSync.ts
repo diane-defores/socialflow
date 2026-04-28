@@ -23,15 +23,35 @@ import {
 } from "@/lib/postAuthSyncFeedback";
 import type { ThemeMode } from "@/utils/themeAuto";
 import { normalizeTapSoundVariant } from "@/ui/setup/pages/SocialFlow/utils/tapSound";
+import {
+  canReuseLocalCloudState,
+  isCloudSnapshotEmpty,
+  shouldKeepLocalWhenCloudEmpty,
+  type CloudSnapshotShape,
+} from "@/lib/cloudSyncDecisions";
 
-type CloudSnapshot = {
-  settings: any;
-  profiles: any[];
-  customLinks: any[];
-  friendsFilters: any[];
-  socialAccounts: any[];
-  activeAccounts: any[];
+type CloudSnapshot = CloudSnapshotShape & {
+  settings: CloudSettings | null;
+  profiles: unknown[];
+  customLinks: unknown[];
+  friendsFilters: unknown[];
+  socialAccounts: unknown[];
+  activeAccounts: unknown[];
 };
+
+type CloudSettings = {
+  language?: string;
+  activeProfileId?: string;
+  friendsFilterEnabled?: boolean;
+  onboardingCompleted?: boolean;
+};
+
+function asCloudSettings(value: unknown): CloudSettings | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+  return value as CloudSettings;
+}
 
 let hydratedUserId: string | null = null;
 let hydratePromise: Promise<void> | null = null;
@@ -56,15 +76,6 @@ function rememberCloudUserId(userId: string) {
 function clearRememberedCloudUserId() {
   if (!canUseStorage()) return;
   localStorage.removeItem(CLOUD_SYNC_USER_ID_KEY);
-}
-
-function isCloudSnapshotEmpty(snapshot: CloudSnapshot) {
-  return !snapshot.settings
-    && snapshot.profiles.length === 0
-    && snapshot.customLinks.length === 0
-    && snapshot.friendsFilters.length === 0
-    && snapshot.socialAccounts.length === 0
-    && snapshot.activeAccounts.length === 0;
 }
 
 async function fetchCloudSnapshot(client: ReturnType<typeof getConvexClient>): Promise<CloudSnapshot> {
@@ -94,7 +105,7 @@ async function fetchCloudSnapshot(client: ReturnType<typeof getConvexClient>): P
   };
 }
 
-function applyCloudSettings(settings: any) {
+function applyCloudSettings(settings: CloudSettings | null) {
   const themeStore = useThemeStore();
   const profilesStore = useProfilesStore();
   const friendsStore = useFriendsFilterStore();
@@ -154,12 +165,13 @@ function applyCloudSnapshot(snapshot: CloudSnapshot) {
   const friendsStore = useFriendsFilterStore();
   const accountsStore = useAccountsStore();
 
-  applyCloudSettings(snapshot.settings);
-  profilesStore.replaceFromCloud(snapshot.profiles, snapshot.settings?.activeProfileId);
+  const settings = asCloudSettings(snapshot.settings);
+  applyCloudSettings(settings);
+  profilesStore.replaceFromCloud(snapshot.profiles, settings?.activeProfileId);
   customLinksStore.replaceFromCloud(snapshot.customLinks);
   friendsStore.replaceFromCloud(
     snapshot.friendsFilters,
-    snapshot.settings?.friendsFilterEnabled ?? false,
+    settings?.friendsFilterEnabled ?? false,
   );
   accountsStore.replaceFromCloud(snapshot.socialAccounts, snapshot.activeAccounts);
 }
@@ -218,7 +230,11 @@ export async function hydrateCloudState(options?: {
 
     const rememberedUserId = getRememberedCloudUserId();
     const isAnonymousUser = user.isAnonymous === true;
-    const canReuseLocalState = isAnonymousUser || rememberedUserId === user._id;
+    const canReuseLocalState = canReuseLocalCloudState({
+      isAnonymousUser,
+      rememberedUserId,
+      currentUserId: user._id,
+    });
 
     if (!canReuseLocalState) {
       clearCloudSyncQueue();
@@ -228,8 +244,10 @@ export async function hydrateCloudState(options?: {
 
     await advancePostAuthSyncStage("dataReceived");
 
-    const shouldKeepLocalIfCloudEmpty =
-      canReuseLocalState || options?.allowLocalSeedIfEmpty === true;
+    const shouldKeepLocalIfCloudEmpty = shouldKeepLocalWhenCloudEmpty({
+      canReuseLocalState,
+      allowLocalSeedIfEmpty: options?.allowLocalSeedIfEmpty,
+    });
 
     if (isCloudSnapshotEmpty(snapshot) && shouldKeepLocalIfCloudEmpty) {
       if (canReuseLocalState && hasPendingCloudSync()) {

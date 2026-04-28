@@ -2,6 +2,18 @@
 
 All notable changes to SocialFlow are documented here.
 
+## [2026-04-28]
+
+### Added
+- **Critical auth/sync test coverage** — added Vitest coverage for Convex mutation invariants, cloud sync decisions, durable sync queue retries, Convex Auth token boundaries, and signup nudge timing; CI now runs tests, TypeScript checks, Convex typecheck, and non-mutating lint before Android debug builds.
+
+### Changed
+- **Cloud-backed Convex writes are stricter** — profiles, settings, custom links, friends filters, and social accounts now validate IDs, URL schemes, labels, profile ownership, active-account network matching, text zoom, language, avatar, and list bounds before persistence.
+- **Contributor docs match the current stack** — README/CLAUDE command documentation now includes test commands and Convex typecheck, and README no longer references Clerk or Vite 5.
+
+### Security
+- **Cross-user active-account and profile/link writes are guarded server-side** — Convex mutations now reject foreign account pointers, wrong-network active account selections, unsafe custom link URLs, and missing or foreign profile references without partial writes.
+
 ## [2026-04-15]
 
 ### Changed

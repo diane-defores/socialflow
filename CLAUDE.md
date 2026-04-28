@@ -60,10 +60,13 @@ Primary goals for any agent:
 - `pnpm build:web` — build web deployment.
 - `pnpm build:chrome` / `pnpm build:firefox` — extension builds.
 - `pnpm tauri:dev` / `pnpm tauri:bundle` — Tauri desktop flows.
-- `pnpm typecheck` / `pnpm lint` / `pnpm format`.
+- `pnpm test:once` / `pnpm test`.
+- `pnpm typecheck` / `pnpm exec tsc -p convex/tsconfig.json --noEmit`.
+- `pnpm lint` / `pnpm format`.
 
 ## Safety checks before release
 
 1. Validate local auth startup (`VITE_CONVEX_URL`) remains optional for graceful offline mode.
 2. Ensure webview-heavy screens still work when cookies/sync state is unavailable.
 3. Confirm no hard dependencies on optional credentials (`VITE_GMAIL_*`) are introduced.
+4. Run `pnpm test:once`, `pnpm typecheck`, `pnpm exec tsc -p convex/tsconfig.json --noEmit`, and `pnpm lint` before release.

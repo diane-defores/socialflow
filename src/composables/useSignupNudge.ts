@@ -17,6 +17,7 @@ const FIRST_LAUNCH_KEY = "sfz_first_launch";
 const NUDGE_COUNT_KEY = "sfz_nudge_count";
 const NUDGE_LAST_KEY = "sfz_nudge_last";
 const NUDGE_PAUSED_KEY = "sfz_nudge_paused_until";
+const NUDGE_COOLDOWN_DAYS = 30;
 const showNudge = ref(false);
 const hasEmailAccount = ref(false);
 
@@ -89,9 +90,9 @@ export function useSignupNudge() {
     localStorage.setItem(NUDGE_LAST_KEY, today());
 
     if (count >= 5) {
-      // Pause for 10 days
+      // Pause for 30 days to match the documented product contract.
       const pauseDate = new Date();
-      pauseDate.setDate(pauseDate.getDate() + 10);
+      pauseDate.setDate(pauseDate.getDate() + NUDGE_COOLDOWN_DAYS);
       localStorage.setItem(NUDGE_PAUSED_KEY, pauseDate.toISOString());
       localStorage.setItem(NUDGE_COUNT_KEY, "0");
     }

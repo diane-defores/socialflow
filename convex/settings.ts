@@ -1,17 +1,12 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { auth } from "./auth";
-
-async function getAuthUserId(ctx: { db: any; auth: any }) {
-  const userId = await auth.getUserId(ctx);
-  if (!userId) throw new Error("Not authenticated");
-  return userId;
-}
+import { requireAuthUserId } from "./authHelpers";
+import { assertEntityId, assertLanguage, assertTextZoom } from "./validators";
 
 export const get = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await requireAuthUserId(ctx);
     return await ctx.db
       .query("settings")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
@@ -34,7 +29,7 @@ export const upsert = mutation({
     friendsFilterEnabled: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await requireAuthUserId(ctx);
 
     const existing = await ctx.db
       .query("settings")
@@ -59,6 +54,7 @@ export const upsert = mutation({
       patch.theme = args.theme;
     }
     if (args.language !== undefined) {
+      assertLanguage(args.language);
       patch.language = args.language;
     }
     if (args.sidebarVisible !== undefined) {
@@ -68,6 +64,7 @@ export const upsert = mutation({
       patch.grayscaleEnabled = args.grayscaleEnabled;
     }
     if (args.textZoom !== undefined) {
+      assertTextZoom(args.textZoom);
       patch.textZoom = args.textZoom;
     }
     if (args.hapticEnabled !== undefined) {
@@ -80,7 +77,18 @@ export const upsert = mutation({
       patch.tapSoundVariant = args.tapSoundVariant;
     }
     if (args.activeProfileId !== undefined) {
-      patch.activeProfileId = args.activeProfileId;
+      const activeProfileId = args.activeProfileId;
+      assertEntityId(activeProfileId, "activeProfileId");
+      const profile = await ctx.db
+        .query("profiles")
+        .withIndex("by_user_profile", (q) =>
+          q.eq("userId", userId).eq("profileId", activeProfileId),
+        )
+        .unique();
+      if (!profile) {
+        throw new Error("activeProfileId does not belong to current user");
+      }
+      patch.activeProfileId = activeProfileId;
     }
     if (args.onboardingCompleted !== undefined) {
       patch.onboardingCompleted = args.onboardingCompleted;

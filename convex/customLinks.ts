@@ -1,17 +1,17 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { auth } from "./auth";
-
-async function getAuthUserId(ctx: { db: any; auth: any }) {
-  const userId = await auth.getUserId(ctx);
-  if (!userId) throw new Error("Not authenticated");
-  return userId;
-}
+import { requireAuthUserId } from "./authHelpers";
+import {
+  assertEntityId,
+  assertHttpUrl,
+  assertIcon,
+  assertLabel,
+} from "./validators";
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await requireAuthUserId(ctx);
     return await ctx.db
       .query("customLinks")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
@@ -28,7 +28,23 @@ export const upsert = mutation({
     icon: v.string(),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await requireAuthUserId(ctx);
+    assertEntityId(args.linkId, "linkId");
+    assertEntityId(args.profileId, "profileId");
+    assertLabel(args.label);
+    assertHttpUrl(args.url);
+    assertIcon(args.icon);
+
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user_profile", (q) =>
+        q.eq("userId", userId).eq("profileId", args.profileId),
+      )
+      .unique();
+
+    if (!profile) {
+      throw new Error("Profile not found for current user");
+    }
     const existing = await ctx.db
       .query("customLinks")
       .withIndex("by_user_link", (q) =>
@@ -59,7 +75,8 @@ export const upsert = mutation({
 export const remove = mutation({
   args: { linkId: v.string() },
   handler: async (ctx, { linkId }) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await requireAuthUserId(ctx);
+    assertEntityId(linkId, "linkId");
     const existing = await ctx.db
       .query("customLinks")
       .withIndex("by_user_link", (q) =>

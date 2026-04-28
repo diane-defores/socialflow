@@ -81,6 +81,18 @@ jobs:
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Run unit tests
+        run: pnpm test:once
+
+      - name: Run TypeScript checks
+        run: pnpm typecheck
+
+      - name: Run Convex typecheck
+        run: pnpm exec tsc -p convex/tsconfig.json --noEmit
+
+      - name: Run lint (non-mutating)
+        run: pnpm lint:check
+
       - name: Initialize Android target
         run: pnpm exec tauri android init --ci
 

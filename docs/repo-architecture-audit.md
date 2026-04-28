@@ -2,6 +2,12 @@
 
 Date: 2026-04-18
 
+Mise a jour: 2026-04-28 (chantier hardening/tests) — aucun fichier duplique n'a ete supprime dans ce lot.
+Ownership retenue:
+- `src/` reste la source de verite pour la logique partagee (stores, lib, services, config).
+- `src/ui/setup/pages/SocialFlow/components/*` reste la source de verite UI SocialFlow.
+- Les doublons shell extension (`src/components/AppHeader.vue`, `AppSidebar.vue`, `AppRightSidebar.vue`) restent volontaires tant que les entrypoints `src/ui/*` ne sont pas retires.
+
 ## Resume
 
 Le repo contient trois produits dans un meme workspace:

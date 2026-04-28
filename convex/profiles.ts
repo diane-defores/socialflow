@@ -1,17 +1,18 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { auth } from "./auth";
-
-async function getAuthUserId(ctx: { db: any; auth: any }) {
-  const userId = await auth.getUserId(ctx);
-  if (!userId) throw new Error("Not authenticated");
-  return userId;
-}
+import { requireAuthUserId } from "./authHelpers";
+import {
+  assertAvatar,
+  assertEmoji,
+  assertEntityId,
+  assertHiddenNetworks,
+  assertProfileName,
+} from "./validators";
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await requireAuthUserId(ctx);
     return await ctx.db
       .query("profiles")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
@@ -29,7 +30,12 @@ export const upsert = mutation({
     createdAt: v.number(),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await requireAuthUserId(ctx);
+    assertEntityId(args.profileId, "profileId");
+    assertProfileName(args.name);
+    assertEmoji(args.emoji);
+    assertAvatar(args.avatar);
+    assertHiddenNetworks(args.hiddenNetworks);
 
     const existing = await ctx.db
       .query("profiles")
@@ -62,7 +68,8 @@ export const upsert = mutation({
 export const remove = mutation({
   args: { profileId: v.string() },
   handler: async (ctx, { profileId }) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await requireAuthUserId(ctx);
+    assertEntityId(profileId, "profileId");
     const existing = await ctx.db
       .query("profiles")
       .withIndex("by_user_profile", (q) =>

@@ -188,23 +188,14 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [ ] 🟡 Android: test friends filter end-to-end on device
 - [ ] 🟡 Desktop sidebar: custom links not yet tested visually
 
-### Audit: Code (2026-04-06, score C)
+### Audit: Code (2026-04-28, score C+)
 
-- [x] 🔴 XSS via `v-html` in SocialPost.vue — `formatText()` now escapes HTML before injecting
-- [x] 🔴 Dead Supabase client removed — `supabase-client.ts` + `supabase.d.ts` deleted
-- [x] 🟠 IDOR in `socialAccounts.ts` — `upsert` now checks `userId` ownership before patching
-- [x] 🟠 `convexAuth.ts` — auth results typed (`AuthResult` interface), empty catches now log warnings
-- [x] 🟠 App.vue event listeners — all 5 custom event handlers now cleaned up on `onUnmounted`
-- [x] 🟡 `gmailService.ts` broken `md5()` replaced with `crypto.subtle.digest('SHA-256')`
-- [x] 🟠 `networkAccessGuard` removed — was a no-op with dead `roles` meta
-- [x] 🟠 `@vueuse/core` version conflict fixed — deduplicated to `^12.3.0` in deps only
-- [x] 🟡 MobileLayout.vue split — 1972→956 lines; extracted MobileProfileSheet + MobileSettingsSheet
-- [x] 🟡 Repo structure audit — architecture reelle documentee dans `docs/repo-architecture-audit.md`; confirme: pas de duplicate `socialNetworks.ts`, le drift restant concerne surtout les reliquats `services`, `types`, `feed/common`, et `mockData` (2026-04-18)
-- [ ] 🟡 Zero test coverage — no test framework, no test files, no CI test step
-- [x] 🟡 `.env.example` created with VITE_CONVEX_URL, VITE_GMAIL_CLIENT_ID, VITE_GMAIL_API_KEY
-- [x] 🟡 Hardcoded French in kanban stores → i18n keys (`kanban.todo`, etc.) + locale entries
-- [ ] 🟡 Content script injects iframe on ALL pages (`*://*/*`) — performance/privacy concern
-- [ ] 🟡 `accessToken` stored in plain Pinia state — could leak to localStorage if persisted
+- [x] 🟠 `convex/socialAccounts.ts` — `setActive` now rejects account IDs that do not belong to the current user or requested network, closing an active-account integrity hole.
+- [x] 🟡 `src/composables/useSignupNudge.ts` — cooldown aligned to the documented 30-day pause instead of the accidental 10-day implementation.
+- [x] ✅ Add automated coverage for auth bootstrap, Convex hydration, cloud-sync replay, and profile/account switching; Vitest + Convex invariant tests now run locally and in CI.
+- [ ] 🟠 Reduce repo convention drift between `src/` and `src/ui/setup/pages/SocialFlow/`; duplicated `services`, `types`, `feed/common`, and mock-data paths still make fixes easy to miss on one surface.
+- [x] ✅ Add stricter server-side validation for cloud-backed payloads (`customLinks`, `profiles`, `settings`) with URL-scheme, length, and invariant checks proportionate to the trust boundary.
+- [x] ✅ Tighten the remaining type-safety gaps in auth/cloud/Convex modules; touched critical auth/cloud/Convex files now pass lint without `any` warnings.
 
 ### Audit: Deps (2026-04-27, score D)
 

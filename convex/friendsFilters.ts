@@ -1,17 +1,12 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { auth } from "./auth";
-
-async function getAuthUserId(ctx: { db: any; auth: any }) {
-  const userId = await auth.getUserId(ctx);
-  if (!userId) throw new Error("Not authenticated");
-  return userId;
-}
+import { requireAuthUserId } from "./authHelpers";
+import { assertFriendNames, assertNetworkId } from "./validators";
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await requireAuthUserId(ctx);
     return await ctx.db
       .query("friendsFilters")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
@@ -25,7 +20,9 @@ export const setNetwork = mutation({
     names: v.array(v.string()),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await requireAuthUserId(ctx);
+    assertNetworkId(args.networkId);
+    assertFriendNames(args.names);
     const existing = await ctx.db
       .query("friendsFilters")
       .withIndex("by_user_network", (q) =>

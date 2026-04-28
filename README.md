@@ -18,7 +18,6 @@ Dashboard unifié pour gérer tous vos réseaux sociaux depuis une seule interfa
 ```
 Une seule codebase Vue.js → 6 plateformes
 
-src/ui/setup/pages/SocialFlow/    # App principale (Vue 3 + PrimeVue + Clerk)
 src/ui/setup/pages/SocialFlow/    # App principale (Vue 3 + PrimeVue)
 ├── main.ts                        # Entry point standalone
 ├── App.vue                        # Layout responsive (mobile/desktop)
@@ -90,7 +89,7 @@ SocialFlow affiche des réseaux sociaux dans des WebViews natives et injecte des
 - **Auth** : Convex Auth (`@auth/core`, `@convex-dev/auth`)
 - **Backend** : Convex (serverless)
 - **i18n** : vue-i18n
-- **Build** : Vite 5, pnpm
+- **Build** : Vite 6, pnpm
 - **Desktop/Mobile** : Tauri 2 (Rust + Kotlin/Swift)
 - **Hosting web** : Vercel
 
@@ -119,9 +118,12 @@ pnpm build:web               # Build web SPA (Vercel)
 pnpm tauri:bundle            # Build desktop
 
 # Qualité
+pnpm test:once                # Vitest (mode CI)
+pnpm test                     # Vitest (watch)
 pnpm lint                    # ESLint
 pnpm format                  # Prettier
 pnpm typecheck               # TypeScript
+pnpm exec tsc -p convex/tsconfig.json --noEmit  # Typecheck Convex
 ```
 
 ## Déploiement

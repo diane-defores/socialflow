@@ -30,9 +30,14 @@ interface AuthResult {
   tokens?: AuthTokens;
 }
 
+type ConvexActionRef = Parameters<ConvexHttpClient["action"]>[0];
+
 let _client: ConvexClient | null = null;
 let _namespace = "";
 let _currentToken: string | null = null;
+
+const AUTH_SIGN_IN = "auth:signIn" as unknown as ConvexActionRef;
+const AUTH_SIGN_OUT = "auth:signOut" as unknown as ConvexActionRef;
 
 function getHttpClient() {
   if (!_namespace) {
@@ -69,7 +74,7 @@ export async function setupConvexAuth(client: ConvexClient, convexUrl: string) {
         }
         try {
           const httpClient = new ConvexHttpClient(convexUrl);
-          const result = (await httpClient.action("auth:signIn" as any, {
+          const result = (await httpClient.action(AUTH_SIGN_IN, {
             refreshToken,
           })) as AuthResult | null;
           if (result?.tokens) {
@@ -126,7 +131,7 @@ export async function signIn(
   }
 
   const httpClient = getHttpClient();
-  const result = (await httpClient.action("auth:signIn" as any, {
+  const result = (await httpClient.action(AUTH_SIGN_IN, {
     provider,
     params: params ?? {},
   })) as AuthResult | null;
@@ -142,7 +147,7 @@ export async function signOut() {
   if (!_client) return;
   try {
     const httpClient = getHttpClient();
-    await httpClient.action("auth:signOut" as any, {});
+    await httpClient.action(AUTH_SIGN_OUT, {});
   } catch (e) {
     console.warn("[ConvexAuth] Sign-out failed (already signed out?)", e);
   }
