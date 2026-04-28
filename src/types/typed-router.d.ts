@@ -67,6 +67,7 @@ declare module 'vue-router/auto-routes' {
     '/setup/SocialFlow/components/networks/TwitterView': RouteRecordInfo<'/setup/SocialFlow/components/networks/TwitterView', '/setup/SocialFlow/components/networks/TwitterView', Record<never, never>, Record<never, never>>,
     '/setup/SocialFlow/components/NetworkWebviewHost': RouteRecordInfo<'/setup/SocialFlow/components/NetworkWebviewHost', '/setup/SocialFlow/components/NetworkWebviewHost', Record<never, never>, Record<never, never>>,
     '/setup/SocialFlow/components/OnboardingFlow': RouteRecordInfo<'/setup/SocialFlow/components/OnboardingFlow', '/setup/SocialFlow/components/OnboardingFlow', Record<never, never>, Record<never, never>>,
+    '/setup/SocialFlow/components/PostAuthSyncOverlay': RouteRecordInfo<'/setup/SocialFlow/components/PostAuthSyncOverlay', '/setup/SocialFlow/components/PostAuthSyncOverlay', Record<never, never>, Record<never, never>>,
     '/setup/SocialFlow/components/ProfileSwitcher': RouteRecordInfo<'/setup/SocialFlow/components/ProfileSwitcher', '/setup/SocialFlow/components/ProfileSwitcher', Record<never, never>, Record<never, never>>,
     '/setup/SocialFlow/components/SignupNudge': RouteRecordInfo<'/setup/SocialFlow/components/SignupNudge', '/setup/SocialFlow/components/SignupNudge', Record<never, never>, Record<never, never>>,
     '/setup/SocialFlow/components/SocialLogin': RouteRecordInfo<'/setup/SocialFlow/components/SocialLogin', '/setup/SocialFlow/components/SocialLogin', Record<never, never>, Record<never, never>>,

@@ -21,6 +21,7 @@ declare module 'vue' {
     FeedSocialAvatar: typeof import('./../components/feed/SocialAvatar.vue')['default']
     FeedSocialComment: typeof import('./../components/feed/SocialComment.vue')['default']
     FeedSocialPost: typeof import('./../components/feed/SocialPost.vue')['default']
+    InputSwitch: typeof import('primevue/inputswitch')['default']
     InputText: typeof import('primevue/inputtext')['default']
     IPhArrowLeft: typeof import('~icons/ph/arrow-left')['default']
     IPhGlobe: typeof import('~icons/ph/globe')['default']

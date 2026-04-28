@@ -118,6 +118,8 @@ Bottom sheet non-bloquant (mobile) / Dialog (desktop), affiché une fois par jou
 | 2026-04-27 | sf-deps | GPT-5 | Dependency audit | D: `pnpm audit` reports 0 critical, 40 high, 34 moderate, 7 low; direct `vue-i18n` runtime advisory affects localized signup/settings/auth surfaces | Upgrade `vue-i18n` patch first, then remediate compatible build-chain advisories before release |
 | 2026-04-27 | sf-deps | GPT-5 | Dependency fix pass | B-: compatible updates reduce `pnpm audit` from 81 advisories to 8; direct `vue-i18n` runtime advisory fixed | Use `/sf-migrate` for remaining Vite/Rollup/Workbox/vue-tsc/web-ext major-line advisories |
 | 2026-04-27 | sf-ship | GPT-5 | Quick ship | shipped | Use `/sf-migrate` for remaining major-line dependency advisories |
+| 2026-04-27 | sf-migrate | GPT-5 | Major-line build-chain migration | Vite/esbuild, Rollup 2, Workbox `serialize-javascript`, and old `vue-tsc`/`vue-template-compiler` advisories cleared; `pnpm audit` now reports 1 moderate upstream `web-ext -> node-notifier -> uuid@8` finding | Track upstream `node-notifier`/`web-ext` fix or replace manifest lint tool path |
+| 2026-04-27 | sf-check | GPT-5 | Full confidence pass | Typecheck, full Vue typecheck, ESLint, Chrome/Firefox builds, web build, and Firefox manifest lint pass; dependency quick scan still reports 1 moderate upstream `web-ext -> node-notifier -> uuid@8` finding | Run `/sf-verify` before ship to assess residual warnings and user-flow coverage |
 
 ## Current Chantier Flow
 

@@ -102,6 +102,7 @@ declare global {
   const refDefault: typeof import('@vueuse/core')['refDefault']
   const refThrottled: typeof import('@vueuse/core')['refThrottled']
   const refWithControl: typeof import('@vueuse/core')['refWithControl']
+  const resolveAutoTheme: typeof import('../../../../../utils/themeAuto')['resolveAutoTheme']
   const resolveComponent: typeof import('vue')['resolveComponent']
   const resolveRef: typeof import('@vueuse/core')['resolveRef']
   const resolveUnref: typeof import('@vueuse/core')['resolveUnref']
@@ -358,6 +359,9 @@ declare global {
   // @ts-ignore
   export type { Profile } from '../../../../../stores/profiles'
   import('../../../../../stores/profiles')
+  // @ts-ignore
+  export type { ThemeMode, AutoThemeSource, AutoThemeResolution } from '../../../../../utils/themeAuto'
+  import('../../../../../utils/themeAuto')
 }
 
 // for vue template auto import
@@ -461,6 +465,7 @@ declare module 'vue' {
     readonly refDefault: UnwrapRef<typeof import('@vueuse/core')['refDefault']>
     readonly refThrottled: UnwrapRef<typeof import('@vueuse/core')['refThrottled']>
     readonly refWithControl: UnwrapRef<typeof import('@vueuse/core')['refWithControl']>
+    readonly resolveAutoTheme: UnwrapRef<typeof import('../../../../../utils/themeAuto')['resolveAutoTheme']>
     readonly resolveComponent: UnwrapRef<typeof import('vue')['resolveComponent']>
     readonly resolveRef: UnwrapRef<typeof import('@vueuse/core')['resolveRef']>
     readonly resolveUnref: UnwrapRef<typeof import('@vueuse/core')['resolveUnref']>

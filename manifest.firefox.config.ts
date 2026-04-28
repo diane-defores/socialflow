@@ -6,8 +6,14 @@ export default defineManifest((env) => ({
   ...ManifestConfig,
   browser_specific_settings: {
     gecko: {
-      id: env["FIREFOX_ADDON_ID"],
+      id: env["FIREFOX_ADDON_ID"] || "socialflow@local",
+      data_collection_permissions: {
+        required: ["none"],
+      },
     },
+  },
+  icons: {
+    800: "src/assets/logo.png",
   },
   background: {
     scripts: ["src/background/index.ts"],
@@ -17,7 +23,7 @@ export default defineManifest((env) => ({
   permissions: [
     // @ts-expect-error background permission is not supported in Firefox
     ...ManifestConfig.permissions.filter(
-      (permission) => permission !== "background",
+      (permission) => !["background", "sidePanel"].includes(permission),
     ),
   ],
 }))

@@ -90,7 +90,7 @@ type CloudSyncOperation =
   | SocialAccountSetActiveOperation;
 
 let flushPromise: Promise<void> | null = null;
-let retryTimer: ReturnType<typeof setTimeout> | null = null;
+let retryTimer: number | null = null;
 let started = false;
 
 function now() {
@@ -158,7 +158,7 @@ function scheduleRetry(delayMs = RETRY_DELAY_MS) {
 
 function clearRetryTimer() {
   if (!retryTimer) return;
-  clearTimeout(retryTimer);
+  window.clearTimeout(retryTimer);
   retryTimer = null;
 }
 

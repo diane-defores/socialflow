@@ -1,0 +1,69 @@
+---
+artifact: claude_instructions
+metadata_schema_version: "1.0"
+artifact_version: "1.0.0"
+project: socialflow
+created: "2026-04-26"
+status: active
+source_skill: sf-docs
+scope: technical-guidance
+owner: "Diane"
+updated: "2026-04-26"
+confidence: high
+risk_level: low
+security_impact: medium
+docs_impact: high
+depends_on: []
+evidence:
+  - "README.md"
+  - "package.json"
+  - "src/lib/convex.ts"
+  - "src/lib/convexAuth.ts"
+supersedes: []
+next_step: "/sf-docs audit CLAUDE.md"
+---
+
+# CLAUDE.md
+
+## Purpose
+
+This repository is **SocialFlow**, a multi-platform social networking dashboard built with **Vue 3 + Vite** and extended through **Tauri 2**.
+
+Primary goals for any agent:
+
+- Keep changes scoped and low-risk.
+- Preserve backward compatibility across Chrome, Firefox, web, and desktop targets.
+- Respect existing architecture: shared Vue source with platform-specific Vite configs.
+
+## Operating constraints
+
+- Use `pnpm` for dependency and script execution.
+- Prefer incremental edits; avoid broad refactors.
+- Keep environment-dependent behavior guarded (offline modes and optional integrations must not crash the app).
+- Never change runtime behavior of navigation or webview persistence without explicit intent.
+
+## Runtime structure
+
+- `src/ui/setup/pages/SocialFlow/` contains the main app.
+- Platform variants are controlled by:
+  - `vite.chrome.config.ts`
+  - `vite.firefox.config.ts`
+  - `vite.web.config.ts`
+  - `vite.tauri.config.ts`
+- Backend stack uses Convex + Convex Auth:
+  - Frontend client entry: `src/lib/convex.ts`
+  - Auth wiring: `src/lib/convexAuth.ts`
+
+## Common commands
+
+- `pnpm dev` — run Chrome + Firefox extension dev flows.
+- `pnpm build:web` — build web deployment.
+- `pnpm build:chrome` / `pnpm build:firefox` — extension builds.
+- `pnpm tauri:dev` / `pnpm tauri:bundle` — Tauri desktop flows.
+- `pnpm typecheck` / `pnpm lint` / `pnpm format`.
+
+## Safety checks before release
+
+1. Validate local auth startup (`VITE_CONVEX_URL`) remains optional for graceful offline mode.
+2. Ensure webview-heavy screens still work when cookies/sync state is unavailable.
+3. Confirm no hard dependencies on optional credentials (`VITE_GMAIL_*`) are introduced.

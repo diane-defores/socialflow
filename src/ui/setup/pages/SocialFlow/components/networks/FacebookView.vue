@@ -37,7 +37,7 @@
         <CreatePost 
           :current-user="store.currentUser"
           network="facebook"
-          @submit="store.addPost"
+          @submit="handlePostSubmit"
         />
 
         <!-- Posts -->
@@ -115,9 +115,29 @@ import InputText from 'primevue/inputtext'
 import ScrollPanel from 'primevue/scrollpanel'
 import { SocialAvatar, SocialPost, SocialComment, CreatePost } from '../feed'
 import { useFacebookMockStore } from '../../stores/mockData/facebookMock'
+import type { FacebookPost } from '../../stores/mockData/facebookMock'
 
 const store = useFacebookMockStore()
 const newComments = ref<Record<string, string>>({})
+
+type CreatePostPayload = {
+  content: string
+  privacy: string
+  files: File[]
+}
+
+const isFacebookPrivacy = (privacy: string): privacy is FacebookPost['privacy'] => {
+  return privacy === 'public' || privacy === 'friends' || privacy === 'private'
+}
+
+const handlePostSubmit = (post: CreatePostPayload) => {
+  store.addPost({
+    content: {
+      text: post.content,
+    },
+    privacy: isFacebookPrivacy(post.privacy) ? post.privacy : 'friends',
+  })
+}
 
 const handleCommentSubmit = (postId: string) => {
   if (newComments.value[postId]?.trim()) {

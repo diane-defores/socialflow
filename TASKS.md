@@ -215,7 +215,7 @@ Key change: replace blocked `<iframe>` embeds with native Tauri Webviews (bypass
 - [x] 🟡 Add a checked-in Node runtime pin (`.nvmrc` or `engines.node`) aligned with CI Node 20/24 policy; local shell currently runs Node 22 while CI uses Node 20.
 - [x] 🟡 Revisit `.npmrc` (`shamefully-hoist=true`, `strict-peer-dependencies=false`) and document why peer/integrity weakening is still required.
 - [ ] 🟡 Declare the project license in `package.json` and `src-tauri/Cargo.toml`; production license summary could not be generated because pnpm reported a missing package index.
-- [ ] 🟠 Remaining `pnpm audit` findings require migration decisions: Rollup 2 via CRX/pluginutils, `serialize-javascript@6` via Workbox, Vite 5/esbuild line, `vue-template-compiler` via old `vue-tsc`, and `uuid@8` via `web-ext`/`node-notifier`.
+- [ ] 🟠 Remaining `pnpm audit` finding is upstream-only: `uuid@8` via `web-ext@10.1.0` -> `node-notifier@10.0.1`; Vite/esbuild, Rollup 2, Workbox `serialize-javascript`, and old `vue-tsc`/`vue-template-compiler` findings were migrated on 2026-04-27.
 - [ ] 🟡 Add `cargo-audit` or `cargo-deny` to CI/local audit workflow; RustSec posture is currently documented but not fully scanner-proven.
 
 ### Bug: Android backup restore fails after reinstall

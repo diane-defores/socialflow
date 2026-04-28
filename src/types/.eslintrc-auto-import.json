@@ -356,6 +356,10 @@
     "onElementRemoval": true,
     "useCountdown": true,
     "usePreferredReducedTransparency": true,
-    "useSSRWidth": true
+    "useSSRWidth": true,
+    "AutoThemeResolution": true,
+    "AutoThemeSource": true,
+    "ThemeMode": true,
+    "resolveAutoTheme": true
   }
 }
