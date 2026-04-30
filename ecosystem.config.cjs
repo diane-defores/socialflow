@@ -1,7 +1,7 @@
 module.exports = {
   apps: [{
     name: "socialflow",
-    cwd: "/home/claude/socialflow",
+    cwd: "/home/ubuntu/socialflow",
     script: "bash",
     args: ["-lc", "export PORT=3022 && flox activate -- bash -lc 'pnpm dev -- --port 3022 --host'"],
     env: {
