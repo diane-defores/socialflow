@@ -2,6 +2,11 @@
 
 All notable changes to SocialFlow are documented here.
 
+## [2026-05-02]
+
+### Security
+- **Native RustSec posture is explicit and gated** — patched the direct `rand` 0.8 line to `0.8.6`, documented the remaining Tauri/GTK/parser warnings as visible accepted upstream risk, and added `cargo audit` before Linux, Windows, and Android native artifact builds.
+
 ## [2026-04-28]
 
 ### Added

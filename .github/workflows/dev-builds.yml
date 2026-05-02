@@ -78,6 +78,13 @@ jobs:
           workspaces: "./src-tauri -> target"
           shared-key: "tauri-android"
 
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --version 0.22.1 --locked
+
+      - name: Run RustSec audit
+        run: cargo audit
+        working-directory: src-tauri
+
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
 
@@ -145,6 +152,13 @@ jobs:
         with:
           workspaces: "./src-tauri -> target"
           shared-key: "tauri-windows"
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --version 0.22.1 --locked
+
+      - name: Run RustSec audit
+        run: cargo audit
+        working-directory: src-tauri
 
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
