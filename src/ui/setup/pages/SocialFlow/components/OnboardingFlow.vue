@@ -189,9 +189,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useProfilesStore } from '@/stores/profiles'
 import { useOnboardingStore } from '@/stores/onboarding'
+import { builtInSocialNetworks } from '@/config/socialNetworks'
 import logoUrl from '@/assets/logo.png'
 
 const profilesStore = useProfilesStore()
@@ -204,25 +205,20 @@ const EMOJIS = ['🟦', '🔵', '🟣', '🟢', '🔴', '🟡', '🟠', '⚫', '
 const selectedEmoji = ref('🟦')
 const profileName = ref('')
 
-const NETWORKS = [
-  { id: 'twitter', label: 'Twitter / X', icon: 'pi pi-twitter', color: '#1DA1F2' },
-  { id: 'facebook', label: 'Facebook', icon: 'pi pi-facebook', color: '#1877F2' },
-  { id: 'instagram', label: 'Instagram', icon: 'pi pi-instagram', color: '#E4405F' },
-  { id: 'linkedin', label: 'LinkedIn', icon: 'pi pi-linkedin', color: '#0A66C2' },
-  { id: 'tiktok', label: 'TikTok', icon: 'pi pi-tiktok', color: '#000000' },
-  { id: 'threads', label: 'Threads', icon: 'pi pi-at', color: '#000000' },
-  { id: 'discord', label: 'Discord', icon: 'pi pi-discord', color: '#5865F2' },
-  { id: 'reddit', label: 'Reddit', icon: 'pi pi-reddit', color: '#FF4500' },
-  { id: 'snapchat', label: 'Snapchat', icon: 'pi pi-camera', color: '#FFFC00' },
-  // { id: 'whatsapp', label: 'WhatsApp', icon: 'pi pi-whatsapp', color: '#25D366' }, // disabled 2026-04-12 — see docs/whatsapp-web-integration.md
-  { id: 'telegram', label: 'Telegram', icon: 'pi pi-telegram', color: '#26A5E4' },
-  { id: 'pinterest', label: 'Pinterest', icon: 'pi pi-pinterest', color: '#BD081C' },
-  { id: 'quora', label: 'Quora', icon: 'pi pi-question-circle', color: '#B92B27' },
-  { id: 'nextdoor', label: 'Nextdoor', icon: 'pi pi-map-marker', color: '#8ED500' },
-]
+const NETWORKS = computed(() =>
+  builtInSocialNetworks
+    .filter((network) => network.onboarding)
+    .map(({ id, label, icon, color, defaultSelected }) => ({ id, label, icon, color, defaultSelected })),
+)
 
 // Default: top 5 selected
-const selectedNetworks = reactive(new Set(['twitter', 'facebook', 'instagram', 'linkedin', 'tiktok']))
+const selectedNetworks = reactive(
+  new Set(
+    NETWORKS.value
+      .filter(network => network.defaultSelected)
+      .map(network => network.id),
+  ),
+)
 
 function toggleNetwork(id: string) {
   if (selectedNetworks.has(id)) {
@@ -243,7 +239,7 @@ function finish() {
     profilesStore.setEmoji(profile.id, selectedEmoji.value)
 
     // Hide unselected networks
-    const allIds = NETWORKS.map(n => n.id)
+    const allIds = NETWORKS.value.map(n => n.id)
     for (const id of allIds) {
       const isHidden = !selectedNetworks.has(id)
       const currentlyHidden = profilesStore.isNetworkHidden(profile.id, id)

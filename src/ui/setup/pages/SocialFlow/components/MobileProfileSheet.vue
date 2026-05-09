@@ -239,6 +239,7 @@
 import { ref, computed, nextTick, onUnmounted, watch } from 'vue'
 import { useProfilesStore } from '@/stores/profiles'
 import { useWebviewStore, WEBVIEW_URLS } from '@/stores/webviewState'
+import { builtInSocialNetworks } from '@/config/socialNetworks'
 import type { Profile } from '@/stores/profiles'
 import ThreadsIcon from './icons/ThreadsIcon.vue'
 import SnapchatIcon from './icons/SnapchatIcon.vue'
@@ -270,24 +271,14 @@ const clearCookiesProfileId = ref<string | null>(null)
 const clearedNetworks = ref<Record<string, boolean>>({})
 
 const webviewNetworks = computed(() => {
-  const iconMap: Record<string, string> = {
-    twitter: 'pi pi-twitter', facebook: 'pi pi-facebook', instagram: 'pi pi-instagram',
-    linkedin: 'pi pi-linkedin', tiktok: 'pi pi-tiktok', threads: 'pi pi-at',
-    discord: 'pi pi-discord', reddit: 'pi pi-reddit',
-    snapchat: 'pi pi-camera', quora: 'pi pi-question-circle', pinterest: 'pi pi-pinterest',
-    whatsapp: 'pi pi-whatsapp', telegram: 'pi pi-telegram', nextdoor: 'pi pi-map-marker',
-  }
-  const labelMap: Record<string, string> = {
-    twitter: 'Twitter / X', facebook: 'Facebook', instagram: 'Instagram',
-    linkedin: 'LinkedIn', tiktok: 'TikTok', threads: 'Threads',
-    discord: 'Discord', reddit: 'Reddit',
-    snapchat: 'Snapchat', quora: 'Quora', pinterest: 'Pinterest',
-    whatsapp: 'WhatsApp', telegram: 'Telegram', nextdoor: 'Nextdoor',
-  }
+  const socialNetworkById = new Map(
+    builtInSocialNetworks.map((network) => [network.id, network]),
+  )
+
   return Object.keys(WEBVIEW_URLS).map(id => ({
     id,
-    icon: iconMap[id] ?? 'pi pi-globe',
-    label: labelMap[id] ?? id,
+    icon: socialNetworkById.get(id)?.icon ?? 'pi pi-globe',
+    label: socialNetworkById.get(id)?.label ?? id,
   }))
 })
 

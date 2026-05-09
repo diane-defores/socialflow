@@ -67,15 +67,15 @@
                       #icon
                     >
                       <ThreadsIcon
-                        v-if="item.route === '/threads'"
+                        v-if="getCustomIconName(item) === 'threads'"
                         size="1rem"
                       />
                       <SnapchatIcon
-                        v-else-if="item.route === '/snapchat'"
+                        v-else-if="getCustomIconName(item) === 'snapchat'"
                         size="1rem"
                       />
                       <NextdoorIcon
-                        v-else-if="item.route === '/nextdoor'"
+                        v-else-if="getCustomIconName(item) === 'nextdoor'"
                         size="1rem"
                       />
                     </template>
@@ -304,6 +304,7 @@ import { useWebviewStore } from '@/stores/webviewState'
 import { useProfilesStore } from '@/stores/profiles'
 import { useFriendsFilterStore } from '@/stores/friendsFilter'
 import { useCustomLinksStore } from '@/stores/customLinks'
+import { builtInSocialNetworks } from '@/config/socialNetworks'
 import type { MenuItem } from '../types'
 import type { KanbanItem, KanbanColumnId } from '@/services/kanbanService'
 import Button from 'primevue/button'
@@ -412,22 +413,20 @@ const handleResize = (e: any) => {
 
 const handleResizeEnd = handleResize
 
+const builtinMenuItems = builtInSocialNetworks.map((network, index) => ({
+  id: index + 1,
+  label: network.label,
+  icon: network.icon,
+  route: network.route,
+}))
+
+const customIconByRoute = new Map<string, typeof builtInSocialNetworks[number]['customIcon']>(
+  builtInSocialNetworks.map((network) => [network.route, network.customIcon] as const),
+)
+
 const menuItems = ref<MenuItem[]>([
-  { id: 1, label: 'Twitter', icon: 'pi pi-twitter', route: '/twitter' },
-  { id: 2, label: 'Facebook', icon: 'pi pi-facebook', route: '/facebook' },
-  { id: 3, label: 'Instagram', icon: 'pi pi-instagram', route: '/instagram' },
-  { id: 4, label: 'LinkedIn', icon: 'pi pi-linkedin', route: '/linkedin' },
-  { id: 5, label: 'TikTok', icon: 'pi pi-tiktok', route: '/tiktok' },
-  { id: 6, label: 'Threads', icon: 'pi pi-at', route: '/threads' },
-  { id: 7, label: 'Discord', icon: 'pi pi-discord', route: '/discord' },
-  { id: 8, label: 'Reddit', icon: 'pi pi-reddit', route: '/reddit' },
-  { id: 9, label: 'Snapchat', icon: 'pi pi-camera', route: '/snapchat' },
-  { id: 10, label: 'Quora', icon: 'pi pi-question-circle', route: '/quora' },
-  { id: 11, label: 'Pinterest', icon: 'pi pi-pinterest', route: '/pinterest' },
-  // { id: 13, label: 'WhatsApp', icon: 'pi pi-whatsapp', route: '/whatsapp' }, // disabled 2026-04-12 — see docs/whatsapp-web-integration.md
-  { id: 12, label: 'Telegram', icon: 'pi pi-telegram', route: '/telegram' },
-  { id: 13, label: 'Nextdoor', icon: 'pi pi-map-marker', route: '/nextdoor' },
-  { id: 14, label: 'Kanban', icon: 'pi pi-th-large', route: '/kanban' }
+  ...builtinMenuItems,
+  { id: builtinMenuItems.length + 1, label: 'Kanban', icon: 'pi pi-th-large', route: '/kanban' },
 ])
 
 const customLinkItems = computed<MenuItem[]>(() => {
@@ -440,8 +439,12 @@ const customLinkItems = computed<MenuItem[]>(() => {
   }))
 })
 
-const CUSTOM_ICON_ROUTES = ['/threads', '/snapchat', '/nextdoor']
-const hasCustomIcon = (item: MenuItem) => CUSTOM_ICON_ROUTES.includes(item.route)
+const hasCustomIcon = (item: MenuItem) => customIconByRoute.get(item.route) !== undefined
+
+const getCustomIconName = (item: MenuItem) => {
+  const route = item.route
+  return customIconByRoute.get(route)
+}
 
 const isNetworkActive = (item: MenuItem): boolean =>
   webviewStore.activeNetworkId === item.route.slice(1)

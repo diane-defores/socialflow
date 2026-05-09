@@ -104,6 +104,7 @@ Il permet de lire les bons documents avant de parcourir le code.
 ## Invariants
 
 - Le même store et utilitaires partagés restent la source de vérité métier.
+- Les métadonnées des réseaux webview intégrés côté UI se gèrent depuis `src/config/socialNetworks.ts`.
 - Les invocations natives Tauri sont encapsulées dans `@tauri-apps/api/core.invoke` depuis le front.
 - Toute mutation du stockage de session passe par `convexAuth` / `cloudSync` ou les commandes Rust dédiées.
 - `convex` est le contrat de données synchronisées quand VITE_CONVEX_URL est configuré.

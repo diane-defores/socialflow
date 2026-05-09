@@ -2,6 +2,15 @@
 
 All notable changes to SocialFlow are documented here.
 
+## [2026-05-09]
+
+### Changed
+- **Built-in social networks now have one frontend catalog** — added `src/config/socialNetworks.ts` as the UI source of truth for webview network labels, routes, URLs, icons, colors, onboarding defaults, and custom icon metadata; desktop sidebar, mobile layout, mobile profile sheet, onboarding, and `WEBVIEW_URLS` now derive from it.
+- **Cloud sync snapshot typing is stricter** — `src/lib/cloudSync.ts` now uses typed cloud DTOs and settings patch typing so full Vue typechecking passes without weakening store contracts.
+
+### Added
+- **Network-addition follow-up captured** — added a spec for the catalog refactor and recorded the runtime-validation follow-up for cloud snapshot payloads.
+
 ## [2026-05-02]
 
 ### Security

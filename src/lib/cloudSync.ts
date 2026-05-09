@@ -29,21 +29,63 @@ import {
   shouldKeepLocalWhenCloudEmpty,
   type CloudSnapshotShape,
 } from "@/lib/cloudSyncDecisions";
+import type { CloudSettingsPatch } from "@/lib/cloudSettings";
 
 type CloudSnapshot = CloudSnapshotShape & {
   settings: CloudSettings | null;
-  profiles: unknown[];
-  customLinks: unknown[];
-  friendsFilters: unknown[];
-  socialAccounts: unknown[];
-  activeAccounts: unknown[];
+  profiles: CloudProfile[];
+  customLinks: CloudCustomLink[];
+  friendsFilters: CloudFriendFilter[];
+  socialAccounts: CloudSocialAccount[];
+  activeAccounts: CloudActiveAccount[];
 };
 
-type CloudSettings = {
-  language?: string;
-  activeProfileId?: string;
-  friendsFilterEnabled?: boolean;
-  onboardingCompleted?: boolean;
+type CloudSettings = Pick<
+  CloudSettingsPatch,
+  | "theme"
+  | "language"
+  | "grayscaleEnabled"
+  | "textZoom"
+  | "hapticEnabled"
+  | "tapSoundEnabled"
+  | "tapSoundVariant"
+  | "activeProfileId"
+  | "onboardingCompleted"
+  | "friendsFilterEnabled"
+>;
+
+type CloudProfile = {
+  profileId: string;
+  name: string;
+  emoji: string;
+  avatar?: string;
+  hiddenNetworks?: string[];
+  createdAt: number;
+};
+
+type CloudCustomLink = {
+  linkId: string;
+  profileId: string;
+  label: string;
+  url: string;
+  icon: string;
+};
+
+type CloudFriendFilter = {
+  networkId: string;
+  names: string[];
+};
+
+type CloudSocialAccount = {
+  accountId: string;
+  networkId: string;
+  label: string;
+  addedAt: number;
+};
+
+type CloudActiveAccount = {
+  networkId: string;
+  accountId: string;
 };
 
 function asCloudSettings(value: unknown): CloudSettings | null {
@@ -51,6 +93,26 @@ function asCloudSettings(value: unknown): CloudSettings | null {
     return null;
   }
   return value as CloudSettings;
+}
+
+function asCloudProfiles(value: unknown): CloudProfile[] {
+  return Array.isArray(value) ? (value as CloudProfile[]) : [];
+}
+
+function asCloudCustomLinks(value: unknown): CloudCustomLink[] {
+  return Array.isArray(value) ? (value as CloudCustomLink[]) : [];
+}
+
+function asCloudFriendFilters(value: unknown): CloudFriendFilter[] {
+  return Array.isArray(value) ? (value as CloudFriendFilter[]) : [];
+}
+
+function asCloudSocialAccounts(value: unknown): CloudSocialAccount[] {
+  return Array.isArray(value) ? (value as CloudSocialAccount[]) : [];
+}
+
+function asCloudActiveAccounts(value: unknown): CloudActiveAccount[] {
+  return Array.isArray(value) ? (value as CloudActiveAccount[]) : [];
 }
 
 let hydratedUserId: string | null = null;
@@ -96,12 +158,12 @@ async function fetchCloudSnapshot(client: ReturnType<typeof getConvexClient>): P
   ]);
 
   return {
-    settings,
-    profiles,
-    customLinks,
-    friendsFilters,
-    socialAccounts,
-    activeAccounts,
+    settings: asCloudSettings(settings),
+    profiles: asCloudProfiles(profiles),
+    customLinks: asCloudCustomLinks(customLinks),
+    friendsFilters: asCloudFriendFilters(friendsFilters),
+    socialAccounts: asCloudSocialAccounts(socialAccounts),
+    activeAccounts: asCloudActiveAccounts(activeAccounts),
   };
 }
 

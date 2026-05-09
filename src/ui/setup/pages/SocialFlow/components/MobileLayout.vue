@@ -43,7 +43,7 @@
             v-for="item in visibleMenuItems.slice(0, 5)"
             :key="item.id"
             class="profile-pill"
-            :style="{ background: pillColor(item.id) }"
+            :style="{ background: pillColor(item) || 'var(--surface-hover)' }"
           />
         </div>
       </div>
@@ -118,7 +118,7 @@
             :key="item.id"
             class="network-tile"
             :class="{ active: isNetworkActive(item), 'edit-mode': networkEditMode }"
-            :style="{ background: tileBg(item.id) }"
+            :style="{ background: tileBg(item) }"
             @click="networkEditMode ? handleEditClick(item) : navigateToNetwork(item)"
             @touchstart="startLongPress(item)"
             @touchend="cancelLongPress"
@@ -127,7 +127,7 @@
           >
             <span
               class="network-icon-wrap"
-              :style="{ background: networkColors[item.id] ?? 'var(--surface-hover)' }"
+              :style="{ background: getNetworkColor(item) ?? 'var(--surface-hover)' }"
             >
               <ThreadsIcon
                 v-if="item.route === '/threads'"
@@ -263,6 +263,7 @@ import { useWebviewStore } from '@/stores/webviewState'
 import { useProfilesStore } from '@/stores/profiles'
 import { useFriendsFilterStore } from '@/stores/friendsFilter'
 import { useCustomLinksStore } from '@/stores/customLinks'
+import { builtInSocialNetworks } from '@/config/socialNetworks'
 import type { MenuItem } from '../types'
 import NetworkWebviewHost from './NetworkWebviewHost.vue'
 import MobileProfileSheet from './MobileProfileSheet.vue'
@@ -399,52 +400,47 @@ function handleEditClick(item: MenuItem) {
 const friendsFilterEnabled = computed(() => filterStore.enabled)
 const toggleFriendsFilter = () => filterStore.toggle()
 
+const builtinMenuItems = computed<MenuItem[]>(() =>
+  builtInSocialNetworks.map((network, index) => ({
+    id: index + 1,
+    label: network.label,
+    icon: network.icon,
+    route: network.route,
+  })),
+)
+
 // ─── Network list ─────────────────────────────────────────────
-const menuItems = ref<MenuItem[]>([
-  { id: 1, label: 'Twitter / X', icon: 'pi pi-twitter', route: '/twitter' },
-  { id: 2, label: 'Facebook', icon: 'pi pi-facebook', route: '/facebook' },
-  { id: 3, label: 'Instagram', icon: 'pi pi-instagram', route: '/instagram' },
-  { id: 4, label: 'LinkedIn', icon: 'pi pi-linkedin', route: '/linkedin' },
-  { id: 5, label: 'TikTok', icon: 'pi pi-tiktok', route: '/tiktok' },
-  { id: 6, label: 'Threads', icon: 'pi pi-at', route: '/threads' },
-  { id: 7, label: 'Discord', icon: 'pi pi-discord', route: '/discord' },
-  { id: 8, label: 'Reddit', icon: 'pi pi-reddit', route: '/reddit' },
-  { id: 9, label: 'Snapchat', icon: 'pi pi-camera', route: '/snapchat' },
-  { id: 10, label: 'Quora', icon: 'pi pi-question-circle', route: '/quora' },
-  { id: 11, label: 'Pinterest', icon: 'pi pi-pinterest', route: '/pinterest' },
-  // { id: 13, label: 'WhatsApp', icon: 'pi pi-whatsapp', route: '/whatsapp' }, // disabled 2026-04-12 — see docs/whatsapp-web-integration.md
-  { id: 12, label: 'Telegram', icon: 'pi pi-telegram', route: '/telegram' },
-  { id: 13, label: 'Nextdoor', icon: 'pi pi-map-marker', route: '/nextdoor' },
-  { id: 14, label: 'Kanban', icon: 'pi pi-th-large', route: '/kanban' },
+const menuItems = computed<MenuItem[]>(() => [
+  ...builtinMenuItems.value,
+  { id: builtinMenuItems.value.length + 1, label: 'Kanban', icon: 'pi pi-th-large', route: '/kanban' },
 ])
 
-const networkColors: Record<number, string> = {
-  1:  '#000000',
-  2:  '#1877F2',
-  3:  'linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)',
-  4:  '#0A66C2',
-  5:  '#010101',
-  6:  '#000000',
-  7:  '#5865F2',
-  8:  '#FF4500',
-  9:  '#FFFC00',
-  10: '#B92B27',
-  11: '#E60023',
-  12: '#0088cc',
-  13: '#8ED500',
-  14: '#6366F1',
+const networkColors: Record<string, string> = builtInSocialNetworks.reduce((acc, network) => {
+  if (network.tileColor || network.color) {
+    acc[network.id] = network.tileColor ?? network.color
+  }
+  return acc
+}, {} as Record<string, string>)
+
+const KANBAN_COLOR = '#6366F1'
+
+const getNetworkColor = (item: MenuItem) => {
+  if (item.route.startsWith('/custom-')) return null
+  if (item.route === '/kanban') return KANBAN_COLOR
+  return networkColors[item.route.slice(1)]
 }
 
 const isNetworkActive = (item: MenuItem) =>
   webviewStore.activeNetworkId === item.route.slice(1)
 
-const pillColor = (id: number) => {
-  const c = networkColors[id]
+const pillColor = (item: MenuItem) => {
+  const c = getNetworkColor(item)
+  if (!c) return undefined
   return c.startsWith('linear') ? '#e6683c' : c
 }
 
-const tileBg = (id: number) => {
-  const c = networkColors[id]
+const tileBg = (item: MenuItem) => {
+  const c = getNetworkColor(item)
   if (!c) return undefined
   const solid = c.startsWith('linear') ? '#e6683c' : c
   return `color-mix(in srgb, ${solid} 7%, var(--surface-card))`
