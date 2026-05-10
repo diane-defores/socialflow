@@ -88,31 +88,259 @@ type CloudActiveAccount = {
   accountId: string;
 };
 
-function asCloudSettings(value: unknown): CloudSettings | null {
-  if (!value || typeof value !== "object") {
+const ID_PATTERN = /^[a-zA-Z0-9:_-]+$/;
+const NETWORK_ID_PATTERN = /^[a-z0-9-]+$/;
+const LANGUAGE_PATTERN = /^[a-z]{2}(?:-[A-Z]{2})?$/;
+const IMAGE_DATA_URL_PATTERN = /^data:image\/[a-zA-Z0-9.+-]+;base64,/;
+const ID_MAX = 128;
+const NETWORK_ID_MAX = 32;
+const LABEL_MAX = 80;
+const PROFILE_NAME_MAX = 64;
+const EMOJI_MAX = 16;
+const AVATAR_MAX = 300_000;
+const CUSTOM_LINK_URL_MAX = 2048;
+const CUSTOM_LINK_ICON_MAX = 64;
+const HIDDEN_NETWORKS_MAX = 32;
+const FRIEND_NAME_MAX = 80;
+const FRIEND_NAMES_MAX = 200;
+const TEXT_ZOOM_MIN = 75;
+const TEXT_ZOOM_MAX = 200;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
+function isTrimmedBoundedString(value: unknown, max: number): value is string {
+  return typeof value === "string"
+    && value.length > 0
+    && value.length <= max
+    && value.trim() === value;
+}
+
+function isEntityId(value: unknown): value is string {
+  return isTrimmedBoundedString(value, ID_MAX) && ID_PATTERN.test(value);
+}
+
+function isNetworkId(value: unknown): value is string {
+  return isTrimmedBoundedString(value, NETWORK_ID_MAX) && NETWORK_ID_PATTERN.test(value);
+}
+
+function isHttpUrl(value: unknown): value is string {
+  if (
+    !isTrimmedBoundedString(value, CUSTOM_LINK_URL_MAX)
+    || value.includes("\n")
+    || value.includes("\r")
+  ) {
+    return false;
+  }
+
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function isAvatar(value: unknown): value is string | undefined {
+  if (value === undefined) return true;
+  if (!isTrimmedBoundedString(value, AVATAR_MAX)) return false;
+  if (value.startsWith("data:")) return IMAGE_DATA_URL_PATTERN.test(value);
+  return isHttpUrl(value);
+}
+
+function isThemeMode(value: unknown): value is ThemeMode {
+  return value === "light" || value === "dark" || value === "auto";
+}
+
+function isTapSoundVariant(value: unknown): value is NonNullable<CloudSettings["tapSoundVariant"]> {
+  return value === "classic" || value === "soft" || value === "pop";
+}
+
+function isTextZoom(value: unknown): value is number {
+  return typeof value === "number"
+    && Number.isFinite(value)
+    && value >= TEXT_ZOOM_MIN
+    && value <= TEXT_ZOOM_MAX;
+}
+
+function asStringArray(
+  value: unknown,
+  itemGuard: (item: unknown) => item is string,
+  max: number,
+) {
+  if (!Array.isArray(value) || value.length > max) return null;
+  const next: string[] = [];
+  const seen = new Set<string>();
+
+  for (const item of value) {
+    if (!itemGuard(item) || typeof item !== "string") return null;
+    const normalized = item.toLowerCase();
+    if (seen.has(normalized)) return null;
+    seen.add(normalized);
+    next.push(item);
+  }
+
+  return next;
+}
+
+export function asCloudSettings(value: unknown): CloudSettings | null {
+  if (!isRecord(value)) {
     return null;
   }
-  return value as CloudSettings;
+
+  const settings: CloudSettings = {};
+
+  if (isThemeMode(value.theme)) settings.theme = value.theme;
+  if (typeof value.language === "string" && LANGUAGE_PATTERN.test(value.language)) {
+    settings.language = value.language;
+  }
+  if (typeof value.grayscaleEnabled === "boolean") settings.grayscaleEnabled = value.grayscaleEnabled;
+  if (isTextZoom(value.textZoom)) settings.textZoom = value.textZoom;
+  if (typeof value.hapticEnabled === "boolean") settings.hapticEnabled = value.hapticEnabled;
+  if (typeof value.tapSoundEnabled === "boolean") settings.tapSoundEnabled = value.tapSoundEnabled;
+  if (isTapSoundVariant(value.tapSoundVariant)) settings.tapSoundVariant = value.tapSoundVariant;
+  if (isEntityId(value.activeProfileId)) settings.activeProfileId = value.activeProfileId;
+  if (typeof value.onboardingCompleted === "boolean") {
+    settings.onboardingCompleted = value.onboardingCompleted;
+  }
+  if (typeof value.friendsFilterEnabled === "boolean") {
+    settings.friendsFilterEnabled = value.friendsFilterEnabled;
+  }
+
+  return Object.keys(settings).length > 0 ? settings : null;
 }
 
-function asCloudProfiles(value: unknown): CloudProfile[] {
-  return Array.isArray(value) ? (value as CloudProfile[]) : [];
+function asCloudProfile(value: unknown): CloudProfile | null {
+  if (!isRecord(value)) return null;
+  if (
+    !isEntityId(value.profileId)
+    || !isTrimmedBoundedString(value.name, PROFILE_NAME_MAX)
+    || !isTrimmedBoundedString(value.emoji, EMOJI_MAX)
+    || !isAvatar(value.avatar)
+    || typeof value.createdAt !== "number"
+    || !Number.isFinite(value.createdAt)
+  ) {
+    return null;
+  }
+
+  const hiddenNetworks = value.hiddenNetworks === undefined
+    ? undefined
+    : asStringArray(value.hiddenNetworks, isNetworkId, HIDDEN_NETWORKS_MAX);
+  if (hiddenNetworks === null) return null;
+
+  return {
+    profileId: value.profileId,
+    name: value.name,
+    emoji: value.emoji,
+    avatar: typeof value.avatar === "string" ? value.avatar : undefined,
+    hiddenNetworks,
+    createdAt: value.createdAt,
+  };
 }
 
-function asCloudCustomLinks(value: unknown): CloudCustomLink[] {
-  return Array.isArray(value) ? (value as CloudCustomLink[]) : [];
+export function asCloudProfiles(value: unknown): CloudProfile[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    const profile = asCloudProfile(item);
+    return profile ? [profile] : [];
+  });
 }
 
-function asCloudFriendFilters(value: unknown): CloudFriendFilter[] {
-  return Array.isArray(value) ? (value as CloudFriendFilter[]) : [];
+function asCloudCustomLink(value: unknown): CloudCustomLink | null {
+  if (!isRecord(value)) return null;
+  if (
+    !isEntityId(value.linkId)
+    || !isEntityId(value.profileId)
+    || !isTrimmedBoundedString(value.label, LABEL_MAX)
+    || !isHttpUrl(value.url)
+    || !isTrimmedBoundedString(value.icon, CUSTOM_LINK_ICON_MAX)
+  ) {
+    return null;
+  }
+
+  return {
+    linkId: value.linkId,
+    profileId: value.profileId,
+    label: value.label,
+    url: value.url,
+    icon: value.icon,
+  };
 }
 
-function asCloudSocialAccounts(value: unknown): CloudSocialAccount[] {
-  return Array.isArray(value) ? (value as CloudSocialAccount[]) : [];
+export function asCloudCustomLinks(value: unknown): CloudCustomLink[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    const link = asCloudCustomLink(item);
+    return link ? [link] : [];
+  });
 }
 
-function asCloudActiveAccounts(value: unknown): CloudActiveAccount[] {
-  return Array.isArray(value) ? (value as CloudActiveAccount[]) : [];
+function asCloudFriendFilter(value: unknown): CloudFriendFilter | null {
+  if (!isRecord(value) || !isNetworkId(value.networkId)) return null;
+  const names = asStringArray(
+    value.names,
+    (item) => isTrimmedBoundedString(item, FRIEND_NAME_MAX),
+    FRIEND_NAMES_MAX,
+  );
+  if (!names) return null;
+  return {
+    networkId: value.networkId,
+    names,
+  };
+}
+
+export function asCloudFriendFilters(value: unknown): CloudFriendFilter[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    const filter = asCloudFriendFilter(item);
+    return filter ? [filter] : [];
+  });
+}
+
+function asCloudSocialAccount(value: unknown): CloudSocialAccount | null {
+  if (!isRecord(value)) return null;
+  if (
+    !isEntityId(value.accountId)
+    || !isNetworkId(value.networkId)
+    || !isTrimmedBoundedString(value.label, LABEL_MAX)
+    || typeof value.addedAt !== "number"
+    || !Number.isFinite(value.addedAt)
+  ) {
+    return null;
+  }
+
+  return {
+    accountId: value.accountId,
+    networkId: value.networkId,
+    label: value.label,
+    addedAt: value.addedAt,
+  };
+}
+
+export function asCloudSocialAccounts(value: unknown): CloudSocialAccount[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    const account = asCloudSocialAccount(item);
+    return account ? [account] : [];
+  });
+}
+
+function asCloudActiveAccount(value: unknown): CloudActiveAccount | null {
+  if (!isRecord(value)) return null;
+  if (!isNetworkId(value.networkId) || !isEntityId(value.accountId)) return null;
+  return {
+    networkId: value.networkId,
+    accountId: value.accountId,
+  };
+}
+
+export function asCloudActiveAccounts(value: unknown): CloudActiveAccount[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    const account = asCloudActiveAccount(item);
+    return account ? [account] : [];
+  });
 }
 
 let hydratedUserId: string | null = null;

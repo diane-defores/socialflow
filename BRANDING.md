@@ -37,6 +37,7 @@ SocialFlow positions itself as a **pragmatic productivity interface** for social
 - Maintain the current Vue + PrimeVue look foundation while avoiding style fragmentation.
 - Prioritize contrast, legibility, and minimal chrome.
 - Keep interface actions visually stable across desktop and mobile.
+- App icon: compact "social flow" mark with connected nodes, dark calm base, teal/aqua/blue accents, and high small-size readability.
 
 ## Brand voice
 

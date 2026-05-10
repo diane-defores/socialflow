@@ -465,6 +465,7 @@ None blocking. Assumptions made:
 | 2026-04-28 | sf-verify | GPT-5 Codex | Reverified final implementation against acceptance criteria, docs, dependency gate, and technical checks | Verified | `/sf-end SocialFlow Code Hardening and Test Coverage` |
 | 2026-04-28 | sf-end | GPT-5 Codex | Closed chantier, updated local/master TASKS and CHANGELOG with verified implementation summary | Closed | `/sf-ship SocialFlow Code Hardening and Test Coverage` |
 | 2026-04-28 | sf-ship | GPT-5 Codex | Shipped code hardening and test coverage changes with quick commit and push | Shipped | None |
+| 2026-05-10 | sf-build | GPT-5 Codex | Hardened `cloudSync.ts` runtime validation for inbound cloud snapshot payloads | Implemented: settings, profiles, custom links, friends filters, social accounts, and active account pointers are field-validated before store application; malformed entries are ignored; Vitest guard coverage added | Run bounded ship when ready |
 
 # Current Chantier Flow
 
@@ -472,8 +473,8 @@ None blocking. Assumptions made:
 |------|--------|-------|
 | sf-spec | done | This document initializes the chantier. |
 | sf-ready | ready | Readiness gate passed on 2026-04-28. |
-| sf-start | implemented | Convex-test/edge-runtime coverage, README freshness, and non-mutating CI lint gate completed. |
-| sf-verify | verified | Final verification passed; remaining lint warnings are pre-existing/out of touched critical files and audit has no high vulnerabilities. |
+| sf-start | implemented | Convex-test/edge-runtime coverage, README freshness, non-mutating CI lint gate, and 2026-05-10 cloud snapshot runtime validation hardening completed. |
+| sf-verify | verified | Final verification passed; 2026-05-10 checks pass with `pnpm typecheck`, `pnpm typecheck:full`, and `pnpm test:once`. |
 | sf-end | closed | TASKS and CHANGELOG updated after verified implementation. |
 | sf-ship | shipped | Changes committed and pushed after quick-mode checks. |
 

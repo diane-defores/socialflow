@@ -189,6 +189,21 @@ private val NETWORKS = listOf(
     // NetworkInfo("whatsapp",  "\ue9d0", Color.parseColor("#25D366"), "https://web.whatsapp.com"), // disabled 2026-04-12 — see docs/whatsapp-web-integration.md
     NetworkInfo("telegram",  "\ue9d3", Color.parseColor("#0088CC"), "https://web.telegram.org"),
     NetworkInfo("nextdoor",  "\ue968", Color.parseColor("#8ED500"), "https://nextdoor.com"),
+    NetworkInfo("patreon",   "\ue9da", Color.parseColor("#FF424D"), "https://www.patreon.com"),
+    NetworkInfo("theresanaiforthat", "\ue9e7", Color.parseColor("#111827"), "https://theresanaiforthat.com"),
+    NetworkInfo("industrysocial", "\ue9bb", Color.parseColor("#2563EB"), "https://industrysocial.net"),
+    NetworkInfo("bluesky",   "\ue9b1", Color.parseColor("#1185FE"), "https://bsky.app"),
+    NetworkInfo("mastodon",  "\ue9ad", Color.parseColor("#6364FF"), "https://mastodon.social"),
+    NetworkInfo("substack",  "\ue977", Color.parseColor("#FF6719"), "https://substack.com"),
+    NetworkInfo("ko-fi",     "\ue9da", Color.parseColor("#29ABE0"), "https://ko-fi.com"),
+    NetworkInfo("buymeacoffee", "\ue9da", Color.parseColor("#FFDD00"), "https://www.buymeacoffee.com"),
+    NetworkInfo("producthunt", "\ue99d", Color.parseColor("#DA552F"), "https://www.producthunt.com"),
+    NetworkInfo("indiehackers", "\ue9ab", Color.parseColor("#0E2439"), "https://www.indiehackers.com"),
+    NetworkInfo("hackernews", "\ue95e", Color.parseColor("#FF6600"), "https://news.ycombinator.com/show"),
+    NetworkInfo("folloverse", "\ue9ab", Color.parseColor("#7C3AED"), "https://folloverse.com/?ref=betalist"),
+    NetworkInfo("industrysocial-waitlist", "\uea18", Color.parseColor("#1D4ED8"), "https://industrysocial.net/waitlist"),
+    NetworkInfo("koru", "\ue9cb", Color.parseColor("#16A34A"), "https://koru.now"),
+    NetworkInfo("medium", "\uea18", Color.parseColor("#000000"), "https://medium.com"),
 )
 
 // Official SVG path data from Simple Icons (24x24 viewBox) for networks without PrimeIcons glyphs
@@ -969,6 +984,21 @@ class NativeWebViewPlugin(private val activity: Activity) : Plugin(activity) {
         "whatsapp"  to listOf("wa_lang_pref"),  // minimal signal — WhatsApp Web is auth-gated
         "telegram"  to listOf("stel_ssid"),
         "nextdoor"  to listOf("ndsid"),
+        "patreon"   to listOf("patreon_device_id", "session_id"),
+        "theresanaiforthat" to listOf("authjs.session-token", "__Secure-authjs.session-token"),
+        "industrysocial" to listOf("sessionid", "session"),
+        "bluesky"   to listOf("did", "sid"),
+        "mastodon"  to listOf("_mastodon_session"),
+        "substack"  to listOf("substack.sid", "substack.lli"),
+        "ko-fi"     to listOf("__stripe_mid", "kofi_session"),
+        "buymeacoffee" to listOf("connect.sid", "remember_web"),
+        "producthunt" to listOf("_producthunt_session"),
+        "indiehackers" to listOf("_indie_hackers_session"),
+        "hackernews" to listOf("user"),
+        "folloverse" to listOf("sessionid", "session"),
+        "industrysocial-waitlist" to listOf("sessionid", "session"),
+        "koru" to listOf("sessionid", "session"),
+        "medium" to listOf("uid", "sid"),
     )
 
     /** Check if the current network has auth cookies → user is logged in. */

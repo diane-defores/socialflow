@@ -111,6 +111,21 @@ const NETWORK_LABELS: Record<string, string> = {
   whatsapp: 'WhatsApp',
   telegram: 'Telegram',
   nextdoor: 'Nextdoor',
+  patreon: 'Patreon',
+  theresanaiforthat: "There's An AI For That",
+  industrysocial: 'Industry Social',
+  bluesky: 'Bluesky',
+  mastodon: 'Mastodon',
+  substack: 'Substack',
+  'ko-fi': 'Ko-fi',
+  buymeacoffee: 'Buy Me a Coffee',
+  producthunt: 'Product Hunt',
+  indiehackers: 'Indie Hackers',
+  hackernews: 'Hacker News / Show HN',
+  folloverse: 'Folloverse',
+  'industrysocial-waitlist': 'Industry Social Waitlist',
+  koru: 'Koru',
+  medium: 'Medium',
 }
 
 const networkLabel = computed(() => NETWORK_LABELS[props.networkId] ?? props.networkId)

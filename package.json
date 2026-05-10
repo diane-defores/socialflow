@@ -87,6 +87,7 @@
   },
   "pnpm": {
     "overrides": {
+      "fast-uri": "3.1.2",
       "@babel/helpers": "^7.29.2",
       "@babel/runtime": "^7.29.2",
       "@eslint/plugin-kit": "^0.3.4",

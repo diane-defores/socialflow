@@ -111,15 +111,87 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     let whatsapp = MenuItem::with_id(app, "tray:whatsapp", "WhatsApp", true, None::<&str>)?;
     let telegram = MenuItem::with_id(app, "tray:telegram", "Telegram", true, None::<&str>)?;
     let nextdoor = MenuItem::with_id(app, "tray:nextdoor", "Nextdoor", true, None::<&str>)?;
+    let patreon = MenuItem::with_id(app, "tray:patreon", "Patreon", true, None::<&str>)?;
+    let theresanaiforthat = MenuItem::with_id(
+        app,
+        "tray:theresanaiforthat",
+        "There's An AI For That",
+        true,
+        None::<&str>,
+    )?;
+    let industrysocial = MenuItem::with_id(
+        app,
+        "tray:industrysocial",
+        "Industry Social",
+        true,
+        None::<&str>,
+    )?;
+    let bluesky = MenuItem::with_id(app, "tray:bluesky", "Bluesky", true, None::<&str>)?;
+    let mastodon = MenuItem::with_id(app, "tray:mastodon", "Mastodon", true, None::<&str>)?;
+    let substack = MenuItem::with_id(app, "tray:substack", "Substack", true, None::<&str>)?;
+    let ko_fi = MenuItem::with_id(app, "tray:ko-fi", "Ko-fi", true, None::<&str>)?;
+    let buymeacoffee =
+        MenuItem::with_id(app, "tray:buymeacoffee", "Buy Me a Coffee", true, None::<&str>)?;
+    let producthunt =
+        MenuItem::with_id(app, "tray:producthunt", "Product Hunt", true, None::<&str>)?;
+    let indiehackers =
+        MenuItem::with_id(app, "tray:indiehackers", "Indie Hackers", true, None::<&str>)?;
+    let hackernews = MenuItem::with_id(
+        app,
+        "tray:hackernews",
+        "Hacker News / Show HN",
+        true,
+        None::<&str>,
+    )?;
+    let folloverse = MenuItem::with_id(app, "tray:folloverse", "Folloverse", true, None::<&str>)?;
+    let industrysocial_waitlist = MenuItem::with_id(
+        app,
+        "tray:industrysocial-waitlist",
+        "Industry Social Waitlist",
+        true,
+        None::<&str>,
+    )?;
+    let koru = MenuItem::with_id(app, "tray:koru", "Koru", true, None::<&str>)?;
+    let medium = MenuItem::with_id(app, "tray:medium", "Medium", true, None::<&str>)?;
     let sep2 = MenuItem::with_id(app, "sep2", "──────────────", false, None::<&str>)?;
     let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
 
     let menu = Menu::with_items(
         app,
         &[
-            &show, &separator, &twitter, &instagram, &linkedin, &facebook, &tiktok, &threads,
-            &discord, &reddit, &snapchat, &quora, &pinterest, &whatsapp, &telegram,
-            &nextdoor, &sep2, &quit,
+            &show,
+            &separator,
+            &twitter,
+            &instagram,
+            &linkedin,
+            &facebook,
+            &tiktok,
+            &threads,
+            &discord,
+            &reddit,
+            &snapchat,
+            &quora,
+            &pinterest,
+            &whatsapp,
+            &telegram,
+            &nextdoor,
+            &patreon,
+            &theresanaiforthat,
+            &industrysocial,
+            &bluesky,
+            &mastodon,
+            &substack,
+            &ko_fi,
+            &buymeacoffee,
+            &producthunt,
+            &indiehackers,
+            &hackernews,
+            &folloverse,
+            &industrysocial_waitlist,
+            &koru,
+            &medium,
+            &sep2,
+            &quit,
         ],
     )?;
 
