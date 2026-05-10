@@ -17,7 +17,7 @@ linked_systems:
   - "README.md"
   - "CONTEXT.md"
   - "CONTEXT-FUNCTION-TREE.md"
-  - "ARCHITECTURE.md"
+  - "shipflow_data/technical/context.md"
   - "src/ui/setup/pages/SocialFlow/main.ts"
   - "src/ui/setup/pages/SocialFlow/App.vue"
   - "src-tauri/src/lib.rs"
@@ -56,7 +56,7 @@ Il permet de lire les bons documents avant de parcourir le code.
 1. Lire `README.md` pour la vue d'ensemble des plateformes.
 2. Lire `CONTEXT.md` pour la carte opérationnelle et les flux.
 3. Lire `CONTEXT-FUNCTION-TREE.md` avant toute tâche sur modules principaux.
-4. Lire `ARCHITECTURE.md` quand la question touche aux frontières techniques.
+4. Lire `shipflow_data/technical/context.md` quand la question touche aux frontières techniques.
 5. Lire `CONTEXT.md` encore une fois avant une tâche de maintenance transversale.
 
 ## What This Repo Is
@@ -87,7 +87,7 @@ Il permet de lire les bons documents avant de parcourir le code.
   - `src-tauri/src/lib.rs`
   - `src-tauri/tauri.conf.json`
   - `src-tauri/plugins/android-webview`
-  - puis `ARCHITECTURE.md`
+  - puis `shipflow_data/technical/context.md`
 - Si la tâche concerne le backend sync :
   - `convex/*`
   - `src/lib/convex*.ts`
