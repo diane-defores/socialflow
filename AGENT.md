@@ -15,9 +15,8 @@ security_impact: none
 docs_impact: yes
 linked_systems:
   - "README.md"
-  - "CONTEXT.md"
-  - "CONTEXT-FUNCTION-TREE.md"
   - "shipflow_data/technical/context.md"
+  - "shipflow_data/technical/context-function-tree.md"
   - "src/ui/setup/pages/SocialFlow/main.ts"
   - "src/ui/setup/pages/SocialFlow/App.vue"
   - "src-tauri/src/lib.rs"
@@ -54,10 +53,10 @@ Il permet de lire les bons documents avant de parcourir le code.
 ## Read Order
 
 1. Lire `README.md` pour la vue d'ensemble des plateformes.
-2. Lire `CONTEXT.md` pour la carte opérationnelle et les flux.
-3. Lire `CONTEXT-FUNCTION-TREE.md` avant toute tâche sur modules principaux.
+2. Lire `shipflow_data/technical/context.md` pour la carte opérationnelle et les flux.
+3. Lire `shipflow_data/technical/context-function-tree.md` avant toute tâche sur modules principaux.
 4. Lire `shipflow_data/technical/context.md` quand la question touche aux frontières techniques.
-5. Lire `CONTEXT.md` encore une fois avant une tâche de maintenance transversale.
+5. Lire `shipflow_data/technical/context.md` encore une fois avant une tâche de maintenance transversale.
 
 ## What This Repo Is
 
@@ -76,7 +75,7 @@ Il permet de lire les bons documents avant de parcourir le code.
   - `src/background/index.ts`
   - `src/content-script/index.ts`
   - `src/ui/*/index.ts`
-  - puis `CONTEXT-FUNCTION-TREE.md`
+  - puis `shipflow_data/technical/context-function-tree.md`
 - Si la tâche concerne la logique métier principale SocialFlow :
   - `src/ui/setup/pages/SocialFlow/main.ts`
   - `src/ui/setup/pages/SocialFlow/App.vue`
@@ -92,7 +91,7 @@ Il permet de lire les bons documents avant de parcourir le code.
   - `convex/*`
   - `src/lib/convex*.ts`
   - `src/lib/cloudSync*`
-  - puis `CONTEXT.md`
+  - puis `shipflow_data/technical/context.md`
 - Si la tâche concerne build/déploiement :
   - `vite.config.ts`
   - `vite.chrome.config.ts`

@@ -1,5 +1,5 @@
 ---
-artifact: architecture_context
+artifact: documentation
 metadata_schema_version: "1.0"
 artifact_version: "1.0.0"
 project: "socialflow"
@@ -7,43 +7,14 @@ created: "2026-04-26"
 updated: "2026-04-27"
 status: reviewed
 source_skill: sf-docs
-scope: architecture
+scope: context
 owner: "Diane"
 confidence: medium
 risk_level: medium
 security_impact: none
 docs_impact: yes
-linked_systems:
-  - "README.md"
-  - "CONTEXT.md"
-  - "CONTEXT-FUNCTION-TREE.md"
-  - "src/ui/setup/pages/SocialFlow/main.ts"
-  - "src-tauri/src/lib.rs"
-  - "convex/schema.ts"
-  - "manifest.config.ts"
-  - "vite.config.ts"
-  - "vite.tauri.config.ts"
-  - "vite.web.config.ts"
-external_dependencies:
-  - "Vue 3"
-  - "Vite 5"
-  - "Pinia"
-  - "PrimeVue"
-  - "Convex"
-  - "Tauri 2"
-  - "Rust"
-  - "Kotlin"
-  - "Vue Router"
-invariants:
-  - "Les surfaces extension, web et desktop partagent une base de code Vue sans dupliquer le contrat de domaine central"
-  - "Les données de synchronisation cloud passent par Convex quand la config est disponible, sinon degrade en mode local"
-  - "Les commandes natives sensibles aux sessions sont centralisées dans src-tauri/src/lib.rs"
-  - "La config d'app (theme, langue, profils) reste cohérente entre local state et cloud"
-depends_on:
-  - "CONTEXT.md"
-  - "CONTEXT-FUNCTION-TREE.md"
-supersedes: []
 evidence:
+  - "README.md"
   - "package.json"
   - "vite.config.ts"
   - "vite.chrome.config.ts"
@@ -51,83 +22,110 @@ evidence:
   - "vite.tauri.config.ts"
   - "vite.web.config.ts"
   - "src/ui/setup/pages/SocialFlow/main.ts"
+  - "src/ui/setup/pages/SocialFlow/App.vue"
   - "src-tauri/src/lib.rs"
   - "convex/schema.ts"
-  - "convex/*"
   - "manifest.config.ts"
-next_review: "2026-07-26"
-next_step: "/sf-docs audit ARCHITECTURE.md"
+depends_on:
+  - "README.md"
+  - "AGENT.md"
+supersedes: []
+linked_systems:
+  - "README.md"
+  - "AGENT.md"
+  - "shipflow_data/technical/context-function-tree.md"
+  - "shipflow_data/technical/architecture.md"
+  - "package.json"
+  - "vite.config.ts"
+  - "vite.web.config.ts"
+  - "vite.tauri.config.ts"
+  - "src-tauri/tauri.conf.json"
+  - "convex/schema.ts"
+next_step: "/sf-docs update shipflow_data/technical/context.md"
 ---
 
-# Architecture Context
+# CONTEXT
 
-## Shape
+## What SocialFlow Is
 
-- `source` : un codebase Vue 3 partagé.
-- `distribution` : extension Chrome/Firefox, desktop Tauri, Android, web SPA.
-- `backend` : Convex serverless.
-- `sync` : stores locaux Pinia + sync cloud optionnelle via Convex.
-- `native layer` : Rust/Kotlin (Tauri + plugin Android WebView).
+SocialFlow est une application social multi-canaux avec une base Vue 3 commune et 4 cibles de distribution : extension navigateur, desktop Tauri, Android, et web app.
 
-## Runtime Boundaries
+## Product/Platform Matrix
 
-- **Browser shell**
-  - Manifest + background/content script/services d'injection.
-  - Pages UI dédiées : setup, popup, side-panel, options.
-- **SocialFlow app**
-  - `src/ui/setup/pages/SocialFlow` avec router et vues réseaux.
-  - Appel de `cloudSyncQueue` et des stores partagés de `src/`.
-- **Native host (desktop/mobile)**
-  - `src-tauri/src/lib.rs` expose les commandes de contrôle WebView.
-  - `set_grayscale`, `set_dark_mode`, `open_webview`, `inject_script`, backups.
-- **Cloud backend**
-  - `convex/` contient `schema` + fonctions auth/mutations/queries.
+- Extension Chrome/Firefox
+  - Build via `vite.chrome.config.ts` et `vite.firefox.config.ts`
+  - Entrées HTML dans `src/ui/*`
+  - Manifest CRX v3 dans `manifest.config.ts`
+- Desktop/Tauri
+  - Build via `vite.tauri.config.ts` + `pnpm tauri:bundle`
+  - Entrée principale `src-tauri/src/lib.rs` + `src-tauri/tauri.conf.json`
+- Android
+  - Cible Tauri mobile avec plugin `src-tauri/plugins/android-webview`
+- Web (Vercel)
+  - Build via `vite.web.config.ts`
+  - Page marketing + pages statiques en `fr/` et `en/`
 
-## Data and Control Flow
+## Repo Map
 
-1. L'entrée UI monte l'app, configure Convex si `VITE_CONVEX_URL`.
-2. L'utilisateur navigue entre vues réseau via le routeur SocialFlow.
-3. `webviewStore` déclenche soit une vue intégrée (`NetworkWebviewHost` + commandes Rust), soit un rendu non-webview.
-4. Les mutations importantes passent par les stores dans `src/stores` et les fonctions Convex.
-5. Les settings et métadonnées de profils sont synchronisés via `cloudSync*` quand authenticated.
-6. Les sessions natives sont maintenues par label `(profileId, networkId)` et stockages persistants par session.
+- `src/` : logique partagée, stores, composables, services, utilitaires.
+- `src/ui/setup/pages/SocialFlow/` : application principale.
+- `src/ui/setup/pages/SocialFlow/main.ts` : bootstrap front (Vue + Convex + services).
+- `src/ui/setup/pages/SocialFlow/App.vue` : shell desktop/mobile principal et orchestration.
+- `src/ui/*` : pages de shell navigateur (setup popup panel options).
+- `convex/` : backend serverless auth + données persistées.
+- `src-tauri/src/` : host natif, commandes IPC, création/gestion webviews.
+- `src-tauri/plugins/android-webview/` : API native Android.
 
-## Multi-Output Build Pipeline
+## Core Runtime Flows
 
-- `vite.chrome.config.ts` -> `dist/chrome/` + ZIP de publication.
-- `vite.firefox.config.ts` -> `dist/firefox/` + ZIP de publication.
-- `vite.tauri.config.ts` -> `dist/tauri/` pour Tauri desktop/mobile.
-- `vite.web.config.ts` -> `dist/web/` et pages marketing multi-routes.
-- `vite.config.ts` -> configuration de base commune.
+### 1) Front boot + auth
 
-## Platform Nuances
+1. Vite démarre une entrée UI.
+2. `src/ui/setup/pages/SocialFlow/main.ts` initialise Pinia, i18n, PrimeVue, router.
+3. Si `VITE_CONVEX_URL` est présent, `getConvexClient()` et `setupConvexAuth()` initient Convex Auth.
+4. App bootstrap puis montage de l'application.
 
-- Desktop webviews utilisent commandes Rust pour création/resize/show/hide/close.
-- Android webviews sont délégués au plugin `tauri_plugin_android_webview`.
-- Extension Chrome/Firefox garde des scripts dédiés (content script, side panel, popup).
+### 2) Navigation SocialFlow
 
-## Security and Privacy Notes
+1. `src/ui/setup/pages/SocialFlow/router/index.ts` route selon hash.
+2. `AuthGuard` protège les vues réseau.
+3. Vue réseau utilise `webviewStore` et store profils pour ouvrir le bon WebView.
+4. Sur desktop/mobile, le front appelle des commandes natives Tauri via IPC.
 
-- Auth token lifecycle est local à session via `src/lib/convexAuth.ts`.
-- Les clés et données utilisateur proviennent des tables Convex dédiées.
-- Les backups sont chiffrés côté Rust et stockés dans l'app data directory.
+### 3) Sync et persistance
+
+- État local : Pinia + localStorage via stores.
+- Sync cloud : `src/lib/cloudSyncQueue.ts`, `src/lib/cloudSettings.ts`, `src/lib/cloudSync.ts`.
+- Backend : tables Convex (`users`, `socialAccounts`, `activeAccounts`, `settings`, `profiles`, `customLinks`, `friendsFilters`, `subscriptions`).
+
+### 4) Extension surfaces
+
+- `src/background/index.ts` gère install/update et ouvre la page setup.
+- `src/content-script/index.ts` injecte l'iframe UI côté page web.
+- `src/ui/action-popup`, `src/ui/options-page`, `src/ui/side-panel` exposent des pages dédiées au navigateur.
+
+## Technical Decisions
+
+- Tauri est retenu pour la couche desktop/mobile pour partager la même base JS tout en gardant contrôle WebView natif.
+- L'application SocialFlow reste dans `src/ui/setup/pages/SocialFlow` avec réutilisation contrôlée des modules partagés de `src/`.
+- La stratégie auth-connexion privilégie Convex Auth avec fallback offline.
 
 ## Hotspots
 
-- `src-tauri/src/lib.rs` : commandes d'ouverture/commande webview et gestion des sessions natives.
-- `src/ui/setup/pages/SocialFlow/App.vue` : orchestrateur front de premier niveau.
-- `src/stores/webviewState.ts` : point de décision pour le flux réseau actif.
-- `src/lib/cloudSync.ts` : point de vérité du sync cloud.
-- `convex/socialAccounts.ts` et `convex/schema.ts` : cœur domaine persistance.
+- `src/ui/setup/pages/SocialFlow/App.vue` : flux global, sync, gestion évènements natifs.
+- `src/stores/webviewState.ts` : state réseau actif, ouverture/fermeture et profils.
+- `src/lib/cloudSync.ts` : sync de settings et données entre local et Convex.
+- `src-tauri/src/lib.rs` : commandes natives critiques (webview, session, commande Android).
+- `convex/socialAccounts.ts`, `convex/settings.ts`, `convex/profiles.ts` : tables cœur métier.
 
-## Known Constraints
+## Read by Task
 
-- Le module `src/ui/setup/pages/SocialFlow` et les shells racine ne sont pas totalement dédoublés.
+- Changer UI/UX : lire d'abord `src/ui/setup/pages/SocialFlow/*` puis `src/stores/*` et `src/components/*`.
+- Changer logique métier : lire `src/` puis la vue SocialFlow correspondante.
+- Changer extension shell : lire `src/ui/*`, manifest et `shipflow_data/technical/context-function-tree.md`.
+- Changer backend : lire `convex/*`, `src/lib/convex.ts`, `src/lib/convexAuth.ts`, puis mise à jour docs.
+- Changer build : lire scripts dans `package.json` puis configs Vite correspondantes.
 
 ## Update Rule
 
-Mettre à jour l'architecture si changent :
-- la partition `src/` vs `SocialFlow/`,
-- la topologie des commandes Tauri,
-- le schéma Convex,
-- les surfaces de build par plateforme.
+Mettre à jour `shipflow_data/technical/context.md` si les flux ci-dessus changent (nouveaux entry points, nouveaux stores critiques, nouveau comportement de sync ou de commande native).

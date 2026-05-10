@@ -132,7 +132,7 @@ pnpm exec tsc -p convex/tsconfig.json --noEmit  # Typecheck Convex
 Configuré via `vercel.json`. Push sur `master` déclenche un déploiement automatique.
 
 ### Mobile (CI)
-Voir [TAURI_MOBILE.md](./TAURI_MOBILE.md) pour le workflow GitHub Actions.
+Voir [shipflow_data/workflow/tauri-mobile.md](shipflow_data/workflow/tauri-mobile.md) pour le workflow GitHub Actions.
 
 ### Extensions
 Les fichiers `.zip` sont générés dans `dist/` pour upload sur le Chrome Web Store et Firefox Add-ons.
