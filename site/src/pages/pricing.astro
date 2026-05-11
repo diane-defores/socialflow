@@ -1,0 +1,271 @@
+---
+import Layout from '../layouts/Layout.astro'
+import Navbar from '../components/Navbar.astro'
+import Newsletter from '../components/Newsletter.astro'
+import Footer from '../components/Footer.astro'
+import { appUrl, siteUrl } from '../config/site'
+
+const plans = [
+  {
+    name: 'Free',
+    monthly: 0,
+    yearly: 0,
+    description: 'Perfect for getting started',
+    features: [
+      '2 isolated profiles',
+      '5 social networks',
+      'Grayscale mode',
+      '3 custom links',
+      'Local session storage',
+      'Community support',
+    ],
+    cta: 'Get Started',
+    href: appUrl(),
+    popular: false,
+  },
+  {
+    name: 'Pro',
+    monthly: 9,
+    yearly: 72,
+    description: 'For serious social operators',
+    features: [
+      'Unlimited profiles',
+      '18+ social networks',
+      'Full anti-distraction suite',
+      'Unlimited custom links',
+      'Kanban board',
+      'Backup and restore',
+      'Priority email support',
+    ],
+    cta: 'Start Free Trial',
+    href: appUrl(),
+    popular: true,
+  },
+  {
+    name: 'Team',
+    monthly: 19,
+    yearly: 180,
+    description: 'For small teams and client work',
+    features: [
+      'Everything in Pro',
+      'Profile sharing',
+      'Team management',
+      'Priority support',
+      'Future cloud features',
+    ],
+    cta: 'Contact Sales',
+    href: appUrl(),
+    popular: false,
+  },
+]
+
+const faqs = [
+  {
+    q: 'How can this be sustainable and still this cheap?',
+    a: 'The free tier is generous for personal use. Paid plans fund maintenance, compatibility updates, and support so the app stays stable over time.',
+  },
+  {
+    q: 'Can I try Pro before paying?',
+    a: 'Yes. A 14-day trial gives you full access to Pro features with no credit card required.',
+  },
+  {
+    q: 'Can I cancel anytime?',
+    a: 'Yes. Monthly plans can be canceled anytime; annual plans remain active until the end of the current billing period.',
+  },
+  {
+    q: 'Do you offer student or nonprofit pricing?',
+    a: 'Yes. We can offer 50% off Pro with a valid student ID or nonprofit certification.',
+  },
+  {
+    q: 'Why is there a lifetime deal for SocialFlow?',
+    a: 'SocialFlow runs mostly locally: live sessions stay on-device. Cloud sync is used only for preferences, so the infra cost stays lower and predictable.',
+  },
+]
+
+const lifetime = [
+  'All Pro features',
+  'Lifetime updates',
+  'Priority support',
+  'No subscription',
+]
+
+const competitorColumns = ['SocialFlow Pro', 'Hootsuite', 'Buffer', 'SessionBox', 'GoLogin']
+const compareRows = [
+  { feature: 'Price', values: ['9 €/mo', '99 €/mo', '5 €/mo/channel', '13 €/mo', '24 €/mo'] },
+  { feature: 'Multi-account isolation', values: ['Yes (native)', 'No', 'No', 'Yes (network-level)', 'Yes (anti-detect)'] },
+  { feature: 'Direct access to networks', values: ['Yes (real sites)', 'No (API only)', 'No (API only)', 'Yes', 'Yes'] },
+  { feature: 'Anti-distraction tools', values: ['Yes', 'No', 'No', 'No', 'No'] },
+  { feature: 'Kanban board', values: ['Yes', 'No', 'No', 'No', 'No'] },
+  { feature: 'Desktop + mobile', values: ['Yes', 'Web only', 'Web only', 'Browser extension only', 'Desktop only'] },
+  { feature: 'Privacy (local data)', values: ['Yes', 'No', 'No', 'No', 'No'] },
+]
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: "SocialFlow Pro",
+    description: "All-in-one social workspace with profile isolation, anti-distraction controls, and native network access.",
+    offers: { "@type": "Offer", price: "9", priceCurrency: "EUR", availability: "https://schema.org/InStock" },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: siteUrl('/') },
+      { "@type": "ListItem", position: 2, name: "Pricing", item: siteUrl('/pricing') },
+    ],
+  },
+]
+---
+
+<Layout
+  title="Pricing - SocialFlow"
+  description="Simple, transparent pricing for SocialFlow. Start free, upgrade when you need more."
+  path="/pricing"
+  jsonLd={jsonLd}
+>
+  <main id="main-content" class="min-h-screen bg-background text-foreground">
+    <Navbar />
+
+    <section class="max-w-5xl mx-auto px-4 pt-32 pb-16 text-center">
+      <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-foreground" style="font-family: var(--font-cal-sans);">
+        Simple, transparent pricing
+      </h1>
+      <p class="mt-4 text-lg text-muted-foreground">Start free. Upgrade when you need more depth.</p>
+    </section>
+
+    <section class="max-w-6xl mx-auto px-4 pb-16">
+      <div class="grid gap-8 md:grid-cols-3">
+        {plans.map((plan) => (
+          <div class={`relative rounded-2xl border ${plan.popular ? 'border-foreground/30 shadow-lg' : 'border-border'} bg-card p-8`}>
+            {plan.popular && (
+              <div class="absolute -top-3 left-1/2 -translate-x-1/2">
+                <span class="rounded-full bg-foreground px-4 py-1 text-sm font-medium text-background">Most Popular</span>
+              </div>
+            )}
+            <div class="text-center mb-6">
+              <h2 class="text-2xl font-bold text-foreground">{plan.name}</h2>
+              <p class="mt-2 text-muted-foreground">{plan.description}</p>
+              <div class="mt-6">
+                <span class="text-5xl font-bold text-foreground">€{plan.monthly}</span>
+                {plan.monthly > 0 && <span class="text-muted-foreground">/month</span>}
+              </div>
+            </div>
+            <ul class="space-y-4 mb-8">
+              {plan.features.map((feature) => (
+                <li class="flex items-start gap-3">
+                  <svg class="w-5 h-5 shrink-0 text-emerald-500 mt-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 6 9 17l-5-5"/>
+                  </svg>
+                  <span class="text-foreground">{feature}</span>
+                </li>
+              ))}
+            </ul>
+            <a
+              href={plan.href}
+              class={`block w-full text-center rounded-full py-3 text-sm font-medium transition-colors ${
+                plan.popular
+                  ? 'shimmer-btn bg-white text-zinc-950 hover:bg-zinc-200'
+                  : 'bg-card text-foreground hover:bg-muted border border-border'
+              }`}
+            >
+              {plan.cta}
+            </a>
+          </div>
+        ))}
+      </div>
+      <p class="mt-8 text-center text-muted-foreground">
+        Want to know exactly what you get? <a href="/features" class="text-foreground underline underline-offset-4 hover:opacity-80">See all features in detail</a>
+      </p>
+    </section>
+
+    <section class="max-w-5xl mx-auto px-4 py-16">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl sm:text-4xl font-bold text-foreground mb-4" style="font-family: var(--font-instrument-sans);">Lifetime Deal</h2>
+        <p class="text-lg text-muted-foreground">Pro access forever, one payment.</p>
+      </div>
+      <div class="max-w-2xl mx-auto rounded-2xl border border-border bg-card p-8">
+        <ul class="space-y-3">
+          {lifetime.map((feature) => (
+            <li class="flex items-center gap-3 text-sm text-foreground">
+              <svg class="w-4 h-4 text-emerald-500 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 6 9 17l-5-5"/>
+              </svg>
+              {feature}
+            </li>
+          ))}
+        </ul>
+        <a href={appUrl()} class="mt-6 block w-full text-center rounded-full py-3 text-sm font-medium shimmer-btn bg-white text-zinc-950 hover:bg-zinc-200">
+          Get Lifetime Access
+        </a>
+      </div>
+    </section>
+
+    <section class="max-w-6xl mx-auto px-4 py-16 sm:py-24">
+      <div class="text-center mb-10">
+        <h2 class="text-3xl sm:text-4xl font-bold text-foreground mb-4" style="font-family: var(--font-instrument-sans);">Compared to alternatives</h2>
+        <p class="text-muted-foreground max-w-2xl mx-auto">SocialFlow keeps real network access and profile isolation in one native app.</p>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse">
+          <thead>
+            <tr class="border-b border-border">
+              <th scope="col" class="py-4 pr-4 text-left font-semibold text-foreground">Feature</th>
+              {competitorColumns.map((name) => (
+                <th scope="col" class="w-36 py-4 text-center font-semibold text-foreground">{name}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {compareRows.map((row) => (
+              <tr class="border-b border-border">
+                <td class="py-4 pr-4 font-medium text-foreground">{row.feature}</td>
+                {row.values.map((value) => (
+                  <td class="py-4 text-center text-sm text-muted-foreground">{value}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="bg-card py-16 sm:py-24">
+      <div class="max-w-3xl mx-auto px-4">
+        <h2 class="text-center text-3xl font-bold text-foreground mb-12" style="font-family: var(--font-instrument-sans);">Frequently Asked Questions</h2>
+        <div class="space-y-2">
+          {faqs.map((faq) => (
+            <details class="group border border-border rounded-xl overflow-hidden">
+              <summary class="flex items-center justify-between gap-4 cursor-pointer px-6 py-5 text-base font-semibold text-foreground list-none hover:bg-muted/40 transition-colors">
+                {faq.q}
+                <svg class="w-5 h-5 shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-180" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="m6 9 6 6 6-6"/>
+                </svg>
+              </summary>
+              <p class="px-6 pb-5 pt-1 text-muted-foreground leading-relaxed">{faq.a}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section class="max-w-3xl mx-auto px-4 py-16 sm:py-24 text-center">
+      <h2 class="text-3xl font-bold text-foreground mb-4">Ready to run social more clearly?</h2>
+      <p class="text-lg text-muted-foreground mb-8">Start free and upgrade only when you need it.</p>
+      <a href={appUrl()} class="shimmer-btn inline-flex items-center bg-white text-zinc-950 hover:bg-zinc-200 rounded-full px-8 py-3 text-base font-medium transition-colors">Get Started Free</a>
+    </section>
+
+    <Newsletter />
+    <Footer />
+  </main>
+</Layout>

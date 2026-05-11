@@ -1,10 +1,10 @@
 ---
 artifact: architecture_context
 metadata_schema_version: "1.0"
-artifact_version: "1.0.1"
+artifact_version: "1.0.2"
 project: "socialflow"
 created: "2026-04-26"
-updated: "2026-05-10"
+updated: "2026-05-11"
 status: reviewed
 source_skill: sf-docs
 scope: architecture
@@ -18,6 +18,27 @@ linked_systems:
   - "shipflow_data/technical/context-function-tree.md"
   - "README.md"
   - "shipflow_data/technical/README.md"
+external_dependencies:
+  - "Vue 3"
+  - "Vite"
+  - "Tauri 2"
+  - "Convex"
+  - "Browser extension APIs"
+invariants:
+  - "One shared Vue application layer serves extension, desktop, mobile, and web targets."
+  - "Native WebView/session behavior stays isolated in Tauri/Rust and Android plugin surfaces."
+  - "Cloud sync must remain optional when Convex configuration is absent."
+depends_on:
+  - artifact: "shipflow_data/technical/context.md"
+    artifact_version: "1.0.0"
+    required_status: reviewed
+supersedes:
+  - "archi.md"
+evidence:
+  - "Legacy root archi.md was a pointer to shipflow_data/technical/architecture.md."
+  - "Vite, Tauri, Convex, and manifest configs define SocialFlow's distribution targets."
+next_review: "2026-06-11"
+next_step: "/sf-docs audit shipflow_data/technical/architecture.md"
 ---
 
 # Architecture

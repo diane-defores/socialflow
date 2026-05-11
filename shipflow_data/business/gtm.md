@@ -1,10 +1,10 @@
 ---
 artifact: gtm_context
 metadata_schema_version: "1.0"
-artifact_version: "1.0.0"
+artifact_version: "1.0.1"
 project: "socialflow"
 created: "2026-04-26"
-updated: "2026-04-27"
+updated: "2026-05-11"
 status: reviewed
 source_skill: manual
 scope: gtm
@@ -14,22 +14,22 @@ risk_level: medium
 security_impact: low
 docs_impact: yes
 evidence:
-  - "README.md and TASKS.md describe current positioning, platforms, and roadmap."
+  - "README.md and shipflow_data/workflow/TASKS.md describe current positioning, platforms, and roadmap."
   - "Build outputs in vite.* and src-tauri show concrete launch channels and packaging model."
   - "Feature set in src/ui and social network components demonstrates operational utility."
 linked_artifacts:
-  - PRODUCT.md
+  - shipflow_data/business/product.md
 depends_on:
-  - artifact: "PRODUCT.md"
+  - artifact: "shipflow_data/business/product.md"
     artifact_version: "1.0.0"
     required_status: reviewed
 supersedes: []
 next_review: "2026-05-26"
-next_step: "/sf-docs audit GTM.md"
+next_step: "/sf-docs audit shipflow_data/business/gtm.md"
 target_segment: "independent operators, small marketing teams, and social operators managing multiple accounts across networks and devices"
 offer: "an all-in-one social operations workspace with shared UI, local profiles, and cross-platform delivery from one codebase"
 channels: "developer and user documentation, landing pages, feature changelogs, social proof from update cadence, and onboarding walkthroughs"
-proof_points: "shared multi-platform build pipeline, Convex-backed profile/session architecture, native webview support, and explicit roadmap visibility in TASKS.md"
+proof_points: "shared multi-platform build pipeline, Convex-backed profile/session architecture, native webview support, and explicit roadmap visibility in shipflow_data/workflow/TASKS.md"
 ---
 
 # GTM Context
@@ -67,8 +67,8 @@ proof_points: "shared multi-platform build pipeline, Convex-backed profile/sessi
 ## Proof Points
 
 - Concrete build/release evidence by platform target in repo scripts.
-- Multi-target architecture described in `archi.md` and implemented in shared stores.
-- Active roadmap transparency through `TASKS.md`.
+- Multi-target architecture described in `shipflow_data/technical/architecture.md` and implemented in shared stores.
+- Active roadmap transparency through `shipflow_data/workflow/TASKS.md`.
 
 ## KPIs (Initial)
 

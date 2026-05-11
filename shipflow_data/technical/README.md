@@ -22,10 +22,10 @@ evidence:
   - "vite.web.config.ts"
   - "vite.tauri.config.ts"
 supersedes: []
-next_step: "/sf-docs audit GUIDELINES.md"
+next_step: "/sf-docs audit shipflow_data/technical/README.md"
 ---
 
-# GUIDELINES.md
+# Technical Guidelines
 
 ## Technical standards
 

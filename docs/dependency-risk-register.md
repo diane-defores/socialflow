@@ -1,7 +1,7 @@
 ---
 artifact: dependency_risk_register
 metadata_schema_version: "1.0"
-artifact_version: "0.1.0"
+artifact_version: "1.0.0"
 project: socialflow
 created: "2026-04-30"
 updated: "2026-05-02"
@@ -14,10 +14,13 @@ risk_level: medium
 security_impact: yes
 docs_impact: yes
 depends_on:
-  - artifact: "specs/socialflow-dependency-hygiene-and-major-line-migration.md"
-    artifact_version: "0.1.0"
+  - artifact: "shipflow_data/workflow/specs/socialflow-dependency-hygiene-and-major-line-migration.md"
+    artifact_version: "1.0.0"
     required_status: "ready"
 supersedes: []
+evidence:
+  - "Dependency hygiene and native RustSec migration specs define the accepted risk policy."
+  - "Register entries document affected dependency paths, reachability, decision, and removal criteria."
 next_review: "2026-06-02"
 next_step: "/sf-verify SocialFlow Native Tauri RustSec Warning Migration"
 ---

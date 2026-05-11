@@ -1,10 +1,10 @@
 ---
 artifact: product_context
 metadata_schema_version: "1.0"
-artifact_version: "1.0.0"
+artifact_version: "1.0.1"
 project: "socialflow"
 created: "2026-04-26"
-updated: "2026-04-27"
+updated: "2026-05-11"
 status: reviewed
 source_skill: manual
 scope: product
@@ -16,16 +16,16 @@ docs_impact: yes
 evidence:
   - "README.md defines the cross-platform product scope and architecture."
   - "vite.*.config.ts plus src-tauri config show delivery targets (extension, desktop, web, mobile)."
-  - "TASKS.md, specs/signup-nudge.md, and archi.md document current roadmap and decisions."
+  - "shipflow_data/workflow/TASKS.md, shipflow_data/workflow/specs/signup-nudge.md, and shipflow_data/technical/architecture.md document current roadmap and decisions."
   - "Convex backend and Vue front-end folders show social account/workspace workflows."
 linked_artifacts:
   - README.md
-  - archi.md
-  - TASKS.md
+  - shipflow_data/technical/architecture.md
+  - shipflow_data/workflow/TASKS.md
 depends_on: []
 supersedes: []
 next_review: "2026-05-26"
-next_step: "/sf-docs audit PRODUCT.md"
+next_step: "/sf-docs audit shipflow_data/business/product.md"
 target_user: "creators, operators, marketers, and small teams managing multiple social accounts across LinkedIn, Instagram, X, Facebook, and Gmail workflows"
 user_problem: "switching contexts between tools, fragmented account sessions, inconsistent automation behavior across platforms, and slow onboarding when extending the app to new surfaces"
 desired_outcomes: "centralized social workflow in one codebase, predictable profile/account session behavior, and faster release velocity with clearer decision contracts"

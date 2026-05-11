@@ -9,7 +9,7 @@
 
 | Pri | Task | Status |
 |-----|------|--------|
-| 🟠 | [Task backlog was migrated; validate project tracker entries] | 🔄 in progress |
+| 🟠 | [Task backlog was migrated; validate project tracker entries] | ✅ done |
 
 ---
 
@@ -19,3 +19,5 @@
 
 ## Audit Findings
 
+- 2026-05-11: ShipFlow layout aligned. Legacy root docs were removed or moved into `shipflow_data/`; specs, bugs, research, competitors/inspirations, and audit log now use canonical paths.
+- 2026-05-11: Task notes were updated after full layout migration; site assets and legacy root web artifacts were consolidated under shipflow_data/ and site split finalized.

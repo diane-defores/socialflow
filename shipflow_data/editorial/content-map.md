@@ -1,10 +1,10 @@
 ---
 artifact: content_map
 metadata_schema_version: "1.0"
-artifact_version: "1.0.0"
+artifact_version: "1.0.1"
 project: "socialflow"
 created: "2026-04-26"
-updated: "2026-04-27"
+updated: "2026-05-11"
 status: reviewed
 source_skill: manual
 scope: content_map
@@ -14,23 +14,23 @@ risk_level: medium
 security_impact: low
 docs_impact: yes
 evidence:
-  - "README.md and TASKS.md serve as the public and execution surfaces."
+  - "README.md and shipflow_data/workflow/TASKS.md serve as the public and execution surfaces."
   - "en/ and fr/ landing pages expose public product positioning."
   - "src/ui and src-tauri represent operational and desktop surfaces."
-  - "research and specs folders contain exploration and implementation context."
+  - "shipflow_data/workflow/research and shipflow_data/workflow/specs contain exploration and implementation context."
 linked_artifacts:
-  - PRODUCT.md
-  - GTM.md
+  - shipflow_data/business/product.md
+  - shipflow_data/business/gtm.md
 depends_on:
-  - artifact: "PRODUCT.md"
+  - artifact: "shipflow_data/business/product.md"
     artifact_version: "1.0.0"
     required_status: reviewed
-  - artifact: "GTM.md"
+  - artifact: "shipflow_data/business/gtm.md"
     artifact_version: "1.0.0"
     required_status: reviewed
 supersedes: []
 next_review: "2026-05-26"
-next_step: "/sf-docs audit CONTENT_MAP.md"
+next_step: "/sf-docs audit shipflow_data/editorial/content-map.md"
 content_surfaces:
   - repo_docs
   - landing_pages
@@ -45,15 +45,15 @@ content_surfaces:
 
 ## Purpose
 
-`CONTENT_MAP.md` defines where SocialFlow content and product truth should live so future repurposing does not drift from implementation.
+`shipflow_data/editorial/content-map.md` defines where SocialFlow content and product truth should live so future repurposing does not drift from implementation.
 
 ## Content Surfaces
 
 ### Repo documentation
 
 - `README.md` — canonical entry for architecture and platform matrix.
-- `TASKS.md` — roadmap and execution priorities.
-- `AUDIT_LOG.md` — historical decision and review notes.
+- `shipflow_data/workflow/TASKS.md` — roadmap and execution priorities.
+- `shipflow_data/workflow/AUDIT_LOG.md` — historical decision and review notes.
 - `CHANGELOG.md` — release-level evolution.
 
 ### Front-end and product surfaces
@@ -68,18 +68,18 @@ content_surfaces:
 - `src/` and `convex/` folders — implementation surfaces for workflows.
 - `vite.*.config.ts`, `manifest.*.config.ts`, and `vercel.json` — release/build contracts.
 - `scripts/` — operational helper surface.
-- `specs/` and `research/` — planning and deep-dive evidence.
+- `shipflow_data/workflow/specs/` and `shipflow_data/workflow/research/` — planning and deep-dive evidence.
 
 ## Content Routing Rules
 
-- Use `PRODUCT.md` and `GTM.md` when changing positioning, audience, offer, or proof assumptions.
+- Use `shipflow_data/business/product.md` and `shipflow_data/business/gtm.md` when changing positioning, audience, offer, or proof assumptions.
 - Use `README.md` for scope, platform coverage, and onboarding truth updates.
-- Use `TASKS.md` for execution shifts and sequencing changes.
-- Use `archi.md` and `src/*` references when introducing architecture-level changes.
+- Use `shipflow_data/workflow/TASKS.md` for execution shifts and sequencing changes.
+- Use `shipflow_data/technical/architecture.md` and `src/*` references when introducing architecture-level changes.
 - Use `CHANGELOG.md` for externally visible milestone summaries.
 
 ## Repurposing Outputs
 
 - For public-facing positioning content, target `/en` and `/fr` landing structures first, then keep links back to `README.md`.
-- For technical summaries and workflow explanations, target `README.md` and `TASKS.md`.
-- For product truth updates, update linked artifact files in tandem (`PRODUCT.md`, `GTM.md`) before publication-facing copy changes.
+- For technical summaries and workflow explanations, target `README.md` and `shipflow_data/workflow/TASKS.md`.
+- For product truth updates, update linked artifact files in tandem (`shipflow_data/business/product.md`, `shipflow_data/business/gtm.md`) before publication-facing copy changes.

@@ -19,10 +19,10 @@ evidence:
   - "package.json"
   - "src/ui/setup/pages/SocialFlow/App.vue"
 supersedes: []
-next_step: "/sf-docs audit BRANDING.md"
+next_step: "/sf-docs audit shipflow_data/business/branding.md"
 ---
 
-# BRANDING.md
+# Branding Context
 
 ## Brand positioning
 

@@ -19,10 +19,10 @@ evidence:
   - "package.json"
   - "src/ui/setup/pages/SocialFlow/App.vue"
 supersedes: []
-next_step: "/sf-docs audit BUSINESS.md"
+next_step: "/sf-docs audit shipflow_data/business/business.md"
 ---
 
-# BUSINESS.md
+# Business Context
 
 ## Business model
 
