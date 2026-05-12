@@ -31,6 +31,13 @@
 
     <div class="header-end">
       <Button
+        v-tooltip.bottom="$t('common.settings')"
+        icon="pi pi-cog"
+        text
+        :aria-label="$t('common.settings')"
+        @click="openSettings"
+      />
+      <Button
         v-tooltip.bottom="'Toggle right sidebar'"
         icon="pi pi-bars"
         text
@@ -58,6 +65,7 @@ const emit = defineEmits<{
   'update:sidebarVisible': [value: boolean]
   'update:rightSidebarVisible': [value: boolean]
   'filter-change': [filters: any]
+  'open-settings': []
 }>()
 
 const route = useRoute()
@@ -83,6 +91,10 @@ const toggleRightSidebar = () => {
 
 const handleFilterChange = (filters: any) => {
   emit('filter-change', filters)
+}
+
+const openSettings = () => {
+  emit('open-settings')
 }
 </script>
 

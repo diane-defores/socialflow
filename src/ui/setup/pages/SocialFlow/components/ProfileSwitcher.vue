@@ -1,7 +1,7 @@
 <template>
   <div
     class="profile-switcher"
-    :class="{ 'icons-only': iconsOnly }"
+    :class="{ 'icons-only': iconsOnly, 'menu-up': menuDirection === 'up' }"
   >
     <!-- Trigger button -->
     <div
@@ -23,8 +23,11 @@
       </span>
       <i
         v-if="!iconsOnly"
-        class="pi pi-chevron-down chevron"
-        :class="{ rotated: menuVisible }"
+        class="pi chevron"
+        :class="[
+          menuDirection === 'up' ? 'pi-chevron-up' : 'pi-chevron-down',
+          { rotated: menuVisible },
+        ]"
       />
     </div>
 
@@ -114,13 +117,13 @@
 import { ref, nextTick, onMounted, onUnmounted } from 'vue'
 import { useProfilesStore } from '@/stores/profiles'
 import type { Profile } from '@/stores/profiles'
-import { useWebviewStore } from '@/stores/webviewState'
-import { useNetworkWebview } from '../composables/useNetworkWebview'
 
-const props = defineProps<{ iconsOnly: boolean }>()
+defineProps<{
+  iconsOnly: boolean
+  menuDirection?: 'up' | 'down'
+}>()
 
 const profilesStore = useProfilesStore()
-const webviewStore = useWebviewStore()
 
 const menuVisible = ref(false)
 const editingId = ref<string | null>(null)
@@ -139,9 +142,7 @@ function selectProfile(profileId: string) {
     menuVisible.value = false
     return
   }
-  // Close current webview — NetworkWebviewHost watcher will reopen with new profile
-  const networkId = webviewStore.activeNetworkId
-  const url = webviewStore.activeUrl
+  // NetworkWebviewHost watcher will reopen the active network with the new profile session.
   profilesStore.setActive(profileId)
   menuVisible.value = false
 }
@@ -200,6 +201,14 @@ onUnmounted(() => document.removeEventListener('click', handleOutsideClick))
   margin-bottom: 0.5rem;
 }
 
+.profile-switcher.menu-up {
+  border-top: 1px solid var(--surface-border);
+  border-bottom: 0;
+  margin-top: 0.5rem;
+  margin-bottom: 0;
+  padding: 0.75rem 0.5rem 0.5rem;
+}
+
 .profile-trigger {
   display: flex;
   align-items: center;
@@ -253,6 +262,11 @@ onUnmounted(() => document.removeEventListener('click', handleOutsideClick))
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   z-index: 200;
   overflow: hidden;
+}
+
+.profile-switcher.menu-up .profile-menu {
+  top: auto;
+  bottom: calc(100% + 4px);
 }
 
 .profile-menu-header {

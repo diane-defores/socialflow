@@ -94,12 +94,15 @@ const currentUser = computed(() => ({
 const content = ref('')
 const selectedImage = ref<string | null>(null)
 
-const onImageSelect = (event: any) => {
+const onImageSelect = (event: { files: File[] }) => {
   const file = event.files[0]
   if (file) {
     const reader = new FileReader()
-    reader.onload = (e) => {
-      selectedImage.value = e.target?.result as string
+    reader.onload = (e: ProgressEvent<FileReader>) => {
+      const result = e.target?.result
+      if (typeof result === 'string') {
+        selectedImage.value = result
+      }
     }
     reader.readAsDataURL(file)
   }

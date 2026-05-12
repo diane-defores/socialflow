@@ -53,4 +53,4 @@ ${urls
 `
 
 writeFileSync(join(dist, 'sitemap.xml'), xml)
-console.log(`Sitemap generated: ${urls.length} URLs.`)
+console.info(`Sitemap generated: ${urls.length} URLs.`)

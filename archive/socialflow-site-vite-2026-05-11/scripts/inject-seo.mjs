@@ -25,4 +25,4 @@ for (const lang of langs) {
   }
 }
 
-console.log('SEO tags injected.')
+console.info('SEO tags injected.')

@@ -1,7 +1,12 @@
 import { ref, watch, nextTick } from "vue"
-function mergeDeep(defaults: any, source: any): any {
+
+type JsonValue = string | number | boolean | null | undefined | JsonObject | JsonArray
+type JsonObject = { [key: string]: JsonValue }
+type JsonArray = JsonValue[]
+
+function mergeDeep(defaults: JsonObject, source: JsonObject): JsonObject {
 	// Merge the default options with the stored options
-	const output = { ...defaults } // Start with defaults
+	const output: JsonObject = { ...defaults } // Start with defaults
 
 	Object.keys(defaults).forEach((key) => {
 		const defaultValue = defaults[key]
@@ -15,20 +20,25 @@ function mergeDeep(defaults: any, source: any): any {
 		} else {
 			// If the type is different, use the default value
 			output[key] = defaultValue
-			console.log("Type mismatch", key, sourceValue)
+			console.warn("Type mismatch", key, sourceValue)
 		}
 	})
 
 	return output
 }
 
-function checkType(defaultValue: any, value: any): boolean {
+function checkType(defaultValue: JsonValue, value: unknown): value is JsonValue {
 	// Check if the value type is the same type as the default value or null
 	// there are only strings, booleans, nulls and arrays as types left
-	return (typeof value === typeof defaultValue && Array.isArray(value) == Array.isArray(defaultValue)) || value === null
+	return (
+		(value === null && defaultValue === null) ||
+		(value !== null &&
+			typeof value === typeof defaultValue &&
+			Array.isArray(value) === Array.isArray(defaultValue))
+	)
 }
-function isObject(value: any): boolean {
-	return value !== null && value instanceof Object && !Array.isArray(value)
+function isObject(value: JsonValue): value is JsonObject {
+	return value !== null && typeof value === "object" && !Array.isArray(value)
 }
 
 export function useBrowserSyncStorage<T>(key: string, defaultValue: T) {
@@ -46,12 +56,13 @@ function useBrowserStorage<T>(key: string, defaultValue: T, storageType: "sync" 
 	const defaultIsObject = isObject(defaultValue)
 	// Initialize storage with the value from chrome.storage
 	const promise = new Promise((resolve) => {
-		chrome.storage[storageType].get(key, async (result) => {
-			if (result?.[key] !== undefined) {
-				if (defaultIsObject && isObject(result[key])) {
-					data.value = mergeDeep(defaultValue, result[key])
-				} else if (checkType(defaultValue, result[key])) {
-					data.value = result[key]
+		chrome.storage[storageType].get(key, async (result: Record<string, unknown>) => {
+			const storedValue = result?.[key]
+			if (storedValue !== undefined) {
+				if (defaultIsObject && isObject(storedValue as JsonValue)) {
+					data.value = mergeDeep(defaultValue as JsonObject, storedValue as JsonObject) as T
+				} else if (checkType(defaultValue as JsonValue, storedValue)) {
+					data.value = storedValue as T
 				}
 			}
 			await nextTick()

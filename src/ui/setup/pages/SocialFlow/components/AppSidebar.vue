@@ -10,26 +10,24 @@
         :min-size="5" 
         class="sidebar"
         :class="{ 'icons-only': iconsOnly }"
-      >
-        <div
-          class="sidebar-content"
-          :class="{ 'content-centered': iconsOnly }"
         >
-          <!-- Profile switcher (global — one profile = all networks) -->
-          <ProfileSwitcher :icons-only="iconsOnly" />
-
           <div
-            class="flex align-items-center mb-3"
-            :class="{ 'justify-content-center': iconsOnly, 'justify-content-between': !iconsOnly }"
+            class="sidebar-content"
+            :class="{ 'content-centered': iconsOnly }"
           >
-            <Button
-              v-tooltip.right="'Toggle compact mode'"
-              icon="pi pi-arrows-h"
-              text
-              aria-label="Toggle compact mode"
-              @click="toggleIconsOnly"
-            />
-          </div>
+            <div class="sidebar-main">
+              <div
+                class="flex align-items-center mb-3"
+                :class="{ 'justify-content-center': iconsOnly, 'justify-content-between': !iconsOnly }"
+              >
+                <Button
+                  v-tooltip.right="'Toggle compact mode'"
+                  icon="pi pi-arrows-h"
+                  text
+                  aria-label="Toggle compact mode"
+                  @click="toggleIconsOnly"
+                />
+              </div>
 
           <!-- Réseaux sociaux -->
           <div class="menu-section">
@@ -284,6 +282,14 @@
               </div>
             </div>
           </div>
+            </div>
+
+            <!-- Profile switcher (global — one profile = all networks) -->
+            <ProfileSwitcher
+              :icons-only="iconsOnly"
+              menu-direction="up"
+              class="profile-switcher-bottom"
+            />
         </div>
       </SplitterPanel>
       <SplitterPanel :size="100 - panelSize">
@@ -509,6 +515,15 @@ onMounted(() => {
 
 .sidebar-content {
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-main {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
   overflow-y: auto;
 }
 

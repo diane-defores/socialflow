@@ -11,6 +11,7 @@
       <AppHeader
         v-model:sidebar-visible="sidebarVisible"
         v-model:right-sidebar-visible="rightSidebarVisible"
+        @open-settings="settingsVisible = true"
       />
       <AppSidebar v-model="sidebarVisible">
         <AppRightSidebar v-model="rightSidebarVisible">
@@ -30,6 +31,10 @@
     />
 
     <PostAuthSyncOverlay />
+    <MobileSettingsSheet
+      v-if="onboardingStore.completed && !isMobile"
+      v-model="settingsVisible"
+    />
   </div>
 </template>
 
@@ -58,12 +63,14 @@ import AppSidebar from './components/AppSidebar.vue'
 import AppRightSidebar from './components/AppRightSidebar.vue'
 import NetworkWebviewHost from './components/NetworkWebviewHost.vue'
 import MobileLayout from './components/MobileLayout.vue'
+import MobileSettingsSheet from './components/MobileSettingsSheet.vue'
 import PostAuthSyncOverlay from './components/PostAuthSyncOverlay.vue'
 import SignupNudge from './components/SignupNudge.vue'
 import OnboardingFlow from './components/OnboardingFlow.vue'
 
 const sidebarVisible = ref(true)
 const rightSidebarVisible = ref(true)
+const settingsVisible = ref(false)
 
 // Signup nudge (desktop only — mobile has its own in MobileLayout)
 const nudge = useSignupNudge()

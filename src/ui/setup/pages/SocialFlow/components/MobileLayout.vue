@@ -13,41 +13,20 @@
     class="mobile-home"
     @click.self="exitEditMode"
   >
-    <!-- Profile card (sticky top) -->
-    <div
-      class="profile-card"
-      @click="networkEditMode ? exitEditMode() : (profileSheetVisible = true)"
-    >
-      <div class="profile-avatar-wrap">
-        <div class="profile-avatar">
-          <img
-            v-if="profilesStore.activeProfile?.avatar"
-            :src="profilesStore.activeProfile.avatar"
-            class="profile-avatar-img"
-          />
-          <span v-else>{{ profilesStore.activeProfile?.emoji ?? '👤' }}</span>
-        </div>
-        <div class="profile-avatar-ring" />
+    <!-- Top app bar -->
+    <div class="mobile-topbar">
+      <div class="mobile-topbar-title">
+        <span class="mobile-app-name">SocialFlow</span>
+        <span class="mobile-app-subtitle">{{ $t('account.section_title') }}</span>
       </div>
-      <div class="profile-info">
-        <span class="profile-name">{{ profilesStore.activeProfile?.name ?? $t('profile.default_name') }}</span>
-        <span class="profile-sub">
-          <i
-            class="pi pi-th-large"
-            style="font-size:0.65rem; margin-right:0.3rem;"
-          />
-          {{ $t('profile.networks_count', { count: visibleMenuItems.length }) }} · {{ $t('profile.tap_to_manage') }}
-        </span>
-        <div class="profile-pills">
-          <span
-            v-for="item in visibleMenuItems.slice(0, 5)"
-            :key="item.id"
-            class="profile-pill"
-            :style="{ background: pillColor(item) || 'var(--surface-hover)' }"
-          />
-        </div>
-      </div>
-      <i class="pi pi-chevron-down profile-chevron" />
+      <button
+        class="settings-topbar-btn"
+        :aria-label="$t('common.settings')"
+        @click="settingsVisible = true"
+      >
+        <i class="pi pi-cog" />
+        <span>{{ $t('common.settings') }}</span>
+      </button>
     </div>
 
     <!-- Quick actions bar (sticky top) -->
@@ -231,15 +210,42 @@
       </div>
     </div><!-- /.mobile-home-scroll -->
 
-    <!-- Settings button (sticky bottom) -->
-    <button
-      class="settings-btn"
-      @click="settingsVisible = true"
+    <!-- Profile switcher bar (sticky bottom) -->
+    <div
+      class="profile-card profile-card--bottom"
+      @click="networkEditMode ? exitEditMode() : (profileSheetVisible = true)"
     >
-      <i class="pi pi-cog" />
-      <span>{{ $t('common.settings') }}</span>
-      <i class="pi pi-chevron-right quick-action-arrow" />
-    </button>
+      <div class="profile-avatar-wrap">
+        <div class="profile-avatar">
+          <img
+            v-if="profilesStore.activeProfile?.avatar"
+            :src="profilesStore.activeProfile.avatar"
+            class="profile-avatar-img"
+          />
+          <span v-else>{{ profilesStore.activeProfile?.emoji ?? '👤' }}</span>
+        </div>
+        <div class="profile-avatar-ring" />
+      </div>
+      <div class="profile-info">
+        <span class="profile-name">{{ profilesStore.activeProfile?.name ?? $t('profile.default_name') }}</span>
+        <span class="profile-sub">
+          <i
+            class="pi pi-th-large"
+            style="font-size:0.65rem; margin-right:0.3rem;"
+          />
+          {{ $t('profile.networks_count', { count: visibleMenuItems.length }) }} · {{ $t('profile.tap_to_manage') }}
+        </span>
+        <div class="profile-pills">
+          <span
+            v-for="item in visibleMenuItems.slice(0, 5)"
+            :key="item.id"
+            class="profile-pill"
+            :style="{ background: pillColor(item) || 'var(--surface-hover)' }"
+          />
+        </div>
+      </div>
+      <i class="pi pi-chevron-up profile-chevron" />
+    </div>
   </div>
 
   <!-- ─── Profile bottom sheet ─── -->
@@ -497,6 +503,69 @@ const navigateToNetwork = (network: MenuItem) => {
   flex: 1;
   overflow-y: auto;
   min-height: 0;
+  padding-bottom: 0.5rem;
+}
+
+/* ─── Top app bar ────────────────────────────────────────────── */
+
+.mobile-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-shrink: 0;
+  padding: 0.75rem 1rem 0.6rem;
+}
+
+.mobile-topbar-title {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.mobile-app-name {
+  font-size: 1.05rem;
+  line-height: 1.2;
+  font-weight: 800;
+  color: var(--text-color);
+}
+
+.mobile-app-subtitle {
+  margin-top: 0.1rem;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  color: var(--text-color-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.settings-topbar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  flex-shrink: 0;
+  min-height: 2.45rem;
+  padding: 0 0.75rem;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 999px;
+  color: var(--text-color);
+  cursor: pointer;
+  box-shadow: var(--card-shadow);
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: background-color 0.12s, transform 0.1s;
+}
+
+.settings-topbar-btn:active {
+  background: var(--surface-hover);
+  transform: scale(0.98);
+}
+
+.settings-topbar-btn i {
+  font-size: 1rem;
 }
 
 /* ─── Profile card ───────────────────────────────────────────── */
@@ -514,6 +583,10 @@ const navigateToNetwork = (network: MenuItem) => {
   cursor: pointer;
   box-shadow: var(--card-shadow);
   transition: background-color 0.15s;
+}
+
+.profile-card--bottom {
+  margin: 0.5rem 1rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
 }
 
 .profile-card:active {
@@ -1000,46 +1073,6 @@ const navigateToNetwork = (network: MenuItem) => {
   0% { transform: scale(1); }
   50% { transform: scale(0.97); }
   100% { transform: scale(1); }
-}
-
-/* ─── Settings button ────────────────────────────────────────── */
-
-.settings-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-shrink: 0;
-  margin: 0.5rem 1rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
-  padding: 0.85rem 1rem;
-  background: var(--surface-card);
-  border: 1px solid var(--surface-border);
-  border-radius: 16px;
-  cursor: pointer;
-  box-shadow: var(--card-shadow);
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--text-color);
-  transition: background-color 0.12s;
-}
-
-.settings-btn:active {
-  background: var(--surface-hover);
-}
-
-.settings-btn > i:first-child {
-  font-size: 1rem;
-  width: 2rem;
-  height: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--surface-ground);
-  border-radius: 8px;
-}
-
-.settings-btn > span {
-  flex: 1;
-  text-align: left;
 }
 
 @media (prefers-reduced-motion: reduce) {
