@@ -1,15 +1,15 @@
-# SocialFlow Site
+# SocialGlowz Site
 
-Marketing site for SocialFlow, built with Astro.
+Marketing site for SocialGlowz, built with Astro.
 
 ## Environment
 
 Copy `.env.example` and override these values when the domains change:
 
 ```bash
-PUBLIC_SITE_URL=https://socialflow.winflowz.com
-PUBLIC_APP_URL=https://socialflow.winflowz.com
-PUBLIC_EMAIL_DOMAIN=winflowz.com
+PUBLIC_SITE_URL=https://socialglowz.com
+PUBLIC_APP_URL=https://socialglowz.com
+PUBLIC_EMAIL_DOMAIN=socialglowz.com
 ```
 
 All canonicals, structured data URLs, and CTA links read from these variables through `src/config/site.ts`.

@@ -1,6 +1,6 @@
-const DEFAULT_SITE_URL = 'https://socialflow.winflowz.com'
-const DEFAULT_APP_URL = 'https://github.com/dianedef/SocialFlow/releases/latest'
-const DEFAULT_EMAIL_DOMAIN = 'winflowz.com'
+const DEFAULT_SITE_URL = 'https://socialglowz.com'
+const DEFAULT_APP_URL = 'https://github.com/dianedef/SocialGlowz/releases/latest'
+const DEFAULT_EMAIL_DOMAIN = 'socialglowz.com'
 
 function stripTrailingSlash(url: string): string {
   return url.replace(/\/+$/, '')

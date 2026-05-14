@@ -27,7 +27,7 @@ If your code runs on a remote Linux server and your phone is not directly connec
 
 1. Push your branch to GitHub.
 2. Run the workflow `Dev Builds (Android + Windows)` (manual or any `git push`).
-3. Download the artifact `socialflowz-android-debug`.
+3. Download the artifact `socialglowz-android-debug`.
 4. Install the APK on your Android phone and test.
 
 This avoids local Android Studio/SDK setup on your server machine.
@@ -38,7 +38,7 @@ To test on Windows without building locally:
 
 1. Push your branch to GitHub.
 2. Run `Dev Builds (Android + Windows)` workflow.
-3. Download artifact `socialflowz-windows-test`.
+3. Download artifact `socialglowz-windows-test`.
 4. Install `.msi` or run `.exe` on your Windows machine.
 
 ## NPM scripts (already added)

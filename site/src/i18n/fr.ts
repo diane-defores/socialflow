@@ -12,8 +12,8 @@ export default {
     badge: 'Workspace social multi-plateforme',
     title1: 'Tous vos reseaux sociaux.',
     title2: 'Un workspace calme.',
-    subtitle: 'SocialFlow rassemble X, Instagram, Facebook, LinkedIn, TikTok, Discord, Reddit, Gmail et plus encore dans une app consciente des profils. Changez de contexte vite, gardez les sessions isolees, et reduisez le bruit des feeds.',
-    cta: 'Commencer avec SocialFlow',
+    subtitle: 'SocialGlowz rassemble X, Instagram, Facebook, LinkedIn, TikTok, Discord, Reddit, Gmail et plus encore dans une app consciente des profils. Changez de contexte vite, gardez les sessions isolees, et reduisez le bruit des feeds.',
+    cta: 'Commencer avec SocialGlowz',
     secondaryCta: 'Voir les fonctionnalites',
     socialProof: 'Concu pour createurs, operateurs et petites equipes',
   },
@@ -36,7 +36,7 @@ export default {
   },
   benefits: {
     label: 'Avantages',
-    title: 'Pourquoi choisir SocialFlow',
+    title: 'Pourquoi choisir SocialGlowz',
     items: [
       { icon: '\uD83D\uDD12', title: 'Isolation par profil', desc: 'Gardez les contextes client, personnel et equipe separes pour eviter les fuites de session.' },
       { icon: '\u2601\uFE0F', title: 'Sync cloud utile', desc: 'Profils, comptes, filtres, liens et preferences cles suivent votre compte; les cookies connectes restent locaux.' },
@@ -87,7 +87,7 @@ export default {
   },
   newsletter: {
     title: 'Restez informe',
-    subtitle: 'Recevez les mises a jour SocialFlow, notes de version et idees de workflow.',
+    subtitle: 'Recevez les mises a jour SocialGlowz, notes de version et idees de workflow.',
     placeholder: 'Votre email',
     subscribe: "S'abonner",
     noSpam: 'Pas de spam, desabonnement a tout moment.',
@@ -95,7 +95,7 @@ export default {
   footer: {
     tagline: 'Operations sociales unifiees, sans explosion d onglets.',
     status: 'Produit en developpement actif',
-    copyright: '\u00A9 {year} SocialFlow. Tous droits reserves.',
+    copyright: '\u00A9 {year} SocialGlowz. Tous droits reserves.',
     product: 'Produit',
     resources: 'Ressources',
     company: 'Entreprise',

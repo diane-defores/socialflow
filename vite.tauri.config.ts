@@ -11,7 +11,7 @@ import { defineConfig } from 'vite'
 import 'dotenv/config'
 
 const PROJECT_ROOT = dirname(fileURLToPath(import.meta.url))
-const APP_ROOT = 'src/ui/setup/pages/SocialFlow'
+const APP_ROOT = 'src/ui/setup/pages/SocialGlowz'
 const APP_ROOT_ABS = resolve(PROJECT_ROOT, APP_ROOT)
 
 // https://vitejs.dev/config/
@@ -74,7 +74,7 @@ export default defineConfig({
     }),
 
     Components({
-      // Prefer SocialFlow-local component variants when names overlap.
+      // Prefer SocialGlowz-local component variants when names overlap.
       dirs: [resolve(PROJECT_ROOT, 'src/components'), resolve(APP_ROOT_ABS, 'components')],
       dts: resolve(APP_ROOT_ABS, 'types/components.d.ts'),
       resolvers: [IconsResolver(), PrimeVueResolver()],

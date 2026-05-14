@@ -2,7 +2,7 @@
 artifact: documentation
 metadata_schema_version: "1.0"
 artifact_version: "1.0.0"
-project: "socialflow"
+project: "socialglowz"
 created: "2026-04-26"
 updated: "2026-04-27"
 status: reviewed
@@ -21,8 +21,8 @@ evidence:
   - "vite.firefox.config.ts"
   - "vite.tauri.config.ts"
   - "vite.web.config.ts"
-  - "src/ui/setup/pages/SocialFlow/main.ts"
-  - "src/ui/setup/pages/SocialFlow/App.vue"
+  - "src/ui/setup/pages/SocialGlowz/main.ts"
+  - "src/ui/setup/pages/SocialGlowz/App.vue"
   - "src-tauri/src/lib.rs"
   - "convex/schema.ts"
   - "manifest.config.ts"
@@ -46,9 +46,9 @@ next_step: "/sf-docs update shipflow_data/technical/context.md"
 
 # CONTEXT
 
-## What SocialFlow Is
+## What SocialGlowz Is
 
-SocialFlow est une application social multi-canaux avec une base Vue 3 commune et 4 cibles de distribution : extension navigateur, desktop Tauri, Android, et web app.
+SocialGlowz est une application social multi-canaux avec une base Vue 3 commune et 4 cibles de distribution : extension navigateur, desktop Tauri, Android, et web app.
 
 ## Product/Platform Matrix
 
@@ -68,9 +68,9 @@ SocialFlow est une application social multi-canaux avec une base Vue 3 commune e
 ## Repo Map
 
 - `src/` : logique partagée, stores, composables, services, utilitaires.
-- `src/ui/setup/pages/SocialFlow/` : application principale.
-- `src/ui/setup/pages/SocialFlow/main.ts` : bootstrap front (Vue + Convex + services).
-- `src/ui/setup/pages/SocialFlow/App.vue` : shell desktop/mobile principal et orchestration.
+- `src/ui/setup/pages/SocialGlowz/` : application principale.
+- `src/ui/setup/pages/SocialGlowz/main.ts` : bootstrap front (Vue + Convex + services).
+- `src/ui/setup/pages/SocialGlowz/App.vue` : shell desktop/mobile principal et orchestration.
 - `src/ui/*` : pages de shell navigateur (setup popup panel options).
 - `convex/` : backend serverless auth + données persistées.
 - `src-tauri/src/` : host natif, commandes IPC, création/gestion webviews.
@@ -81,21 +81,21 @@ SocialFlow est une application social multi-canaux avec une base Vue 3 commune e
 ### 1) Front boot + auth
 
 1. Vite démarre une entrée UI.
-2. `src/ui/setup/pages/SocialFlow/main.ts` initialise Pinia, i18n, PrimeVue, router.
+2. `src/ui/setup/pages/SocialGlowz/main.ts` initialise Pinia, i18n, PrimeVue, router.
 3. Si `VITE_CONVEX_URL` est présent, `getConvexClient()` et `setupConvexAuth()` initient Convex Auth.
 4. App bootstrap puis montage de l'application.
 
 #### Android OAuth callback hardening (mobile)
 
 1. `main.ts` écoute les événements `deep-link://new-url` du plugin deep-link et lit aussi `plugin:deep-link|get_current` au démarrage.
-2. Lorsqu'une requête OAuth démarre, l'app enregistre un `state`/`nonce` pending local via `socialflow:android-oauth-request-started`.
+2. Lorsqu'une requête OAuth démarre, l'app enregistre un `state`/`nonce` pending local via `socialglowz:android-oauth-request-started`.
 3. Chaque URL candidate OAuth est validée côté Rust via `validate_android_oauth_callback` contre cette requête pending (host/schéma allowlist, `state`, `nonce`, TTL 5 min, anti-rejeu).
 4. Un callback rejeté ne doit pas muter l'état auth/session et déclenche un signal Sentry anonymisé si le SDK est disponible.
 5. Le lock session n'autorise pas de création PIN depuis l'écran verrouillé: si aucun PIN préenregistré, l'utilisateur retourne au login.
 
-### 2) Navigation SocialFlow
+### 2) Navigation SocialGlowz
 
-1. `src/ui/setup/pages/SocialFlow/router/index.ts` route selon hash.
+1. `src/ui/setup/pages/SocialGlowz/router/index.ts` route selon hash.
 2. `AuthGuard` protège les vues réseau.
 3. Vue réseau utilise `webviewStore` et store profils pour ouvrir le bon WebView.
 4. Sur desktop/mobile, le front appelle des commandes natives Tauri via IPC.
@@ -115,12 +115,12 @@ SocialFlow est une application social multi-canaux avec une base Vue 3 commune e
 ## Technical Decisions
 
 - Tauri est retenu pour la couche desktop/mobile pour partager la même base JS tout en gardant contrôle WebView natif.
-- L'application SocialFlow reste dans `src/ui/setup/pages/SocialFlow` avec réutilisation contrôlée des modules partagés de `src/`.
+- L'application SocialGlowz reste dans `src/ui/setup/pages/SocialGlowz` avec réutilisation contrôlée des modules partagés de `src/`.
 - La stratégie auth-connexion privilégie Convex Auth avec fallback offline.
 
 ## Hotspots
 
-- `src/ui/setup/pages/SocialFlow/App.vue` : flux global, sync, gestion évènements natifs.
+- `src/ui/setup/pages/SocialGlowz/App.vue` : flux global, sync, gestion évènements natifs.
 - `src/stores/webviewState.ts` : state réseau actif, ouverture/fermeture et profils.
 - `src/lib/cloudSync.ts` : sync de settings et données entre local et Convex.
 - `src-tauri/src/lib.rs` : commandes natives critiques (webview, session, commande Android).
@@ -128,8 +128,8 @@ SocialFlow est une application social multi-canaux avec une base Vue 3 commune e
 
 ## Read by Task
 
-- Changer UI/UX : lire d'abord `src/ui/setup/pages/SocialFlow/*` puis `src/stores/*` et `src/components/*`.
-- Changer logique métier : lire `src/` puis la vue SocialFlow correspondante.
+- Changer UI/UX : lire d'abord `src/ui/setup/pages/SocialGlowz/*` puis `src/stores/*` et `src/components/*`.
+- Changer logique métier : lire `src/` puis la vue SocialGlowz correspondante.
 - Changer extension shell : lire `src/ui/*`, manifest et `shipflow_data/technical/context-function-tree.md`.
 - Changer backend : lire `convex/*`, `src/lib/convex.ts`, `src/lib/convexAuth.ts`, puis mise à jour docs.
 - Changer build : lire scripts dans `package.json` puis configs Vite correspondantes.

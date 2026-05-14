@@ -2,7 +2,7 @@
 artifact: content_map
 metadata_schema_version: "1.0"
 artifact_version: "1.0.1"
-project: "socialflow"
+project: "socialglowz"
 created: "2026-04-26"
 updated: "2026-05-11"
 status: reviewed
@@ -45,7 +45,7 @@ content_surfaces:
 
 ## Purpose
 
-`shipflow_data/editorial/content-map.md` defines where SocialFlow content and product truth should live so future repurposing does not drift from implementation.
+`shipflow_data/editorial/content-map.md` defines where SocialGlowz content and product truth should live so future repurposing does not drift from implementation.
 
 ## Content Surfaces
 
@@ -58,7 +58,7 @@ content_surfaces:
 
 ### Front-end and product surfaces
 
-- `src/ui/setup/pages/SocialFlow/` — primary application surface.
+- `src/ui/setup/pages/SocialGlowz/` — primary application surface.
 - `src-tauri/` — desktop and packaging surface.
 - `en/` and `fr/` — public landing/content pages.
 - `404.html` and extension-specific root index as distribution entry docs.

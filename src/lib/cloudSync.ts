@@ -22,7 +22,7 @@ import {
   showPostAuthReadyFeedback,
 } from "@/lib/postAuthSyncFeedback";
 import type { ThemeMode } from "@/utils/themeAuto";
-import { normalizeTapSoundVariant } from "@/ui/setup/pages/SocialFlow/utils/tapSound";
+import { normalizeTapSoundVariant } from "@/ui/setup/pages/SocialGlowz/utils/tapSound";
 import {
   canReuseLocalCloudState,
   isCloudSnapshotEmpty,

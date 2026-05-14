@@ -2,7 +2,7 @@
   <div class="login-screen">
     <div class="login-card">
       <div class="login-header">
-        <h1>SocialFlow</h1>
+        <h1>SocialGlowz</h1>
         <p>Your social media command center</p>
       </div>
 

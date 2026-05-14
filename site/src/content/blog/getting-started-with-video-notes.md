@@ -1,12 +1,12 @@
 ---
-title: "Getting Started with SocialFlow Profiles"
+title: "Getting Started with SocialGlowz Profiles"
 description: "Set up clean profile isolation quickly and keep personal, work, and client accounts organized across your social workflows."
 date: "2026-01-15"
-author: "SocialFlow Team"
+author: "SocialGlowz Team"
 tags: ["guide", "social", "profiles"]
 ---
 
-SocialFlow is built for teams and creators who need separate social contexts. In a few minutes you can set up isolated profiles, keep account sessions separated, and reduce context switching across networks.
+SocialGlowz is built for teams and creators who need separate social contexts. In a few minutes you can set up isolated profiles, keep account sessions separated, and reduce context switching across networks.
 
 ## Why Profile Isolation Matters
 
@@ -46,4 +46,4 @@ Use the Kanban board to turn recurring daily actions into a repeatable system. I
 
 Once profiles are clean, every login, post, outreach, and research session becomes faster. You can switch contexts in seconds instead of rebuilding state from scratch.
 
-Get started with SocialFlow and keep every social context isolated.
+Get started with SocialGlowz and keep every social context isolated.

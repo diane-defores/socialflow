@@ -52,16 +52,16 @@ Ordered from essential to nice-to-have:
 
 - **"Login with email/password"** — does not exist. WhatsApp has no web login, only device pairing.
 - **Native WhatsApp deep link** (`whatsapp://`) — already blocked in `shouldOverrideUrlLoading` and would open the native app, defeating the point.
-- **Reverse-engineer the Noise protocol directly** — possible (see `whatsmeow`, `Baileys`) but means shipping a full WA client, not a WebView. Out of scope for SocialFlow.
+- **Reverse-engineer the Noise protocol directly** — possible (see `whatsmeow`, `Baileys`) but means shipping a full WA client, not a WebView. Out of scope for SocialGlowz.
 
 ## Re-enable checklist
 
 When the work above is done, uncomment WhatsApp in:
 
 1. `src/stores/webviewState.ts` — `WEBVIEW_URLS.whatsapp`
-2. `src/ui/setup/pages/SocialFlow/components/AppSidebar.vue` — menu item id 13
-3. `src/ui/setup/pages/SocialFlow/components/MobileLayout.vue` — menu item id 13
-4. `src/ui/setup/pages/SocialFlow/components/OnboardingFlow.vue` — `NETWORKS` array
-5. `src-tauri/plugins/android-webview/android/src/main/java/com/socialflow/webview/NativeWebViewPlugin.kt` — `NetworkInfo("whatsapp", ...)` in the NETWORKS list (around line 152)
+2. `src/ui/setup/pages/SocialGlowz/components/AppSidebar.vue` — menu item id 13
+3. `src/ui/setup/pages/SocialGlowz/components/MobileLayout.vue` — menu item id 13
+4. `src/ui/setup/pages/SocialGlowz/components/OnboardingFlow.vue` — `NETWORKS` array
+5. `src-tauri/plugins/android-webview/android/src/main/java/com/socialglowz/webview/NativeWebViewPlugin.kt` — `NetworkInfo("whatsapp", ...)` in the NETWORKS list (around line 152)
 
 `DESKTOP_UA_NETWORKS` (line ~2121) still contains `"whatsapp"` — leave it, it's harmless while disabled and needed when re-enabled.

@@ -1,4 +1,4 @@
-# Tasks — socialflow
+# Tasks — socialglowz
 
 > **Priority:** 🔴 P0 blocker · 🟠 P1 high · 🟡 P2 normal · 🟢 P3 low · ⚪ deferred
 > **Status:** 📋 todo · 🔄 in progress · ✅ done · ⛔ blocked · 💤 deferred
@@ -10,6 +10,7 @@
 | Pri | Task | Status |
 |-----|------|--------|
 | 🟠 | [Task backlog was migrated; validate project tracker entries] | ✅ done |
+| 🟡 | [Quand un vrai flow OAuth existe, tester le callback positif Android: connexion lancée depuis l'app, state/nonce attendus, callback accepté, faux deep links toujours rejetés] | 💤 deferred |
 
 ---
 

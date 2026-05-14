@@ -2,7 +2,7 @@
 artifact: architecture_context
 metadata_schema_version: "1.0"
 artifact_version: "1.0.2"
-project: "socialflow"
+project: "socialglowz"
 created: "2026-04-26"
 updated: "2026-05-11"
 status: reviewed
@@ -36,15 +36,15 @@ supersedes:
   - "archi.md"
 evidence:
   - "Legacy root archi.md was a pointer to shipflow_data/technical/architecture.md."
-  - "Vite, Tauri, Convex, and manifest configs define SocialFlow's distribution targets."
+  - "Vite, Tauri, Convex, and manifest configs define SocialGlowz's distribution targets."
 next_review: "2026-06-11"
 next_step: "/sf-docs audit shipflow_data/technical/architecture.md"
 ---
 
 # Architecture
 
-- SocialFlow repose sur une base Vue.js unique distribuée en 4 familles de cibles (extension, desktop, mobile, web).
-- La couche domaine métier et les stores partagés vivent dans `src/` et `src/ui/setup/pages/SocialFlow/`.
+- SocialGlowz repose sur une base Vue.js unique distribuée en 4 familles de cibles (extension, desktop, mobile, web).
+- La couche domaine métier et les stores partagés vivent dans `src/` et `src/ui/setup/pages/SocialGlowz/`.
 - La synchronisation cloud passe par Convex quand configurée; sinon, état local.
 - Les fonctions natives critiques restent concentrées dans `src-tauri/src/lib.rs` et le plugin Android WebView.
 

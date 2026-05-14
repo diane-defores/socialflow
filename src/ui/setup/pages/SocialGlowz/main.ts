@@ -107,7 +107,7 @@ function registerPendingAndroidOAuthRequest(request: AndroidOAuthPendingRequest)
 }
 
 function setupAndroidOAuthPendingRegistration() {
-  window.addEventListener('socialflow:android-oauth-request-started', (event) => {
+  window.addEventListener('socialglowz:android-oauth-request-started', (event) => {
     if (!(event instanceof CustomEvent)) return
     const detail = event.detail as Partial<AndroidOAuthPendingRequest> | null
     if (!detail || typeof detail.state !== 'string') return
@@ -153,7 +153,7 @@ async function validateAndroidOAuthDeepLink(rawUrl: string) {
       startedAtMs: pendingRequest.startedAtMs,
     })
     pendingAndroidOAuthRequests.delete(callbackState)
-    window.dispatchEvent(new CustomEvent('socialflow:android-oauth-callback-validated', { detail: rawUrl }))
+    window.dispatchEvent(new CustomEvent('socialglowz:android-oauth-callback-validated', { detail: rawUrl }))
   } catch (error) {
     reportAndroidOAuthRejection(error instanceof Error ? error.message : 'native-validator-rejected')
     console.warn('[Security] Android OAuth callback rejected by native validator.', error)

@@ -2,7 +2,7 @@
 artifact: documentation
 metadata_schema_version: "1.0"
 artifact_version: "1.0.0"
-project: "socialflow"
+project: "socialglowz"
 created: "2026-04-26"
 updated: "2026-04-27"
 status: reviewed
@@ -14,9 +14,9 @@ risk_level: medium
 security_impact: none
 docs_impact: yes
 evidence:
-  - "src/ui/setup/pages/SocialFlow/main.ts"
-  - "src/ui/setup/pages/SocialFlow/App.vue"
-  - "src/ui/setup/pages/SocialFlow/router/index.ts"
+  - "src/ui/setup/pages/SocialGlowz/main.ts"
+  - "src/ui/setup/pages/SocialGlowz/App.vue"
+  - "src/ui/setup/pages/SocialGlowz/router/index.ts"
   - "src/stores/*.ts"
   - "src/lib/*.ts"
   - "src-tauri/src/lib.rs"
@@ -38,11 +38,11 @@ next_step: "/sf-docs update shipflow_data/technical/context-function-tree.md"
 
 ## Purpose
 
-Vue fonctionnelle du cœur de SocialFlow sans lire tout le projet.
+Vue fonctionnelle du cœur de SocialGlowz sans lire tout le projet.
 
 ## Runtime Entry Points
 
-- `src/ui/setup/pages/SocialFlow/main.ts`
+- `src/ui/setup/pages/SocialGlowz/main.ts`
   - Bootstrap Vue + Pinia + i18n.
   - Appelle `setupConvexAuth()` si `VITE_CONVEX_URL` est configuré.
   - Monte `App.vue`.
@@ -64,14 +64,14 @@ Vue fonctionnelle du cœur de SocialFlow sans lire tout le projet.
 - `convex/users.ts`, `convex/socialAccounts.ts`, `convex/settings.ts`, `convex/profiles.ts`
   - Entrées backend métier.
 
-## App Lifecycle (SocialFlow)
+## App Lifecycle (SocialGlowz)
 
-- `src/ui/setup/pages/SocialFlow/main.ts`
-- `src/ui/setup/pages/SocialFlow/App.vue`
+- `src/ui/setup/pages/SocialGlowz/main.ts`
+- `src/ui/setup/pages/SocialGlowz/App.vue`
   - Gère onboarding, thèmes, synchronisation cloud, nudge, événements Tauri.
-- `src/ui/setup/pages/SocialFlow/router/index.ts`
+- `src/ui/setup/pages/SocialGlowz/router/index.ts`
   - Routes réseau + auth guard.
-- `src/ui/setup/pages/SocialFlow/components/*`
+- `src/ui/setup/pages/SocialGlowz/components/*`
   - Layouts, vues réseau, sidebars, popups, overlays.
 - `src/stores/webviewState.ts`
   - État `activeNetworkId`, `activeUrl`, mode profiles.
@@ -148,5 +148,5 @@ Vue fonctionnelle du cœur de SocialFlow sans lire tout le projet.
 
 - `src-tauri/src/lib.rs` et plugin Android: changements de commandes natives.
 - `src/stores/webviewState.ts`: impact direct sur comportement réseau multi-webview.
-- `src/ui/setup/pages/SocialFlow/components/NetworkWebviewHost.vue` et `composables/useNetworkWebview.ts`: orchestration webview principale.
+- `src/ui/setup/pages/SocialGlowz/components/NetworkWebviewHost.vue` et `composables/useNetworkWebview.ts`: orchestration webview principale.
 - `convex/schema.ts`: changement de schéma de données.

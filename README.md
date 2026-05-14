@@ -1,4 +1,4 @@
-# SocialFlow
+# SocialGlowz
 
 Dashboard unifié pour gérer tous vos réseaux sociaux depuis une seule interface. Disponible en extension Chrome/Firefox, application desktop, application mobile et web app.
 
@@ -18,7 +18,7 @@ Dashboard unifié pour gérer tous vos réseaux sociaux depuis une seule interfa
 ```
 Une seule codebase Vue.js → 6 plateformes
 
-src/ui/setup/pages/SocialFlow/    # App principale (Vue 3 + PrimeVue)
+src/ui/setup/pages/SocialGlowz/    # App principale (Vue 3 + PrimeVue)
 ├── main.ts                        # Entry point standalone
 ├── App.vue                        # Layout responsive (mobile/desktop)
 ├── router/                        # Vue Router (createWebHashHistory)
@@ -46,7 +46,7 @@ src/ui/setup/pages/SocialFlow/    # App principale (Vue 3 + PrimeVue)
 
 ### Contexte
 
-SocialFlow affiche des réseaux sociaux dans des WebViews natives et injecte des scripts dans ces WebViews (grayscale, protection copie, session par profil). L'UI est écrite en Vue.js car le projet a démarré comme une extension Chrome.
+SocialGlowz affiche des réseaux sociaux dans des WebViews natives et injecte des scripts dans ces WebViews (grayscale, protection copie, session par profil). L'UI est écrite en Vue.js car le projet a démarré comme une extension Chrome.
 
 ### Décision : Tauri 2
 
@@ -81,7 +81,7 @@ SocialFlow affiche des réseaux sociaux dans des WebViews natives et injecte des
 | Support desktop | Natif | Natif | Limité | Natif |
 | Contrôle cookies WebView | Natif (Kotlin/Swift) | Non | Non | Oui |
 
-**En résumé** : Tauri est le seul framework qui permet de garder une codebase Vue.js unique pour les 6 plateformes, avec un accès bas-niveau au WebView natif pour l'injection de scripts et la gestion des cookies — ce qui est le coeur fonctionnel de SocialFlow.
+**En résumé** : Tauri est le seul framework qui permet de garder une codebase Vue.js unique pour les 6 plateformes, avec un accès bas-niveau au WebView natif pour l'injection de scripts et la gestion des cookies — ce qui est le coeur fonctionnel de SocialGlowz.
 
 ## Stack technique
 
@@ -95,7 +95,7 @@ SocialFlow affiche des réseaux sociaux dans des WebViews natives et injecte des
 
 ## Sécurité auth Android (hardening)
 
-- Les callbacks OAuth Android sont traités uniquement via deep links autorisés (`socialflow://auth-callback/oauth` et `https://socialflow.app/auth/callback`).
+- Les callbacks OAuth Android sont traités uniquement via deep links autorisés (`socialglowz://auth-callback/oauth` et `https://socialglowz.com/auth/callback`).
 - Chaque callback passe par une validation native Rust (`validate_android_oauth_callback`) avant d'être accepté:
   - schéma + host allowlist,
   - `state` obligatoire et présent dans une requête OAuth pending créée par l'app,

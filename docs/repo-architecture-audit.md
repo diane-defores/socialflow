@@ -5,7 +5,7 @@ Date: 2026-04-18
 Mise a jour: 2026-04-28 (chantier hardening/tests) — aucun fichier duplique n'a ete supprime dans ce lot.
 Ownership retenue:
 - `src/` reste la source de verite pour la logique partagee (stores, lib, services, config).
-- `src/ui/setup/pages/SocialFlow/components/*` reste la source de verite UI SocialFlow.
+- `src/ui/setup/pages/SocialGlowz/components/*` reste la source de verite UI SocialGlowz.
 - Les doublons shell extension (`src/components/AppHeader.vue`, `AppSidebar.vue`, `AppRightSidebar.vue`) restent volontaires tant que les entrypoints `src/ui/*` ne sont pas retires.
 
 ## Resume
@@ -13,10 +13,10 @@ Ownership retenue:
 Le repo contient trois produits dans un meme workspace:
 
 - `src/` porte le socle front partage et les entrypoints historiques de l'extension.
-- `src/ui/setup/pages/SocialFlow/` porte l'application SocialFlow dediee utilisee par Tauri et par une partie du build web.
+- `src/ui/setup/pages/SocialGlowz/` porte l'application SocialGlowz dediee utilisee par Tauri et par une partie du build web.
 - `src-tauri/` porte la couche native Rust/Kotlin pour desktop et Android.
 
-Le point de confusion principal est que l'application SocialFlow a son propre `root` Vite, mais continue d'importer une grande partie de sa logique via l'alias `@ -> src/`. Il y a donc un melange entre composants locaux et logique partagee, plus quelques reliquats du template ou de l'ancienne structure qui ressemblent a des doublons.
+Le point de confusion principal est que l'application SocialGlowz a son propre `root` Vite, mais continue d'importer une grande partie de sa logique via l'alias `@ -> src/`. Il y a donc un melange entre composants locaux et logique partagee, plus quelques reliquats du template ou de l'ancienne structure qui ressemblent a des doublons.
 
 ## Architecture active
 
@@ -26,13 +26,13 @@ Le point de confusion principal est que l'application SocialFlow a son propre `r
 - Entrypoints: `src/ui/setup/index.html`, `src/ui/content-script-iframe/index.html`, `src/ui/devtools-panel/index.html`
 - Composants shell generiques: `src/components/AppHeader.vue`, `src/components/AppFooter.vue`, etc.
 
-### 2. Application SocialFlow
+### 2. Application SocialGlowz
 
 - Config Tauri: `vite.tauri.config.ts`
-- `root`: `src/ui/setup/pages/SocialFlow`
+- `root`: `src/ui/setup/pages/SocialGlowz`
 - Config web: `vite.web.config.ts`
-- Point d'entree app: `src/ui/setup/pages/SocialFlow/main.ts`
-- UI dediee: `src/ui/setup/pages/SocialFlow/components/*`
+- Point d'entree app: `src/ui/setup/pages/SocialGlowz/main.ts`
+- UI dediee: `src/ui/setup/pages/SocialGlowz/components/*`
 
 ### 3. Couche native
 
@@ -45,7 +45,7 @@ Le point de confusion principal est que l'application SocialFlow a son propre `r
 
 ## Ce qui est reellement partage
 
-L'app SocialFlow consomme deja la logique partagee dans `src/` pour:
+L'app SocialGlowz consomme deja la logique partagee dans `src/` pour:
 
 - `src/lib/*`
 - `src/stores/*`
@@ -56,49 +56,49 @@ L'app SocialFlow consomme deja la logique partagee dans `src/` pour:
 
 Exemples:
 
-- `src/ui/setup/pages/SocialFlow/App.vue` importe `@/stores/*` et `@/lib/*`
+- `src/ui/setup/pages/SocialGlowz/App.vue` importe `@/stores/*` et `@/lib/*`
 - `src/stores/socialNetworks.ts` importe `@/services/gmailService` et `@/config/gmail`
 
-Conclusion: la source de verite de la logique metier est deja surtout `src/`, pas `src/ui/setup/pages/SocialFlow/`.
+Conclusion: la source de verite de la logique metier est deja surtout `src/`, pas `src/ui/setup/pages/SocialGlowz/`.
 
 ## Doublons confirmes
 
 ### Doublons voulus ou acceptables
 
-- `src/components/AppHeader.vue` vs `src/ui/setup/pages/SocialFlow/components/AppHeader.vue`
-- `src/components/AppSidebar.vue` vs `src/ui/setup/pages/SocialFlow/components/AppSidebar.vue`
-- `src/components/AppRightSidebar.vue` vs `src/ui/setup/pages/SocialFlow/components/AppRightSidebar.vue`
+- `src/components/AppHeader.vue` vs `src/ui/setup/pages/SocialGlowz/components/AppHeader.vue`
+- `src/components/AppSidebar.vue` vs `src/ui/setup/pages/SocialGlowz/components/AppSidebar.vue`
+- `src/components/AppRightSidebar.vue` vs `src/ui/setup/pages/SocialGlowz/components/AppRightSidebar.vue`
 
 Ces fichiers ne servent pas au meme produit:
 
 - les versions racine servent aux shells generiques de l'extension
-- les versions `SocialFlow/` servent a l'app SocialFlow
+- les versions `SocialGlowz/` servent a l'app SocialGlowz
 
 Ils ne doivent pas etre supprimes sans rerouter les entrypoints `src/ui/*`.
 
 ### Doublons suspects / reliquats
 
-Copies locales probablement mortes dans `src/ui/setup/pages/SocialFlow/`:
+Copies locales probablement mortes dans `src/ui/setup/pages/SocialGlowz/`:
 
 - `services/gmailService.ts`
 - `services/kanbanService.ts`
 - `config/gmail.ts`
 - `stores/mockData/gmailMock.ts`
 
-Copies racine probablement heritees de l'ancien template ou d'une ancienne phase SocialFlow:
+Copies racine probablement heritees de l'ancien template ou d'une ancienne phase SocialGlowz:
 
 - `src/components/feed/*`
 - `src/components/common/*`
 - `src/utils/dateFormatter.ts`
 - `src/stores/mockData/facebookMock.ts`
 
-Ces fichiers ont encore une existence physique, mais l'app SocialFlow utilise majoritairement ses propres composants locaux pour `feed/` et `common/`.
+Ces fichiers ont encore une existence physique, mais l'app SocialGlowz utilise majoritairement ses propres composants locaux pour `feed/` et `common/`.
 
 ## Points de drift a corriger
 
 ### 1. Types partages mal places
 
-`src/stores/socialNetworks.ts` depend de `@/ui/setup/pages/SocialFlow/types` pour le type `Email`.
+`src/stores/socialNetworks.ts` depend de `@/ui/setup/pages/SocialGlowz/types` pour le type `Email`.
 
 Consequence:
 
@@ -110,11 +110,11 @@ Consequence:
 Il existe deux jeux de types auto-generes:
 
 - `src/types/*`
-- `src/ui/setup/pages/SocialFlow/types/*`
+- `src/ui/setup/pages/SocialGlowz/types/*`
 
 Pour `auto-imports.d.ts` et `components.d.ts`, c'est normal car les builds n'ont pas les memes roots.
 
-En revanche, les types metier manuels doivent etre clarifies pour eviter les imports croises entre `src/` et `SocialFlow/`.
+En revanche, les types metier manuels doivent etre clarifies pour eviter les imports croises entre `src/` et `SocialGlowz/`.
 
 ## Plan de nettoyage
 
@@ -122,23 +122,23 @@ En revanche, les types metier manuels doivent etre clarifies pour eviter les imp
 
 - Conserver ce document comme reference de cleanup.
 - Considerer `src/` comme source de verite pour la logique partagee.
-- Considerer `src/ui/setup/pages/SocialFlow/components/*` comme source de verite UI pour l'app SocialFlow.
+- Considerer `src/ui/setup/pages/SocialGlowz/components/*` comme source de verite UI pour l'app SocialGlowz.
 
 ### Phase 2 - Nettoyage sans risque
 
 - Verifier qu'aucun import n'utilise encore:
-  - `src/ui/setup/pages/SocialFlow/services/gmailService.ts`
-  - `src/ui/setup/pages/SocialFlow/services/kanbanService.ts`
-  - `src/ui/setup/pages/SocialFlow/config/gmail.ts`
-  - `src/ui/setup/pages/SocialFlow/stores/mockData/gmailMock.ts`
+  - `src/ui/setup/pages/SocialGlowz/services/gmailService.ts`
+  - `src/ui/setup/pages/SocialGlowz/services/kanbanService.ts`
+  - `src/ui/setup/pages/SocialGlowz/config/gmail.ts`
+  - `src/ui/setup/pages/SocialGlowz/stores/mockData/gmailMock.ts`
 - Supprimer ces fichiers s'ils sont bien morts.
 
 ### Phase 3 - Clarifier les types
 
-- Deplacer `Email` et autres types metier reutilises hors de `src/ui/setup/pages/SocialFlow/types`.
+- Deplacer `Email` et autres types metier reutilises hors de `src/ui/setup/pages/SocialGlowz/types`.
 - Creer une source de verite partagee, par exemple:
-  - `src/types/socialflow.ts`
-  - ou `src/features/socialflow/types.ts`
+  - `src/types/socialglowz.ts`
+  - ou `src/features/socialglowz/types.ts`
 - Rerouter `src/stores/socialNetworks.ts` et les composants Gmail vers cette nouvelle source.
 
 ### Phase 4 - Unifier les primitives dupliquees
@@ -148,7 +148,7 @@ En revanche, les types metier manuels doivent etre clarifies pour eviter les imp
   - `common/SocialNetworkLogo.vue`
   - `utils/dateFormatter.ts`
   - `stores/mockData/facebookMock.ts`
-- Si l'app SocialFlow est la seule consommatrice reelle, deplacer les imports vers la branche `SocialFlow/` ou remonter proprement les composants vers `src/components/`.
+- Si l'app SocialGlowz est la seule consommatrice reelle, deplacer les imports vers la branche `SocialGlowz/` ou remonter proprement les composants vers `src/components/`.
 
 ### Phase 5 - Reste de l'extension
 
@@ -159,8 +159,8 @@ En revanche, les types metier manuels doivent etre clarifies pour eviter les imp
 
 Ordre conseille:
 
-1. supprimer les copies mortes locales `SocialFlow/services|config|gmailMock`
-2. sortir les types metier partages hors de `SocialFlow/types`
+1. supprimer les copies mortes locales `SocialGlowz/services|config|gmailMock`
+2. sortir les types metier partages hors de `SocialGlowz/types`
 3. unifier `dateFormatter`, `facebookMock`, `feed`, `common`
 4. seulement apres, decider si les shells extension dans `src/ui/*` restent supportes ou non
 

@@ -7,7 +7,7 @@ import { appUrl, siteUrl } from '../config/site'
 const rows = [
   {
     feature: 'Multi-account isolation',
-    socialflow: 'Yes (native)',
+    socialglowz: 'Yes (native)',
     hootsuite: 'No',
     buffer: 'No',
     sessionbox: 'Yes (network-level)',
@@ -15,7 +15,7 @@ const rows = [
   },
   {
     feature: 'Direct access to networks',
-    socialflow: 'Yes (real websites)',
+    socialglowz: 'Yes (real websites)',
     hootsuite: 'No (API only)',
     buffer: 'No (API only)',
     sessionbox: 'Yes',
@@ -23,7 +23,7 @@ const rows = [
   },
   {
     feature: 'Anti-distraction controls',
-    socialflow: 'Yes',
+    socialglowz: 'Yes',
     hootsuite: 'No',
     buffer: 'No',
     sessionbox: 'No',
@@ -31,7 +31,7 @@ const rows = [
   },
   {
     feature: 'Kanban board',
-    socialflow: 'Yes',
+    socialglowz: 'Yes',
     hootsuite: 'No',
     buffer: 'No',
     sessionbox: 'No',
@@ -39,7 +39,7 @@ const rows = [
   },
   {
     feature: 'Desktop + mobile',
-    socialflow: 'Yes',
+    socialglowz: 'Yes',
     hootsuite: 'Web only',
     buffer: 'Web only',
     sessionbox: 'Browser extension only',
@@ -47,7 +47,7 @@ const rows = [
   },
   {
     feature: 'Privacy (local session data)',
-    socialflow: 'Yes',
+    socialglowz: 'Yes',
     hootsuite: 'No',
     buffer: 'No',
     sessionbox: 'No',
@@ -58,17 +58,17 @@ const rows = [
 const useCases = [
   {
     title: 'Community managers',
-    socialflow: 'One-click switching between client profiles, no risky cross-posting.',
+    socialglowz: 'One-click switching between client profiles, no risky cross-posting.',
     alternative: 'Often limited by API access and manual credential handling.',
   },
   {
     title: 'Freelancers',
-    socialflow: 'Profiles and profiles-specific cookies keep personal and client work separated.',
+    socialglowz: 'Profiles and profiles-specific cookies keep personal and client work separated.',
     alternative: 'Most competitors force account switching hacks or manual process.',
   },
   {
     title: 'Agencies',
-    socialflow: 'Built-in Kanban plus profile-level workspaces keep teams organized.',
+    socialglowz: 'Built-in Kanban plus profile-level workspaces keep teams organized.',
     alternative: 'Typically requires extra tools to combine operations.',
   },
 ]
@@ -84,8 +84,8 @@ const jsonLd = [{
 ---
 
 <Layout
-  title="SocialFlow vs alternatives"
-  description="A practical comparison of SocialFlow against Hootsuite, Buffer, SessionBox, and GoLogin for social operators."
+  title="SocialGlowz vs alternatives"
+  description="A practical comparison of SocialGlowz against Hootsuite, Buffer, SessionBox, and GoLogin for social operators."
   path="/compare"
   jsonLd={jsonLd}
 >
@@ -94,13 +94,13 @@ const jsonLd = [{
 
     <section class="max-w-5xl mx-auto px-4 pt-32 pb-16 text-center">
       <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground" style="font-family: var(--font-cal-sans);">
-        SocialFlow vs Alternatives
+        SocialGlowz vs Alternatives
       </h1>
       <p class="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-        Compare practical workflows, not only feature checklists. SocialFlow focuses on real social work and profile isolation.
+        Compare practical workflows, not only feature checklists. SocialGlowz focuses on real social work and profile isolation.
       </p>
       <div class="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-        <a href={appUrl()} class="shimmer-btn inline-flex items-center bg-white text-zinc-950 hover:bg-zinc-200 rounded-full px-6 py-3 text-sm font-medium transition-colors">Try SocialFlow</a>
+        <a href={appUrl()} class="shimmer-btn inline-flex items-center bg-white text-zinc-950 hover:bg-zinc-200 rounded-full px-6 py-3 text-sm font-medium transition-colors">Try SocialGlowz</a>
         <a href="/pricing" class="inline-flex items-center rounded-full px-6 py-3 text-sm font-medium border border-border text-muted-foreground hover:bg-card hover:text-foreground transition-colors">View Pricing</a>
       </div>
     </section>
@@ -113,7 +113,7 @@ const jsonLd = [{
             <thead>
               <tr class="border-b border-border">
                 <th scope="col" class="py-4 pr-4 text-left font-semibold text-foreground">Feature</th>
-                <th scope="col" class="w-32 py-4 text-center font-semibold text-foreground">SocialFlow</th>
+                <th scope="col" class="w-32 py-4 text-center font-semibold text-foreground">SocialGlowz</th>
                 <th scope="col" class="w-32 py-4 text-center font-semibold text-foreground">Hootsuite</th>
                 <th scope="col" class="w-32 py-4 text-center font-semibold text-foreground">Buffer</th>
                 <th scope="col" class="w-32 py-4 text-center font-semibold text-foreground">SessionBox</th>
@@ -126,7 +126,7 @@ const jsonLd = [{
                   <td class="py-4 pr-4">
                     <div class="font-medium text-foreground">{row.feature}</div>
                   </td>
-                  <td class="py-4 text-center text-foreground">{row.socialflow}</td>
+                  <td class="py-4 text-center text-foreground">{row.socialglowz}</td>
                   <td class="py-4 text-center text-muted-foreground">{row.hootsuite}</td>
                   <td class="py-4 text-center text-muted-foreground">{row.buffer}</td>
                   <td class="py-4 text-center text-muted-foreground">{row.sessionbox}</td>
@@ -141,14 +141,14 @@ const jsonLd = [{
 
     <section class="max-w-6xl mx-auto px-4 py-16">
       <div class="text-center mb-12">
-        <h2 class="text-3xl sm:text-4xl font-bold text-foreground" style="font-family: var(--font-instrument-sans);">Who benefits most from SocialFlow?</h2>
+        <h2 class="text-3xl sm:text-4xl font-bold text-foreground" style="font-family: var(--font-instrument-sans);">Who benefits most from SocialGlowz?</h2>
       </div>
       <div class="space-y-6">
         {useCases.map((item) => (
           <article class="rounded-xl border border-border bg-card p-6">
             <h3 class="text-xl font-semibold text-foreground mb-3">{item.title}</h3>
             <div class="grid gap-4 md:grid-cols-2">
-              <p class="rounded-lg bg-background border border-border p-4 text-sm text-muted-foreground">{item.socialflow}</p>
+              <p class="rounded-lg bg-background border border-border p-4 text-sm text-muted-foreground">{item.socialglowz}</p>
               <p class="rounded-lg bg-background border border-border p-4 text-sm text-muted-foreground">{item.alternative}</p>
             </div>
           </article>
@@ -159,10 +159,10 @@ const jsonLd = [{
     <section class="max-w-3xl mx-auto px-4 py-16 text-center">
       <h2 class="text-3xl font-bold text-foreground mb-4">The short answer</h2>
       <p class="text-lg text-muted-foreground mb-8">
-        SocialFlow is built to replace tab-heavy workflows with a calm social workspace: profiles, isolation, and direct network access.
+        SocialGlowz is built to replace tab-heavy workflows with a calm social workspace: profiles, isolation, and direct network access.
       </p>
       <a href={appUrl()} class="shimmer-btn inline-flex items-center bg-white text-zinc-950 hover:bg-zinc-200 rounded-full px-6 py-3 text-sm font-medium transition-colors">
-        Start with SocialFlow
+        Start with SocialGlowz
       </a>
     </section>
 

@@ -19,7 +19,7 @@
         <div class="welcome-icon">
           <img
             :src="logoUrl"
-            alt="SocialFlow"
+            alt="SocialGlowz"
             class="welcome-logo"
           />
         </div>

@@ -2,7 +2,7 @@
 artifact: claude_instructions
 metadata_schema_version: "1.0"
 artifact_version: "1.0.0"
-project: socialflow
+project: socialglowz
 created: "2026-04-26"
 status: active
 source_skill: sf-docs
@@ -27,7 +27,7 @@ next_step: "/sf-docs audit CLAUDE.md"
 
 ## Purpose
 
-This repository is **SocialFlow**, a multi-platform social networking dashboard built with **Vue 3 + Vite** and extended through **Tauri 2**.
+This repository is **SocialGlowz**, a multi-platform social networking dashboard built with **Vue 3 + Vite** and extended through **Tauri 2**.
 
 Primary goals for any agent:
 
@@ -44,7 +44,7 @@ Primary goals for any agent:
 
 ## Runtime structure
 
-- `src/ui/setup/pages/SocialFlow/` contains the main app.
+- `src/ui/setup/pages/SocialGlowz/` contains the main app.
 - Platform variants are controlled by:
   - `vite.chrome.config.ts`
   - `vite.firefox.config.ts`

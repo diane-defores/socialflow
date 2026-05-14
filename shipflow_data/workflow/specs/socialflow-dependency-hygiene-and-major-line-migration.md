@@ -2,7 +2,7 @@
 artifact: spec
 metadata_schema_version: "1.0"
 artifact_version: "1.0.0"
-project: "socialflow"
+project: "socialglowz"
 created: "2026-04-30"
 created_at: "2026-04-30 10:25:48 UTC"
 updated: "2026-04-30"
@@ -13,7 +13,7 @@ source_model: "GPT-5 Codex"
 scope: "migration / audit-fix"
 owner: "Diane"
 confidence: high
-user_story: "As the SocialFlow maintainer, I want dependency risk reduced through staged hygiene fixes and explicit major-line migration decisions, so web, extension, desktop, and Android releases remain secure and predictable without dependency churn breaking core workflows."
+user_story: "As the SocialGlowz maintainer, I want dependency risk reduced through staged hygiene fixes and explicit major-line migration decisions, so web, extension, desktop, and Android releases remain secure and predictable without dependency churn breaking core workflows."
 risk_level: "medium"
 security_impact: "yes"
 docs_impact: "yes"
@@ -94,7 +94,7 @@ evidence:
   - "pnpm audit reports GHSA-w5hq-g745-h8pq: uuid@8.3.2 via web-ext@10.1.0 -> node-notifier@10.0.1."
   - "package.json has 19 dependencies, 57 devDependencies, 1 root override, and 30 pnpm overrides."
   - "package.json lists deprecated or stale tracks: @primevue/themes, @types/eslint__js, unplugin-vue-router, PrimeVue 3, Tailwind 3, Vite 6, Pinia 2, TypeScript 5, ESLint 9."
-  - "src/ui/setup/pages/SocialFlow/main.ts imports primevue/resources/themes/lara-light-blue/theme.css and primevue/resources/primevue.css, which PrimeVue 4 docs say are no longer used."
+  - "src/ui/setup/pages/SocialGlowz/main.ts imports primevue/resources/themes/lara-light-blue/theme.css and primevue/resources/primevue.css, which PrimeVue 4 docs say are no longer used."
   - "tailwind.config.cjs and postcss.config.cjs use Tailwind v3-era config; Tailwind v4 docs recommend the official upgrade tool and @tailwindcss/vite for Vite projects."
   - "src/utils/router/index.ts and vite.config.ts depend on unplugin-vue-router generated routes; pnpm view says unplugin-vue-router has been merged into vuejs/router."
   - "scripts/vue-tsc-fixed.cjs requires semver, but semver is not declared as a direct package.json dependency."
@@ -103,12 +103,12 @@ evidence:
   - "sf-ready 2026-04-30 found the draft not ready because `pnpm tauri:build` is only a Vite build, release RustSec coverage was ambiguous, fresh-docs coverage was partial, and Convex/Auth security checks were underspecified."
   - "package.json defines `tauri:build` as `vite build -c vite.tauri.config.ts`; native desktop packaging requires `pnpm exec tauri build` or the existing `tauri:bundle` script."
   - "Current Vite 8 and ESLint 10 docs require Node 20.19+; `.nvmrc` currently says `20` and must be treated as a Node-major pin, not proof of the patch-level floor."
-next_step: "/sf-start SocialFlow Dependency Hygiene and Major-Line Migration"
+next_step: "/sf-start SocialGlowz Dependency Hygiene and Major-Line Migration"
 ---
 
 # Title
 
-SocialFlow Dependency Hygiene and Major-Line Migration
+SocialGlowz Dependency Hygiene and Major-Line Migration
 
 # Status
 
@@ -116,9 +116,9 @@ Ready. This spec defines a staged dependency chantier. It does not implement pac
 
 # User Story
 
-As the SocialFlow maintainer, I want dependency risk reduced through staged hygiene fixes and explicit major-line migration decisions, so web, extension, desktop, and Android releases remain secure and predictable without dependency churn breaking core workflows.
+As the SocialGlowz maintainer, I want dependency risk reduced through staged hygiene fixes and explicit major-line migration decisions, so web, extension, desktop, and Android releases remain secure and predictable without dependency churn breaking core workflows.
 
-Actor: SocialFlow maintainer/operator.
+Actor: SocialGlowz maintainer/operator.
 
 Trigger: a dependency audit, Dependabot PR, security advisory, or intentional framework upgrade touches the package graph, Vite build configs, PrimeVue styling, Tailwind/PostCSS styling, Vue Router routing, Tauri/Cargo dependencies, or CI dependency checks.
 
@@ -148,7 +148,7 @@ When a dependency-health run starts, the maintainer can apply low-risk hygiene f
 - If a patch/minor update fails install, typecheck, lint, unit tests, web build, extension build, Tauri build, or Convex typecheck, revert only that stage's changes and leave the documented risk entry in place.
 - If an advisory fix requires a transitive major override with unknown runtime compatibility, do not apply it; keep the risk accepted as dev/build-only until an upstream package path exists.
 - If PrimeVue 4 theme migration breaks dark mode, surface tokens, component rendering, or mobile layout, stop the PrimeVue stage before starting Tailwind or router upgrades.
-- If Tailwind 4 migration changes generated CSS enough to alter key SocialFlow screens, stop and re-scope styling fixes before continuing.
+- If Tailwind 4 migration changes generated CSS enough to alter key SocialGlowz screens, stop and re-scope styling fixes before continuing.
 - If route generation changes break hash routing, typed routes, extension shells, or Tauri Android compatibility, stop and keep Vue Router/unplugin changes isolated.
 - If cargo-audit or cargo-deny reports RustSec issues that need incompatible Rust/Tauri upgrades, document them and route the Rust migration through a dedicated `/sf-migrate` step.
 - If native packaging fails after a frontend-only `tauri:build` succeeds, the stage is failed; do not treat a Vite-only Tauri build as proof that desktop or Android release artifacts are safe.
@@ -164,12 +164,12 @@ This crosses the chantier threshold because the work spans package metadata, fro
 
 Source intake from sf-deps:
 
-- Titre propose: SocialFlow Dependency Hygiene and Major-Line Migration
+- Titre propose: SocialGlowz Dependency Hygiene and Major-Line Migration
 - Raison: multiple dependency, license, override, and migration decisions cross several build/runtime surfaces.
 - Severite: P2
 - Scope: package.json, pnpm-lock.yaml, Vite configs, PrimeVue/Tailwind/router setup, Rust/Tauri manifests, GitHub Actions, dependency docs, release checks.
-- Spec recommandee: `/sf-spec SocialFlow Dependency Hygiene and Major-Line Migration`
-- Prochaine etape from intake: `/sf-ready SocialFlow Dependency Hygiene and Major-Line Migration`
+- Spec recommandee: `/sf-spec SocialGlowz Dependency Hygiene and Major-Line Migration`
+- Prochaine etape from intake: `/sf-ready SocialGlowz Dependency Hygiene and Major-Line Migration`
 
 # Solution
 
@@ -188,7 +188,7 @@ The implementation should prefer removing stale packages over adding new abstrac
 - RustSec scanning with `cargo-audit` or `cargo-deny`.
 - PrimeVue 3 to 4 migration planning and implementation, including theme imports and dark-mode/surface token compatibility.
 - Tailwind CSS 3 to 4 migration planning and implementation, including Vite/PostCSS config and DaisyUI/plugin compatibility.
-- Vue Router / unplugin-vue-router migration planning and implementation for generated typed routes and manual SocialFlow router compatibility.
+- Vue Router / unplugin-vue-router migration planning and implementation for generated typed routes and manual SocialGlowz router compatibility.
 - Follow-up major-line migrations for Vite, TypeScript, ESLint, Pinia, VueUse, Marked, Convex/Auth, and related build/test dependencies when supported by official docs and local validation.
 - CI validation for dependency install, audit, typecheck, tests, lint, web build, extension builds, Convex typecheck, native packaging, Android packaging, and native dependency scan.
 - Release workflow hardening so `.github/workflows/build.yml` cannot produce desktop artifacts without RustSec coverage or an explicitly documented blocker.
@@ -257,7 +257,7 @@ The docs above are current planning evidence for this spec. Each major-line stag
 - Native release checks must prove actual Tauri desktop/mobile packaging, not only Vite output for the Tauri frontend.
 - PrimeVue migration must preserve existing app-level dark-mode behavior and surface token expectations.
 - Tailwind migration must preserve current content scanning coverage for root HTML, FR/EN HTML, demo, and Vue/TS sources.
-- Router migration must preserve `createWebHashHistory` for SocialFlow and not break generated typed routes used by extension shells.
+- Router migration must preserve `createWebHashHistory` for SocialGlowz and not break generated typed routes used by extension shells.
 - Native Tauri dependency scanning must not require publishing crates or changing the product license.
 - RustSec scanning must run before native artifacts are uploaded in both dev-build and release workflows, or the workflow must fail with a documented blocker.
 - CI must continue to install dependencies with frozen lockfiles.
@@ -268,8 +268,8 @@ The docs above are current planning evidence for this spec. Each major-line stag
 
 - `package.json` and `pnpm-lock.yaml`: every package change affects install reproducibility and Dependabot diffs.
 - `.npmrc`: broad peer resolution and hoisting are currently documented compatibility concessions; removing them requires proving all surfaces still install/build.
-- `src/ui/setup/pages/SocialFlow/main.ts`: PrimeVue 4 changes old CSS imports and `app.use(PrimeVue)` theme config.
-- `src/ui/setup/pages/SocialFlow/App.vue` and `src/ui/setup/pages/SocialFlow/assets/main.css`: dark-mode and surface token overrides may need adjustment after PrimeVue theme migration.
+- `src/ui/setup/pages/SocialGlowz/main.ts`: PrimeVue 4 changes old CSS imports and `app.use(PrimeVue)` theme config.
+- `src/ui/setup/pages/SocialGlowz/App.vue` and `src/ui/setup/pages/SocialGlowz/assets/main.css`: dark-mode and surface token overrides may need adjustment after PrimeVue theme migration.
 - `vite.config.ts`, `vite.web.config.ts`, `vite.tauri.config.ts`, `vite.chrome.config.ts`, `vite.firefox.config.ts`: Tailwind/Vite/router/plugin changes can affect different surfaces differently.
 - `src/utils/router/index.ts`, `src/types/typed-router.d.ts`, `src/types/router-meta.d.ts`, `src/types/auto-imports.d.ts`: typed route generation and imports can break typecheck if migration order is wrong.
 - `tailwind.config.cjs`, `postcss.config.cjs`, `src/assets/base.scss`, `src/landing/main.css`: Tailwind 4 migration can change CSS entrypoint semantics.
@@ -389,12 +389,12 @@ No user-facing marketing, pricing, onboarding, or FAQ copy change is required un
   - Notes: Updating `.nvmrc` from `20` to `20.19.0` or a later Node 20 patch is allowed in the relevant major stage if the docs require it.
 
 - [ ] Task 11: PrimeVue 3 to 4 migration stage
-  - File: `src/ui/setup/pages/SocialFlow/main.ts`
+  - File: `src/ui/setup/pages/SocialGlowz/main.ts`
   - Action: Replace old `primevue/resources` CSS imports with PrimeVue 4 styled-mode configuration using `primevue` and `@primeuix/themes`; update package dependencies accordingly.
   - User story link: Moves the UI stack off deprecated theme architecture while preserving the app surface.
   - Depends on: Task 10.
   - Validate with: `corepack pnpm typecheck`, `corepack pnpm test:once`, `corepack pnpm build:web`, `corepack pnpm build:chrome`, `corepack pnpm build:firefox`, `corepack pnpm tauri:build`, plus visual smoke of login, settings, signup nudge, sidebar, mobile layout, and dark mode.
-  - Notes: Re-check official PrimeVue 4 migration docs immediately before implementation. Update `src/ui/setup/pages/SocialFlow/App.vue` and `src/ui/setup/pages/SocialFlow/assets/main.css` only as needed to preserve existing tokens.
+  - Notes: Re-check official PrimeVue 4 migration docs immediately before implementation. Update `src/ui/setup/pages/SocialGlowz/App.vue` and `src/ui/setup/pages/SocialGlowz/assets/main.css` only as needed to preserve existing tokens.
 
 - [ ] Task 12: Tailwind CSS 3 to 4 migration stage
   - File: `tailwind.config.cjs`
@@ -406,11 +406,11 @@ No user-facing marketing, pricing, onboarding, or FAQ copy change is required un
 
 - [ ] Task 13: Vue Router / unplugin-vue-router migration stage
   - File: `vite.config.ts`
-  - Action: Migrate from deprecated `unplugin-vue-router` to the official Vue Router 5 file-based routing path; preserve generated route types for extension shells and manual SocialFlow hash router behavior.
+  - Action: Migrate from deprecated `unplugin-vue-router` to the official Vue Router 5 file-based routing path; preserve generated route types for extension shells and manual SocialGlowz hash router behavior.
   - User story link: Keeps routing safe across extension and Tauri surfaces.
   - Depends on: Task 12.
-  - Validate with: `corepack pnpm typecheck`, `corepack pnpm build:chrome`, `corepack pnpm build:firefox`, `corepack pnpm build:web`, and a route smoke for setup, action popup, and SocialFlow app entry.
-  - Notes: Do not migrate `src/ui/setup/pages/SocialFlow/router/index.ts` away from `createWebHashHistory` unless a separate routing spec approves it.
+  - Validate with: `corepack pnpm typecheck`, `corepack pnpm build:chrome`, `corepack pnpm build:firefox`, `corepack pnpm build:web`, and a route smoke for setup, action popup, and SocialGlowz app entry.
+  - Notes: Do not migrate `src/ui/setup/pages/SocialGlowz/router/index.ts` away from `createWebHashHistory` unless a separate routing spec approves it.
 
 - [ ] Task 14: Vite and build-plugin major stage
   - File: `vite.config.ts`
@@ -454,7 +454,7 @@ No user-facing marketing, pricing, onboarding, or FAQ copy change is required un
 - [ ] CA 6: Given Rust dependencies are part of release packaging, when Android/dev or desktop release CI runs, then RustSec scanning is executed before artifacts are built or the workflow is explicitly blocked with a documented replacement plan.
 - [ ] CA 7: Given PrimeVue 4 removes old resource CSS, when the PrimeVue stage completes, then the app uses the new theme config and dark/light surfaces still render correctly.
 - [ ] CA 8: Given Tailwind 4 changes Vite/PostCSS integration, when the Tailwind stage completes, then generated CSS covers the same HTML/Vue source surfaces and key UI screens remain visually usable.
-- [ ] CA 9: Given routing is split between generated extension routes and manual SocialFlow routes, when router tooling changes, then both route systems still typecheck and use hash history where required.
+- [ ] CA 9: Given routing is split between generated extension routes and manual SocialGlowz routes, when router tooling changes, then both route systems still typecheck and use hash history where required.
 - [ ] CA 10: Given Vite/build tooling changes, when build validation runs, then Chrome, Firefox, web, Tauri frontend output, and at least one native Tauri packaging path still succeed or the stage is blocked.
 - [ ] CA 11: Given Vite 7+/8 or ESLint 10 is adopted, when local and CI checks run, then `node --version` proves Node `20.19.0` or later without jumping to a new Node major unless separately approved.
 - [ ] CA 12: Given TypeScript/ESLint majors are changed, when static checks run, then they fail only for real code issues and no temporary bypasses are committed.
@@ -489,7 +489,7 @@ Automated checks:
 
 Manual smoke:
 
-- SocialFlow startup with no `VITE_CONVEX_URL`.
+- SocialGlowz startup with no `VITE_CONVEX_URL`.
 - Login/signup/settings drawer.
 - Signup nudge dialog/bottom sheet.
 - Sidebar and mobile network navigation.
@@ -519,14 +519,14 @@ Manual smoke:
 Read these files first before implementation:
 
 - `package.json`
-- `src/ui/setup/pages/SocialFlow/main.ts`
+- `src/ui/setup/pages/SocialGlowz/main.ts`
 - `vite.config.ts`
 - `vite.web.config.ts`
 - `vite.tauri.config.ts`
 - `tailwind.config.cjs`
 - `postcss.config.cjs`
 - `src/utils/router/index.ts`
-- `src/ui/setup/pages/SocialFlow/router/index.ts`
+- `src/ui/setup/pages/SocialGlowz/router/index.ts`
 - `src-tauri/Cargo.toml`
 - `.github/workflows/dev-builds.yml`
 - `.github/workflows/build.yml`
@@ -581,20 +581,20 @@ None blocking for spec readiness. This spec assumes the project remains private/
 
 | Date UTC | Skill | Model | Action | Result | Next step |
 |----------|-------|-------|--------|--------|-----------|
-| 2026-04-30 10:25:48 | sf-spec | GPT-5 Codex | Created dependency hygiene and major-line migration spec from sf-deps intake and local investigation | Draft chantier saved with staged tasks, docs freshness evidence, and validation plan | /sf-ready SocialFlow Dependency Hygiene and Major-Line Migration |
-| 2026-04-30 12:44:17 | sf-ready | GPT-5 Codex | Ran strict readiness gate against dependency migration spec, local package/workflow scripts, audit evidence, and current official docs for named migration claims | Not ready: validation commands can miss native Tauri release breakage, release RustSec coverage is ambiguous, fresh-docs coverage is partial for in-scope major stages, and Convex/Auth runtime migration security checks are underspecified | /sf-spec SocialFlow Dependency Hygiene and Major-Line Migration |
-| 2026-04-30 15:49:33 | sf-spec | GPT-5 Codex | Updated the dependency migration spec after readiness findings and current official docs review | Draft updated with native packaging validation, release RustSec gate, full fresh-docs evidence, Node 20.19+ constraint, and Convex/Auth security checks | /sf-ready SocialFlow Dependency Hygiene and Major-Line Migration |
-| 2026-04-30 16:20:48 | sf-ready | GPT-5 Codex | Ran strict readiness gate against the updated dependency migration spec, local package/workflow evidence, and current official docs/package metadata for named migration stages | Ready: structure, metadata, task ordering, fresh-docs gate, adversarial review, and proportional security review pass for staged implementation | /sf-start SocialFlow Dependency Hygiene and Major-Line Migration |
+| 2026-04-30 10:25:48 | sf-spec | GPT-5 Codex | Created dependency hygiene and major-line migration spec from sf-deps intake and local investigation | Draft chantier saved with staged tasks, docs freshness evidence, and validation plan | /sf-ready SocialGlowz Dependency Hygiene and Major-Line Migration |
+| 2026-04-30 12:44:17 | sf-ready | GPT-5 Codex | Ran strict readiness gate against dependency migration spec, local package/workflow scripts, audit evidence, and current official docs for named migration claims | Not ready: validation commands can miss native Tauri release breakage, release RustSec coverage is ambiguous, fresh-docs coverage is partial for in-scope major stages, and Convex/Auth runtime migration security checks are underspecified | /sf-spec SocialGlowz Dependency Hygiene and Major-Line Migration |
+| 2026-04-30 15:49:33 | sf-spec | GPT-5 Codex | Updated the dependency migration spec after readiness findings and current official docs review | Draft updated with native packaging validation, release RustSec gate, full fresh-docs evidence, Node 20.19+ constraint, and Convex/Auth security checks | /sf-ready SocialGlowz Dependency Hygiene and Major-Line Migration |
+| 2026-04-30 16:20:48 | sf-ready | GPT-5 Codex | Ran strict readiness gate against the updated dependency migration spec, local package/workflow evidence, and current official docs/package metadata for named migration stages | Ready: structure, metadata, task ordering, fresh-docs gate, adversarial review, and proportional security review pass for staged implementation | /sf-start SocialGlowz Dependency Hygiene and Major-Line Migration |
 
 # Current Chantier Flow
 
 | Step | Status | Notes |
 |------|--------|-------|
-| sf-spec | done | Draft spec updated after readiness findings in `shipflow_data/workflow/specs/socialflow-dependency-hygiene-and-major-line-migration.md`. |
+| sf-spec | done | Draft spec updated after readiness findings in `shipflow_data/workflow/specs/socialglowz-dependency-hygiene-and-major-line-migration.md`. |
 | sf-ready | ready | 2026-04-30 readiness gate passed after fresh-docs, native packaging, RustSec, Node floor, and Convex/Auth security updates. |
 | sf-start | next | Ready to launch staged implementation. |
 | sf-verify | not launched | Required after implementation stages. |
 | sf-end | not launched | Use after verified task completion if not shipping immediately. |
 | sf-ship | not launched | Use only after checks and release decision. |
 
-Next command: `/sf-start SocialFlow Dependency Hygiene and Major-Line Migration`
+Next command: `/sf-start SocialGlowz Dependency Hygiene and Major-Line Migration`

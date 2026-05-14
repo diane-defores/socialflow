@@ -2,7 +2,7 @@
 artifact: spec
 metadata_schema_version: "1.0"
 artifact_version: "1.0.0"
-project: "socialflow"
+project: "socialglowz"
 created: "2026-05-02"
 created_at: "2026-05-02 12:38:54 UTC"
 updated: "2026-05-02"
@@ -13,7 +13,7 @@ source_model: "GPT-5 Codex"
 scope: "migration / audit-fix"
 owner: "Diane"
 confidence: high
-user_story: "As the SocialFlow maintainer, I want the remaining RustSec warning set split into fixable native dependency updates and explicitly accepted upstream risks, so desktop and Android native releases are not blocked by hidden Rust dependency risk or unsafe transitive overrides."
+user_story: "As the SocialGlowz maintainer, I want the remaining RustSec warning set split into fixable native dependency updates and explicitly accepted upstream risks, so desktop and Android native releases are not blocked by hidden Rust dependency risk or unsafe transitive overrides."
 risk_level: "medium"
 security_impact: "yes"
 docs_impact: "yes"
@@ -38,7 +38,7 @@ depends_on:
   - artifact: "CLAUDE.md"
     artifact_version: "1.0.0"
     required_status: "active"
-  - artifact: "shipflow_data/workflow/specs/socialflow-dependency-hygiene-and-major-line-migration.md"
+  - artifact: "shipflow_data/workflow/specs/socialglowz-dependency-hygiene-and-major-line-migration.md"
     artifact_version: "1.0.0"
     required_status: "ready"
   - artifact: "docs/dependency-risk-register.md"
@@ -61,7 +61,7 @@ evidence:
   - "Local `(cd src-tauri && cargo audit --json)` exits 0 and reports 0 vulnerabilities, 17 unmaintained warnings, and 3 unsound warnings."
   - "RustSec warnings include GTK3 binding crates, `fxhash`, `proc-macro-error`, `unic-*`, `glib@0.18.5`, `rand@0.7.3`, and `rand@0.8.5`."
   - "`cargo tree --locked -i glib@0.18.5` traces the `glib` warning through Tauri Linux desktop stack paths including `tauri`, `tauri-runtime-wry`, `wry`, `webkit2gtk`, `gtk`, `muda`, `tray-icon`, and `libappindicator`."
-  - "`cargo tree --locked -i rand@0.8.5` shows one direct SocialFlow edge through `app` plus transitive Tauri parsing/codegen edges through `phf_generator`, `cssparser`, `kuchikiki`, `tauri-utils`, and `html5ever`."
+  - "`cargo tree --locked -i rand@0.8.5` shows one direct SocialGlowz edge through `app` plus transitive Tauri parsing/codegen edges through `phf_generator`, `cssparser`, `kuchikiki`, `tauri-utils`, and `html5ever`."
   - "`cargo tree --locked -i rand@0.7.3` traces the older `rand` line through `phf_generator@0.8.0`, `selectors`, `kuchikiki`, and `tauri-utils`."
   - "`cargo update -p rand@0.8.5 --precise 0.8.6 --dry-run` succeeds and would update the direct `rand` 0.8 lock entry without writing the lockfile."
   - "RustSec RUSTSEC-2024-0429 marks `glib` unsound and patched in `>=0.20.0`; the current lockfile has `glib@0.18.5`."
@@ -69,12 +69,12 @@ evidence:
   - "RustSec GTK3 binding advisories such as RUSTSEC-2024-0415 have no patched GTK3 versions and point toward gtk4-rs rather than a simple patch bump."
   - "Tauri official docs state `tauri build` and `tauri android build` run `build.beforeBuildCommand` and use `build.frontendDist`; `pnpm tauri:build` remains only the frontend Vite build script in this repo."
   - "Local docs and workflows already use `cargo-audit` as the executable RustSec gate; `cargo-deny` is unavailable locally and is deferred from this stage."
-next_step: "/sf-start SocialFlow Native Tauri RustSec Warning Migration"
+next_step: "/sf-start SocialGlowz Native Tauri RustSec Warning Migration"
 ---
 
 # Title
 
-SocialFlow Native Tauri RustSec Warning Migration
+SocialGlowz Native Tauri RustSec Warning Migration
 
 # Status
 
@@ -82,9 +82,9 @@ Ready. This spec defines the dedicated native dependency migration and risk-poli
 
 # User Story
 
-As the SocialFlow maintainer, I want the remaining RustSec warning set split into fixable native dependency updates and explicitly accepted upstream risks, so desktop and Android native releases are not blocked by hidden Rust dependency risk or unsafe transitive overrides.
+As the SocialGlowz maintainer, I want the remaining RustSec warning set split into fixable native dependency updates and explicitly accepted upstream risks, so desktop and Android native releases are not blocked by hidden Rust dependency risk or unsafe transitive overrides.
 
-Actor: SocialFlow maintainer/operator.
+Actor: SocialGlowz maintainer/operator.
 
 Trigger: a native dependency/security maintenance pass starts after the general dependency hygiene stage documented `DEP-RISK-004`.
 
@@ -224,7 +224,7 @@ Run a dedicated native/Tauri RustSec migration pass. First refresh and classify 
   - Action: Record outputs or summaries for `cargo audit --version`, `(cd src-tauri && cargo audit --json)`, `cargo tree --locked -d`, `cargo metadata --locked --no-deps --format-version 1`, and inverse trees for every warning family.
   - User story link: Establishes the exact native risk baseline before changing dependencies.
   - Depends on: None.
-  - Validate with: `node -e "const a=require('/tmp/socialflow-cargo-audit.json'); console.log(a.vulnerabilities?.count, a.warnings)"` or equivalent parser after writing the JSON to a temp file.
+  - Validate with: `node -e "const a=require('/tmp/socialglowz-cargo-audit.json'); console.log(a.vulnerabilities?.count, a.warnings)"` or equivalent parser after writing the JSON to a temp file.
   - Notes: Do not commit raw JSON unless it is intentionally useful; a concise doc table is preferred.
 
 - [ ] Task 2: Build the warning classification table
@@ -317,7 +317,7 @@ Run a dedicated native/Tauri RustSec migration pass. First refresh and classify 
 # Test Strategy
 
 - Baseline and policy:
-  - `(cd src-tauri && cargo audit --json > /tmp/socialflow-cargo-audit.json)`
+  - `(cd src-tauri && cargo audit --json > /tmp/socialglowz-cargo-audit.json)`
   - Parse JSON to confirm vulnerabilities and warnings by category.
   - `(cd src-tauri && cargo tree --locked -d)`
   - `(cd src-tauri && cargo tree --locked -i glib@0.18.5)`
@@ -399,12 +399,12 @@ Fresh external docs verdict:
 
 | Date UTC | Skill | Model | Action | Result | Next step |
 |----------|-------|-------|--------|--------|-----------|
-| 2026-05-02 12:38:54 | sf-spec | GPT-5 Codex | Created dedicated native RustSec warning migration spec from local cargo audit, Cargo tree evidence, existing dependency risk docs, CI workflows, and current Tauri/RustSec/cargo-deny docs | Draft saved; ready gate required before implementation | /sf-ready SocialFlow Native Tauri RustSec Warning Migration |
-| 2026-05-02 12:45:48 | sf-ready | GPT-5 Codex | Ran strict readiness gate against the native RustSec warning migration spec, local Cargo/Tauri evidence, dependency risk docs, and current official Tauri/RustSec/cargo-deny sources | Not ready: the spec still leaves the cargo-deny versus cargo-audit policy surface for readiness to decide, which changes tooling, CI, validation, and acceptance scope | /sf-spec SocialFlow Native Tauri RustSec Warning Migration |
-| 2026-05-02 12:49:59 | sf-spec | GPT-5 Codex | Updated the native RustSec warning migration spec to resolve the readiness blocker by choosing visible `cargo-audit` warnings plus documentation as the stage policy surface | Draft updated; cargo-deny, audit suppressions, and deny.toml are explicitly out of scope for this stage | /sf-ready SocialFlow Native Tauri RustSec Warning Migration |
-| 2026-05-02 13:13:33 | sf-ready | GPT-5 Codex | Re-ran readiness gate against the updated native RustSec warning migration spec, local cargo-audit/workflow evidence, language doctrine, and fresh Tauri/RustSec/cargo-deny docs | Ready: no blocking ambiguity remains; visible cargo-audit warning policy, stop conditions, tasks, acceptance criteria, docs impact, and security boundaries are explicit | /sf-start SocialFlow Native Tauri RustSec Warning Migration |
-| 2026-05-02 13:53:52 | sf-start | GPT-5 Codex | Implemented the native RustSec warning migration: refreshed cargo-audit baseline, patched direct `rand` 0.8 to `0.8.6`, evaluated broader Tauri/parser update path, documented remaining visible warnings, and rechecked workflow gate placement | Partial: direct fix and policy docs are implemented; native compile/package proof is blocked locally because `pkg-config`/GTK system dependencies are unavailable | /sf-verify SocialFlow Native Tauri RustSec Warning Migration |
-| 2026-05-02 14:26:43 | sf-verify | GPT-5 Codex | Verified the native RustSec migration against the ready spec, current cargo-audit output, Cargo inverse trees, dependency docs, workflow gate placement, quick pnpm checks, local `cargo check --locked`, and `pnpm tauri:bundle` | Partial: RustSec classification, direct `rand` fix, local Rust check, and Tauri no-bundle release build are verified; required docs/spec artifacts are still untracked and the worktree still contains out-of-scope changes that need isolation before ship | /sf-ship SocialFlow Native Tauri RustSec Warning Migration |
+| 2026-05-02 12:38:54 | sf-spec | GPT-5 Codex | Created dedicated native RustSec warning migration spec from local cargo audit, Cargo tree evidence, existing dependency risk docs, CI workflows, and current Tauri/RustSec/cargo-deny docs | Draft saved; ready gate required before implementation | /sf-ready SocialGlowz Native Tauri RustSec Warning Migration |
+| 2026-05-02 12:45:48 | sf-ready | GPT-5 Codex | Ran strict readiness gate against the native RustSec warning migration spec, local Cargo/Tauri evidence, dependency risk docs, and current official Tauri/RustSec/cargo-deny sources | Not ready: the spec still leaves the cargo-deny versus cargo-audit policy surface for readiness to decide, which changes tooling, CI, validation, and acceptance scope | /sf-spec SocialGlowz Native Tauri RustSec Warning Migration |
+| 2026-05-02 12:49:59 | sf-spec | GPT-5 Codex | Updated the native RustSec warning migration spec to resolve the readiness blocker by choosing visible `cargo-audit` warnings plus documentation as the stage policy surface | Draft updated; cargo-deny, audit suppressions, and deny.toml are explicitly out of scope for this stage | /sf-ready SocialGlowz Native Tauri RustSec Warning Migration |
+| 2026-05-02 13:13:33 | sf-ready | GPT-5 Codex | Re-ran readiness gate against the updated native RustSec warning migration spec, local cargo-audit/workflow evidence, language doctrine, and fresh Tauri/RustSec/cargo-deny docs | Ready: no blocking ambiguity remains; visible cargo-audit warning policy, stop conditions, tasks, acceptance criteria, docs impact, and security boundaries are explicit | /sf-start SocialGlowz Native Tauri RustSec Warning Migration |
+| 2026-05-02 13:53:52 | sf-start | GPT-5 Codex | Implemented the native RustSec warning migration: refreshed cargo-audit baseline, patched direct `rand` 0.8 to `0.8.6`, evaluated broader Tauri/parser update path, documented remaining visible warnings, and rechecked workflow gate placement | Partial: direct fix and policy docs are implemented; native compile/package proof is blocked locally because `pkg-config`/GTK system dependencies are unavailable | /sf-verify SocialGlowz Native Tauri RustSec Warning Migration |
+| 2026-05-02 14:26:43 | sf-verify | GPT-5 Codex | Verified the native RustSec migration against the ready spec, current cargo-audit output, Cargo inverse trees, dependency docs, workflow gate placement, quick pnpm checks, local `cargo check --locked`, and `pnpm tauri:bundle` | Partial: RustSec classification, direct `rand` fix, local Rust check, and Tauri no-bundle release build are verified; required docs/spec artifacts are still untracked and the worktree still contains out-of-scope changes that need isolation before ship | /sf-ship SocialGlowz Native Tauri RustSec Warning Migration |
 | 2026-05-02 19:56:37 | sf-ship | GPT-5 Codex | Closed and shipped the scoped native RustSec migration with updated dependency docs, local task/changelog notes, local native proof, and a targeted commit excluding unrelated dirty worktree changes | shipped | None |
 
 # Current Chantier Flow
@@ -416,6 +416,6 @@ Fresh external docs verdict:
 - sf-end: not launched
 - sf-ship: shipped
 
-Current command: `/sf-ship end SocialFlow Native Tauri RustSec Warning Migration`
+Current command: `/sf-ship end SocialGlowz Native Tauri RustSec Warning Migration`
 
 Next command: `None`

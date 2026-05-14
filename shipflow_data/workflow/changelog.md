@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to SocialFlow are documented here.
+All notable changes to SocialGlowz are documented here.
 
 ## [2026-05-09]
 
@@ -41,7 +41,7 @@ All notable changes to SocialFlow are documented here.
 ## [2026-04-14]
 
 ### Added
-- **Real multi-device Convex sync** — added cloud-backed sync for profiles, active profile, custom links, friends filter, SocialFlow accounts, and key preferences (`theme`, `language`, `grayscale`, `textZoom`, `haptic`, `tapSound`, onboarding state)
+- **Real multi-device Convex sync** — added cloud-backed sync for profiles, active profile, custom links, friends filter, SocialGlowz accounts, and key preferences (`theme`, `language`, `grayscale`, `textZoom`, `haptic`, `tapSound`, onboarding state)
 
 ### Changed
 - **Cloud sync bootstrap is now real instead of mostly aspirational** — the app now hydrates from Convex on sign-in/startup, uses a cloud-priority policy, and seeds the cloud when a signed-in user starts from a previously local-only device
@@ -69,7 +69,7 @@ All notable changes to SocialFlow are documented here.
 - **Convex Auth sign-in bootstrap on dev deployment** — the `users` schema is now compatible with `@convex-dev/auth` default writes (`createdAt` optional, auth verification fields/indexes added), the workspace is linked to a live Convex dev deployment, and missing auth signing secrets (`JWT_PRIVATE_KEY`, `JWKS`) were provisioned so password sign-in can mint session tokens instead of failing at startup
 - **Account creation errors were hard to read/copy** — long backend/auth errors are truncated by default, can be expanded on demand, and the full raw message can be copied from both the drawer and the signup nudge
 - **Android social WebView photo picker did nothing** — web `<input type="file">` requests now open the Android picker instead of failing silently
-- **Facebook mobile story CTA no longer fails silently** — when the user taps `Créer une story` and Facebook only shows the mobile-app upsell, SocialFlow now explains that Stories are not available in Facebook mobile web instead of leaving the user with a disappearing prompt
+- **Facebook mobile story CTA no longer fails silently** — when the user taps `Créer une story` and Facebook only shows the mobile-app upsell, SocialGlowz now explains that Stories are not available in Facebook mobile web instead of leaving the user with a disappearing prompt
 - **Facebook UI diagnostics were noisy/broken** — `fb-ui` logs now flush correctly instead of throwing JSON parse errors, making copied logs readable for future debugging
 
 ## [2026-04-12]
@@ -161,7 +161,7 @@ All notable changes to SocialFlow are documented here.
 - Persistent mute — `applyMuteToWebView` now uses MutationObserver to catch dynamically created `<video>`/`<audio>` + overrides `AudioContext` to silence Web Audio API; previously only muted elements present at call time
 - Kotlin mute label — "Son activé" → "Activer le son" (action label when sound is muted)
 - Settings drawer account section — styled signup form with gradient CTA, red sign-out button, proper spacing (was unstyled raw HTML)
-- Android backup export was writing to private app sandbox (invisible to user) — now saves to `Download/SocialFlow/` via MediaStore; import loads the latest `.sfbak` from the same folder
+- Android backup export was writing to private app sandbox (invisible to user) — now saves to `Download/SocialGlowz/` via MediaStore; import loads the latest `.sfbak` from the same folder
 
 ### Improved
 - Bottom bar icon opacity — smooth fade animations (600ms in, 800ms out) on touch instead of instant alpha change; removed 500ms postDelayed on release for immediate response
@@ -392,7 +392,7 @@ All notable changes to SocialFlow are documented here.
 - Auto app-banner dismiss — JS injected to hide "download our app" / "open in app" prompts that block web usage
 
 ### Changed
-- App renamed **SocialFlowz → SocialFlow** throughout: package name, Kotlin namespace, Tauri product identifier, folder paths, git remote, CI artifacts, tray tooltip
+- App renamed **SocialGlowz → SocialGlowz** throughout: package name, Kotlin namespace, Tauri product identifier, folder paths, git remote, CI artifacts, tray tooltip
 - Android overlay bar moved from top to bottom — consistent with native Android bottom bar placement
 - Vue mobile overlay bar DOM order swapped: webview fills space, bar anchors to bottom with safe-area inset
 
@@ -423,7 +423,7 @@ All notable changes to SocialFlow are documented here.
 
 ### Removed
 - `src/stores/auth.ts` — mock JWT store with hardcoded `fake-jwt-token`
-- `src/ui/setup/pages/SocialFlowz/stores/auth.ts` — dead API-expecting auth store never wired
+- `src/ui/setup/pages/SocialGlowz/stores/auth.ts` — dead API-expecting auth store never wired
 
 ---
 
@@ -436,7 +436,7 @@ All notable changes to SocialFlow are documented here.
 
 ### Fixed
 - `beforeBuildCommand` recursion — `tauri:build` script is Vite-only; Tauri CLI invokes it
-- Bundle identifier changed to `com.socialflowz.desktop`
+- Bundle identifier changed to `com.socialglowz.desktop`
 
 ---
 
@@ -472,6 +472,6 @@ All notable changes to SocialFlow are documented here.
 ## [0.1.0] — Phase 1 App Extraction (2026-02-22)
 
 ### Added
-- Standalone `index.html` mounting the SocialFlowz `main.ts`
+- Standalone `index.html` mounting the SocialGlowz `main.ts`
 - `vite.tauri.config.ts` — clean Vite config (port 1420, no extension plugins)
 - `tauri:dev` and `tauri:build` scripts in `package.json`

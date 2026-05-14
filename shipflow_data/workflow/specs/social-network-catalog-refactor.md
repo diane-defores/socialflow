@@ -2,7 +2,7 @@
 artifact: spec
 metadata_schema_version: "1.0"
 artifact_version: "1.0.0"
-project: "socialflow"
+project: "socialglowz"
 created: "2026-05-08"
 created_at: "2026-05-08 00:00:00 UTC"
 updated: "2026-05-08"
@@ -13,12 +13,12 @@ source_model: "GPT-5 Codex"
 scope: "architecture-refactor"
 owner: "Diane"
 confidence: high
-user_story: "As the SocialFlow maintainer, I want built-in social network metadata to come from one frontend catalog, so adding a network no longer requires manual edits across multiple UI files and is safer to validate before Android/native-specific work."
+user_story: "As the SocialGlowz maintainer, I want built-in social network metadata to come from one frontend catalog, so adding a network no longer requires manual edits across multiple UI files and is safer to validate before Android/native-specific work."
 risk_level: "medium"
 security_impact: "no"
 docs_impact: "yes"
 linked_systems:
-  - "SocialFlow webview network selection"
+  - "SocialGlowz webview network selection"
   - "desktop sidebar"
   - "mobile dashboard"
   - "mobile profile sheet"
@@ -47,11 +47,11 @@ Ready. This spec defines the first refactor step before adding Patreon, There's 
 
 ## User Story
 
-As the SocialFlow maintainer, I want built-in social network metadata to come from one frontend catalog, so adding a network no longer requires manual edits across multiple UI files and is safer to validate before Android/native-specific work.
+As the SocialGlowz maintainer, I want built-in social network metadata to come from one frontend catalog, so adding a network no longer requires manual edits across multiple UI files and is safer to validate before Android/native-specific work.
 
-Actor: SocialFlow maintainer.
+Actor: SocialGlowz maintainer.
 
-Trigger: a developer adds, removes, renames, hides, displays, or validates a built-in social network in the SocialFlow UI.
+Trigger: a developer adds, removes, renames, hides, displays, or validates a built-in social network in the SocialGlowz UI.
 
 Expected observable result: frontend built-in network lists are generated from one typed catalog, while native Android special cases remain explicit and documented.
 
@@ -82,10 +82,10 @@ When the app needs built-in social network metadata, it must read IDs, labels, i
 - Add a typed frontend network catalog, likely `src/config/socialNetworks.ts`.
 - Keep a compatibility export for `WEBVIEW_URLS` from `src/stores/webviewState.ts` unless replacing all imports is cleaner and low-risk.
 - Refactor these consumers to use the catalog:
-  - `src/ui/setup/pages/SocialFlow/components/AppSidebar.vue`
-  - `src/ui/setup/pages/SocialFlow/components/MobileLayout.vue`
-  - `src/ui/setup/pages/SocialFlow/components/MobileProfileSheet.vue`
-  - `src/ui/setup/pages/SocialFlow/components/OnboardingFlow.vue`
+  - `src/ui/setup/pages/SocialGlowz/components/AppSidebar.vue`
+  - `src/ui/setup/pages/SocialGlowz/components/MobileLayout.vue`
+  - `src/ui/setup/pages/SocialGlowz/components/MobileProfileSheet.vue`
+  - `src/ui/setup/pages/SocialGlowz/components/OnboardingFlow.vue`
 - Preserve current network order:
   - Twitter / X
   - Facebook
@@ -110,7 +110,7 @@ When the app needs built-in social network metadata, it must read IDs, labels, i
 - Do not change cookie persistence, user-agent rules, login URL overrides, or Android bottom bar rendering.
 - Do not redesign sidebar/mobile/onboarding UI.
 - Do not delete routes or legacy mock network views unless proven unused and explicitly in scope later.
-- Do not create the project-local `socialflow-add-network` skill yet; create it after this catalog proves stable.
+- Do not create the project-local `socialglowz-add-network` skill yet; create it after this catalog proves stable.
 
 ## Constraints
 
@@ -145,12 +145,12 @@ Implementation may choose stricter literal types if it stays maintainable.
 ## Links & Consequences
 
 - Current URL source: `src/stores/webviewState.ts`
-- Desktop UI source: `src/ui/setup/pages/SocialFlow/components/AppSidebar.vue`
-- Mobile UI source: `src/ui/setup/pages/SocialFlow/components/MobileLayout.vue`
-- Mobile profile/session source: `src/ui/setup/pages/SocialFlow/components/MobileProfileSheet.vue`
-- Onboarding source: `src/ui/setup/pages/SocialFlow/components/OnboardingFlow.vue`
-- Native Android registry: `src-tauri/plugins/android-webview/android/src/main/java/com/socialflow/webview/NativeWebViewPlugin.kt`
-- DNS prefetch source: `src/ui/setup/pages/SocialFlow/index.html`
+- Desktop UI source: `src/ui/setup/pages/SocialGlowz/components/AppSidebar.vue`
+- Mobile UI source: `src/ui/setup/pages/SocialGlowz/components/MobileLayout.vue`
+- Mobile profile/session source: `src/ui/setup/pages/SocialGlowz/components/MobileProfileSheet.vue`
+- Onboarding source: `src/ui/setup/pages/SocialGlowz/components/OnboardingFlow.vue`
+- Native Android registry: `src-tauri/plugins/android-webview/android/src/main/java/com/socialglowz/webview/NativeWebViewPlugin.kt`
+- DNS prefetch source: `src/ui/setup/pages/SocialGlowz/index.html`
 
 ## Documentation Coherence
 

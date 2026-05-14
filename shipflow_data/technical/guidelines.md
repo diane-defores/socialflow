@@ -2,7 +2,7 @@
 artifact: technical_guidelines
 metadata_schema_version: "1.0"
 artifact_version: "1.0.0"
-project: "socialflow"
+project: "socialglowz"
 created: "2026-05-12"
 updated: "2026-05-12"
 status: reviewed
@@ -40,7 +40,7 @@ evidence:
   - "vite.firefox.config.ts"
   - "vite.web.config.ts"
   - "vite.tauri.config.ts"
-  - "src/ui/setup/pages/SocialFlow/main.ts"
+  - "src/ui/setup/pages/SocialGlowz/main.ts"
   - "src-tauri/src/lib.rs"
   - "convex/schema.ts"
 supersedes: []

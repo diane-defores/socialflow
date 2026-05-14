@@ -6,7 +6,7 @@
       </div>
       <h1>Session verrouillée</h1>
       <p>
-        Déverrouillez SocialFlow pour reprendre votre session. Le code PIN reste
+        Déverrouillez SocialGlowz pour reprendre votre session. Le code PIN reste
         local à cette session et n'est pas synchronisé.
       </p>
       <p

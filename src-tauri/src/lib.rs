@@ -88,7 +88,7 @@ const OAUTH_CALLBACK_TTL_MS: i64 = 5 * 60 * 1000;
 
 #[cfg(target_os = "android")]
 fn android_allowed_oauth_callback_hosts() -> &'static [&'static str] {
-    &["auth-callback", "socialflow.app", "www.socialflow.app"]
+    &["auth-callback", "socialglowz.com", "www.socialglowz.com"]
 }
 
 #[cfg(target_os = "android")]
@@ -215,7 +215,7 @@ fn validate_android_oauth_callback_url(callback_url: &str) -> Result<url::Url, S
         .map_err(|e: url::ParseError| format!("invalid Android OAuth callback URL: {e}"))?;
 
     let scheme = parsed.scheme();
-    if scheme != "https" && scheme != "socialflow" {
+    if scheme != "https" && scheme != "socialglowz" {
         return Err("Android OAuth callback rejected: scheme is not allowlisted".to_string());
     }
 
@@ -252,7 +252,7 @@ fn webview_label(profile_id: &str, network_id: &str) -> String {
 
 #[cfg(not(target_os = "android"))]
 fn build_tray(app: &AppHandle) -> tauri::Result<()> {
-    let show = MenuItem::with_id(app, "show", "Show SocialFlow", true, None::<&str>)?;
+    let show = MenuItem::with_id(app, "show", "Show SocialGlowz", true, None::<&str>)?;
     let separator = MenuItem::with_id(app, "sep", "──────────────", false, None::<&str>)?;
     let twitter = MenuItem::with_id(app, "tray:twitter", "Twitter / X", true, None::<&str>)?;
     let instagram = MenuItem::with_id(app, "tray:instagram", "Instagram", true, None::<&str>)?;
@@ -360,7 +360,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     }
 
     tray_builder
-        .tooltip("SocialFlow")
+        .tooltip("SocialGlowz")
         .menu(&menu)
         .on_menu_event(move |app, event| match event.id().as_ref() {
             "show" => show_window(app),
@@ -876,7 +876,7 @@ fn create_backup(
     std::fs::create_dir_all(&backups_dir)
         .map_err(|e| format!("Failed to create backups dir: {e}"))?;
 
-    let filename = format!("socialflow-backup-{}.sfbak", chrono::Utc::now().timestamp_millis());
+    let filename = format!("socialglowz-backup-{}.sfbak", chrono::Utc::now().timestamp_millis());
     let file_path = backups_dir.join(&filename);
     std::fs::write(&file_path, &blob)
         .map_err(|e| format!("Failed to write backup file: {e}"))?;

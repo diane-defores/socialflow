@@ -2,7 +2,7 @@
 artifact: gtm_context
 metadata_schema_version: "1.0"
 artifact_version: "1.0.1"
-project: "socialflow"
+project: "socialglowz"
 created: "2026-04-26"
 updated: "2026-05-11"
 status: reviewed
@@ -41,7 +41,7 @@ proof_points: "shared multi-platform build pipeline, Convex-backed profile/sessi
 
 ## Offer
 
-- SocialFlow is positioned as a unified social operations workspace, not another fragmented extension or single-surface tool.
+- SocialGlowz is positioned as a unified social operations workspace, not another fragmented extension or single-surface tool.
 - The practical promise is consistency: one interface and one codebase behavior across browser extension, desktop, and web.
 
 ## Positioning

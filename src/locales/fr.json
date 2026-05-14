@@ -10,7 +10,7 @@
     "warning": "Attention !"
   },
   "updated": "Mis à jour",
-  "welcomeMessage": "Bienvenue dans SocialFlow !",
+  "welcomeMessage": "Bienvenue dans SocialGlowz !",
   "common": {
     "settings": "Paramètres",
     "notifications": "Notifications",
@@ -87,7 +87,7 @@
     "import_done_title": "Restauration terminée !",
     "export_next_title": "Prochaines étapes :",
     "export_step_1": "Transférez le fichier .sfbak sur votre autre appareil",
-    "export_step_2": "Installez SocialFlow sur le nouvel appareil",
+    "export_step_2": "Installez SocialGlowz sur le nouvel appareil",
     "export_step_3": "Utilisez « Restaurer une sauvegarde » avec le même mot de passe",
     "export_tip": "Conservez votre mot de passe — il est indispensable pour restaurer vos données.",
     "import_done_message": "Tous vos profils, comptes et préférences ont été restaurés.",
@@ -100,7 +100,7 @@
     "error_check_version": "La sauvegarde a-t-elle été créée avec une version compatible ?",
     "error_wrong_password": "Mot de passe incorrect. Veuillez réessayer.",
     "error_no_file": "Aucun fichier sélectionné.",
-    "error_invalid_file": "Ce fichier ne semble pas être une sauvegarde SocialFlow valide.",
+    "error_invalid_file": "Ce fichier ne semble pas être une sauvegarde SocialGlowz valide.",
     "try_again": "Réessayer"
   },
   "profile": {
@@ -213,12 +213,12 @@
   },
   "nudge": {
     "title": "Sécurisez vos données",
-    "promo_text": "Créez votre compte maintenant et obtenez 1 mois offert sur SocialFlow Pro !",
+    "promo_text": "Créez votre compte maintenant et obtenez 1 mois offert sur SocialGlowz Pro !",
     "cta_button": "Créer mon compte",
     "dismiss": "Pas maintenant"
   },
   "onboarding": {
-    "welcome_title": "Bienvenue sur SocialFlow",
+    "welcome_title": "Bienvenue sur SocialGlowz",
     "welcome_desc": "Tous vos réseaux sociaux en un seul endroit. Configurons votre espace en quelques secondes.",
     "start_button": "Commencer",
     "profile_title": "Créez votre profil",
@@ -262,7 +262,7 @@
     "auth_hint": "Connectez-vous avec un compte existant ou créez-en un pour synchroniser vos données entre vos appareils.",
     "sync_more": "Plus d’infos",
     "sync_less": "Moins d’infos",
-    "sync_info": "Le cloud synchronise vos profils, paramètres, comptes SocialFlow, filtres amis et liens personnalisés sur vos autres appareils.",
+    "sync_info": "Le cloud synchronise vos profils, paramètres, comptes SocialGlowz, filtres amis et liens personnalisés sur vos autres appareils.",
     "cookies_info": "Nous aimerions synchroniser aussi vos sessions connectées, mais les navigateurs et réseaux sociaux interdisent l’envoi de ces cookies vers des serveurs tiers. Pour transférer vos sessions sur un nouvel appareil, utilisez l’export chiffré ci-dessous.",
     "sign_in_hint": "Connectez-vous avec votre compte existant pour retrouver vos données synchronisées.",
     "already_exists_error": "Un compte existe déjà pour cet e-mail. Utilisez « Se connecter » à la place.",
@@ -285,7 +285,7 @@
       "waitingServer": "On attend vos données serveur pour remettre l’application dans le bon état.",
       "dataReceived": "Les données synchronisées viennent d’arriver depuis le cloud.",
       "dataApplied": "Vos profils, paramètres et éléments synchronisés ont été appliqués à l’application.",
-      "restarting": "On relance SocialFlow pour repartir proprement avec votre état synchronisé."
+      "restarting": "On relance SocialGlowz pour repartir proprement avec votre état synchronisé."
     },
     "steps": {
       "waitingServer": "En attente des données serveur",

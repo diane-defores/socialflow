@@ -2,7 +2,7 @@
 artifact: spec
 metadata_schema_version: "1.0"
 artifact_version: "1.0.0"
-project: socialflow
+project: socialglowz
 created: "2026-04-25"
 updated: "2026-04-27"
 status: ready
@@ -61,13 +61,13 @@ Bottom sheet non-bloquant (mobile) / Dialog (desktop), affiché une fois par jou
   - Comparer par **date calendrier** (`toDateString()`), pas 24h glissantes
 
 ### Tâche 3 : Composant `SignupNudge`
-- **Fichier** : `src/ui/setup/pages/SocialFlow/components/SignupNudge.vue`
+- **Fichier** : `src/ui/setup/pages/SocialGlowz/components/SignupNudge.vue`
 - **UI mobile** (<=768px) : bottom sheet (Teleport to body, Transition slide-up)
 - **UI desktop** (>768px) : Dialog PrimeVue modal
 - **Contenu** :
   - Icône cadeau
   - Titre : "Sécurisez vos données"
-  - Sous-titre promo : "Créez votre compte et obtenez 1 mois offert sur SocialFlow Pro"
+  - Sous-titre promo : "Créez votre compte et obtenez 1 mois offert sur SocialGlowz Pro"
   - Champs : email + password (min 8 chars)
   - Bouton "Créer mon compte" → `signIn("password", { email, password, flow: "signUp" })`
   - Lien "Pas maintenant" → `dismissNudge()`
@@ -76,12 +76,12 @@ Bottom sheet non-bloquant (mobile) / Dialog (desktop), affiché une fois par jou
 - **Pas de nudge** si webview active (mobile) ou si offline
 
 ### Tâche 4 : Intégrer dans MobileLayout
-- **Fichier** : `src/ui/setup/pages/SocialFlow/components/MobileLayout.vue`
+- **Fichier** : `src/ui/setup/pages/SocialGlowz/components/MobileLayout.vue`
 - onMounted : appeler `recordFirstLaunch()` + checker `shouldShowNudge()`
 - Afficher `<SignupNudge>` si shouldShow est true ET `!webviewStore.activeUrl`
 
 ### Tâche 5 : Intégrer dans App.vue (desktop)
-- **Fichier** : `src/ui/setup/pages/SocialFlow/App.vue`
+- **Fichier** : `src/ui/setup/pages/SocialGlowz/App.vue`
 - Même logique onMounted, composant `<SignupNudge>` en Teleport (Dialog mode)
 - Indépendant du layout sidebar — le Dialog se positionne tout seul
 

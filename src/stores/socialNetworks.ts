@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { computed } from 'vue'
 import { GmailService } from '@/services/gmailService'
 import { gmailConfig } from '@/config/gmail'
-import type { Email } from '@/ui/setup/pages/SocialFlow/types'
+import type { Email } from '@/ui/setup/pages/SocialGlowz/types'
 
 const OAUTH_CALLBACK_TTL_MS = 5 * 60 * 1000
 const consumedOAuthStates = new Map<string, number>()
@@ -94,7 +94,7 @@ export const useSocialNetworksStore = defineStore('socialNetworks', {
         const requestNonce = randomToken()
         const startedAt = Date.now()
         const authQuery = new URLSearchParams({ state: requestState, nonce: requestNonce })
-        window.dispatchEvent(new CustomEvent('socialflow:android-oauth-request-started', {
+        window.dispatchEvent(new CustomEvent('socialglowz:android-oauth-request-started', {
           detail: {
             networkId: 'facebook',
             state: requestState,
@@ -118,7 +118,7 @@ export const useSocialNetworksStore = defineStore('socialNetworks', {
             if (settled) return
             settled = true
             window.removeEventListener('message', onMessage)
-            window.removeEventListener('socialflow:android-oauth-callback-validated', onAndroidOAuthCallback)
+            window.removeEventListener('socialglowz:android-oauth-callback-validated', onAndroidOAuthCallback)
             window.clearTimeout(timeoutId)
             authWindow.close()
             reject(error)
@@ -128,7 +128,7 @@ export const useSocialNetworksStore = defineStore('socialNetworks', {
             if (settled) return
             settled = true
             window.removeEventListener('message', onMessage)
-            window.removeEventListener('socialflow:android-oauth-callback-validated', onAndroidOAuthCallback)
+            window.removeEventListener('socialglowz:android-oauth-callback-validated', onAndroidOAuthCallback)
             window.clearTimeout(timeoutId)
             authWindow.close()
 
@@ -225,7 +225,7 @@ export const useSocialNetworksStore = defineStore('socialNetworks', {
           }, OAUTH_CALLBACK_TTL_MS)
 
           window.addEventListener('message', onMessage)
-          window.addEventListener('socialflow:android-oauth-callback-validated', onAndroidOAuthCallback)
+          window.addEventListener('socialglowz:android-oauth-callback-validated', onAndroidOAuthCallback)
         })
       } catch (error) {
         console.error('Erreur de connexion Facebook:', error)

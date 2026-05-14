@@ -2,7 +2,7 @@
 artifact: development_guidelines
 metadata_schema_version: "1.0"
 artifact_version: "1.0.0"
-project: socialflow
+project: socialglowz
 created: "2026-04-26"
 status: reviewed
 source_skill: sf-docs

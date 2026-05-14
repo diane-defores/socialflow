@@ -2,7 +2,7 @@
 title: "Escape Social Noise: Build a Focused Social Workflow"
 description: "Stop social feeds from running your attention and take back control of your social operations."
 date: "2026-01-22"
-author: "SocialFlow Team"
+author: "SocialGlowz Team"
 tags: ["productivity", "social", "workflow"]
 ---
 
@@ -21,7 +21,7 @@ This drains output and increases risk of profile confusion.
 
 ## Reclaim the Working Surface
 
-Use SocialFlow as a single workspace instead of opening disconnected windows and tabs for each need.
+Use SocialGlowz as a single workspace instead of opening disconnected windows and tabs for each need.
 
 ### Define Profile Boundaries First
 
@@ -57,6 +57,6 @@ You win by turning network access into a reliable daily system:
 - clearer profile ownership,  
 - more consistent posting and follow-up.  
 
-That is exactly what SocialFlow is designed for.
+That is exactly what SocialGlowz is designed for.
 
-Start with SocialFlow if you want the platform to work for you.
+Start with SocialGlowz if you want the platform to work for you.

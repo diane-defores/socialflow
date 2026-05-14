@@ -2,7 +2,7 @@
 artifact: branding_system
 metadata_schema_version: "1.0"
 artifact_version: "1.0.0"
-project: socialflow
+project: socialglowz
 created: "2026-04-26"
 status: active
 source_skill: sf-docs
@@ -17,7 +17,7 @@ depends_on: []
 evidence:
   - "README.md"
   - "package.json"
-  - "src/ui/setup/pages/SocialFlow/App.vue"
+  - "src/ui/setup/pages/SocialGlowz/App.vue"
 supersedes: []
 next_step: "/sf-docs audit shipflow_data/business/branding.md"
 ---
@@ -26,7 +26,7 @@ next_step: "/sf-docs audit shipflow_data/business/branding.md"
 
 ## Brand positioning
 
-SocialFlow positions itself as a **pragmatic productivity interface** for social media professionals:
+SocialGlowz positions itself as a **pragmatic productivity interface** for social media professionals:
 
 - Calm, efficient, and trustworthy
 - Built for speed across platforms

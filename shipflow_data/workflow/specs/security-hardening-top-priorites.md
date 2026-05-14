@@ -2,7 +2,7 @@
 artifact: spec
 metadata_schema_version: "1.0"
 artifact_version: "0.1.0"
-project: "socialflow"
+project: "socialglowz"
 created: "2026-05-11"
 created_at: "2026-05-11 19:51:04 UTC"
 updated: "2026-05-14"
@@ -11,15 +11,15 @@ status: implemented
 source_skill: sf-spec
 source_model: "GPT-5 Codex"
 scope: "audit-fix"
-owner: "socialflow-team"
-user_story: "En tant qu'utilisateur SocialFlow connecté, je veux que la phase d'initialisation d'authentification, le stockage de session et la surface d'exécution Android soient sécurisés, afin de réduire les risques de fuite de session, d'exécution non autorisée et d'erreur silencieuse."
+owner: "socialglowz-team"
+user_story: "En tant qu'utilisateur SocialGlowz connecté, je veux que la phase d'initialisation d'authentification, le stockage de session et la surface d'exécution Android soient sécurisés, afin de réduire les risques de fuite de session, d'exécution non autorisée et d'erreur silencieuse."
 risk_level: "high"
 security_impact: "yes"
 docs_impact: "yes"
 linked_systems:
   - "README.md"
-  - "src/ui/setup/pages/SocialFlow/main.ts"
-  - "src/ui/setup/pages/SocialFlow/router/guards.ts"
+  - "src/ui/setup/pages/SocialGlowz/main.ts"
+  - "src/ui/setup/pages/SocialGlowz/router/guards.ts"
   - "src/lib/convexAuth.ts"
   - "src/lib/cloudSync.ts"
   - "src/stores/socialNetworks.ts"
@@ -36,9 +36,9 @@ depends_on:
     required_status: "active"
 supersedes: []
 evidence:
-  - "src/ui/setup/pages/SocialFlow/main.ts:24-35"
+  - "src/ui/setup/pages/SocialGlowz/main.ts:24-35"
   - "src/lib/convexAuth.ts:11-17,63-71,97-113,159-166"
-  - "src/ui/setup/pages/SocialFlow/router/guards.ts:15-23"
+  - "src/ui/setup/pages/SocialGlowz/router/guards.ts:15-23"
   - "src/lib/cloudSync.ts:360-369,442-450,584-586"
   - "src-tauri/tauri.conf.json:1-120"
   - "src-tauri/src/lib.rs:1-200"
@@ -56,15 +56,15 @@ Implemented
 
 User Story
 ----------
-En tant qu'utilisateur SocialFlow connecté, je veux que l'application initialise son authentification de façon explicite, valide les échanges OAuth et limite son exécution aux pages autorisées, afin de protéger ma session et éviter des actions non voulues sur des pages tiers.
+En tant qu'utilisateur SocialGlowz connecté, je veux que l'application initialise son authentification de façon explicite, valide les échanges OAuth et limite son exécution aux pages autorisées, afin de protéger ma session et éviter des actions non voulues sur des pages tiers.
 
 Minimal Behavior Contract
 -------------------------
- Le système doit démarrer SocialFlow seulement si l'état d'authentification est établi de manière vérifiable; dans le cas contraire, il doit montrer une erreur de connexion claire avec une action de reconnexion, sans poursuivre silencieusement. Les points d'entrée Android (deep links, callbacks OAuth, ouvertures d'URL vers un webview) ne doivent accepter que des domaines/hosts explicites autorisés. Les données de session ne doivent plus être récupérées par défaut depuis un stockage persistant faible; elles sont stockées via un mécanisme durci et explicite, et les flux OAuth doivent être validés avant de conclure la connexion. En cas d'échec de callback, de permission insuffisante ou de token invalide, la session ne doit pas être marquée connectée et l'utilisateur doit voir un état d'erreur récupérable.
+ Le système doit démarrer SocialGlowz seulement si l'état d'authentification est établi de manière vérifiable; dans le cas contraire, il doit montrer une erreur de connexion claire avec une action de reconnexion, sans poursuivre silencieusement. Les points d'entrée Android (deep links, callbacks OAuth, ouvertures d'URL vers un webview) ne doivent accepter que des domaines/hosts explicites autorisés. Les données de session ne doivent plus être récupérées par défaut depuis un stockage persistant faible; elles sont stockées via un mécanisme durci et explicite, et les flux OAuth doivent être validés avant de conclure la connexion. En cas d'échec de callback, de permission insuffisante ou de token invalide, la session ne doit pas être marquée connectée et l'utilisateur doit voir un état d'erreur récupérable.
 
 Success Behavior
 ---------------
-1) Au chargement de SocialFlow, si l'utilisateur est connecté et valide, l'app monte en mode authentifié et ouvre l'UI principale.
+1) Au chargement de SocialGlowz, si l'utilisateur est connecté et valide, l'app monte en mode authentifié et ouvre l'UI principale.
 2) Si l'auth échoue, une bannière/écran d'erreur explicite avec guidance s'affiche (`Réessayer la connexion`, `Retour à login`), et aucune vue protégée n'est visible.
 3) Les callbacks OAuth et ouvertures d'URL natives ne sont acceptés que depuis des hôtes et schémas explicitement autorisés, avec une préférence par défaut pour les flux fonctionnels strictement nécessaires.
 4) Le callback OAuth n'est accepté que si le message/événement respecte le protocole attendu (origin, channel, state/nonce, type d'événement, TTL de 5 minutes, anti-rejeu).
@@ -125,8 +125,8 @@ Dependencies
 - Official docs checked 2026-05-12: Android Developers App Links intent filters and verification behavior; Tauri 2 Deep Linking plugin for Android static mobile scheme/host config and fake deep-link validation warning; Vue Router navigation guards async/cancel/error contract; Convex Auth session/refresh token lifecycle and session duration config.
 - Fichiers à coordonner:
   - `src/lib/convexAuth.ts`
-  - `src/ui/setup/pages/SocialFlow/main.ts`
-  - `src/ui/setup/pages/SocialFlow/router/guards.ts`
+  - `src/ui/setup/pages/SocialGlowz/main.ts`
+  - `src/ui/setup/pages/SocialGlowz/router/guards.ts`
   - `src-tauri/tauri.conf.json`
   - `src-tauri/src/lib.rs`
   - `src/stores/socialNetworks.ts`
@@ -142,7 +142,7 @@ Invariants
 Links & Consequences
 --------------------
 - `src/lib/convexAuth.ts` est la source de vérité session côté UI; toute modification de ses contrats nécessite revue des usages.
-- Le comportement d’amorçage impacte `router` et toutes les pages SocialFlow.
+- Le comportement d’amorçage impacte `router` et toutes les pages SocialGlowz.
 - La configuration des deep links/open-url impacte permissions système, stabilité Android/WebView et conformité stores.
 - Les changements de stockage session impactent la synchronisation cloud et la résilience UX (reconnexion nécessaire plus fréquente).
 - Régression potentielle: sessions non restaurées automatiquement selon la stratégie retenue; prévoir fallback utilisateur.
@@ -178,7 +178,7 @@ Implementation Tasks
   - Notes : garder l’UX actuelle sur réseaux supportés.
 
 - [ ] Tâche 3 — Rendre la résolution auth fail-fast dans le bootstrap
-  - Fichiers : `src/ui/setup/pages/SocialFlow/main.ts`, `src/ui/setup/pages/SocialFlow/router/guards.ts`
+  - Fichiers : `src/ui/setup/pages/SocialGlowz/main.ts`, `src/ui/setup/pages/SocialGlowz/router/guards.ts`
   - Action : supprimer le `catch` silencieux de bootstrap, exiger un état `authReady/error`; empêcher la navigation sur routes protégées tant que `isAuthLoading` et afficher état d’erreur bloquant.
   - User story link : visibilité d’erreur et prévention accès non-autorisée.
   - Depends on : Tâche 2
@@ -202,7 +202,7 @@ Implementation Tasks
   - Notes : prévoir utilitaire de validation partagé si plusieurs réseaux suivent le même pattern.
 
 - [ ] Tâche 6 — Ajouter un lock local configurable pour sessions restaurées
-  - Fichiers : `src/ui/setup/pages/SocialFlow/main.ts`, `src/ui/setup/pages/SocialFlow/router/guards.ts`, modules de session
+  - Fichiers : `src/ui/setup/pages/SocialGlowz/main.ts`, `src/ui/setup/pages/SocialGlowz/router/guards.ts`, modules de session
   - Action : implémenter un verrous UX local (PIN/biométrie si dispo) après 15 min d'inactivité (configurable), et réinitialiser le timeout sur activité; bloquer l'accès aux routes sensibles tant que lock actif.
   - User story link : maintenir le confort de restauration tout en limitant l'exposition en cas de reprise tardive.
   - Depends on : Tâche 3
@@ -244,8 +244,8 @@ Execution Notes
 1) Lire d'abord:
    - `src-tauri/tauri.conf.json`
    - `src-tauri/src/lib.rs`
-   - `src/ui/setup/pages/SocialFlow/main.ts`
-   - `src/ui/setup/pages/SocialFlow/router/guards.ts`
+   - `src/ui/setup/pages/SocialGlowz/main.ts`
+   - `src/ui/setup/pages/SocialGlowz/router/guards.ts`
    - `src/lib/convexAuth.ts`
 2) Implémenter d'abord la sécurité deep link/callback Android, puis le contrat auth, puis OAuth.
 3) Garder les changements ciblés: pas de refactor global du store; ajouter/adapter une abstraction de session propre et minimale.

@@ -16,7 +16,7 @@
     <!-- Top app bar -->
     <div class="mobile-topbar">
       <div class="mobile-topbar-title">
-        <span class="mobile-app-name">SocialFlow</span>
+        <span class="mobile-app-name">SocialGlowz</span>
         <span class="mobile-app-subtitle">{{ $t('account.section_title') }}</span>
       </div>
       <button

@@ -2,7 +2,7 @@
 artifact: spec
 metadata_schema_version: "1.0"
 artifact_version: "1.0.0"
-project: "socialflow"
+project: "socialglowz"
 created: "2026-04-28"
 created_at: "2026-04-28 01:08:44 UTC"
 updated: "2026-04-28"
@@ -13,7 +13,7 @@ source_model: "GPT-5 Codex"
 scope: "audit-fix"
 owner: "Diane"
 confidence: high
-user_story: "As the SocialFlow maintainer, I want auth, cloud sync, and profile/account state to be protected by tests and stronger server-side contracts, so releases do not regress session continuity or leak/overwrite user data across profiles and accounts."
+user_story: "As the SocialGlowz maintainer, I want auth, cloud sync, and profile/account state to be protected by tests and stronger server-side contracts, so releases do not regress session continuity or leak/overwrite user data across profiles and accounts."
 risk_level: "medium"
 security_impact: "yes"
 docs_impact: "yes"
@@ -51,15 +51,15 @@ supersedes: []
 evidence:
   - "sf-audit-code 2026-04-28 scored code C+ and identified missing critical-path tests."
   - "shipflow_data/workflow/TASKS.md Audit: Code 2026-04-28 lists auth/bootstrap, Convex hydration, cloud-sync replay, and profile/account switching as uncovered high-risk flows."
-  - "shipflow_data/workflow/TASKS.md Audit: Code 2026-04-28 lists duplicated src/ and src/ui/setup/pages/SocialFlow paths as convention drift."
+  - "shipflow_data/workflow/TASKS.md Audit: Code 2026-04-28 lists duplicated src/ and src/ui/setup/pages/SocialGlowz paths as convention drift."
   - "pnpm lint passed with 67 warnings, many from any-typed auth/cloud/Convex boundaries."
   - "convex/customLinks.ts, convex/profiles.ts, and convex/settings.ts accept broad string/number payloads without stronger domain validation."
-next_step: "/sf-verify SocialFlow Code Hardening and Test Coverage"
+next_step: "/sf-verify SocialGlowz Code Hardening and Test Coverage"
 ---
 
 # Title
 
-SocialFlow Code Hardening and Test Coverage
+SocialGlowz Code Hardening and Test Coverage
 
 # Status
 
@@ -67,9 +67,9 @@ Ready. This spec defines a staged hardening chantier. It does not implement code
 
 # User Story
 
-As the SocialFlow maintainer, I want auth, cloud sync, and profile/account state to be protected by tests and stronger server-side contracts, so releases do not regress session continuity or leak/overwrite user data across profiles and accounts.
+As the SocialGlowz maintainer, I want auth, cloud sync, and profile/account state to be protected by tests and stronger server-side contracts, so releases do not regress session continuity or leak/overwrite user data across profiles and accounts.
 
-Actor: SocialFlow maintainer/operator.
+Actor: SocialGlowz maintainer/operator.
 
 Trigger: a code change touches auth bootstrap, Convex sync, cloud-backed settings/profiles/accounts/custom links, source-tree organization, or CI quality gates.
 
@@ -79,7 +79,7 @@ Value: safer releases across web, extension, desktop, and Android surfaces witho
 
 # Minimal Behavior Contract
 
-When a developer changes SocialFlow auth, sync, profile/account, or cloud-backed preference behavior, the project must provide automated checks that exercise the main success path and the likely failure paths before release; invalid cloud data must be rejected server-side instead of trusted from local stores; and duplicated source paths must not hide a second copy of code that can drift. If Convex or local storage is unavailable, the app must keep its documented offline-safe behavior and tests must prove no partial sync writes are silently treated as success. The easy edge case to miss is a stale local queue or active pointer from one user/profile being replayed into another signed-in account after hydration.
+When a developer changes SocialGlowz auth, sync, profile/account, or cloud-backed preference behavior, the project must provide automated checks that exercise the main success path and the likely failure paths before release; invalid cloud data must be rejected server-side instead of trusted from local stores; and duplicated source paths must not hide a second copy of code that can drift. If Convex or local storage is unavailable, the app must keep its documented offline-safe behavior and tests must prove no partial sync writes are silently treated as success. The easy edge case to miss is a stale local queue or active pointer from one user/profile being replayed into another signed-in account after hydration.
 
 # Success Behavior
 
@@ -100,7 +100,7 @@ When a developer changes SocialFlow auth, sync, profile/account, or cloud-backed
 
 # Problem
 
-The 2026-04-28 code audit found that the most valuable SocialFlow flows are under-protected: auth bootstrap, Convex hydration, cloud sync replay, and profile/account switching have no automated tests. Convex mutation validators enforce basic types, but the domain rules are still too broad for cloud-backed user data. The repository also carries duplicated source paths under `src/` and `src/ui/setup/pages/SocialFlow/`, which makes maintenance risky because a fix can land in one copy and miss the actual runtime copy.
+The 2026-04-28 code audit found that the most valuable SocialGlowz flows are under-protected: auth bootstrap, Convex hydration, cloud sync replay, and profile/account switching have no automated tests. Convex mutation validators enforce basic types, but the domain rules are still too broad for cloud-backed user data. The repository also carries duplicated source paths under `src/` and `src/ui/setup/pages/SocialGlowz/`, which makes maintenance risky because a fix can land in one copy and miss the actual runtime copy.
 
 # Solution
 
@@ -141,7 +141,7 @@ Add a focused test harness around Convex functions and pure frontend sync/auth h
 - Use `pnpm`.
 - Prefer existing Vue, Pinia, Convex, and TypeScript patterns.
 - Keep tests focused on behavior and invariants, not snapshots of implementation details.
-- Avoid broad refactors of `src/ui/setup/pages/SocialFlow/` layout or native WebView plumbing.
+- Avoid broad refactors of `src/ui/setup/pages/SocialGlowz/` layout or native WebView plumbing.
 - Existing dirty changes from the 2026-04-28 audit should be reviewed before implementation and not reverted accidentally.
 
 # Dependencies
@@ -185,7 +185,7 @@ Add a focused test harness around Convex functions and pure frontend sync/auth h
 # Links & Consequences
 
 - Auth and sync entrypoints:
-  - `src/ui/setup/pages/SocialFlow/main.ts`
+  - `src/ui/setup/pages/SocialGlowz/main.ts`
   - `src/lib/convexAuth.ts`
   - `src/lib/cloudSync.ts`
   - `src/lib/cloudSyncQueue.ts`
@@ -338,7 +338,7 @@ Add a focused test harness around Convex functions and pure frontend sync/auth h
 
 - [ ] Task 13: Reduce or document source-tree duplication.
   - File: `docs/repo-architecture-audit.md`
-  - Action: Inventory duplicated paths under `src/` and `src/ui/setup/pages/SocialFlow/`; delete dead copies only after `rg` confirms no imports and typecheck/lint pass; document remaining intentional ownership.
+  - Action: Inventory duplicated paths under `src/` and `src/ui/setup/pages/SocialGlowz/`; delete dead copies only after `rg` confirms no imports and typecheck/lint pass; document remaining intentional ownership.
   - User story link: Ensures maintainers fix the code that actually runs.
   - Depends on: Tests from Tasks 1-12 enough to guard critical flows.
   - Validate with: `rg` import checks, `pnpm typecheck`, `pnpm lint`, and targeted build if imports move.
@@ -456,15 +456,15 @@ None blocking. Assumptions made:
 
 | Date UTC | Skill | Model | Action | Result | Next step |
 |----------|-------|-------|--------|--------|-----------|
-| 2026-04-28 | sf-spec | GPT-5 Codex | Created full technical spec for code hardening and test coverage | Draft saved | `/sf-ready socialflow code hardening and test coverage` |
-| 2026-04-28 | sf-ready | GPT-5 Codex | Evaluated readiness gate for code hardening and test coverage | Ready | `/sf-start SocialFlow Code Hardening and Test Coverage` |
-| 2026-04-28 | sf-start | GPT-5 Codex | Implemented test harness, Convex validation hardening, CI quality gate, and contributor doc updates | Partial | `/sf-verify SocialFlow Code Hardening and Test Coverage` |
-| 2026-04-28 | sf-verify | GPT-5 Codex | Verified code hardening and test coverage against acceptance criteria | Partial | `/sf-start SocialFlow Code Hardening and Test Coverage auth and Convex mutation coverage gaps` |
-| 2026-04-28 | sf-start | GPT-5 Codex | Added auth boundary tests, Convex mutation invariant tests, and removed `any` usage in critical auth/cloud-sync modules | Partial | `/sf-verify SocialFlow Code Hardening and Test Coverage` |
-| 2026-04-28 | sf-verify | GPT-5 Codex | Verified latest hardening/test implementation against spec, docs, bugs, dependencies, and checks | Partial | `/sf-start SocialFlow Code Hardening and Test Coverage convex-test and documentation gaps` |
-| 2026-04-28 | sf-start | GPT-5.3 Codex | Closed verification gaps with convex-test/edge-runtime coverage, README freshness fixes, and non-mutating CI lint gate | Implemented | `/sf-verify SocialFlow Code Hardening and Test Coverage` |
-| 2026-04-28 | sf-verify | GPT-5 Codex | Reverified final implementation against acceptance criteria, docs, dependency gate, and technical checks | Verified | `/sf-end SocialFlow Code Hardening and Test Coverage` |
-| 2026-04-28 | sf-end | GPT-5 Codex | Closed chantier, updated local/master TASKS and CHANGELOG with verified implementation summary | Closed | `/sf-ship SocialFlow Code Hardening and Test Coverage` |
+| 2026-04-28 | sf-spec | GPT-5 Codex | Created full technical spec for code hardening and test coverage | Draft saved | `/sf-ready socialglowz code hardening and test coverage` |
+| 2026-04-28 | sf-ready | GPT-5 Codex | Evaluated readiness gate for code hardening and test coverage | Ready | `/sf-start SocialGlowz Code Hardening and Test Coverage` |
+| 2026-04-28 | sf-start | GPT-5 Codex | Implemented test harness, Convex validation hardening, CI quality gate, and contributor doc updates | Partial | `/sf-verify SocialGlowz Code Hardening and Test Coverage` |
+| 2026-04-28 | sf-verify | GPT-5 Codex | Verified code hardening and test coverage against acceptance criteria | Partial | `/sf-start SocialGlowz Code Hardening and Test Coverage auth and Convex mutation coverage gaps` |
+| 2026-04-28 | sf-start | GPT-5 Codex | Added auth boundary tests, Convex mutation invariant tests, and removed `any` usage in critical auth/cloud-sync modules | Partial | `/sf-verify SocialGlowz Code Hardening and Test Coverage` |
+| 2026-04-28 | sf-verify | GPT-5 Codex | Verified latest hardening/test implementation against spec, docs, bugs, dependencies, and checks | Partial | `/sf-start SocialGlowz Code Hardening and Test Coverage convex-test and documentation gaps` |
+| 2026-04-28 | sf-start | GPT-5.3 Codex | Closed verification gaps with convex-test/edge-runtime coverage, README freshness fixes, and non-mutating CI lint gate | Implemented | `/sf-verify SocialGlowz Code Hardening and Test Coverage` |
+| 2026-04-28 | sf-verify | GPT-5 Codex | Reverified final implementation against acceptance criteria, docs, dependency gate, and technical checks | Verified | `/sf-end SocialGlowz Code Hardening and Test Coverage` |
+| 2026-04-28 | sf-end | GPT-5 Codex | Closed chantier, updated local/master TASKS and CHANGELOG with verified implementation summary | Closed | `/sf-ship SocialGlowz Code Hardening and Test Coverage` |
 | 2026-04-28 | sf-ship | GPT-5 Codex | Shipped code hardening and test coverage changes with quick commit and push | Shipped | None |
 | 2026-05-10 | sf-build | GPT-5 Codex | Hardened `cloudSync.ts` runtime validation for inbound cloud snapshot payloads | Implemented: settings, profiles, custom links, friends filters, social accounts, and active account pointers are field-validated before store application; malformed entries are ignored; Vitest guard coverage added | Run bounded ship when ready |
 

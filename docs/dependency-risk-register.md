@@ -2,7 +2,7 @@
 artifact: dependency_risk_register
 metadata_schema_version: "1.0"
 artifact_version: "1.0.0"
-project: socialflow
+project: socialglowz
 created: "2026-04-30"
 updated: "2026-05-02"
 status: active
@@ -14,7 +14,7 @@ risk_level: medium
 security_impact: yes
 docs_impact: yes
 depends_on:
-  - artifact: "shipflow_data/workflow/specs/socialflow-dependency-hygiene-and-major-line-migration.md"
+  - artifact: "shipflow_data/workflow/specs/socialglowz-dependency-hygiene-and-major-line-migration.md"
     artifact_version: "1.0.0"
     required_status: "ready"
 supersedes: []
@@ -22,7 +22,7 @@ evidence:
   - "Dependency hygiene and native RustSec migration specs define the accepted risk policy."
   - "Register entries document affected dependency paths, reachability, decision, and removal criteria."
 next_review: "2026-06-02"
-next_step: "/sf-verify SocialFlow Native Tauri RustSec Warning Migration"
+next_step: "/sf-verify SocialGlowz Native Tauri RustSec Warning Migration"
 ---
 
 # Dependency Risk Register
@@ -63,13 +63,13 @@ Applied decision:
 
 Validation:
 
-- `(cd src-tauri && cargo audit --json > /tmp/socialflow-cargo-audit-accepted.json)` -> 0 vulnerabilities, 17 unmaintained warnings, 2 unsound warnings.
+- `(cd src-tauri && cargo audit --json > /tmp/socialglowz-cargo-audit-accepted.json)` -> 0 vulnerabilities, 17 unmaintained warnings, 2 unsound warnings.
 - `(cd src-tauri && cargo tree --locked -i rand@0.8.6)` -> direct `app` edge now uses patched `rand@0.8.6`.
 - `(cd src-tauri && cargo tree --locked -i rand@0.7.3)` -> remaining old `rand` line is Tauri parser/codegen owned.
 - `(cd src-tauri && cargo tree --locked -i glib@0.18.5)` -> remaining `glib` warning is Linux GTK/WebKit/Tauri owned.
 - `corepack pnpm tauri:build` -> passed; this validates Tauri frontend assets only, not native packaging.
 - `(cd src-tauri && cargo check --locked)` -> passed after installing the Tauri Linux system dependencies.
-- `pnpm tauri:bundle` -> passed after enabling the Corepack `pnpm` shim; produced `/home/ubuntu/socialflow/src-tauri/target/release/app`.
+- `pnpm tauri:bundle` -> passed after enabling the Corepack `pnpm` shim; produced `/home/ubuntu/socialglowz/src-tauri/target/release/app`.
 - Workflow review confirms RustSec runs before native artifact generation in `.github/workflows/build.yml` and `.github/workflows/dev-builds.yml`.
 
 Proof gap:
@@ -115,7 +115,7 @@ Fresh docs checked:
 - Official PrimeVue migration guide: `https://primevue.org/guides/migration/v4/`.
 - Official PrimeVue styled mode docs: `https://primevue.org/theming/styled`.
 
-Rollback boundary: package dependency changes plus `src/ui/setup/pages/SocialFlow/main.ts` only. Do not start Tailwind, router, Vite, TypeScript, or runtime/auth upgrades in this stage.
+Rollback boundary: package dependency changes plus `src/ui/setup/pages/SocialGlowz/main.ts` only. Do not start Tailwind, router, Vite, TypeScript, or runtime/auth upgrades in this stage.
 
 Applied decision: use the Lara preset from `@primeuix/themes/lara` to stay closest to the previous `lara-light-blue` theme, configure `darkModeSelector: '.dark'` to preserve the existing `html.dark` store behavior, and keep `cssLayer: false` to avoid changing Tailwind/DaisyUI cascade order in this stage.
 

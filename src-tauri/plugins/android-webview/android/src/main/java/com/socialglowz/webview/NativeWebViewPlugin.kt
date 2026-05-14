@@ -1,4 +1,4 @@
-package com.socialflow.webview
+package com.socialglowz.webview
 
 import android.app.Activity
 import android.content.Context
@@ -2069,7 +2069,7 @@ ${LINKEDIN_THEME_BRIDGE_HELPERS}
             val values = android.content.ContentValues().apply {
                 put(android.provider.MediaStore.Downloads.DISPLAY_NAME, args.fileName)
                 put(android.provider.MediaStore.Downloads.MIME_TYPE, "application/octet-stream")
-                put(android.provider.MediaStore.Downloads.RELATIVE_PATH, "Download/SocialFlow")
+                put(android.provider.MediaStore.Downloads.RELATIVE_PATH, "Download/SocialGlowz")
                 put(android.provider.MediaStore.Downloads.IS_PENDING, 1)
             }
             val uri = resolver.insert(android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
@@ -2080,7 +2080,7 @@ ${LINKEDIN_THEME_BRIDGE_HELPERS}
             values.put(android.provider.MediaStore.Downloads.IS_PENDING, 0)
             resolver.update(uri, values, null, null)
             val result = JSObject()
-            result.put("path", "Download/SocialFlow/${args.fileName}")
+            result.put("path", "Download/SocialGlowz/${args.fileName}")
             invoke.resolve(result)
         } catch (e: Exception) {
             invoke.reject("Backup save failed: ${e.message}")

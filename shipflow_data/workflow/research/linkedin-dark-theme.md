@@ -31,7 +31,7 @@ Source:
 
 Implication:
 
-- If this is a SocialFlow-owned UI that only references LinkedIn, it should feel compatible with LinkedIn, not like a cloned LinkedIn screen.
+- If this is a SocialGlowz-owned UI that only references LinkedIn, it should feel compatible with LinkedIn, not like a cloned LinkedIn screen.
 
 Source:
 
@@ -112,8 +112,8 @@ It also already:
 
 Relevant code:
 
-- [NativeWebViewPlugin.kt](/home/claude/socialflow/src-tauri/plugins/android-webview/android/src/main/java/com/socialflow/webview/NativeWebViewPlugin.kt:1288)
-- [NativeWebViewPlugin.kt](/home/claude/socialflow/src-tauri/plugins/android-webview/android/src/main/java/com/socialflow/webview/NativeWebViewPlugin.kt:1365)
+- [NativeWebViewPlugin.kt](/home/claude/socialglowz/src-tauri/plugins/android-webview/android/src/main/java/com/socialglowz/webview/NativeWebViewPlugin.kt:1288)
+- [NativeWebViewPlugin.kt](/home/claude/socialglowz/src-tauri/plugins/android-webview/android/src/main/java/com/socialglowz/webview/NativeWebViewPlugin.kt:1365)
 
 Important nuance:
 
@@ -132,7 +132,7 @@ Current global dark tokens are:
 
 Relevant code:
 
-- [App.vue](/home/claude/socialflow/src/ui/setup/pages/SocialFlow/App.vue:378)
+- [App.vue](/home/claude/socialglowz/src/ui/setup/pages/SocialGlowz/App.vue:378)
 
 This creates a modern generic dark SaaS theme, but it does not evoke LinkedIn's restrained neutral system.
 
@@ -146,8 +146,8 @@ The custom LinkedIn screen uses the generic app surfaces plus isolated LinkedIn 
 
 Relevant code:
 
-- [LinkedInView.vue](/home/claude/socialflow/src/ui/setup/pages/SocialFlow/components/networks/LinkedInView.vue:359)
-- [LinkedInView.vue](/home/claude/socialflow/src/ui/setup/pages/SocialFlow/components/networks/LinkedInView.vue:548)
+- [LinkedInView.vue](/home/claude/socialglowz/src/ui/setup/pages/SocialGlowz/components/networks/LinkedInView.vue:359)
+- [LinkedInView.vue](/home/claude/socialglowz/src/ui/setup/pages/SocialGlowz/components/networks/LinkedInView.vue:548)
 
 This is the main reason the theme feels inconsistent: the accent says "LinkedIn" but the surfaces and hierarchy say "generic app".
 
@@ -202,7 +202,7 @@ Then apply these rules:
 
 If the goal is the real LinkedIn browsing experience, refactor the WebView activation path first.
 
-If the goal is the mocked/custom LinkedIn page inside SocialFlow, refactor the design tokens first.
+If the goal is the mocked/custom LinkedIn page inside SocialGlowz, refactor the design tokens first.
 
 I would not invest more time in the current hybrid theme approach.
 

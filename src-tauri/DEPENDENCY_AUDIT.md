@@ -9,18 +9,18 @@ This stage keeps `cargo-audit` as the executable RustSec gate. It does not add `
 ## Commands Run
 
 - `cargo audit --version` - available locally as `cargo-audit-audit 0.22.1`.
-- `(cd src-tauri && cargo audit --json > /tmp/socialflow-cargo-audit-before.json)` - pre-migration baseline.
+- `(cd src-tauri && cargo audit --json > /tmp/socialglowz-cargo-audit-before.json)` - pre-migration baseline.
 - `(cd src-tauri && cargo update -p rand@0.8.5 --precise 0.8.6 --dry-run)` - succeeded; would update only `rand v0.8.5 -> v0.8.6`.
 - `(cd src-tauri && cargo update -p rand@0.8.5 --precise 0.8.6)` - applied the safe direct patch update.
 - `(cd src-tauri && cargo update --dry-run)` - broad compatible native refresh was evaluated but not kept in this stage because it would change 134 packages and requires a separate Tauri/native MSRV and packaging validation pass.
-- `(cd src-tauri && cargo audit --json > /tmp/socialflow-cargo-audit-accepted.json)` - post-migration RustSec posture.
+- `(cd src-tauri && cargo audit --json > /tmp/socialglowz-cargo-audit-accepted.json)` - post-migration RustSec posture.
 - `(cd src-tauri && cargo tree --locked -i rand@0.8.6)` - confirms the patched 0.8 line is used by `app` and Tauri parser/codegen paths.
 - `(cd src-tauri && cargo tree --locked -i rand@0.7.3)` - confirms the remaining old `rand` line is owned by `tauri-utils -> kuchikiki -> selectors -> phf_generator`.
 - `(cd src-tauri && cargo tree --locked -i glib@0.18.5)` - confirms the remaining `glib` warning is owned by the Linux GTK/WebKit/Tauri stack.
 - `(cd src-tauri && cargo metadata --locked --format-version 1)` - lockfile metadata resolves.
 - `(cd src-tauri && cargo check --locked)` - passed after installing the Tauri Linux system dependencies.
 - `corepack pnpm tauri:build` - Tauri frontend asset build passes; this is not native packaging proof.
-- `pnpm tauri:bundle` - passed after enabling the Corepack `pnpm` shim; produced `/home/ubuntu/socialflow/src-tauri/target/release/app`.
+- `pnpm tauri:bundle` - passed after enabling the Corepack `pnpm` shim; produced `/home/ubuntu/socialglowz/src-tauri/target/release/app`.
 - Workflow review: `.github/workflows/build.yml` and `.github/workflows/dev-builds.yml` install `cargo-audit` and run `cargo audit` before Linux, Windows, and Android native artifact builds.
 
 ## RustSec Baseline

@@ -2,7 +2,7 @@
 title: "5 Social Workflow Tips for Faster Social Operations"
 description: "Reduce context switching and noise across social networks with a profile-aware workspace and practical routines."
 date: "2026-01-29"
-author: "SocialFlow Team"
+author: "SocialGlowz Team"
 tags: ["productivity", "tips", "social"]
 ---
 
@@ -50,6 +50,6 @@ Use anti-distraction controls during repetitive tasks and evaluate outcomes by q
 - Are links and assets valid?  
 - Is follow-up status clear for the team?  
 
-The win comes from a stable system: isolated context, fewer manual transitions, explicit steps. SocialFlow is designed for that.
+The win comes from a stable system: isolated context, fewer manual transitions, explicit steps. SocialGlowz is designed for that.
 
-Try this setup in SocialFlow and standardize your daily social operations.
+Try this setup in SocialGlowz and standardize your daily social operations.

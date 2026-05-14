@@ -8,7 +8,7 @@
         aria-label="Toggle left sidebar"
         @click="toggleLeftSidebar"
       />
-      <h1 class="app-title">SocialFlow</h1>
+      <h1 class="app-title">SocialGlowz</h1>
     </div>
 
     <div class="header-center">

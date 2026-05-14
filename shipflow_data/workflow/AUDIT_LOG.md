@@ -1,4 +1,4 @@
-# Audit Log — SocialFlowz
+# Audit Log — SocialGlowz
 
 > Project-local audit history. Append-only.
 

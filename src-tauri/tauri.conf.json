@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "SocialFlow",
+  "productName": "SocialGlowz",
   "version": "0.1.0",
-  "identifier": "com.socialflow.desktop",
+  "identifier": "com.socialglowz.desktop",
   "build": {
     "frontendDist": "../dist/tauri",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "SocialFlow",
+        "title": "SocialGlowz",
         "width": 1280,
         "height": 800,
         "minWidth": 900,
@@ -31,7 +31,7 @@
       "mobile": [
         {
           "scheme": [
-            "socialflow"
+            "socialglowz"
           ],
           "host": "auth-callback",
           "pathPrefix": [
@@ -42,7 +42,7 @@
           "scheme": [
             "https"
           ],
-          "host": "socialflow.app",
+            "host": "socialglowz.com",
           "pathPrefix": [
             "/auth/callback"
           ]

@@ -2,7 +2,7 @@
 artifact: competitive_intelligence
 metadata_schema_version: "1.0"
 artifact_version: "1.0.0"
-project: "socialflow"
+project: "socialglowz"
 created: "2026-05-11"
 updated: "2026-05-11"
 status: reviewed
@@ -15,7 +15,7 @@ security_impact: none
 docs_impact: yes
 evidence:
   - "Initial competitor and inspiration triage captured in legacy root concurrent.md."
-  - "SocialFlow product context describes a multi-platform social operations dashboard."
+  - "SocialGlowz product context describes a multi-platform social operations dashboard."
 depends_on:
   - artifact: "shipflow_data/business/product.md"
     artifact_version: "1.0.1"
@@ -26,9 +26,9 @@ depends_on:
 supersedes:
   - "concurrent.md"
 next_review: "2026-06-11"
-next_step: "/sf-market-study socialflow"
+next_step: "/sf-market-study socialglowz"
 target_projects:
-  - socialflow
+  - socialglowz
 reference_categories:
   - direct_competitor
   - indirect_competitor
@@ -37,17 +37,17 @@ reference_categories:
 source_policy: "Track public sources only; do not copy private positioning, paid assets, credentials, or non-public customer data."
 ---
 
-# Concurrents et inspirations — SocialFlow
+# Concurrents et inspirations — SocialGlowz
 
 ## Lecture projet
 
-SocialFlow est un dashboard social multi-plateforme. Les liens utiles concernent multi-comptes, social content, analytics, relations et intégrations.
+SocialGlowz est un dashboard social multi-plateforme. Les liens utiles concernent multi-comptes, social content, analytics, relations et intégrations.
 
 ## Liens prioritaires
 
 | Lien | Type | Score | Usage concret |
 |---|---:|:---:|---|
-| [BundleUp](https://betalist.com/startups/bundleup) | Inspiration architecture | 8/10 | API unifiée multi-intégrations: proche du besoin SocialFlow pour réseaux, Gmail, storage, analytics. |
+| [BundleUp](https://betalist.com/startups/bundleup) | Inspiration architecture | 8/10 | API unifiée multi-intégrations: proche du besoin SocialGlowz pour réseaux, Gmail, storage, analytics. |
 | [TonimusAI](https://betalist.com/startups/tonimusai) | Concurrent indirect | 7/10 | Creator analytics/revenue: benchmark pour vues performance et priorisation des contenus. |
 | [Igloo](https://betalist.com/startups/igloo-2) | Inspiration contenu social | 7/10 | Génération de reels: utile pour workflow de publication/social content. |
 | [Photo Poodle](https://betalist.com/startups/photo-poodle) | Inspiration UGC | 6/10 | Capture photo événementielle par QR: pattern intéressant pour campagnes sociales. |

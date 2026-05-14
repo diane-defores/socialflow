@@ -232,8 +232,8 @@ export function useBackup() {
     const b64: string = await invoke('create_backup', { storeData, password })
 
     if (isAndroid) {
-      // Save to Downloads/SocialFlow/ via Kotlin MediaStore
-      const fileName = `socialflow-backup-${Date.now()}.sfbak`
+      // Save to Downloads/SocialGlowz/ via Kotlin MediaStore
+      const fileName = `socialglowz-backup-${Date.now()}.sfbak`
       const result = await invoke<{ path: string }>(
         'plugin:android-webview|save_backup_to_downloads',
         { base64Data: b64, fileName },
@@ -244,10 +244,10 @@ export function useBackup() {
     // Desktop: show native save dialog
     const { writeFile } = await import('@tauri-apps/plugin-fs')
     const { save } = await import('@tauri-apps/plugin-dialog')
-    const fileName = `socialflow-backup-${Date.now()}.sfbak`
+    const fileName = `socialglowz-backup-${Date.now()}.sfbak`
     const filePath = await save({
       defaultPath: fileName,
-      filters: [{ name: 'SocialFlow Backup', extensions: ['sfbak'] }],
+      filters: [{ name: 'SocialGlowz Backup', extensions: ['sfbak'] }],
     })
     if (!filePath) throw new Error('No file selected')
     await writeFile(filePath, b64ToBytes(b64))
@@ -263,7 +263,7 @@ export function useBackup() {
     let encryptedB64 = ''
 
     if (isAndroid) {
-      // Load the latest .sfbak from Downloads/SocialFlow/ via Kotlin MediaStore
+      // Load the latest .sfbak from Downloads/SocialGlowz/ via Kotlin MediaStore
       const result = await invoke<{ base64: string }>(
         'plugin:android-webview|load_backup_from_downloads',
         {},
@@ -274,7 +274,7 @@ export function useBackup() {
       const { readFile } = await import('@tauri-apps/plugin-fs')
       const { open } = await import('@tauri-apps/plugin-dialog')
       const filePath = await open({
-        filters: [{ name: 'SocialFlow Backup', extensions: ['sfbak'] }],
+        filters: [{ name: 'SocialGlowz Backup', extensions: ['sfbak'] }],
       })
       if (!filePath) throw new Error('No file selected')
       const bytes = await readFile(filePath)

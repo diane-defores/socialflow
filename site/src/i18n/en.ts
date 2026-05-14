@@ -12,8 +12,8 @@ export default {
     badge: 'Cross-platform social workspace',
     title1: 'All Your Social Networks.',
     title2: 'One Calm Workspace.',
-    subtitle: 'SocialFlow brings X, Instagram, Facebook, LinkedIn, TikTok, Discord, Reddit, Gmail and more into one profile-aware app. Switch contexts fast, keep sessions isolated, and reduce feed noise without rebuilding your workflow.',
-    cta: 'Start with SocialFlow',
+    subtitle: 'SocialGlowz brings X, Instagram, Facebook, LinkedIn, TikTok, Discord, Reddit, Gmail and more into one profile-aware app. Switch contexts fast, keep sessions isolated, and reduce feed noise without rebuilding your workflow.',
+    cta: 'Start with SocialGlowz',
     secondaryCta: 'Explore Features',
     socialProof: 'Built for creators, operators, and small teams',
   },
@@ -36,7 +36,7 @@ export default {
   },
   benefits: {
     label: 'Benefits',
-    title: 'Why Choose SocialFlow',
+    title: 'Why Choose SocialGlowz',
     items: [
       { icon: '\uD83D\uDD12', title: 'Profile Isolation', desc: 'Keep each account context separate so client, personal, and team sessions do not leak into each other.' },
       { icon: '\u2601\uFE0F', title: 'Useful Cloud Sync', desc: 'Profiles, accounts, filters, links, and key preferences follow your account while live login cookies remain local.' },
@@ -87,7 +87,7 @@ export default {
   },
   newsletter: {
     title: 'Stay in the Loop',
-    subtitle: 'Get SocialFlow product updates, release notes, and workflow ideas delivered to your inbox.',
+    subtitle: 'Get SocialGlowz product updates, release notes, and workflow ideas delivered to your inbox.',
     placeholder: 'Enter your email',
     subscribe: 'Subscribe',
     noSpam: 'No spam, unsubscribe anytime.',
@@ -95,7 +95,7 @@ export default {
   footer: {
     tagline: 'Unified social operations without the tab sprawl.',
     status: 'Active product development',
-    copyright: '\u00A9 {year} SocialFlow. All rights reserved.',
+    copyright: '\u00A9 {year} SocialGlowz. All rights reserved.',
     product: 'Product',
     resources: 'Resources',
     company: 'Company',

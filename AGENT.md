@@ -2,7 +2,7 @@
 artifact: technical_guidelines
 metadata_schema_version: "1.0"
 artifact_version: "1.0.0"
-project: "socialflow"
+project: "socialglowz"
 created: "2026-04-26"
 updated: "2026-04-27"
 status: reviewed
@@ -17,8 +17,8 @@ linked_systems:
   - "README.md"
   - "shipflow_data/technical/context.md"
   - "shipflow_data/technical/context-function-tree.md"
-  - "src/ui/setup/pages/SocialFlow/main.ts"
-  - "src/ui/setup/pages/SocialFlow/App.vue"
+  - "src/ui/setup/pages/SocialGlowz/main.ts"
+  - "src/ui/setup/pages/SocialGlowz/App.vue"
   - "src-tauri/src/lib.rs"
   - "convex/schema.ts"
   - "vite.config.ts"
@@ -31,9 +31,9 @@ supersedes: []
 evidence:
   - "README.md"
   - "package.json"
-  - "src/ui/setup/pages/SocialFlow/main.ts"
-  - "src/ui/setup/pages/SocialFlow/App.vue"
-  - "src/ui/setup/pages/SocialFlow/router/index.ts"
+  - "src/ui/setup/pages/SocialGlowz/main.ts"
+  - "src/ui/setup/pages/SocialGlowz/App.vue"
+  - "src/ui/setup/pages/SocialGlowz/router/index.ts"
   - "convex/auth.config.ts"
   - "convex/schema.ts"
   - "src-tauri/src/lib.rs"
@@ -47,7 +47,7 @@ next_step: "/sf-docs audit AGENT.md"
 
 ## Purpose
 
-Ce fichier sert de point d'entrée rapide pour toute action dans `socialflow`.
+Ce fichier sert de point d'entrée rapide pour toute action dans `socialglowz`.
 Il permet de lire les bons documents avant de parcourir le code.
 
 ## Read Order
@@ -57,6 +57,14 @@ Il permet de lire les bons documents avant de parcourir le code.
 3. Lire `shipflow_data/technical/context-function-tree.md` avant toute tâche sur modules principaux.
 4. Lire `shipflow_data/technical/context.md` quand la question touche aux frontières techniques.
 5. Lire `shipflow_data/technical/context.md` encore une fois avant une tâche de maintenance transversale.
+6. Considérer `archive/` comme matière historique uniquement; ne pas l'utiliser comme source de vérité d'implémentation.
+
+## Archive Policy
+
+- `archive/` est une zone de preuve historique (snapshots, expérimentations, backups de contenu).
+- Les traces `socialflow` présentes dans `archive/` sont conservées tel quel.
+- Le périmètre actif du projet est hors `archive/` (code, config, données, docs courantes).
+- Avant un tri de contenu ou migration de marque, traiter `archive/` séparément si nécessaire.
 
 ## What This Repo Is
 
@@ -66,7 +74,7 @@ Il permet de lire les bons documents avant de parcourir le code.
   - une build mobile Android via plugin Android WebView
   - une web SPA déployée sur Vercel
 - L'authentification et le sync principal passent par Convex.
-- Le coeur métier social se trouve dans `src/` et `src/ui/setup/pages/SocialFlow/`.
+- Le coeur métier social se trouve dans `src/` et `src/ui/setup/pages/SocialGlowz/`.
 
 ## Route by Task
 
@@ -76,10 +84,10 @@ Il permet de lire les bons documents avant de parcourir le code.
   - `src/content-script/index.ts`
   - `src/ui/*/index.ts`
   - puis `shipflow_data/technical/context-function-tree.md`
-- Si la tâche concerne la logique métier principale SocialFlow :
-  - `src/ui/setup/pages/SocialFlow/main.ts`
-  - `src/ui/setup/pages/SocialFlow/App.vue`
-  - `src/ui/setup/pages/SocialFlow/router/index.ts`
+- Si la tâche concerne la logique métier principale SocialGlowz :
+  - `src/ui/setup/pages/SocialGlowz/main.ts`
+  - `src/ui/setup/pages/SocialGlowz/App.vue`
+  - `src/ui/setup/pages/SocialGlowz/router/index.ts`
   - `src/stores`
   - `src/lib`
 - Si la tâche concerne un flow natif desktop/mobile :
@@ -104,22 +112,22 @@ Il permet de lire les bons documents avant de parcourir le code.
 
 - Le même store et utilitaires partagés restent la source de vérité métier.
 - Les métadonnées des réseaux webview intégrés côté UI se gèrent depuis `src/config/socialNetworks.ts`.
-- Pour ajouter un réseau intégré, utiliser la skill projet locale `.claude/skills/socialflow-add-network/SKILL.md`.
+- Pour ajouter un réseau intégré, utiliser la skill projet locale `.claude/skills/socialglowz-add-network/SKILL.md`.
 - Les invocations natives Tauri sont encapsulées dans `@tauri-apps/api/core.invoke` depuis le front.
 - Toute mutation du stockage de session passe par `convexAuth` / `cloudSync` ou les commandes Rust dédiées.
 - `convex` est le contrat de données synchronisées quand VITE_CONVEX_URL est configuré.
 
 ## Boundaries & Responsibilities
 
-- `src/ui/setup/pages/SocialFlow/` : app principale SocialFlow (routing, UI, vues réseaux).
+- `src/ui/setup/pages/SocialGlowz/` : app principale SocialGlowz (routing, UI, vues réseaux).
 - `src/` : services et stores partagés (état, auth, sync, utilitaires).
 - `src-tauri/` : orchestration WebView, commandes natives, plugins et persistance sessions.
-- `src/ui/*` (hors SocialFlow) : shells historiques de l'extension.
+- `src/ui/*` (hors SocialGlowz) : shells historiques de l'extension.
 - `convex/` : schema, queries/mutations et auth backend.
 
 ## Editing Order
 
-- Changer un comportement d'app SocialFlow → `src/ui/setup/pages/SocialFlow/*` puis `src/stores/*`/`src/lib/*`.
-- Changer des services partagés → `src/services/*`, `src/utils/*`, `src/composables/*` puis mettre à jour SocialFlow.
+- Changer un comportement d'app SocialGlowz → `src/ui/setup/pages/SocialGlowz/*` puis `src/stores/*`/`src/lib/*`.
+- Changer des services partagés → `src/services/*`, `src/utils/*`, `src/composables/*` puis mettre à jour SocialGlowz.
 - Modifier les commandes natives → `src-tauri/src/lib.rs` et tests manuels sur desktop/mobile après.
 - Changer des règles de sync/auth → `convex/*` + `src/lib/cloud*` + `src/lib/convexAuth.ts`.

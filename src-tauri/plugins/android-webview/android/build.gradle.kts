@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.socialflow.webview"
+    namespace = "com.socialglowz.webview"
     compileSdk = 35
 
     defaultConfig {
