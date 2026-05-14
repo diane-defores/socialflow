@@ -117,10 +117,8 @@ const addToKanban = (email: Email) => {
 
 onMounted(async () => {
   try {
-    console.log('Chargement des emails...')
     await store.fetchGmailData()
     await kanbanStore.initialize()
-    console.log('Emails chargés:', store.gmail.emails)
   } catch (error) {
     console.error('Erreur lors du chargement des emails:', error)
   } finally {

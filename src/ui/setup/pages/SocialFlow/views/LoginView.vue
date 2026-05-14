@@ -113,9 +113,10 @@ async function handleSignIn() {
       email: normalizedEmail,
       flow: isSignUp.value ? 'signUp' : 'signIn',
     })
-  } catch (e: any) {
+  } catch (err: unknown) {
     resetPostAuthSyncFeedback()
-    error.value = e?.message ?? 'Sign in failed'
+    error.value =
+      err instanceof Error ? err.message : 'Sign in failed'
   } finally {
     loading.value = false
   }

@@ -14,6 +14,12 @@ const routes: RouteRecordRaw[] = [
     meta: { auth: false }
   },
   {
+    path: '/session-lock',
+    name: 'SessionLock',
+    component: () => import('../views/SessionLockView.vue'),
+    meta: { auth: true, requiresAuth: true, lockScreen: true }
+  },
+  {
     path: '/twitter',
     name: 'Twitter',
     component: () => import('../components/networks/TwitterView.vue'),

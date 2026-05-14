@@ -5,9 +5,9 @@ artifact_version: "0.1.0"
 project: "socialflow"
 created: "2026-05-11"
 created_at: "2026-05-11 19:51:04 UTC"
-updated: "2026-05-11"
-updated_at: "2026-05-11 21:32:49 UTC"
-status: reviewed
+updated: "2026-05-14"
+updated_at: "2026-05-14 17:59:02 UTC"
+status: implemented
 source_skill: sf-spec
 source_model: "GPT-5 Codex"
 scope: "audit-fix"
@@ -29,11 +29,11 @@ linked_systems:
   - "shipflow_data/business/branding.md"
 depends_on:
   - artifact: "shipflow_data/business/business.md"
-    artifact_version: "unknown"
-    required_status: "unknown"
+    artifact_version: "1.0.0"
+    required_status: "reviewed"
   - artifact: "shipflow_data/business/branding.md"
-    artifact_version: "unknown"
-    required_status: "unknown"
+    artifact_version: "1.0.0"
+    required_status: "active"
 supersedes: []
 evidence:
   - "src/ui/setup/pages/SocialFlow/main.ts:24-35"
@@ -43,7 +43,7 @@ evidence:
   - "src-tauri/tauri.conf.json:1-120"
   - "src-tauri/src/lib.rs:1-200"
   - "src/stores/socialNetworks.ts:1-200"
-next_step: "/sf-spec Renforcer la sécurité auth Android"
+next_step: "/sf-test validation Android auth deep-link sur device"
 ---
 
 Title
@@ -52,7 +52,7 @@ Renforcer la sécurité auth/session et réduire la surface d'exécution Android
 
 Status
 ------
-Reviewed
+Implemented
 
 User Story
 ----------
@@ -120,7 +120,9 @@ Dependencies
 ------------
 - Stack: Vue 3 / Vue Router / Pinia, Convex Auth, Tauri Android/WebView.
 - Dépendance externe principale: API Convex d’authentification et lifecycle de session existants (mode opératoire inchangé, hardening uniquement).
-- fresh-docs status: fresh-docs required. Sources à valider avant implémentation: Android App Links/intent-filter docs, Tauri/WebView URL handling, Vue Router guards contract, Convex Auth session/lifecycle.
+- fresh-docs status: fresh-docs checked.
+- Local versions noted: `@tauri-apps/api` 2.10.1, `tauri` 2.10.0, `@tauri-apps/cli` 2.10.0, `vue-router` 4.5.0, `convex` 1.32.0, `@convex-dev/auth` 0.0.91.
+- Official docs checked 2026-05-12: Android Developers App Links intent filters and verification behavior; Tauri 2 Deep Linking plugin for Android static mobile scheme/host config and fake deep-link validation warning; Vue Router navigation guards async/cancel/error contract; Convex Auth session/refresh token lifecycle and session duration config.
 - Fichiers à coordonner:
   - `src/lib/convexAuth.ts`
   - `src/ui/setup/pages/SocialFlow/main.ts`
@@ -264,30 +266,39 @@ Skill Run History
 | 2026-05-11 21:28:45 UTC | sf-ready | GPT-5 Codex | Readiness gate (re-run after open clarifications) | Not ready | /sf-spec Renforcer la sécurité auth Android |
 | 2026-05-11 21:35:00 UTC | sf-spec | GPT-5 Codex | Removed surface references and aligned spec for Android-only scope and files/tasks/CA | Draft revised | /sf-ready Renforcer la sécurité auth Android |
 | 2026-05-11 21:32:49 UTC | sf-ready | GPT-5 Codex | Readiness gate | Not ready | /sf-spec Renforcer la sécurité auth Android |
+| 2026-05-12 19:52:42 UTC | sf-docs | GPT-5 Codex | Documentation update | Updated `depends_on` versions and synchronized docs versions | /sf-ready Renforcer la sécurité auth Android |
+| 2026-05-12 20:02:41 UTC | sf-ready | GPT-5 Codex | Readiness gate with official docs freshness check | Ready | /sf-start Renforcer la sécurité auth Android |
+| 2026-05-13 04:27:56 UTC | sf-start | GPT-5 Codex | Implémentation Android auth hardening (bootstrap fail-fast, guard, session lock, OAuth callback checks, allowlist Android webview) | Partial | /sf-start Renforcer la sécurité auth Android (finaliser coverage lock UX/tests) |
+| 2026-05-13 08:39:51 UTC | sf-start | GPT-5 Codex | Finalized lock UX route, Android OAuth callback replay validation, and deep-link config policy | Implemented | /sf-verify Renforcer la sécurité auth Android |
+| 2026-05-14 11:01:41 UTC | sf-verify | GPT-5 Codex | Verification against auth/session Android hardening contract | Not verified | /sf-start Renforcer la sécurité auth Android (corriger verification) |
+| 2026-05-14 16:11:02 UTC | sf-build | GPT-5 Codex | Applied verification corrections (session lock no set-on-lock, safe error rendering, deep-link plugin wiring, native callback validator usage, auth tests refresh+legacy purge, docs map/docs update) | Implemented | /sf-verify Renforcer la sécurité auth Android |
+| 2026-05-14 17:33:08 UTC | sf-verify | GPT-5.5 xhigh | Verification rerun after Android auth hardening corrections | Not verified | /sf-start Renforcer la sécurité auth Android (lier state OAuth Android à une requête attendue) |
+| 2026-05-14 17:41:56 UTC | sf-start | GPT-5.5 | Linked Android OAuth callback validation to pending app-created state/nonce and anonymized Sentry rejection signal | Implemented | /sf-verify Renforcer la sécurité auth Android |
+| 2026-05-14 17:59:02 UTC | sf-verify | GPT-5.5 | Corrected final deep-link consumer gap during verification and reran local JS checks | Partial | /sf-test validation Android auth deep-link sur device |
 
 Current Chantier Flow
 ---------------------
 - sf-spec: done
-- sf-ready: not ready
-- sf-start: not launched
-- sf-verify: not launched
+- sf-ready: ready
+- sf-start: implemented
+- sf-verify: not verified
 - sf-end: not launched
 - sf-ship: not launched
 
 ## Chantier
-Skill courante: sf-ready
+Skill courante: sf-verify
 Chantier: specs/security-hardening-top-priorites.md
 Trace spec: ecrite
 Flux:
 - sf-spec: done
-- sf-ready: not ready
-- sf-start: not launched
-- sf-verify: not launched
+- sf-ready: ready
+- sf-start: implemented
+- sf-verify: partial
 - sf-end: not launched
 - sf-ship: not launched
 
 Reste a faire:
-- Finaliser le verdict de freshness docs, puis ajuster la spec / implémentation en conséquence.
+- Preuve runtime Android device manquante pour callbacks deep-link acceptes/rejetes; `cargo check` local bloque sur `pkg-config`/GTK manquants.
 
 Prochaine etape:
-- /sf-spec Renforcer la sécurité auth Android
+- /sf-test validation Android auth deep-link sur device

@@ -6,6 +6,62 @@ export interface GmailConfig {
   scope: string
 }
 
+interface GmailMessageSummary {
+  id?: string
+  labelIds?: string[]
+}
+
+interface GmailMessagePayloadHeader {
+  name: string
+  value?: string
+}
+
+interface GmailMessagePayloadBody {
+  data?: string
+}
+
+interface GmailMessagePayloadPart {
+  mimeType?: string
+  body?: GmailMessagePayloadBody
+}
+
+interface GmailMessagePayload {
+  headers?: GmailMessagePayloadHeader[]
+  parts?: GmailMessagePayloadPart[]
+  body?: GmailMessagePayloadBody
+}
+
+interface GmailMessage {
+  id?: string
+  threadId?: string
+  labelIds?: string[]
+  payload?: GmailMessagePayload
+}
+
+interface ParsedGmailMessage {
+  id: string
+  threadId: string
+  subject: string
+  preview: string
+  body: string
+  date: Date
+  sender: {
+    id: string
+    name: string
+    email: string
+    avatar: string
+  }
+  isRead: boolean
+  labels: string[]
+}
+
+interface GmailLabel {
+  id: string
+  name: string
+  type?: string
+  [key: string]: unknown
+}
+
 export class GmailService {
   private accessToken: string | null = null
   private config: GmailConfig
@@ -54,7 +110,7 @@ export class GmailService {
     }
   }
 
-  async getEmails(maxResults: number = 20): Promise<any[]> {
+  async getEmails(maxResults: number = 20): Promise<ParsedGmailMessage[]> {
     if (!this.accessToken) {
       throw new Error('Non authentifié')
     }
@@ -68,29 +124,30 @@ export class GmailService {
       })
 
       // Récupérer les détails de chaque message
-      const messages = await Promise.all(
-        response.result.messages.map(async (message: any) => {
+      const messages = response.result.messages || []
+      const parsed = await Promise.all(
+        messages.map(async (message: GmailMessageSummary) => {
           const details = await gapi.client.gmail.users.messages.get({
             userId: 'me',
-            id: message.id,
+            id: message.id || '',
             format: 'full'
           })
-          return this.parseMessage(details.result)
+          return this.parseMessage(details.result as GmailMessage)
         })
       )
 
-      return messages
+      return parsed
     } catch (error) {
       console.error('Erreur lors de la récupération des emails:', error)
       throw error
     }
   }
 
-  private async parseMessage(message: any) {
-    const headers = message.payload.headers
-    const subject = headers.find((h: any) => h.name === 'Subject')?.value
-    const from = headers.find((h: any) => h.name === 'From')?.value
-    const date = headers.find((h: any) => h.name === 'Date')?.value
+  private async parseMessage(message: GmailMessage): Promise<ParsedGmailMessage> {
+    const headers = message.payload?.headers ?? []
+    const subject = headers.find((h) => h.name === 'Subject')?.value
+    const from = headers.find((h) => h.name === 'From')?.value
+    const date = headers.find((h) => h.name === 'Date')?.value
 
     // Extraire le nom et l'email de l'expéditeur
     const fromMatch = from?.match(/(?:"?([^"]*)"?\s)?(?:<?(.+@[^>]+)>?)/)
@@ -99,7 +156,7 @@ export class GmailService {
     // Extraire le contenu du message
     let body = ''
     if (message.payload.parts) {
-      const textPart = message.payload.parts.find((part: any) => part.mimeType === 'text/plain')
+      const textPart = message.payload.parts?.find((part) => part.mimeType === 'text/plain')
       if (textPart?.body?.data) {
         body = atob(textPart.body.data.replace(/-/g, '+').replace(/_/g, '/'))
       }
@@ -108,8 +165,8 @@ export class GmailService {
     }
 
     return {
-      id: message.id,
-      threadId: message.threadId,
+      id: message.id ?? '',
+      threadId: message.threadId ?? '',
       subject: subject || '(pas de sujet)',
       preview: body.substring(0, 100),
       body: body,
@@ -120,8 +177,8 @@ export class GmailService {
         email: senderEmail,
         avatar: `https://www.gravatar.com/avatar/${await this.hashEmail(senderEmail)}?d=mp`
       },
-      isRead: !message.labelIds.includes('UNREAD'),
-      labels: message.labelIds || []
+      isRead: !(message.labelIds ?? []).includes('UNREAD'),
+      labels: message.labelIds ?? []
     }
   }
 
@@ -150,7 +207,7 @@ export class GmailService {
     }
   }
 
-  async getLabels(): Promise<any[]> {
+  async getLabels(): Promise<GmailLabel[]> {
     if (!this.accessToken) {
       throw new Error('Non authentifié')
     }
@@ -159,7 +216,7 @@ export class GmailService {
       const response = await gapi.client.gmail.users.labels.list({
         userId: 'me'
       })
-      return response.result.labels
+      return (response.result.labels || []) as GmailLabel[]
     } catch (error) {
       console.error('Erreur lors de la récupération des labels:', error)
       throw error

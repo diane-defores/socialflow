@@ -93,6 +93,21 @@ SocialFlow affiche des réseaux sociaux dans des WebViews natives et injecte des
 - **Desktop/Mobile** : Tauri 2 (Rust + Kotlin/Swift)
 - **Hosting web** : Vercel
 
+## Sécurité auth Android (hardening)
+
+- Les callbacks OAuth Android sont traités uniquement via deep links autorisés (`socialflow://auth-callback/oauth` et `https://socialflow.app/auth/callback`).
+- Chaque callback passe par une validation native Rust (`validate_android_oauth_callback`) avant d'être accepté:
+  - schéma + host allowlist,
+  - `state` obligatoire et présent dans une requête OAuth pending créée par l'app,
+  - `nonce` vérifié contre cette requête pending quand présent,
+  - TTL max 5 minutes,
+  - anti-rejeu (`state` consommé une seule fois).
+- Les callbacks rejetés déclenchent un signal Sentry anonymisé si le SDK Sentry est exposé au runtime.
+- Le lock de session n'autorise plus la création d'un PIN depuis l'écran verrouillé:
+  - PIN préconfiguré requis pour déverrouiller,
+  - sinon retour login obligatoire.
+- L'écran d'erreur de bootstrap auth n'injecte plus le message via `innerHTML` (rendu DOM via `textContent`).
+
 ## Variables d'environnement
 
 ```env

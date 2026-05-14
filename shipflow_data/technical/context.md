@@ -85,6 +85,14 @@ SocialFlow est une application social multi-canaux avec une base Vue 3 commune e
 3. Si `VITE_CONVEX_URL` est présent, `getConvexClient()` et `setupConvexAuth()` initient Convex Auth.
 4. App bootstrap puis montage de l'application.
 
+#### Android OAuth callback hardening (mobile)
+
+1. `main.ts` écoute les événements `deep-link://new-url` du plugin deep-link et lit aussi `plugin:deep-link|get_current` au démarrage.
+2. Lorsqu'une requête OAuth démarre, l'app enregistre un `state`/`nonce` pending local via `socialflow:android-oauth-request-started`.
+3. Chaque URL candidate OAuth est validée côté Rust via `validate_android_oauth_callback` contre cette requête pending (host/schéma allowlist, `state`, `nonce`, TTL 5 min, anti-rejeu).
+4. Un callback rejeté ne doit pas muter l'état auth/session et déclenche un signal Sentry anonymisé si le SDK est disponible.
+5. Le lock session n'autorise pas de création PIN depuis l'écran verrouillé: si aucun PIN préenregistré, l'utilisateur retourne au login.
+
 ### 2) Navigation SocialFlow
 
 1. `src/ui/setup/pages/SocialFlow/router/index.ts` route selon hash.

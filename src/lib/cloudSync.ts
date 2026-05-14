@@ -582,6 +582,10 @@ export function resetSyncedLocalState() {
   clearCloudBackedLocalState();
 
   localStorage.removeItem("sfz_email");
+  localStorage.removeItem("sf_jwt");
+  localStorage.removeItem("sf_refresh");
+  localStorage.removeItem("__convexAuthJWT");
+  localStorage.removeItem("__convexAuthRefreshToken");
   clearRememberedCloudUserId();
 }
 

@@ -248,9 +248,9 @@ async function handleSignup() {
       email: normalizedEmail,
       flow: 'signUp',
     })
-  } catch (e: any) {
+  } catch (error: unknown) {
     resetPostAuthSyncFeedback()
-    error.value = e?.message ?? t('account.error_generic')
+    error.value = error instanceof Error ? error.message : t('account.error_generic')
   } finally {
     loading.value = false
   }

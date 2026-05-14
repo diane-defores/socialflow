@@ -26,6 +26,30 @@
       "csp": null
     }
   },
+  "plugins": {
+    "deep-link": {
+      "mobile": [
+        {
+          "scheme": [
+            "socialflow"
+          ],
+          "host": "auth-callback",
+          "pathPrefix": [
+            "/oauth"
+          ]
+        },
+        {
+          "scheme": [
+            "https"
+          ],
+          "host": "socialflow.app",
+          "pathPrefix": [
+            "/auth/callback"
+          ]
+        }
+      ]
+    }
+  },
   "bundle": {
     "active": true,
     "targets": "all",

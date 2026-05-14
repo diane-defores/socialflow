@@ -152,7 +152,8 @@ const handleCommentLike = (postId: string, commentId: string) => {
 
 const handleCommentReply = (postId: string, commentId: string) => {
   // Logique pour répondre à un commentaire
-  console.log(`Répondre au commentaire ${commentId} du post ${postId}`)
+  void postId
+  void commentId
 }
 
 const togglePostComments = (postId: string) => {

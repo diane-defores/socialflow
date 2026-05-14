@@ -50,7 +50,7 @@ interface Props {
   showBadge?: boolean
   badgeContent?: string | number
   badgeIcon?: string
-  badgeSeverity?: 'success' | 'info' | 'warning' | 'danger'
+  badgeSeverity?: 'success' | 'info' | 'warning' | 'danger' | 'secondary'
   showStatus?: boolean
   borderColor?: string
   borderWidth?: string
@@ -60,7 +60,11 @@ const props = withDefaults(defineProps<Props>(), {
   size: 'normal',
   shape: 'circle',
   showBadge: false,
+  badgeContent: undefined,
+  badgeIcon: undefined,
+  badgeSeverity: 'secondary',
   showStatus: false,
+  borderColor: 'var(--surface-border)',
   borderWidth: '0px'
 })
 

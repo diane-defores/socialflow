@@ -4,12 +4,34 @@ import { GmailService } from '@/services/gmailService'
 import { gmailConfig } from '@/config/gmail'
 import type { Email } from '@/ui/setup/pages/SocialFlow/types'
 
+const OAUTH_CALLBACK_TTL_MS = 5 * 60 * 1000
+const consumedOAuthStates = new Map<string, number>()
+
 interface NetworkConnection {
   networkId: string
   accessToken: string
   username: string
   connected: boolean
   userData?: unknown
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value)
+}
+
+function randomToken() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID()
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`
+}
+
+function pruneConsumedOAuthStates(now: number) {
+  for (const [state, timestamp] of consumedOAuthStates.entries()) {
+    if (now - timestamp > OAUTH_CALLBACK_TTL_MS) {
+      consumedOAuthStates.delete(state)
+    }
+  }
 }
 
 export const useSocialNetworksStore = defineStore('socialNetworks', {
@@ -68,31 +90,142 @@ export const useSocialNetworksStore = defineStore('socialNetworks', {
 
     async connectFacebook() {
       try {
+        const requestState = randomToken()
+        const requestNonce = randomToken()
+        const startedAt = Date.now()
+        const authQuery = new URLSearchParams({ state: requestState, nonce: requestNonce })
+        window.dispatchEvent(new CustomEvent('socialflow:android-oauth-request-started', {
+          detail: {
+            networkId: 'facebook',
+            state: requestState,
+            nonce: requestNonce,
+            startedAtMs: startedAt,
+          }
+        }))
         const authWindow = window.open(
-          '/api/auth/facebook',
+          `/api/auth/facebook?${authQuery.toString()}`,
           'Facebook Auth',
           'width=600,height=600,scrollbars=yes'
         )
+        if (!authWindow) {
+          throw new Error('La popup OAuth a été bloquée par le navigateur.')
+        }
 
         return new Promise((resolve, reject) => {
-          window.addEventListener('message', async (event) => {
-            if (event.origin !== window.location.origin) return
+          let settled = false
 
-            if (event.data.type === 'facebook-auth-callback') {
-              const { accessToken, user } = event.data
+          const finishWithError = (error: Error) => {
+            if (settled) return
+            settled = true
+            window.removeEventListener('message', onMessage)
+            window.removeEventListener('socialflow:android-oauth-callback-validated', onAndroidOAuthCallback)
+            window.clearTimeout(timeoutId)
+            authWindow.close()
+            reject(error)
+          }
 
-              this.connections['facebook'] = {
-                networkId: 'facebook',
-                accessToken: accessToken,
-                username: user.name,
-                connected: true,
-                userData: user
-              }
+          const finishWithSuccess = (accessToken: string, user: Record<string, unknown>) => {
+            if (settled) return
+            settled = true
+            window.removeEventListener('message', onMessage)
+            window.removeEventListener('socialflow:android-oauth-callback-validated', onAndroidOAuthCallback)
+            window.clearTimeout(timeoutId)
+            authWindow.close()
 
-              authWindow?.close()
-              resolve(true)
+            this.connections['facebook'] = {
+              networkId: 'facebook',
+              accessToken,
+              username: String(user.name),
+              connected: true,
+              userData: user
             }
-          }, { once: true })
+
+            resolve(true)
+          }
+
+          const acceptOAuthCallback = (payload: Record<string, unknown>) => {
+            const now = Date.now()
+            pruneConsumedOAuthStates(now)
+
+            if (now - startedAt > OAUTH_CALLBACK_TTL_MS) {
+              finishWithError(new Error('Le callback OAuth a expiré. Réessayez la connexion.'))
+              return
+            }
+
+            const callbackState = payload.state
+            const callbackNonce = payload.nonce
+            const accessToken = payload.accessToken
+            const user = payload.user
+
+            if (typeof callbackState !== 'string' || callbackState !== requestState) {
+              finishWithError(new Error('Callback OAuth rejeté: state invalide.'))
+              return
+            }
+
+            if (consumedOAuthStates.has(callbackState)) {
+              finishWithError(new Error('Callback OAuth rejeté: state déjà utilisé (anti-rejeu).'))
+              return
+            }
+
+            if (callbackNonce !== undefined && callbackNonce !== requestNonce) {
+              finishWithError(new Error('Callback OAuth rejeté: nonce invalide.'))
+              return
+            }
+
+            if (typeof accessToken !== 'string' || accessToken.length === 0) {
+              finishWithError(new Error('Callback OAuth rejeté: token manquant.'))
+              return
+            }
+
+            if (!isRecord(user) || typeof user.name !== 'string' || user.name.length === 0) {
+              finishWithError(new Error('Callback OAuth rejeté: profil utilisateur invalide.'))
+              return
+            }
+
+            consumedOAuthStates.set(callbackState, now)
+            finishWithSuccess(accessToken, user)
+          }
+
+          const onMessage = (event: MessageEvent<unknown>) => {
+            if (event.origin !== window.location.origin) return
+            if (event.source !== authWindow) return
+            if (!isRecord(event.data)) return
+            if (event.data.type !== 'facebook-auth-callback') return
+            acceptOAuthCallback(event.data)
+          }
+
+          const onAndroidOAuthCallback = (event: Event) => {
+            if (!(event instanceof CustomEvent) || typeof event.detail !== 'string') return
+            let callbackUrl: URL
+            try {
+              callbackUrl = new URL(event.detail)
+            } catch {
+              finishWithError(new Error('Callback OAuth Android rejeté: URL invalide.'))
+              return
+            }
+
+            acceptOAuthCallback({
+              state: callbackUrl.searchParams.get('state') ?? undefined,
+              nonce: callbackUrl.searchParams.get('nonce') ?? undefined,
+              accessToken:
+                callbackUrl.searchParams.get('accessToken')
+                ?? callbackUrl.searchParams.get('access_token')
+                ?? undefined,
+              user: {
+                name:
+                  callbackUrl.searchParams.get('userName')
+                  ?? callbackUrl.searchParams.get('username')
+                  ?? 'Facebook',
+              },
+            })
+          }
+
+          const timeoutId = window.setTimeout(() => {
+            finishWithError(new Error('Délai OAuth dépassé. Veuillez recommencer.'))
+          }, OAUTH_CALLBACK_TTL_MS)
+
+          window.addEventListener('message', onMessage)
+          window.addEventListener('socialflow:android-oauth-callback-validated', onAndroidOAuthCallback)
         })
       } catch (error) {
         console.error('Erreur de connexion Facebook:', error)

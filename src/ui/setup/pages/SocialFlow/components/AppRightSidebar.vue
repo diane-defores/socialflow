@@ -118,8 +118,10 @@ const toggleIconsOnly = () => {
   iconsOnly.value = !iconsOnly.value
 }
 
-const handleResize = (e: any) => {
-  const newSize = e.sizes[1]
+const handleResize = (e: { sizes?: Array<number> }) => {
+  const newSize = e.sizes?.[1]
+  if (typeof newSize !== 'number') return
+
   if (newSize <= COMPACT_THRESHOLD && !iconsOnly.value) {
     iconsOnly.value = true
   } else if (newSize > COMPACT_THRESHOLD && iconsOnly.value) {

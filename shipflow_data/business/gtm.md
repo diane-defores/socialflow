@@ -21,7 +21,7 @@ linked_artifacts:
   - shipflow_data/business/product.md
 depends_on:
   - artifact: "shipflow_data/business/product.md"
-    artifact_version: "1.0.0"
+    artifact_version: "1.0.1"
     required_status: reviewed
 supersedes: []
 next_review: "2026-05-26"

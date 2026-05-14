@@ -8,7 +8,7 @@ export interface KanbanItem {
   description: string
   date: Date
   labels: string[]
-  originalData?: any // Données originales (email complet, tâche complète, etc.)
+  originalData?: Record<string, unknown> // Données originales (email complet, tâche complète, etc.)
   columnId: KanbanColumnId
   order: number
 }
@@ -119,7 +119,13 @@ export class KanbanService {
   }
 
   // Convertir un email en élément Kanban
-  emailToKanbanItem(email: any): Omit<KanbanItem, 'id' | 'order' | 'columnId'> {
+  emailToKanbanItem(email: {
+    subject: string
+    preview: string
+    date: Date
+    labels: string[]
+    [key: string]: unknown
+  }): Omit<KanbanItem, 'id' | 'order' | 'columnId'> {
     return {
       type: 'email',
       title: email.subject,

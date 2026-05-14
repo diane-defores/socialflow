@@ -55,6 +55,10 @@ const CONVEX_URL = "https://demo.convex.cloud";
 const NAMESPACE = CONVEX_URL.replace(/[^a-zA-Z0-9]/g, "");
 const JWT_STORAGE_KEY = `__convexAuthJWT_${NAMESPACE}`;
 const REFRESH_STORAGE_KEY = `__convexAuthRefreshToken_${NAMESPACE}`;
+const LEGACY_JWT_KEY = "sf_jwt";
+const LEGACY_REFRESH_KEY = "sf_refresh";
+const LEGACY_GLOBAL_JWT_KEY = "__convexAuthJWT";
+const LEGACY_GLOBAL_REFRESH_KEY = "__convexAuthRefreshToken";
 
 async function loadAuthModule() {
   vi.resetModules();
@@ -92,8 +96,9 @@ beforeEach(() => {
 });
 
 describe("convexAuth client boundaries", () => {
-  it("restores a stored namespaced session token during setup", async () => {
+  it("restores a session only when both namespaced JWT and refresh token exist", async () => {
     localStorage.setItem(JWT_STORAGE_KEY, "jwt-1");
+    localStorage.setItem(REFRESH_STORAGE_KEY, "refresh-1");
     const { setupConvexAuth, isAuthenticated, isAuthLoading } = await loadAuthModule();
 
     await setupConvexAuth(createMockClient() as never, CONVEX_URL);
@@ -101,6 +106,33 @@ describe("convexAuth client boundaries", () => {
     expect(isAuthenticated.value).toBe(true);
     expect(isAuthLoading.value).toBe(false);
     expect(mockState.action).not.toHaveBeenCalled();
+  });
+
+  it("does not restore a token-only session and clears stale JWT storage", async () => {
+    localStorage.setItem(JWT_STORAGE_KEY, "jwt-without-refresh");
+    const { setupConvexAuth, isAuthenticated, isAuthLoading } = await loadAuthModule();
+
+    await setupConvexAuth(createMockClient() as never, CONVEX_URL);
+
+    expect(isAuthenticated.value).toBe(false);
+    expect(isAuthLoading.value).toBe(false);
+    expect(localStorage.getItem(JWT_STORAGE_KEY)).toBeNull();
+    expect(localStorage.getItem(REFRESH_STORAGE_KEY)).toBeNull();
+  });
+
+  it("purges legacy global/localStorage auth keys during setup", async () => {
+    localStorage.setItem(LEGACY_JWT_KEY, "legacy-jwt");
+    localStorage.setItem(LEGACY_REFRESH_KEY, "legacy-refresh");
+    localStorage.setItem(LEGACY_GLOBAL_JWT_KEY, "legacy-global-jwt");
+    localStorage.setItem(LEGACY_GLOBAL_REFRESH_KEY, "legacy-global-refresh");
+
+    const { setupConvexAuth } = await loadAuthModule();
+    await setupConvexAuth(createMockClient() as never, CONVEX_URL);
+
+    expect(localStorage.getItem(LEGACY_JWT_KEY)).toBeNull();
+    expect(localStorage.getItem(LEGACY_REFRESH_KEY)).toBeNull();
+    expect(localStorage.getItem(LEGACY_GLOBAL_JWT_KEY)).toBeNull();
+    expect(localStorage.getItem(LEGACY_GLOBAL_REFRESH_KEY)).toBeNull();
   });
 
   it("persists sign-in tokens under the Convex namespace", async () => {

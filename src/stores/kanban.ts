@@ -74,7 +74,16 @@ export const useKanbanStore = defineStore('kanban', {
       }
     },
 
-    addEmailToKanban(email: any, columnId: KanbanColumnId = 'todo') {
+    addEmailToKanban(
+      email: {
+        subject: string
+        preview: string
+        date: Date
+        labels: string[]
+        [key: string]: unknown
+      },
+      columnId: KanbanColumnId = 'todo'
+    ) {
       try {
         const kanbanItem = this.service.emailToKanbanItem(email)
         return this.addItem(columnId, kanbanItem)

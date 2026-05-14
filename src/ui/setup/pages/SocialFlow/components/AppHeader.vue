@@ -61,10 +61,17 @@ const props = defineProps<{
   rightSidebarVisible: boolean
 }>()
 
+interface DashboardFiltersPayload {
+  dateRange: [Date | null, Date | null]
+  quickDate: string | null
+  selectedFilters: string[]
+  sort: string | null
+}
+
 const emit = defineEmits<{
   'update:sidebarVisible': [value: boolean]
   'update:rightSidebarVisible': [value: boolean]
-  'filter-change': [filters: any]
+  'filter-change': [filters: DashboardFiltersPayload]
   'open-settings': []
 }>()
 
@@ -89,7 +96,7 @@ const toggleRightSidebar = () => {
   emit('update:rightSidebarVisible', !props.rightSidebarVisible)
 }
 
-const handleFilterChange = (filters: any) => {
+const handleFilterChange = (filters: DashboardFiltersPayload) => {
   emit('filter-change', filters)
 }
 

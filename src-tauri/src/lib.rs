@@ -83,6 +83,163 @@ use tauri::{
 #[cfg(target_os = "android")]
 use tauri_plugin_android_webview::AndroidWebviewExt;
 
+#[cfg(target_os = "android")]
+const OAUTH_CALLBACK_TTL_MS: i64 = 5 * 60 * 1000;
+
+#[cfg(target_os = "android")]
+fn android_allowed_oauth_callback_hosts() -> &'static [&'static str] {
+    &["auth-callback", "socialflow.app", "www.socialflow.app"]
+}
+
+#[cfg(target_os = "android")]
+fn host_matches_allowlist(host: &str, allowed_host: &str) -> bool {
+    host == allowed_host || host.ends_with(&format!(".{allowed_host}"))
+}
+
+#[cfg(target_os = "android")]
+fn android_allowed_hosts_for_network(network_id: &str) -> &'static [&'static str] {
+    match network_id {
+        "twitter" => &["x.com", "twitter.com"],
+        "facebook" => &["facebook.com"],
+        "instagram" => &["instagram.com"],
+        "linkedin" => &["linkedin.com"],
+        "tiktok" => &["tiktok.com"],
+        "threads" => &["threads.net"],
+        "discord" => &["discord.com"],
+        "reddit" => &["reddit.com"],
+        "snapchat" => &["web.snapchat.com"],
+        "quora" => &["quora.com"],
+        "pinterest" => &["pinterest.com"],
+        "telegram" => &["web.telegram.org", "telegram.org", "t.me"],
+        "nextdoor" => &["nextdoor.com"],
+        "patreon" => &["patreon.com"],
+        "theresanaiforthat" => &["theresanaiforthat.com"],
+        "industrysocial" | "industrysocial-waitlist" => &["industrysocial.net"],
+        "bluesky" => &["bsky.app"],
+        "mastodon" => &["mastodon.social"],
+        "substack" => &["substack.com"],
+        "ko-fi" => &["ko-fi.com"],
+        "buymeacoffee" => &["buymeacoffee.com"],
+        "producthunt" => &["producthunt.com"],
+        "indiehackers" => &["indiehackers.com"],
+        "hackernews" => &["news.ycombinator.com"],
+        "folloverse" => &["folloverse.com"],
+        "koru" => &["koru.now"],
+        "medium" => &["medium.com"],
+        _ => &[],
+    }
+}
+
+#[cfg(target_os = "android")]
+fn is_disallowed_host_value(host: &str) -> bool {
+    if host.eq_ignore_ascii_case("localhost") || host.eq_ignore_ascii_case("127.0.0.1") {
+        return true;
+    }
+
+    if let Ok(ip) = host.parse::<std::net::IpAddr>() {
+        return match ip {
+            std::net::IpAddr::V4(ipv4) => {
+                ipv4.is_private()
+                    || ipv4.is_loopback()
+                    || ipv4.is_link_local()
+                    || ipv4.is_documentation()
+                    || ipv4.is_unspecified()
+            }
+            std::net::IpAddr::V6(ipv6) => {
+                ipv6.is_loopback()
+                    || ipv6.is_unspecified()
+                    || ipv6.is_unique_local()
+                    || ipv6.is_unicast_link_local()
+            }
+        };
+    }
+
+    false
+}
+
+#[cfg(target_os = "android")]
+fn validate_android_webview_url(url: &str, network_id: &str) -> Result<url::Url, String> {
+    let parsed: url::Url = url
+        .parse()
+        .map_err(|e: url::ParseError| format!("invalid Android URL: {e}"))?;
+
+    if parsed.scheme() != "https" {
+        return Err("Android webview URL rejected: only https scheme is allowed".to_string());
+    }
+
+    let host = parsed
+        .host_str()
+        .ok_or_else(|| "Android webview URL rejected: host is missing".to_string())?
+        .to_ascii_lowercase();
+
+    if is_disallowed_host_value(&host) {
+        return Err(format!("Android webview URL rejected: host `{host}` is not allowed"));
+    }
+
+    let allowed_hosts = android_allowed_hosts_for_network(network_id);
+    if allowed_hosts.is_empty() {
+        return Err(format!(
+            "Android webview URL rejected: network `{network_id}` is not allowlisted"
+        ));
+    }
+
+    if !allowed_hosts
+        .iter()
+        .any(|allowed| host_matches_allowlist(&host, allowed))
+    {
+        return Err(format!(
+            "Android webview URL rejected: host `{host}` is not allowed for `{network_id}`"
+        ));
+    }
+
+    Ok(parsed)
+}
+
+#[derive(Default)]
+struct AndroidOAuthReplayState(std::sync::Mutex<std::collections::HashMap<String, i64>>);
+
+#[cfg(target_os = "android")]
+fn now_millis() -> i64 {
+    chrono::Utc::now().timestamp_millis()
+}
+
+#[cfg(target_os = "android")]
+fn prune_consumed_oauth_states(consumed_states: &mut std::collections::HashMap<String, i64>, now: i64) {
+    consumed_states.retain(|_, timestamp| now - *timestamp <= OAUTH_CALLBACK_TTL_MS);
+}
+
+#[cfg(target_os = "android")]
+fn validate_android_oauth_callback_url(callback_url: &str) -> Result<url::Url, String> {
+    let parsed: url::Url = callback_url
+        .parse()
+        .map_err(|e: url::ParseError| format!("invalid Android OAuth callback URL: {e}"))?;
+
+    let scheme = parsed.scheme();
+    if scheme != "https" && scheme != "socialflow" {
+        return Err("Android OAuth callback rejected: scheme is not allowlisted".to_string());
+    }
+
+    let host = parsed
+        .host_str()
+        .ok_or_else(|| "Android OAuth callback rejected: host is missing".to_string())?
+        .to_ascii_lowercase();
+
+    if is_disallowed_host_value(&host) {
+        return Err(format!("Android OAuth callback rejected: host `{host}` is not allowed"));
+    }
+
+    if !android_allowed_oauth_callback_hosts()
+        .iter()
+        .any(|allowed| host_matches_allowlist(&host, allowed))
+    {
+        return Err(format!(
+            "Android OAuth callback rejected: host `{host}` is not in callback allowlist"
+        ));
+    }
+
+    Ok(parsed)
+}
+
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 /// Unique label per (profile, network) pair — ensures isolated webviews.
@@ -396,11 +553,74 @@ fn open_webview(
     _width: f64,
     _height: f64,
 ) -> Result<(), String> {
+    let validated_url = validate_android_webview_url(&url, &network_id)?;
+
     // Use "profileId-networkId" as the session key for Android
     let session_key = format!("{}-{}", profile_id, network_id);
     app.android_webview()
-        .open(&url, &session_key, &network_id)
+        .open(validated_url.as_str(), &session_key, &network_id)
         .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+#[cfg(target_os = "android")]
+fn validate_android_oauth_callback(
+    app: AppHandle,
+    callback_url: String,
+    expected_state: String,
+    expected_nonce: Option<String>,
+    started_at_ms: i64,
+) -> Result<(), String> {
+    let parsed = validate_android_oauth_callback_url(&callback_url)?;
+    let now = now_millis();
+
+    if started_at_ms <= 0 || now - started_at_ms > OAUTH_CALLBACK_TTL_MS {
+        return Err("Android OAuth callback rejected: request expired".to_string());
+    }
+
+    let callback_state = parsed
+        .query_pairs()
+        .find_map(|(key, value)| (key == "state").then(|| value.into_owned()))
+        .ok_or_else(|| "Android OAuth callback rejected: state is missing".to_string())?;
+
+    if callback_state != expected_state {
+        return Err("Android OAuth callback rejected: state mismatch".to_string());
+    }
+
+    if let Some(expected_nonce) = expected_nonce {
+        let callback_nonce = parsed
+            .query_pairs()
+            .find_map(|(key, value)| (key == "nonce").then(|| value.into_owned()))
+            .ok_or_else(|| "Android OAuth callback rejected: nonce is missing".to_string())?;
+        if callback_nonce != expected_nonce {
+            return Err("Android OAuth callback rejected: nonce mismatch".to_string());
+        }
+    }
+
+    let replay_state = app.state::<AndroidOAuthReplayState>();
+    let mut consumed_states = replay_state
+        .0
+        .lock()
+        .map_err(|_| "Android OAuth callback rejected: replay state unavailable".to_string())?;
+    prune_consumed_oauth_states(&mut consumed_states, now);
+    if consumed_states.contains_key(&callback_state) {
+        return Err("Android OAuth callback rejected: state replay detected".to_string());
+    }
+    consumed_states.insert(callback_state, now);
+
+    Ok(())
+}
+
+#[tauri::command]
+#[cfg(not(target_os = "android"))]
+fn validate_android_oauth_callback(
+    _app: AppHandle,
+    _callback_url: String,
+    _expected_state: String,
+    _expected_nonce: Option<String>,
+    _started_at_ms: i64,
+) -> Result<(), String> {
+    Err("Android OAuth callback validation is only available on Android".to_string())
 }
 
 #[tauri::command]
@@ -711,7 +931,9 @@ fn restore_backup(
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .manage(AndroidOAuthReplayState::default())
         .plugin(tauri_plugin_android_webview::init())
+        .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .setup(|app| {
@@ -732,6 +954,7 @@ pub fn run() {
             open_webview,
             resize_webview,
             close_webview,
+            validate_android_oauth_callback,
             hide_webview,
             show_webview,
             set_grayscale,

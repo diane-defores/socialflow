@@ -250,7 +250,11 @@ const handleToolClick = (tool: typeof postTools[0]) => {
   // Implémenter les autres actions d'outils
 }
 
-const onFileSelect = (event: any) => {
+interface FileUploadSelectEvent {
+  files: File[]
+}
+
+const onFileSelect = (event: FileUploadSelectEvent) => {
   const files = event.files
   
   for (let file of files) {

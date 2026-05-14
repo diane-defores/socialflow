@@ -34,8 +34,23 @@
       <p
         v-if="post.content.text"
         class="content-text"
-        v-html="formatText(post.content.text)"
-      />
+      >
+        <template
+          v-for="(segment, index) in formatTextSegments(post.content.text)"
+          :key="index"
+        >
+          <template v-if="segment.kind === 'linebreak'">
+            <br>
+          </template>
+          <a
+            v-else-if="segment.kind === 'link'"
+            :href="segment.href"
+            target="_blank"
+            rel="noopener"
+          >{{ segment.text }}</a>
+          <template v-else>{{ segment.text }}</template>
+        </template>
+      </p>
       
       <div
         v-if="post.content.link"
@@ -192,7 +207,8 @@ const props = withDefaults(defineProps<Props>(), {
   showComments: false,
   showReactions: true,
   primaryActionIcon: 'pi pi-thumbs-up',
-  primaryActionLabel: undefined
+  primaryActionLabel: undefined,
+  subtitle: undefined
 })
 
 const emit = defineEmits<{
@@ -247,27 +263,60 @@ const formatDate = (timestamp: string) => {
   return new Date(timestamp).toLocaleDateString()
 }
 
-const escapeHtml = (str: string) =>
-  str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+type TextSegment =
+  | { kind: 'text'; text: string }
+  | { kind: 'link'; text: string; href: string }
+  | { kind: 'linebreak'; text: string }
 
-const formatText = (text: string) => {
-  // Escape HTML first to prevent XSS
-  text = escapeHtml(text)
+const formatTextSegments = (text: string): TextSegment[] => {
+  const tokenRegex = /(https?:\/\/[^\s]+)|#(\w+)|@(\w+)|\n/g
+  const segments: TextSegment[] = []
+  let cursor = 0
+  let match: RegExpExecArray | null
 
-  // Convertit les URLs en liens
-  const urlRegex = /(https?:\/\/[^\s]+)/g
-  text = text.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener">$1</a>')
+  while ((match = tokenRegex.exec(text)) !== null) {
+    const [token] = match
+    const index = match.index
 
-  // Convertit les hashtags en liens
-  const hashtagRegex = /#(\w+)/g
-  text = text.replace(hashtagRegex, '<a href="/hashtag/$1">#$1</a>')
+    if (index > cursor) {
+      segments.push({ kind: 'text', text: text.slice(cursor, index) })
+    }
 
-  // Convertit les mentions en liens
-  const mentionRegex = /@(\w+)/g
-  text = text.replace(mentionRegex, '<a href="/user/$1">@$1</a>')
+    if (token.startsWith('http')) {
+      segments.push({
+        kind: 'link',
+        text: token,
+        href: token
+      })
+    } else if (token.startsWith('#')) {
+      const value = token.slice(1)
+      segments.push({
+        kind: 'link',
+        text: token,
+        href: `/hashtag/${value}`
+      })
+    } else if (token.startsWith('@')) {
+      const value = token.slice(1)
+      segments.push({
+        kind: 'link',
+        text: token,
+        href: `/user/${value}`
+      })
+    } else if (token === '\n') {
+      segments.push({
+        kind: 'linebreak',
+        text: token
+      })
+    }
 
-  // Convertit les retours à la ligne en <br>
-  return text.replace(/\n/g, '<br>')
+    cursor = index + token.length
+  }
+
+  if (cursor < text.length) {
+    segments.push({ kind: 'text', text: text.slice(cursor) })
+  }
+
+  return segments
 }
 
 // Méthode pour basculer l'affichage des commentaires
